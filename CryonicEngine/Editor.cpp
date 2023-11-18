@@ -192,7 +192,7 @@ void Editor::UpdateViewport()
     {
         FilePathList droppedFiles = LoadDroppedFiles();
 
-        if (droppedFiles.count == 1) // Only support one file dropped BUT ADD SUPPORT FOR MULTIPLE ---------------------------------------------------------------------
+        if (droppedFiles.count == 1) // Todo: Add support for multiple files dropped.
         {
             if (IsFileExtension(droppedFiles.paths[0], ".obj") ||
                 IsFileExtension(droppedFiles.paths[0], ".gltf") ||
