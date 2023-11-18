@@ -20,6 +20,7 @@ public:
 	void RenderHierarchy();
 	void RenderTopbar();
 	void RenderComponentsWin();
+	void RenderScriptCreateWin();
 	void Render();
 
 	void UpdateViewport();

@@ -150,6 +150,7 @@
     <ClCompile Include="..\includes\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\includes\imgui\rlImGui.cpp" />
     <ClCompile Include="Components\Component.cpp" />
+    <ClCompile Include="Components\ScriptComponent.cpp" />
     <ClCompile Include="ConsoleLogger.cpp" />
     <ClCompile Include="CryonicEngine.cpp" />
     <ClCompile Include="Editor.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="..\includes\imgui\rlImGuiColors.h" />
     <ClInclude Include="..\includes\json.hpp" />
     <ClInclude Include="Components\Component.h" />
+    <ClInclude Include="Components\ScriptComponent.h" />
     <ClInclude Include="ConsoleLogger.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="FontManager.h" />
@@ -179,6 +181,7 @@
     <ClInclude Include="ProjectManager.h" />
     <ClInclude Include="Scenes\Scene.h" />
     <ClInclude Include="Scenes\SceneManager.h" />
+    <ClInclude Include="ScriptableObject.h" />
     <ClInclude Include="Utilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

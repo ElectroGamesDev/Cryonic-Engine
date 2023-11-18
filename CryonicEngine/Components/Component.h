@@ -1,25 +1,27 @@
 #pragma once
 
 #include <string>
-//#include "GameObject.h"
-class GameObject;
+#include "../GameObject.h"
+//class GameObject;
 
 class Component
 {
 public:
-    Component(GameObject* obj);
-    virtual ~Component();
-    virtual void Update(float deltaTime);
-    virtual void Start();
-    //void SetName(const std::string& name);
+    //Component(GameObject* obj);
+    virtual ~Component() {};
+    template<typename T>
+    T& GetComponent()
+    {
+        return _gameObject.GetComponent<T>();
+    }
     GameObject* GetGameObject();
-    //void SetGameObject(GameObject* object);
-    //const std::string& GetName() const;
-    //void SetRenderInEditMode(bool value);
-    //bool GetRenderInEditMode();
+
+protected:
+    virtual void Start();
+    virtual void Update(float deltaTime);
+    virtual void Destroy();
 
 private:
-    //std::string componentName = "Unnamed Component";
-    GameObject* gameObject;
-    //bool updateInEditMode = false;
+    GameObject& _gameObject;
+    friend class Scene;
 };

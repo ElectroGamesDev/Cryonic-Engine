@@ -32,6 +32,7 @@ GameObject* selectedObject = nullptr;
 bool explorerContextMenuOpen = false;
 bool hierarchyContextMenuOpen = false;
 bool componentsWindowOpen = false;
+bool scriptCreateWinOpen = false;
 
 bool resetComponentsWin = true;
 bool resetPropertiesWin = true;
@@ -372,6 +373,14 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         std::system(command.c_str());
                     }
                 }
+                else if (extension == ".h")
+                {
+                    if (rlImGuiImageButtonSize(("##" + id).c_str(), imageTextures["HeaderIcon"], ImVec2(32, 32)))
+                    {
+                        std::string command = "code " + entry.path().string();
+                        std::system(command.c_str());
+                    }
+                }
                 else if (extension == ".png" || extension == ".jpg" || extension == ".webp")
                 {
                     tempTextures.push_back(new Texture2D(LoadTexture(entry.path().string().c_str())));
@@ -464,6 +473,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Create Script"))
                 {
                     explorerContextMenuOpen = false;
+                    scriptCreateWinOpen = true;
                 }
                 if (ImGui::MenuItem("Create Sprite"))
                 {
@@ -498,6 +508,51 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
     ImGui::End();
 }
 
+void Editor::RenderScriptCreateWin()
+{
+    if (!scriptCreateWinOpen) return;
+    ImGui::SetNextWindowSize(ImVec2(180, 180));
+    ImGui::SetNextWindowPos(ImVec2((GetScreenWidth() - 180) / 2, (GetScreenHeight() - 180) / 2));
+    if (ImGui::Begin("Create Script", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    {
+        ImGui::Text("Script Name");
+        static char behaviourName[36] = "";
+        ImGui::SetNextItemWidth(163);
+        ImGui::InputTextWithHint("##Name", "Script Name...", behaviourName, IM_ARRAYSIZE(behaviourName));
+        ImGui::NewLine();
+        if (ImGui::Button("Cancel", ImVec2(163, 0)))
+        {
+            strcpy_s(behaviourName, sizeof(behaviourName), "");
+            scriptCreateWinOpen = false;
+        }
+
+        ImGui::NewLine();
+
+        std::string name = behaviourName;
+        std::string newName = name;
+        newName.erase(std::remove_if(newName.begin(), newName.end(), [](unsigned char c) {
+            return std::isspace(c);
+            }), newName.end());
+        bool canCreate = true;
+        if (newName == "") canCreate = false;
+
+        if (!canCreate) ImGui::BeginDisabled();
+        if (ImGui::Button("Create", ImVec2(163, 0)))
+        {
+            if (std::filesystem::exists(fileExplorerPath / (name + ".h")) || std::filesystem::exists(fileExplorerPath / (name + ".cpp")))
+            {
+                // Todo: Popup saying script with this name already exists in this location
+                ImGui::End();
+                return;
+            }
+            // Copy and paste preset ehader and cpp
+            scriptCreateWinOpen = false;
+        }
+        if (!canCreate) ImGui::EndDisabled();
+    }
+    ImGui::End();
+}
+
 void Editor::RenderComponentsWin()
 {
     if (!componentsWindowOpen) return;
@@ -509,11 +564,23 @@ void Editor::RenderComponentsWin()
     }
     if (ImGui::Begin("Add Component", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NoCollapse))
     {
+        // Internal Components
         float buttonWidth = ImGui::GetWindowWidth() - 28;
         if (ImGui::Button("Camera", ImVec2(buttonWidth, 0)))
         {
             componentsWindowOpen = false;
             resetComponentsWin = true;
+        }
+        ImGui::Separator();
+        // External Components
+        for (const auto& file : std::filesystem::recursive_directory_iterator(projectData.path))
+        {
+            if (!std::filesystem::is_regular_file(file) || file.path().extension() != ".h") continue;
+            if (ImGui::Button(file.path().stem().string().c_str(), ImVec2(buttonWidth, 0)))
+            {
+                componentsWindowOpen = false;
+                resetComponentsWin = true;
+            }
         }
     }
     ImGui::End();
@@ -907,6 +974,7 @@ void Editor::Render(void)
     RenderFileExplorer();
     RenderTopbar();
     RenderComponentsWin();
+    RenderScriptCreateWin();
 }
 
 void Editor::SetupViewport()
