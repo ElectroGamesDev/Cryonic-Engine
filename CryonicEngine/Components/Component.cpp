@@ -31,7 +31,7 @@ GameObject* Component::GetGameObject() {
 }
 
 /**
- * This function should not be used in behaviors, it is for internal use only.
+ * This function should not be used in scripts, it is for internal use only.
  */
 //void Component::SetGameObject(GameObject* object) {
 //    gameObject = object;

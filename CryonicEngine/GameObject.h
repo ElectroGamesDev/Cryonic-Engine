@@ -42,25 +42,18 @@ public:
     bool IsActive() const;
     int GetId() const;
     bool active = true;
-    bool AddComponent(Component* component);
-    bool RemoveComponent(Component* component);
-    std::vector<Component*> GetComponents();
+
+    template <typename T>
+    bool AddComponent(T component);
+    template <typename T>
+    bool RemoveComponent(T component);
+    template<typename T>
+    T* GetComponent();
+
+    std::vector<Component>& GetComponents();
     GameObject& operator=(const GameObject& other);
     bool operator==(const GameObject& other) const;
     bool operator!=(const GameObject& other) const;
-
-    template<typename T>
-    T* GetComponent()
-    {
-        if (components.data() == nullptr || components.empty()) return nullptr;
-        for (auto& component : components)
-        {
-            if (component == nullptr) return nullptr;
-            T* tcomponent = dynamic_cast<T*>(component);
-            if (tcomponent) return tcomponent;
-        }
-        return nullptr;
-    }
 
     struct Transform
     {
@@ -130,5 +123,5 @@ private:
     //Material material;
     std::string name;
     int id;
-    std::vector<Component*> components;
+    std::vector<Component> components;
 };

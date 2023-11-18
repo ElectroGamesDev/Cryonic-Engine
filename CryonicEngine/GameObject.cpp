@@ -89,26 +89,54 @@ int GameObject::GetId() const
     return id;
 }
 
-bool GameObject::AddComponent(Component* component)
+template <typename T>
+T* GameObject::GetComponent()
 {
-    // Todo: Check if a component already exists first and return true or false
+    if (components.data() == nullptr || components.empty()) return nullptr;
+    for (auto& component : components)
+    {
+        if (component == nullptr) return nullptr;
+        T* tcomponent = dynamic_cast<T*>(component);
+        if (tcomponent) return tcomponent;
+    }
+    return nullptr;
+}
+
+template <typename T>
+inline bool GameObject::AddComponent(T component)
+{
+    if (GetComponent<T>() != nullptr) return false;
     components.push_back(component);
     return true;
 }
 
-bool GameObject::RemoveComponent(Component* component)
+template <typename T>
+inline bool GameObject::RemoveComponent(T component)
 {
-    // Check if component exists and return true or false
-    auto iter = std::find(components.begin(), components.end(), component);
-    if (iter != components.end())
+    auto it = std::remove(components.begin(), components.end(), component);
+    if (it != components.end())
     {
-        components.erase(iter);
-        delete component;
+        components.erase(it, components.end());
+        return true;
     }
-    return true;
+    return false;
 }
 
-std::vector<Component*> GameObject::GetComponents()
+//template <typename T>
+//T* GameObject::GetComponent()
+//{
+//    for (auto* comp : components)
+//    {
+//        if (dynamic_cast<T*>(comp) != nullptr)
+//        {
+//            return static_cast<T*>(comp);
+//        }
+//    }
+//    return nullptr;
+//}
+
+
+std::vector<Component>& GameObject::GetComponents()
 {
     return components;
 }
