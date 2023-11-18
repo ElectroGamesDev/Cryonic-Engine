@@ -298,25 +298,6 @@ void Editor::UpdateViewport()
         rlPopMatrix();
     }
 
-    // grid of cube trees on a plane to make a "world"
-    //DrawPlane(Vector3{ 0, 0, 0 }, Vector2{ 50, 50 }, BEIGE); // simple world plane
-    //float spacing = 4;
-    //int count = 5;
-
-    //for (float x = -count * spacing; x <= count * spacing; x += spacing)
-    //{
-    //    for (float z = -count * spacing; z <= count * spacing; z += spacing)
-    //    {
-    //        Vector3 pos = { x, 0.5f, z };
-
-    //        Vector3 min = { x - 0.5f,0,z - 0.5f };
-    //        Vector3 max = { x + 0.5f,1,z + 0.5f };
-
-    //        DrawCube(Vector3{ x, 1.5f, z }, 1, 1, 1, GREEN);
-    //        DrawCube(Vector3{ x, 0.5f, z }, 0.25f, 1, 0.25f, BROWN);
-    //    }
-    //}
-
     EndMode3D();
     EndTextureMode();
 }
@@ -351,19 +332,18 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 ImGui::End();
                 return;
             }
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y); // Move cursor to the bottom of the image
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
             ImGui::SetCursorPosX(nextX + 5);
-            ImGui::Text("Back");             // Text to display below the image
+            ImGui::Text("Back");
             nextX += 60;
-            ImGui::PopID(); // reset the unique ID
+            ImGui::PopID();
         }
 
         for (const auto& entry : std::filesystem::directory_iterator(fileExplorerPath))
         {
-            ImGui::PushID(entry.path().string().c_str()); // set unique ID based on the path string
+            ImGui::PushID(entry.path().string().c_str());
             std::string id = entry.path().string().c_str();
             std::string fileName = entry.path().filename().string();
-            //ConsoleLogger::InfoLog("Found " + fileName);
             if (fileName.length() > 7) {
                 fileName = fileName.substr(0, 8);
                 fileName = fileName + "..";
@@ -395,7 +375,6 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 else if (extension == ".png" || extension == ".jpg" || extension == ".webp")
                 {
                     tempTextures.push_back(new Texture2D(LoadTexture(entry.path().string().c_str())));
-                    //imageTextures[path.stem().string()] = LoadTexture(path.string().c_str());
 
                     if (rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32)))
                     {
@@ -463,9 +442,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     continue;
                 }
             }
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y); // Move cursor to the bottom of the image
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
             ImGui::SetCursorPosX(nextX - 2);
-            ImGui::Text(fileName.c_str());             // Text to display below the image
+            ImGui::Text(fileName.c_str());
 
             nextX += 60;
 
@@ -474,12 +453,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 nextX = 10;
                 nextY = nextY + 75;
             }
-            ImGui::PopID(); // reset the unique ID
+            ImGui::PopID();
         }
-        // Add a scrollable text box
-        //ImGui::BeginChild("Scrolling Region", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
-        //ImGui::Text("Scrollable Text");
-        //ImGui::EndChild();
 
         if (explorerContextMenuOpen || (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
         {
@@ -489,29 +464,22 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Create Script"))
                 {
                     explorerContextMenuOpen = false;
-                    //eventSheetEditor.eventSheetCreatorOpen = true;
-                    //eventSheetEditor.SetPath(fileExplorerPath);
                 }
                 if (ImGui::MenuItem("Create Sprite"))
                 {
                     explorerContextMenuOpen = false;
-                    //spriteEditorWindow.spriteCreatorOpen = true;
-                    //spriteEditorWindow.SetPath(fileExplorerPath);
                 }
                 if (ImGui::MenuItem("Create Material"))
                 {
                     explorerContextMenuOpen = false;
                     std::ofstream outFile(fileExplorerPath / "NewMaterial.mat");
-                    // Todo: In file explorere, show material as multi-color/rainbow square/sphere
+                    // Todo: In file explorer, show material as multi-color/rainbow square/sphere 
                     if (outFile.is_open()) {
-                        //outFile << "Hello, this is a text file!\n";
-                        //outFile << "You can write more lines here.\n";
 
                         outFile.close();
-                        //std::cout << "File created successfully.\n";
                     }
                     else {
-                        //std::cerr << "Error opening the file.\n";
+                        
                     }
                 }
 
@@ -520,7 +488,6 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Open Folder In File Explorer"))
                 {
                     explorerContextMenuOpen = false;
-                    //ConsoleLogger::InfoLog("Opened Folder: " + PathToString(fileExplorerPath));
                     Utilities::OpenPathInExplorer(fileExplorerPath);
                 }
 
@@ -940,13 +907,6 @@ void Editor::SetupViewport()
     camera.position.z = -25;
     camera.projection = CAMERA_PERSPECTIVE;
     camera.target = { 0.0f, 0.0f, 0.0f };
-
-    //Image img = GenImageChecked(256, 256, 32, 32, DARKGRAY, WHITE);
-    //GridTexture = LoadTextureFromImage(img);
-    //UnloadImage(img);
-    //GenTextureMipmaps(&GridTexture);
-    //SetTextureFilter(GridTexture, TEXTURE_FILTER_ANISOTROPIC_16X);
-    //SetTextureWrap(GridTexture, TEXTURE_WRAP_CLAMP);
 }
 
 void CloseViewport()
@@ -957,14 +917,6 @@ void CloseViewport()
 
 void Editor::InitFonts()
 {
-    //ImGuiIO& io = ImGui::GetIO();
-    //CreateFont("Familiar-Pro-Bold", 30);
-    //io.Fonts->AddFontDefault();
-    //defaultFont = io.Fonts->AddFontFromFileTTF("resources/fonts/Familiar-Pro-Bold.ttf", 30);
-    //defaultFont15p = io.Fonts->AddFontFromFileTTF("resources/fonts/Familiar-Pro-Bold.ttf", 15);
-    //markerBoldTitleFont = io.Fonts->AddFontFromFileTTF("resources/fonts/BoldMarker.ttf", 70);
-    //Imgui_ImplRaylib_BuildFontAtlas();
-
     FontManager::CreateFonts("Familiar-Pro-Bold", { 15, 18, 20, 25, 30 });
     FontManager::CreateFont("BoldMarker", 90);
 }
