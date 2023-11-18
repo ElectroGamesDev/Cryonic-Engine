@@ -89,54 +89,46 @@ int GameObject::GetId() const
     return id;
 }
 
-template <typename T>
-T* GameObject::GetComponent()
+template<typename T>
+T* GameObject::AddComponent()
 {
-    if (components.data() == nullptr || components.empty()) return nullptr;
-    for (auto& component : components)
-    {
-        if (component == nullptr) return nullptr;
-        T* tcomponent = dynamic_cast<T*>(component);
-        if (tcomponent) return tcomponent;
-    }
-    return nullptr;
+    T* newComponent = new T();
+    components.push_back(newComponent);
+    return newComponent;
 }
 
-template <typename T>
-inline bool GameObject::AddComponent(T component)
+template<typename T>
+bool GameObject::RemoveComponent()
 {
-    if (GetComponent<T>() != nullptr) return false;
-    components.push_back(component);
-    return true;
-}
-
-template <typename T>
-inline bool GameObject::RemoveComponent(T component)
-{
-    auto it = std::remove(components.begin(), components.end(), component);
-    if (it != components.end())
+    for (size_t i = 0; i < components.size(); ++i)
     {
-        components.erase(it, components.end());
-        return true;
+        T* comp = dynamic_cast<T*>(components[i]);
+        if (comp != nullptr)
+        {
+            delete comp;
+            components.erase(components.begin() + i);
+            return true;
+        }
     }
     return false;
 }
 
-//template <typename T>
-//T* GameObject::GetComponent()
-//{
-//    for (auto* comp : components)
-//    {
-//        if (dynamic_cast<T*>(comp) != nullptr)
-//        {
-//            return static_cast<T*>(comp);
-//        }
-//    }
-//    return nullptr;
-//}
+template<typename T>
+T* GameObject::GetComponent()
+{
+    for (Component* comp : components)
+    {
+        T* tcomp = dynamic_cast<T*>(comp);
+        if (tcomp != nullptr)
+        {
+            return tcomp;
+        }
+    }
+    return nullptr;
+}
 
 
-std::vector<Component>& GameObject::GetComponents()
+std::vector<Component*> GameObject::GetComponents()
 {
     return components;
 }

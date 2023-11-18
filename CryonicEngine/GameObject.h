@@ -44,13 +44,13 @@ public:
     bool active = true;
 
     template <typename T>
-    bool AddComponent(T component);
+    T* AddComponent();
     template <typename T>
-    bool RemoveComponent(T component);
+    bool RemoveComponent();
     template<typename T>
     T* GetComponent();
 
-    std::vector<Component>& GetComponents();
+    std::vector<Component*> GetComponents();
     GameObject& operator=(const GameObject& other);
     bool operator==(const GameObject& other) const;
     bool operator!=(const GameObject& other) const;
@@ -123,5 +123,5 @@ private:
     //Material material;
     std::string name;
     int id;
-    std::vector<Component> components;
+    std::vector<Component*> components;
 };
