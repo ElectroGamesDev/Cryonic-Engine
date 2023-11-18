@@ -19,6 +19,7 @@ public:
 	void RenderProperties();
 	void RenderHierarchy();
 	void RenderTopbar();
+	void RenderComponentsWin();
 	void Render();
 
 	void UpdateViewport();

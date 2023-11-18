@@ -31,13 +31,13 @@ GameObject* selectedObject = nullptr;
 
 bool explorerContextMenuOpen = false;
 bool hierarchyContextMenuOpen = false;
+bool componentsWindowOpen = false;
 
+bool resetComponentsWin = true;
 bool resetPropertiesWin = true;
 bool resetViewportWin = true;
 bool resetFileExplorerWin = true;
 bool resetHierarchy = true;
-
-bool componentsWindowOpen = false;
 
 std::filesystem::path fileExplorerPath;
 
@@ -498,6 +498,27 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
     ImGui::End();
 }
 
+void Editor::RenderComponentsWin()
+{
+    if (!componentsWindowOpen) return;
+    if (resetComponentsWin)
+    {
+        ImGui::SetNextWindowSize(ImVec2(300, 400));
+        ImGui::SetNextWindowPos(ImVec2((GetScreenWidth() - 300) / 2, (GetScreenHeight() - 400) / 2));
+        resetComponentsWin = false;
+    }
+    if (ImGui::Begin("Add Component", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NoCollapse))
+    {
+        float buttonWidth = ImGui::GetWindowWidth() - 28;
+        if (ImGui::Button("Camera", ImVec2(buttonWidth, 0)))
+        {
+            componentsWindowOpen = false;
+            resetComponentsWin = true;
+        }
+    }
+    ImGui::End();
+}
+
 void Editor::RenderProperties()
 {
     static bool show = true;
@@ -690,17 +711,7 @@ void Editor::RenderProperties()
             //}
             // Component button
             ImGui::NewLine();
-            // Calculate the button width
-            float buttonWidth = ImGui::GetWindowWidth() - 15;
-            // Calculate the width of the button text
-            float textWidth = ImGui::CalcTextSize("Add Behaviour").x;
-            // Calculate the number of spaces needed to center the text
-            int numSpaces = (int)((buttonWidth - textWidth) / ImGui::CalcTextSize(" ").x / 2);
-            // Create the centered button text
-            std::string centeredText = std::string(numSpaces, ' ') + "Add Behaviour " + std::string(numSpaces, ' ');
-
-            // Create the button with the centered text
-            if (ImGui::Button(centeredText.c_str(), ImVec2(buttonWidth, 0))) {
+            if (ImGui::Button("Add Component", ImVec2(ImGui::GetWindowWidth() - 37, 0))) {
                 componentsWindowOpen = true;
             }
         }
@@ -895,6 +906,7 @@ void Editor::Render(void)
     //RenderConsole();
     RenderFileExplorer();
     RenderTopbar();
+    RenderComponentsWin();
 }
 
 void Editor::SetupViewport()
