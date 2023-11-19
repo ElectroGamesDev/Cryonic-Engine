@@ -10,6 +10,9 @@
 void ProjectManager::CopyApiFiles(std::filesystem::path path)
 {
     std::vector<std::string> filesToCopy = { "CryonicAPI", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components" };
+     
+    if (!std::filesystem::exists(path))
+        std::filesystem::create_directory(path);
 
     for (const auto& file : std::filesystem::directory_iterator(std::filesystem::path(__FILE__).parent_path()))
     {
