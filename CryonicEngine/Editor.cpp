@@ -960,6 +960,12 @@ void Editor::Render(void)
             if (ImGui::MenuItem("Sprite Editor", "")) {}
             ImGui::EndMenu();
         }
+        if (ImGui::MenuItem("Reload API Files", "")) // Todo: Move this into settings
+        {
+            ConsoleLogger::InfoLog("Reloading API Files");
+            std::filesystem::remove_all(projectData.path / "api");
+            ProjectManager::CopyApiFiles(projectData.path / "api");
+        }
         if (ImGui::BeginMenu("Help")) {
             ImGui::EndMenu();
         }
