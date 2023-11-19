@@ -1,15 +1,11 @@
 #include "ProjectManager.h"
 #include "ConsoleLogger.h"
-//#include "CryonicEngine.h"
 #include <cstdlib>
 #include <direct.h>
 #include <filesystem>
 #include <fstream>
 #include "Scenes/SceneManager.h"
-//#include "Editor.h"
-//#include "miniz.h"
 #include "Utilities.h"
-#include <fileapi.h>
 
 void ProjectManager::CopyApiFiles(std::filesystem::path path)
 {
@@ -46,7 +42,7 @@ int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catc
     std::filesystem::create_directory(path / "Assets" / "Scripts");
     std::filesystem::create_directory(path / "Assets" / "Scenes");
 
-    SetFileAttributes((path / "api").wstring().c_str(), FILE_ATTRIBUTE_HIDDEN);
+    Utilities::HideFile(path / "api");
 
     CopyApiFiles(path / "api");
 
