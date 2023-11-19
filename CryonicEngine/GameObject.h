@@ -16,12 +16,12 @@ public:
     GameObject(int id = 0);
     ~GameObject();
 
-    Model GetModel() const;
-    void SetModel(Model model);
-    std::filesystem::path GetModelPath() const;
-    void SetModelPath(std::filesystem::path path);
-    BoundingBox GetBounds() const;
-    void SetBounds(BoundingBox bounds);
+    //Model GetModel() const;
+    //void SetModel(Model model);
+    //std::filesystem::path GetModelPath() const;
+    //void SetModelPath(std::filesystem::path path);
+    //BoundingBox GetBounds() const;
+    //void SetBounds(BoundingBox bounds);
     //Material GetMaterial() const;
     //void SetMaterial(Material material);
     //std::string GetPath() const;
@@ -44,14 +44,14 @@ public:
     bool active = true;
 
     template <typename T>
-    T* AddComponent();
+    T& AddComponent();
     template <typename T>
     bool RemoveComponent();
     template<typename T>
-    T* GetComponent();
+    T& GetComponent();
 
     std::vector<Component*> GetComponents();
-    GameObject& operator=(const GameObject& other);
+    //GameObject& operator=(const GameObject& other);
     bool operator==(const GameObject& other) const;
     bool operator!=(const GameObject& other) const;
 
@@ -117,9 +117,9 @@ public:
     }; Transform transform;
 
 private:
-    Model model;
-    std::filesystem::path modelPath;
-    BoundingBox bounds;
+    //Model model;
+    //std::filesystem::path modelPath;
+    //BoundingBox bounds;
     //Material material;
     std::string name;
     int id;

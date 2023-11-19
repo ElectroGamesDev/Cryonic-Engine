@@ -150,6 +150,7 @@
     <ClCompile Include="..\includes\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\includes\imgui\rlImGui.cpp" />
     <ClCompile Include="Components\Component.cpp" />
+    <ClCompile Include="Components\MeshRenderer.cpp" />
     <ClCompile Include="Components\ScriptComponent.cpp" />
     <ClCompile Include="ConsoleLogger.cpp" />
     <ClCompile Include="CryonicEngine.cpp" />
@@ -173,6 +174,7 @@
     <ClInclude Include="..\includes\imgui\rlImGuiColors.h" />
     <ClInclude Include="..\includes\json.hpp" />
     <ClInclude Include="Components\Component.h" />
+    <ClInclude Include="Components\MeshRenderer.h" />
     <ClInclude Include="Components\ScriptComponent.h" />
     <ClInclude Include="ConsoleLogger.h" />
     <ClInclude Include="CryonicAPI.h" />

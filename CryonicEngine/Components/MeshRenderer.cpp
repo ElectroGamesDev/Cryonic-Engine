@@ -1,38 +1,6 @@
 #include "MeshRenderer.h"
 #include "rlgl.h"
 
-void MeshRenderer::Update(float deltaTime)
-{
-    rlPushMatrix();
-
-    // build up the transform
-    Matrix transform = MatrixTranslate(gameObject.transform.GetPosition().x, gameObject.transform.GetPosition().y, gameObject.transform.GetPosition().z);
-
-    transform = MatrixMultiply(QuaternionToMatrix(gameObject.transform.GetRotation()), transform);
-
-    transform = MatrixMultiply(MatrixScale(gameObject.transform.GetScale().x, gameObject.transform.GetScale().y, gameObject.transform.GetScale().z), transform);
-
-    // apply the transform
-    rlMultMatrixf(MatrixToFloat(transform));
-
-    // draw model
-    if ((std::filesystem::exists(gameObject.GetModelPath())))
-        DrawModel(gameObject.GetModel(), Vector3Zero(), 1, WHITE);
-    else if (gameObject.GetModelPath() == "Cube")
-        DrawCube(Vector3Zero(), 1, 1, 1, LIGHTGRAY);
-    else if (gameObject.GetModelPath() == "Plane")
-        DrawPlane(Vector3Zero(), Vector2{ 1,1 }, LIGHTGRAY);
-    else if (gameObject.GetModelPath() == "Sphere")
-        DrawSphere(Vector3Zero(), 1, LIGHTGRAY);
-    else
-    {
-        // Invalid model path or empty object
-    }
-
-    rlPopMatrix();
-}
-
-
 Model MeshRenderer::GetModel() const
 {
     return model;
@@ -62,4 +30,40 @@ BoundingBox MeshRenderer::GetBounds() const
 void MeshRenderer::SetBounds(BoundingBox bounds)
 {
     this->bounds = bounds;
+}
+
+void MeshRenderer::Update(float deltaTime)
+{
+    rlPushMatrix();
+
+    // build up the transform
+    Matrix transform = MatrixTranslate(gameObject.transform.GetPosition().x, gameObject.transform.GetPosition().y, gameObject.transform.GetPosition().z);
+
+    transform = MatrixMultiply(QuaternionToMatrix(gameObject.transform.GetRotation()), transform);
+
+    transform = MatrixMultiply(MatrixScale(gameObject.transform.GetScale().x, gameObject.transform.GetScale().y, gameObject.transform.GetScale().z), transform);
+
+    // apply the transform
+    rlMultMatrixf(MatrixToFloat(transform));
+
+    // draw model
+    if ((std::filesystem::exists(GetModelPath())))
+        DrawModel(GetModel(), Vector3Zero(), 1, WHITE);
+    else if (GetModelPath() == "Cube")
+        DrawCube(Vector3Zero(), 1, 1, 1, LIGHTGRAY);
+    else if (GetModelPath() == "Plane")
+        DrawPlane(Vector3Zero(), Vector2{ 1,1 }, LIGHTGRAY);
+    else if (GetModelPath() == "Sphere")
+        DrawSphere(Vector3Zero(), 1, LIGHTGRAY);
+    else
+    {
+        // Invalid model path
+    }
+
+    rlPopMatrix();
+}
+
+void MeshRenderer::Destroy()
+{
+    UnloadModel(GetModel());
 }

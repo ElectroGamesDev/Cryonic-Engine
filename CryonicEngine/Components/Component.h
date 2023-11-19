@@ -7,24 +7,26 @@
 class Component
 {
 public:
-    //Component(GameObject& obj);
+    Component(GameObject& obj) : gameObject(obj) {};
     virtual ~Component() {};
     template<typename T>
     T& GetComponent()
     {
-        return _gameObject.GetComponent<T>();
+        return gameObject.GetComponent<T>();
     }
     GameObject& GetGameObject()
     {
-        return _gameObject;
+        return gameObject;
     }
 
-protected:
+    bool runInEditor = false;
+    bool active = true;
+    void SetActive(bool active) { this->active = active; };
+    bool IsActive() const { return active; };
+
     virtual void Start() {};
     virtual void Update(float deltaTime) {};
     virtual void Destroy() {};
 
-private:
-    GameObject& _gameObject;
-    friend class Scene;
+    GameObject& gameObject;
 };

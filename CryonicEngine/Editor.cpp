@@ -13,6 +13,7 @@
 #include <fstream>
 #include "Utilities.h"
 #include <variant>
+#include "Components/MeshRenderer.h"
 
 const float DEG = 180.0f / PI;
 const float RAD = PI / 180.0f;
@@ -223,9 +224,9 @@ void Editor::UpdateViewport()
 
                 GameObject gameObject;
                 Material material;
-                //gameObject.SetModel(LoadModel((folderPath / filename).string().c_str()));
-                gameObject.SetModelPath(folderPath / filename);
-                gameObject.SetModel(LoadModel(gameObject.GetModelPath().string().c_str()));
+                MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                meshRenderer.SetModelPath(folderPath / filename);
+                meshRenderer.SetModel(LoadModel(meshRenderer.GetModelPath().string().c_str()));
                 gameObject.transform.SetPosition({ 0,0,0 });
                 //gameObject.SetRealSize(gameObject.GetModel().s);
                 gameObject.transform.SetScale({ 1,1,1 });
@@ -269,34 +270,11 @@ void Editor::UpdateViewport()
     for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
         if (!gameObject.IsActive()) continue;
-
-        rlPushMatrix();
-
-        // build up the transform
-        Matrix transform = MatrixTranslate(gameObject.transform.GetPosition().x, gameObject.transform.GetPosition().y, gameObject.transform.GetPosition().z);
-
-        transform = MatrixMultiply(QuaternionToMatrix(gameObject.transform.GetRotation()), transform);
-
-        transform = MatrixMultiply(MatrixScale(gameObject.transform.GetScale().x, gameObject.transform.GetScale().y, gameObject.transform.GetScale().z), transform);
-
-        // apply the transform
-        rlMultMatrixf(MatrixToFloat(transform));
-
-        // draw model
-        if ((std::filesystem::exists(gameObject.GetModelPath())))
-            DrawModel(gameObject.GetModel(), Vector3Zero(), 1, WHITE);
-        else if (gameObject.GetModelPath() == "Cube")
-            DrawCube(Vector3Zero(), 1, 1, 1, LIGHTGRAY);
-        else if (gameObject.GetModelPath() == "Plane")
-            DrawPlane(Vector3Zero(), Vector2{1,1}, LIGHTGRAY);
-        else if (gameObject.GetModelPath() == "Sphere")
-            DrawSphere(Vector3Zero(), 1, LIGHTGRAY);
-        else
+        for (Component* component : gameObject.GetComponents())
         {
-            // Invalid model path or empty object
+            if (!component->IsActive() || !component->runInEditor) continue;
+            component->Update(GetFrameTime());
         }
-
-        rlPopMatrix();
     }
 
     EndMode3D();
@@ -866,12 +844,16 @@ void Editor::RenderHierarchy()
                 if (objectToCreate != "")
                 {
                     GameObject gameObject;
-                    gameObject.SetModelPath(objectToCreate);
                     gameObject.transform.SetPosition({ 0,0,0 });
                     gameObject.transform.SetScale({ 1,1,1 });
                     gameObject.transform.SetRotation(QuaternionIdentity());
                     if (objectToCreate == "Empty") gameObject.SetName("GameObject");
-                    else gameObject.SetName(objectToCreate);
+                    else
+                    {
+                        gameObject.SetName(objectToCreate);
+                        MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                        meshRenderer.SetModelPath(objectToCreate);
+                    }
 
                     SceneManager::GetActiveScene()->AddGameObject(gameObject);
 
@@ -1141,10 +1123,12 @@ void Editor::Cleanup()
     }
     tempRenderTextures.clear();
 
-    for (GameObject gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+    for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
-        if (std::filesystem::exists(gameObject.GetModelPath()))
-            UnloadModel(gameObject.GetModel());
+        for (Component* component : gameObject.GetComponents())
+        {
+            component->Destroy();
+        }
     }
     ImGui_ImplRaylib_Shutdown();
     ImGui::DestroyContext();

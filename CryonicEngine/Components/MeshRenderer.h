@@ -5,9 +5,13 @@
 class MeshRenderer : public Component
 {
 public:
-	void Start() override;
+	MeshRenderer(GameObject& obj) : Component(obj)
+	{
+		runInEditor = true;
+	}
+	void Start() override {};
 	void Update(float deltaTime) override;
-	void Destroy() override {};
+	void Destroy() override;
 
 	Model GetModel() const;
 	void SetModel(Model model);

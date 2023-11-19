@@ -12,36 +12,36 @@ GameObject::GameObject(int id)
     this->id = id;
 }
 
-Model GameObject::GetModel() const
-{
-    return model;
-}
-
-void GameObject::SetModel(Model model)
-{
-    this->model = model;
-    this->bounds = GetMeshBoundingBox(model.meshes[0]); // Todo: Set the correct scale depending on size variable.
-}
-
-std::filesystem::path GameObject::GetModelPath() const
-{
-    return modelPath;
-}
-
-void GameObject::SetModelPath(std::filesystem::path path)
-{
-    this->modelPath = path;
-}
-
-BoundingBox GameObject::GetBounds() const
-{
-    return bounds;
-}
-
-void GameObject::SetBounds(BoundingBox bounds)
-{
-    this->bounds = bounds;
-}
+//Model GameObject::GetModel() const
+//{
+//    return model;
+//}
+//
+//void GameObject::SetModel(Model model)
+//{
+//    this->model = model;
+//    this->bounds = GetMeshBoundingBox(model.meshes[0]); // Todo: Set the correct scale depending on size variable.
+//}
+//
+//std::filesystem::path GameObject::GetModelPath() const
+//{
+//    return modelPath;
+//}
+//
+//void GameObject::SetModelPath(std::filesystem::path path)
+//{
+//    this->modelPath = path;
+//}
+//
+//BoundingBox GameObject::GetBounds() const
+//{
+//    return bounds;
+//}
+//
+//void GameObject::SetBounds(BoundingBox bounds)
+//{
+//    this->bounds = bounds;
+//}
 
 bool GameObject::IsActive() const
 {
@@ -90,7 +90,7 @@ int GameObject::GetId() const
 }
 
 template<typename T>
-T* GameObject::AddComponent()
+T& GameObject::AddComponent()
 {
     T* newComponent = new T();
     components.push_back(newComponent);
@@ -114,7 +114,7 @@ bool GameObject::RemoveComponent()
 }
 
 template<typename T>
-T* GameObject::GetComponent()
+T& GameObject::GetComponent()
 {
     for (Component* comp : components)
     {
@@ -143,17 +143,14 @@ bool GameObject::operator!=(const GameObject& other) const
     return this->id != other.id;
 }
 
-GameObject& GameObject::operator=(const GameObject& other) {
-    if (this != &other) {
-        model = other.model;
-        modelPath = other.modelPath;
-        bounds = other.bounds;
-        name = other.name;
-        id = other.id;
-        transform = other.transform;
-    }
-    return *this;
-}
+//GameObject& GameObject::operator=(const GameObject& other) {
+//    if (this != &other) {
+//        name = other.name;
+//        id = other.id;
+//        transform = other.transform;
+//    }
+//    return *this;
+//}
 
 GameObject::~GameObject()
 {
