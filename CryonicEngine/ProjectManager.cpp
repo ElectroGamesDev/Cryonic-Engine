@@ -7,25 +7,25 @@
 #include "Scenes/SceneManager.h"
 #include "Utilities.h"
 
-void ProjectManager::CopyApiFiles(std::filesystem::path path)
+void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
     std::vector<std::string> filesToCopy = { "CryonicAPI", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components" };
      
-    if (!std::filesystem::exists(path))
-        std::filesystem::create_directories(path);
+    if (!std::filesystem::exists(destination))
+        std::filesystem::create_directories(destination);
 
-    for (const auto& file : std::filesystem::directory_iterator(std::filesystem::path(__FILE__).parent_path()))
+    for (const auto& file : std::filesystem::directory_iterator(source))
     {
         if (std::find(filesToCopy.begin(), filesToCopy.end(), file.path().stem()) != filesToCopy.end())
         {
             if (file.is_directory())
             {
-                if (!std::filesystem::exists(path / file.path().filename()))
-                    std::filesystem::create_directory(path / file.path().filename());
-                std::filesystem::copy(file.path(), path / file.path().filename());
+                if (!std::filesystem::exists(destination / file.path().filename()))
+                    std::filesystem::create_directory(destination / file.path().filename());
+                std::filesystem::copy(file.path(), destination / file.path().filename());
             }
             else
-                std::filesystem::copy(file.path(), path);
+                std::filesystem::copy(file.path(), destination);
         }
     }
 }
@@ -47,7 +47,7 @@ int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catc
 
     Utilities::HideFile(path / "api");
 
-    CopyApiFiles(path / "api");
+    CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), path / "api");
 
     switch (projectData.templateData._template)
     {
@@ -180,8 +180,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .js
         return;
     }
 
-    //CopyApiFiles(buildPath / "Source");
-    std::filesystem::copy(projectData.path / "api", buildPath / "Source");
+    CopyApiFiles(projectData.path / "api", buildPath / "Source");
 
     // Saves original path, sets new current path, and then run cmake and mingw32-make
     std::filesystem::path originalPath = std::filesystem::current_path();

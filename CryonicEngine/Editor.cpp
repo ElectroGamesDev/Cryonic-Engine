@@ -951,7 +951,7 @@ void Editor::Render(void)
         }
         if (ImGui::BeginMenu("Edit")) {
             if (ImGui::MenuItem("Project Settings", "")) {}
-            if (ImGui::MenuItem("Reload API Files", "")) // Todo: Move this into settings
+            if (ImGui::MenuItem("Reload API Files", "")) // Todo: Move this into settings or help
             {
                 ConsoleLogger::InfoLog("Reloading API Files");
                 if (!std::filesystem::exists(projectData.path / "api"))
@@ -960,7 +960,7 @@ void Editor::Render(void)
                     Utilities::HideFile(projectData.path / "api");
                 }
                 std::filesystem::remove_all(projectData.path / "api");
-                ProjectManager::CopyApiFiles(projectData.path / "api");
+                ProjectManager::CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), projectData.path / "api");
             }
             ImGui::EndMenu();
         }
