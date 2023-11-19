@@ -954,6 +954,11 @@ void Editor::Render(void)
             if (ImGui::MenuItem("Reload API Files", "")) // Todo: Move this into settings
             {
                 ConsoleLogger::InfoLog("Reloading API Files");
+                if (!std::filesystem::exists(projectData.path / "api"))
+                {
+                    std::filesystem::create_directories(projectData.path / "api");
+                    Utilities::HideFile(projectData.path / "api");
+                }
                 std::filesystem::remove_all(projectData.path / "api");
                 ProjectManager::CopyApiFiles(projectData.path / "api");
             }

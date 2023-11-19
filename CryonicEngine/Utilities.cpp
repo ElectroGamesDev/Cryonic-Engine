@@ -1,8 +1,9 @@
 #include "Utilities.h"
 #include <ShlObj.h>
 #include <fileapi.h>
+#include "ConsoleLogger.h"
 
-void Utilities::HideFile(std::filesystem::path path)
+void Utilities::HideFile(std::filesystem::path path) // Todo: Figure out why the file isn't being hidden
 {
     SetFileAttributes(path.wstring().c_str(), FILE_ATTRIBUTE_HIDDEN);
 }
