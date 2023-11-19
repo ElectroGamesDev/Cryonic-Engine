@@ -1,5 +1,11 @@
 #include "Utilities.h"
 #include <ShlObj.h>
+#include <fileapi.h>
+
+void Utilities::HideFile(std::filesystem::path path)
+{
+    SetFileAttributes(path.wstring().c_str(), FILE_ATTRIBUTE_HIDDEN);
+}
 
 void Utilities::OpenPathInExplorer(std::filesystem::path path)
 {
