@@ -1,6 +1,6 @@
 # Cryonic Engine
 
-Cryonic is a simple & flexible 3D game engine designed to facilitate game development with a focus on simplicity and flexibility.
+Cryonic Engine is a simple & flexible 3D game engine designed to facilitate game development with a focus on simplicity and flexibility.
 
 ## Features
 
