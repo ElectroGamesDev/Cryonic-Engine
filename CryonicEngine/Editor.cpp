@@ -319,6 +319,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
     if (ImGui::Begin("File Explorer", nullptr, windowFlags))
     {
+        //ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 10, false));
         // Back Folder/Button if not in Assets folder
         if (fileExplorerPath != projectData.path / "Assets")
         {
@@ -997,7 +998,8 @@ void CloseViewport()
 
 void Editor::InitFonts()
 {
-    FontManager::CreateFonts("Familiar-Pro-Bold", { 15, 18, 20, 25, 30 });
+    // First font created is the default folt. This should be Familiar-Pro-Bold 15
+    FontManager::CreateFonts("Familiar-Pro-Bold", { 15, 10, 18, 20, 25, 30 });
     FontManager::CreateFont("BoldMarker", 90);
 }
 

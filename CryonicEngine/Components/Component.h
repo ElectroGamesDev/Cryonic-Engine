@@ -7,19 +7,22 @@
 class Component
 {
 public:
-    //Component(GameObject* obj);
+    //Component(GameObject& obj);
     virtual ~Component() {};
     template<typename T>
     T& GetComponent()
     {
         return _gameObject.GetComponent<T>();
     }
-    GameObject* GetGameObject();
+    GameObject& GetGameObject()
+    {
+        return _gameObject;
+    }
 
 protected:
-    virtual void Start();
-    virtual void Update(float deltaTime);
-    virtual void Destroy();
+    virtual void Start() {};
+    virtual void Update(float deltaTime) {};
+    virtual void Destroy() {};
 
 private:
     GameObject& _gameObject;

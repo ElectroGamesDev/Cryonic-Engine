@@ -9,12 +9,12 @@ public:
     static void WarningLog(const std::string& message, bool devMessage = true);
     static void ErrorLog(const std::string& message, bool devMessage = true);
 
-    static enum class ConsoleLogType {
+    enum class ConsoleLogType {
         WARNING,
         INFO,
         ERROR_
     };
-    static struct ConsoleLog {
+    struct ConsoleLog {
         std::string message;
         ConsoleLogType type;
     };

@@ -10,6 +10,11 @@ void ScriptComponent::Update(float deltaTime)
 
 }
 
+void ScriptComponent::Destroy()
+{
+
+}
+
 void ScriptComponent::SetPath(std::filesystem::path path)
 {
 	_path = path;
