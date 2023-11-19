@@ -175,6 +175,7 @@
     <ClInclude Include="Components\Component.h" />
     <ClInclude Include="Components\ScriptComponent.h" />
     <ClInclude Include="ConsoleLogger.h" />
+    <ClInclude Include="CryonicAPI.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="GameObject.h" />
