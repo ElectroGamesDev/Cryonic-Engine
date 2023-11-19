@@ -181,7 +181,8 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .js
         return;
     }
 
-    CopyApiFiles(buildPath / "Source");
+    //CopyApiFiles(buildPath / "Source");
+    std::filesystem::copy(projectData.path / "api", buildPath / "Source");
 
     // Saves original path, sets new current path, and then run cmake and mingw32-make
     std::filesystem::path originalPath = std::filesystem::current_path();
