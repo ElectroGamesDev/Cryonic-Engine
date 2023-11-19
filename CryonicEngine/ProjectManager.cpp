@@ -9,6 +9,27 @@
 //#include "Editor.h"
 //#include "miniz.h"
 #include "Utilities.h"
+#include <fileapi.h>
+
+void ProjectManager::CopyApiFiles(std::filesystem::path path)
+{
+    std::vector<std::string> filesToCopy = { "CryonicAPI", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components" };
+
+    for (const auto& file : std::filesystem::directory_iterator(std::filesystem::path(__FILE__).parent_path()))
+    {
+        if (std::find(filesToCopy.begin(), filesToCopy.end(), file.path().stem()) != filesToCopy.end())
+        {
+            if (file.is_directory())
+            {
+                if (!std::filesystem::exists(path / file.path().filename()))
+                    std::filesystem::create_directory(path / file.path().filename());
+                std::filesystem::copy(file.path(), path / file.path().filename());
+            }
+            else
+                std::filesystem::copy(file.path(), path);
+        }
+    }
+}
 
 int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catch
 {
@@ -18,11 +39,16 @@ int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catc
     std::filesystem::create_directory(path);
     if (!std::filesystem::exists(path)) return 1;
 
+    std::filesystem::create_directory(path / "api");
     std::filesystem::create_directory(path / "Settings");
     std::filesystem::create_directory(path / "Plugins");
     std::filesystem::create_directory(path / "Assets");
     std::filesystem::create_directory(path / "Assets" / "Scripts");
     std::filesystem::create_directory(path / "Assets" / "Scenes");
+
+    SetFileAttributes((path / "api").wstring().c_str(), FILE_ATTRIBUTE_HIDDEN);
+
+    CopyApiFiles(path / "api");
 
     switch (projectData.templateData._template)
     {
@@ -62,25 +88,6 @@ void ProjectManager::CleanupBuildFolder(std::filesystem::path path)
     catch (const std::exception& e) {
         ConsoleLogger::ErrorLog("Build Log - Error during build cleanup: " + (std::string)e.what());
         return;
-    }
-}
-
-void ProjectManager::CopyApiFiles(std::filesystem::path path)
-{
-    std::vector<std::string> filesToCopy = { "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components"};
-
-    for (const auto& file : std::filesystem::directory_iterator(std::filesystem::path(__FILE__).parent_path()))
-    {
-        if (std::find(filesToCopy.begin(), filesToCopy.end(), file.path().stem()) != filesToCopy.end())
-        {
-            if (file.is_directory())
-            {
-                //std::filesystem::create_directory(path / "Source" / file.path().filename());
-                std::filesystem::copy(file.path(), path / "Source" / file.path().filename());
-            }
-            else
-                std::filesystem::copy(file.path(), path / "Source");
-        }
     }
 }
 
@@ -174,7 +181,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .js
         return;
     }
 
-    CopyApiFiles(buildPath);
+    CopyApiFiles(buildPath / "Source");
 
     // Saves original path, sets new current path, and then run cmake and mingw32-make
     std::filesystem::path originalPath = std::filesystem::current_path();
