@@ -9,6 +9,9 @@
 #include <algorithm>
 #include <cctype>
 #include "json.hpp"
+#include "../Components/Component.h"
+
+#include "../Components/MeshRenderer.h"
 
 using json = nlohmann::json;
 
@@ -45,15 +48,35 @@ bool SceneManager::SaveScene(Scene* scene)
         //    gameObjectData["texture_path"] = object.GetPath();
         //}
 
-        gameObjectData["model_path"] = object.GetModelPath().string();
+        //gameObjectData["model_path"] = object.GetModelPath().string();
         gameObjectData["name"] = object.GetName();
         gameObjectData["position"] = { object.transform.GetPosition().x, object.transform.GetPosition().y, object.transform.GetPosition().z };
         //gameObjectData["real_size"] = { object.GetRealSize().x, object.GetRealSize().y, object.GetRealSize().z };
         gameObjectData["size"] = { object.transform.GetScale().x, object.transform.GetScale().y, object.transform.GetScale().z};
         gameObjectData["rotation"] = { object.transform.GetRotation().x, object.transform.GetRotation().y, object.transform.GetRotation().z, object.transform.GetRotation().w };
         gameObjectData["id"] = object.GetId();
+
         //gameObjectData["tint"] = { object.GetTint().Value.x, object.GetTint().Value.y, object.GetTint().Value.z, object.GetTint().Value.w };
         //gameObjectData["z_order"] = object.GetZOrder();
+
+        // Save components
+        json componentsData;
+        for (Component* component : object.GetComponents())
+        {
+            json componentData;
+            componentData["name"] = component->name;
+            componentData["active"] = component->IsActive();
+            componentData["runInEditor"] = component->runInEditor;
+
+            // Temporary solution
+            if (dynamic_cast<MeshRenderer*>(component))
+            {
+                componentData["model_path"] = dynamic_cast<MeshRenderer*>(component)->GetModelPath();
+            }
+
+            componentsData.push_back(componentData);
+        }
+        gameObjectData["components"] = componentsData;
 
         // Add game object data to scene data
         sceneData["game_objects"].push_back(gameObjectData);
@@ -148,8 +171,8 @@ bool SceneManager::LoadScene(const std::filesystem::path& filePath)
         std::string objectName = gameObjectData["name"];
 
         // Load name, position, real size, size, rotation, id, tint, zOrder
-        gameObject.SetModelPath(gameObjectData["model_path"]);
-        gameObject.SetModel(LoadModel(gameObject.GetModelPath().string().c_str()));
+        //gameObject.SetModelPath(gameObjectData["model_path"]);
+        //gameObject.SetModel(LoadModel(gameObject.GetModelPath().string().c_str()));
         gameObject.SetName(gameObjectData["name"]);
         gameObject.transform.SetPosition(Vector3{ gameObjectData["position"][0], gameObjectData["position"][1], gameObjectData["position"][2] });
         //gameObject.transform.SetRealSize(Vector3{gameObjectData["real_size"][0], gameObjectData["real_size"][1], gameObjectData["real_size"][2] });
@@ -158,6 +181,19 @@ bool SceneManager::LoadScene(const std::filesystem::path& filePath)
         gameObject.transform.SetRotation(Quaternion{ gameObjectData["rotation"][0], gameObjectData["rotation"][1], gameObjectData["rotation"][2], gameObjectData["rotation"][3]});
         //gameObject.SetTint(ImVec4(gameObjectData["tint"][0], gameObjectData["tint"][1], gameObjectData["tint"][2], gameObjectData["tint"][3]));
         //gameObject.SetZOrder(gameObjectData["z_order"]);
+
+        // Load components
+        for (const auto& componentData : gameObjectData["components"])
+        {
+            // Temporary solution
+            if (componentData["name"] == "MeshRenderer")
+            {
+                MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                meshRenderer.gameObject = gameObject;
+                meshRenderer.SetModelPath(componentData["model_path"]);
+                meshRenderer.SetModel(LoadModel(meshRenderer.GetModelPath().string().c_str()));
+            }
+        }
 
         // Add game object to scene
         scene.AddGameObject(gameObject);

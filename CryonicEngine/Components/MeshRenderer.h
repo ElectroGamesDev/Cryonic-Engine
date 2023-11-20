@@ -8,6 +8,7 @@ public:
 	MeshRenderer(GameObject& obj) : Component(obj)
 	{
 		runInEditor = true;
+		name = "MeshRenderer";
 	}
 	void Start() override {};
 	void Update(float deltaTime) override;

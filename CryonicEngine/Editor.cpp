@@ -729,32 +729,28 @@ void Editor::RenderProperties()
             //if (ImGui::InputText("##ObjectATint", aBufferTint, sizeof(aBufferTint), ImGuiInputTextFlags_EnterReturnsTrue)) {
             //    std::get<GameObject*>(objectInProperties)->SetTint(ImColor(std::get<GameObject*>(objectInProperties)->GetTint().Value.x, std::get<GameObject*>(objectInProperties)->GetTint().Value.y, std::get<GameObject*>(objectInProperties)->GetTint().Value.z, std::stof(aBufferTint) / 255));
             //}
-            // Components
-            //int behaviourNum = 0;
-            //for (Behaviour* behaviour : std::get<GameObject*>(objectInProperties)->GetBehaviours())
-            //{
-            //    behaviourNum++;
-            //    float buttonWidth = ImGui::GetWindowWidth() - 15;
-            //    float textWidth = ImGui::CalcTextSize(behaviour->GetName().c_str()).x;
-            //    int numSpaces = (int)((buttonWidth - textWidth) / ImGui::CalcTextSize(" ").x / 2);
-            //    std::string centeredText = std::string(numSpaces, ' ') + behaviour->GetName().c_str() + std::string(numSpaces, ' ');
-            //    ImGui::Separator();
-            //    //ImGui::NewLine();
-            //    //ImGui::CollapseButton();
-            //    ImGui::Text(centeredText.c_str());
-            //    ImGui::SameLine();
+             
+            //Components
+            int componentsNum = 0;
+            for (Component* component : std::get<GameObject*>(objectInProperties)->GetComponents())
+            {
+                componentsNum++;
+                float buttonWidth = ImGui::GetWindowWidth() - 15;
+                ImGui::Separator();
+                ImGui::Text(component->name.c_str());
+                ImGui::SameLine();
 
-            //    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0)); // Set button color to transparent
-            //    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0)); // Set button hover color to transparent
-            //    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0)); // Set button active color to transparent
-            //    ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 40);
-            //    if (ImGui::Button(("X##" + std::to_string(behaviourNum)).c_str()))
-            //    {
-            //        std::get<GameObject*>(objectInProperties)->RemoveBehaviour(behaviour);
-            //    }
-            //    ImGui::PopStyleColor(3);
-            //    // Configeration properties here
-            //}
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 40);
+                if (ImGui::Button(("X##" + std::to_string(componentsNum)).c_str()))
+                {
+                    //std::get<GameObject*>(objectInProperties)->RemoveComponent<component>();
+                }
+                ImGui::PopStyleColor(3);
+                // Configeration properties here
+            }
             // Component button
             ImGui::NewLine();
             if (ImGui::Button("Add Component", ImVec2(ImGui::GetWindowWidth() - 37, 0))) {
@@ -851,8 +847,9 @@ void Editor::RenderHierarchy()
                     else
                     {
                         gameObject.SetName(objectToCreate);
-                        MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                        MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
                         meshRenderer.SetModelPath(objectToCreate);
+                        meshRenderer.gameObject = gameObject;
                     }
 
                     SceneManager::GetActiveScene()->AddGameObject(gameObject);

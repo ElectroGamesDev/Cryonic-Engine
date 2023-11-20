@@ -89,13 +89,13 @@ int GameObject::GetId() const
     return id;
 }
 
-template<typename T>
-T& GameObject::AddComponent()
-{
-    T* newComponent = new T();
-    components.push_back(newComponent);
-    return newComponent;
-}
+//template<typename T>
+//T& GameObject::AddComponent()
+//{
+//    T* newComponent = new T();
+//    components.push_back(newComponent);
+//    return newComponent;
+//}
 
 template<typename T>
 bool GameObject::RemoveComponent()

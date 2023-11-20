@@ -18,7 +18,8 @@ public:
     {
         return gameObject;
     }
-
+    
+    std::string name;
     bool runInEditor = false;
     bool active = true;
     void SetActive(bool active) { this->active = active; };

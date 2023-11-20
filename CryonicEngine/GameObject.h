@@ -44,7 +44,11 @@ public:
     bool active = true;
 
     template <typename T>
-    T& AddComponent();
+    T& AddComponent() {
+        T* newComponent = new T(*this);
+        components.push_back(newComponent);
+        return *newComponent;
+    }
     template <typename T>
     bool RemoveComponent();
     template<typename T>
