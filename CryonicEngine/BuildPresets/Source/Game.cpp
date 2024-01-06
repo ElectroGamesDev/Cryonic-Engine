@@ -14,7 +14,7 @@ int main(void)
     InitWindow(GetScreenWidth(), GetScreenHeight(), ("Game Name Here"));
     ToggleFullscreen();
     SetWindowMinSize(100, 100);
-    SetTargetFPS(144); // Todo: Set target FPS to monitor refresh rate and handle editor being moved across monitors or just take the higher refresh rate
+    //SetTargetFPS(144);
 	
 	SceneManager::LoadScene(std::filesystem::current_path() / "Scenes" / "Default.scene");
 	SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());

@@ -189,11 +189,12 @@ bool SceneManager::LoadScene(const std::filesystem::path& filePath)
             if (componentData["name"] == "MeshRenderer")
             {
                 MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
-                meshRenderer.gameObject = gameObject;
+                meshRenderer.gameObject = &gameObject;
                 meshRenderer.SetModelPath(componentData["model_path"]);
                 meshRenderer.SetModel(LoadModel(meshRenderer.GetModelPath().string().c_str()));
             }
         }
+
 
         // Add game object to scene
         scene.AddGameObject(gameObject);
@@ -209,6 +210,14 @@ bool SceneManager::LoadScene(const std::filesystem::path& filePath)
     {
         AddScene(scene);
         SetActiveScene(&GetScenes()->back());
+
+        for (GameObject& gameObject : GetActiveScene()->GetGameObjects())
+        {
+            for (Component* component : gameObject.GetComponents())
+            {
+                component->gameObject = &gameObject;
+            }
+        }
     }
     ConsoleLogger::InfoLog("The scene \"" + filePath.stem().string() + "\" has been loaded");
     return true;

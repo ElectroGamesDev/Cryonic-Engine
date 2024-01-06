@@ -5,7 +5,7 @@
 class MeshRenderer : public Component
 {
 public:
-	MeshRenderer(GameObject& obj) : Component(obj)
+	MeshRenderer(GameObject* obj) : Component(obj)
 	{
 		runInEditor = true;
 		name = "MeshRenderer";
@@ -23,6 +23,7 @@ public:
 
 private:
 	Model model;
+	bool modelSet = false;
 	std::filesystem::path modelPath;
 	BoundingBox bounds;
 };

@@ -10,6 +10,7 @@ void MeshRenderer::SetModel(Model model)
 {
     this->model = model;
     this->bounds = GetMeshBoundingBox(model.meshes[0]); // Todo: Set the correct scale depending on size variable.
+    this->modelSet = true;
 }
 
 std::filesystem::path MeshRenderer::GetModelPath() const
@@ -37,11 +38,11 @@ void MeshRenderer::Update(float deltaTime)
     rlPushMatrix();
 
     // build up the transform
-    Matrix transform = MatrixTranslate(gameObject.transform.GetPosition().x, gameObject.transform.GetPosition().y, gameObject.transform.GetPosition().z);
+    Matrix transform = MatrixTranslate(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z);
 
-    transform = MatrixMultiply(QuaternionToMatrix(gameObject.transform.GetRotation()), transform);
+    transform = MatrixMultiply(QuaternionToMatrix(gameObject->transform.GetRotation()), transform);
 
-    transform = MatrixMultiply(MatrixScale(gameObject.transform.GetScale().x, gameObject.transform.GetScale().y, gameObject.transform.GetScale().z), transform);
+    transform = MatrixMultiply(MatrixScale(gameObject->transform.GetScale().x, gameObject->transform.GetScale().y, gameObject->transform.GetScale().z), transform);
 
     // apply the transform
     rlMultMatrixf(MatrixToFloat(transform));
@@ -65,5 +66,6 @@ void MeshRenderer::Update(float deltaTime)
 
 void MeshRenderer::Destroy()
 {
-    UnloadModel(GetModel());
+    if (modelSet)
+        UnloadModel(GetModel());
 }

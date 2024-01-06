@@ -238,6 +238,11 @@ void Editor::UpdateViewport()
 
                 SceneManager::GetActiveScene()->AddGameObject(gameObject);
 
+                for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back().GetComponents())
+                {
+                    component->gameObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
+                }
+
                 selectedObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
                 objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects().back();
 
@@ -849,10 +854,14 @@ void Editor::RenderHierarchy()
                         gameObject.SetName(objectToCreate);
                         MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
                         meshRenderer.SetModelPath(objectToCreate);
-                        meshRenderer.gameObject = gameObject;
                     }
 
                     SceneManager::GetActiveScene()->AddGameObject(gameObject);
+
+                    for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back().GetComponents())
+                    {
+                        component->gameObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
+                    }
 
                     selectedObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
                     objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects().back();
