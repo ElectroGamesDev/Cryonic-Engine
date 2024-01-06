@@ -5,6 +5,7 @@
 #include "ConsoleLogger.h"
 #include "Scenes/SceneManager.h"
 #include "imgui_impl_raylib.h"
+#include "Components/Component.h"
 
 Camera camera = { 0 };
 
@@ -37,34 +38,11 @@ int main(void)
 		for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 		{
 			if (!gameObject.IsActive()) continue;
-
-			rlPushMatrix();
-
-			// build up the transform
-			Matrix transform = MatrixTranslate(gameObject.transform.GetPosition().x, gameObject.transform.GetPosition().y, gameObject.transform.GetPosition().z);
-
-			transform = MatrixMultiply(QuaternionToMatrix(gameObject.transform.GetRotation()), transform);
-
-			transform = MatrixMultiply(MatrixScale(gameObject.transform.GetScale().x, gameObject.transform.GetScale().y, gameObject.transform.GetScale().z), transform);
-
-			// apply the transform
-			rlMultMatrixf(MatrixToFloat(transform));
-
-			// draw model
-			if ((std::filesystem::exists(gameObject.GetModelPath())))
-				DrawModel(gameObject.GetModel(), Vector3Zero(), 1, WHITE);
-			else if (gameObject.GetModelPath() == "Cube")
-				DrawCube(Vector3Zero(), 1, 1, 1, LIGHTGRAY);
-			else if (gameObject.GetModelPath() == "Plane")
-				DrawPlane(Vector3Zero(), Vector2{1,1}, LIGHTGRAY);
-			else if (gameObject.GetModelPath() == "Sphere")
-				DrawSphere(Vector3Zero(), 1, LIGHTGRAY);
-			else
+			for (Component* component : gameObject.GetComponents())
 			{
-				// Invalid model path or empty object
+				if (!component->IsActive() || !component->runInEditor) continue;
+				component->Update(GetFrameTime());
 			}
-
-			rlPopMatrix();
 		}
 		
 		EndMode3D();
