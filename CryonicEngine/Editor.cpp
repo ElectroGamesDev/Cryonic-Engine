@@ -286,8 +286,10 @@ void Editor::UpdateViewport()
         if (!gameObject.IsActive()) continue;
         for (Component* component : gameObject.GetComponents())
         {
-            if (!component->IsActive() || !component->runInEditor) continue;
-            component->Update(GetFrameTime());
+            if (!component->IsActive()) continue;
+            if (component->runInEditor)
+                component->Update(GetFrameTime());
+            component->EditorUpdate();
         }
     }
 

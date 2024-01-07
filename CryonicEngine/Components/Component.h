@@ -28,6 +28,7 @@ public:
 
     virtual void Start() {};
     virtual void Update(float deltaTime) {};
+    virtual void EditorUpdate() {};
     virtual void Destroy() {};
 
     GameObject* gameObject;

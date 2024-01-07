@@ -24,6 +24,7 @@ public:
 	}
 	void Start() override;
 	void Update(float deltaTime) override;
+	void EditorUpdate() override;
 	//void Destroy() override;
 	Camera camera = { 0 };
 
