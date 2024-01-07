@@ -155,10 +155,12 @@
     <ClCompile Include="Components\ScriptComponent.cpp" />
     <ClCompile Include="Components\ScriptLoader.cpp" />
     <ClCompile Include="ConsoleLogger.cpp" />
+    <ClCompile Include="CryonicCore.cpp" />
     <ClCompile Include="CryonicEngine.cpp" />
     <ClCompile Include="Editor.cpp" />
     <ClCompile Include="FontManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="IconManager.cpp" />
     <ClCompile Include="ProjectManager.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\SceneManager.cpp" />
@@ -182,9 +184,11 @@
     <ClInclude Include="Components\ScriptLoader.h" />
     <ClInclude Include="ConsoleLogger.h" />
     <ClInclude Include="CryonicAPI.h" />
+    <ClInclude Include="CryonicCore.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="IconManager.h" />
     <ClInclude Include="ProjectManager.h" />
     <ClInclude Include="Scenes\Scene.h" />
     <ClInclude Include="Scenes\SceneManager.h" />
