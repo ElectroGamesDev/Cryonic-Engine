@@ -149,6 +149,7 @@
     <ClCompile Include="..\includes\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\includes\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\includes\imgui\rlImGui.cpp" />
+    <ClCompile Include="Components\CameraComponent.cpp" />
     <ClCompile Include="Components\Component.cpp" />
     <ClCompile Include="Components\MeshRenderer.cpp" />
     <ClCompile Include="Components\ScriptComponent.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="..\includes\imgui\rlImGui.h" />
     <ClInclude Include="..\includes\imgui\rlImGuiColors.h" />
     <ClInclude Include="..\includes\json.hpp" />
+    <ClInclude Include="Components\CameraComponent.h" />
     <ClInclude Include="Components\Component.h" />
     <ClInclude Include="Components\MeshRenderer.h" />
     <ClInclude Include="Components\ScriptComponent.h" />

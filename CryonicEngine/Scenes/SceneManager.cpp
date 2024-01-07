@@ -13,6 +13,7 @@
 #include "../Components/Component.h"
 #include "../Components/MeshRenderer.h"
 #include "../Components/ScriptComponent.h"
+#include "../Components/CameraComponent.h"
 
 using json = nlohmann::json;
 
@@ -208,6 +209,8 @@ bool SceneManager::LoadScene(const std::filesystem::path& filePath)
                 component.SetName(component.GetHeaderPath().stem().string());
                 //component.name = component.GetName();
             }
+            else if (componentData["name"] == "CameraComponent")
+                gameObject.AddComponent<CameraComponent>();
         }
 
 

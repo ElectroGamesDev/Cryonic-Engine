@@ -21,6 +21,7 @@ public:
 	void RenderTopbar();
 	void RenderComponentsWin();
 	void RenderScriptCreateWin();
+	void RenderCameraView();
 	void Render();
 
 	void UpdateViewport();

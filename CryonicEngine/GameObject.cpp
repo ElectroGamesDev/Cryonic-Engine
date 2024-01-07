@@ -97,35 +97,35 @@ int GameObject::GetId() const
 //    return newComponent;
 //}
 
-template<typename T>
-bool GameObject::RemoveComponent()
-{
-    for (size_t i = 0; i < components.size(); ++i)
-    {
-        T* comp = dynamic_cast<T*>(components[i]);
-        if (comp != nullptr)
-        {
-            delete comp;
-            components.erase(components.begin() + i);
-            return true;
-        }
-    }
-    return false;
-}
-
-template<typename T>
-T& GameObject::GetComponent()
-{
-    for (Component* comp : components)
-    {
-        T* tcomp = dynamic_cast<T*>(comp);
-        if (tcomp != nullptr)
-        {
-            return tcomp;
-        }
-    }
-    return nullptr;
-}
+//template<typename T>
+//bool GameObject::RemoveComponent()
+//{
+//    for (size_t i = 0; i < components.size(); ++i)
+//    {
+//        T* comp = dynamic_cast<T*>(components[i]);
+//        if (comp != nullptr)
+//        {
+//            delete comp;
+//            components.erase(components.begin() + i);
+//            return true;
+//        }
+//    }
+//    return false;
+//}
+//
+//template<typename T>
+//T& GameObject::GetComponent()
+//{
+//    for (Component* comp : components)
+//    {
+//        T* tcomp = dynamic_cast<T*>(comp);
+//        if (tcomp != nullptr)
+//        {
+//            return tcomp;
+//        }
+//    }
+//    return nullptr;
+//}
 
 
 std::vector<Component*> GameObject::GetComponents()

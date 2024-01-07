@@ -47,13 +47,45 @@ public:
     T& AddComponent() {
         T* newComponent = new T(this);
         static_cast<Component*>(newComponent)->gameObject = this; // Todo: This may cause a crash if its not a component
+        //Component* componentPtr = static_cast<Component*>(newComponent);
+        //if (componentPtr)
+        //    componentPtr->gameObject = this;
+        //else
+        //    return nullptr;
         components.push_back(newComponent);
         return *newComponent;
     }
-    template <typename T>
-    bool RemoveComponent();
+
     template<typename T>
-    T& GetComponent();
+    bool RemoveComponent()
+    {
+        for (size_t i = 0; i < components.size(); ++i)
+        {
+            T* comp = dynamic_cast<T*>(components[i]);
+            if (comp != nullptr)
+            {
+                delete comp;
+                components.erase(components.begin() + i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    template<typename T>
+    T* GetComponent()
+    {
+        for (Component* comp : components)
+        {
+            T* tcomp = dynamic_cast<T*>(comp);
+            if (tcomp != nullptr)
+            {
+                return tcomp;
+            }
+        }
+        return nullptr;
+    }
+
 
     std::vector<Component*> GetComponents();
     //GameObject& operator=(const GameObject& other);

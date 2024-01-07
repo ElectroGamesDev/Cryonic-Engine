@@ -15,6 +15,7 @@
 #include <variant>
 #include "Components/MeshRenderer.h"
 #include "Components/ScriptComponent.h"
+#include "Components/CameraComponent.h"
 
 const float DEG = 180.0f / PI;
 const float RAD = PI / 180.0f;
@@ -24,12 +25,15 @@ bool viewportFocused = false;
 bool viewportHovered = false;
 bool rmbDown = false;
 RenderTexture ViewTexture;
+RenderTexture cameraRenderTexture;
 Texture2D GridTexture = { 0 };
 
+bool viewportOpened = true;
 Vector4 viewportPosition;
 
 std::variant<std::monostate, GameObject*, Material*> objectInProperties = std::monostate{}; // Make a struct or something that holds a Path and ifstream String. Not specific to material so prefabs and stuff can use
 GameObject* selectedObject = nullptr;
+bool cameraSelected = false;
 
 bool explorerContextMenuOpen = false;
 bool hierarchyContextMenuOpen = false;
@@ -41,6 +45,7 @@ bool resetPropertiesWin = true;
 bool resetViewportWin = true;
 bool resetFileExplorerWin = true;
 bool resetHierarchy = true;
+bool resetCameraView = true;
 
 std::filesystem::path fileExplorerPath;
 
@@ -85,9 +90,9 @@ RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path modelPath, int
 
     EndTextureMode();
 
-    std::cout << "Path: " << modelPath << ", Texture Size: " << textureSize << std::endl;
+    //std::cout << "Path: " << modelPath << ", Texture Size: " << textureSize << std::endl;
 
-    // Unload the model (not needed anymore)
+    // Unload the model
     UnloadModel(model);
 
     //tempTextures.push_back(new Texture2D(target.texture));
@@ -110,10 +115,10 @@ void Editor::RenderViewport()
     }
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     // Todo: Use resize events
-    viewportPosition = { ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y };
 
     if (ImGui::Begin("Viewport", &viewportOpen, ImGuiWindowFlags_NoScrollbar))
     {
+        viewportPosition = { ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y };
         viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
         rlImGuiImageRenderTextureFit(&ViewTexture, true);
 
@@ -585,6 +590,48 @@ void Editor::RenderComponentsWin()
     ImGui::End();
 }
 
+void Editor::RenderCameraView()
+{
+    if (!cameraSelected) return;
+
+    if (resetCameraView)
+    {
+        cameraRenderTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+        ImGui::SetNextWindowSize(ImVec2(200, 112));
+        if (!viewportOpened)
+            ImGui::SetNextWindowPos(ImVec2((GetScreenWidth() - 200) / 2, (GetScreenHeight() - 112) / 2));
+        else
+            ImGui::SetNextWindowPos(ImVec2(viewportPosition.z - 200, viewportPosition.w - 112));
+        resetCameraView = false;
+    }
+
+    BeginTextureMode(cameraRenderTexture);
+    ClearBackground(SKYBLUE);
+
+    BeginMode3D(selectedObject->GetComponent<CameraComponent>()->camera);
+
+    DrawGrid(100, 10.0f);
+
+    for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+    {
+        if (!gameObject.IsActive()) continue;
+        for (Component* component : gameObject.GetComponents())
+        {
+            if (!component->IsActive() || !component->runInEditor) continue;
+            component->Update(GetFrameTime());
+        }
+    }
+
+    EndMode3D();
+    EndTextureMode();
+
+    if (ImGui::Begin("Camera View", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
+    {
+        rlImGuiImageRenderTextureFit(&cameraRenderTexture, true);
+    }
+    ImGui::End();
+}
+
 void Editor::RenderProperties()
 {
     static bool show = true;
@@ -807,6 +854,14 @@ void Editor::RenderHierarchy()
             {
                 objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects()[i];
                 selectedObject = &SceneManager::GetActiveScene()->GetGameObjects()[i];
+
+                if (selectedObject->GetComponent<CameraComponent>() != nullptr)
+                    cameraSelected = true;
+                else if (cameraSelected)
+                {
+                    cameraSelected = false;
+                    resetCameraView = true;
+                }
             }
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
         }
@@ -866,10 +921,13 @@ void Editor::RenderHierarchy()
                     gameObject.transform.SetPosition({ 0,0,0 });
                     gameObject.transform.SetScale({ 1,1,1 });
                     gameObject.transform.SetRotation(QuaternionIdentity());
-                    if (objectToCreate == "Empty") gameObject.SetName("GameObject");
+                    gameObject.SetName(objectToCreate);
+                    if (objectToCreate == "Empty")
+                        gameObject.SetName("GameObject");
+                    else if (objectToCreate == "Camera")
+                        gameObject.AddComponent<CameraComponent>();
                     else
                     {
-                        gameObject.SetName(objectToCreate);
                         MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
                         meshRenderer.SetModelPath(objectToCreate);
                     }
@@ -883,6 +941,14 @@ void Editor::RenderHierarchy()
 
                     selectedObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
                     objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects().back();
+
+                    if (selectedObject->GetComponent<CameraComponent>() != nullptr)
+                        cameraSelected = true;
+                    else if (cameraSelected)
+                    {
+                        cameraSelected = false;
+                        resetCameraView = true;
+                    }
                 }
 
                 ImGui::EndPopup();
@@ -991,6 +1057,7 @@ void Editor::Render(void)
     //RenderConsole();
     RenderFileExplorer();
     RenderTopbar();
+    RenderCameraView();
     RenderComponentsWin();
     RenderScriptCreateWin();
 }
@@ -1154,6 +1221,10 @@ void Editor::Cleanup()
             component->Destroy();
         }
     }
+
+    if (cameraSelected)
+        UnloadRenderTexture(cameraRenderTexture);
+
     ImGui_ImplRaylib_Shutdown();
     ImGui::DestroyContext();
 }
@@ -1221,6 +1292,9 @@ void Editor::Init(ProjectData _projectData)
             UnloadRenderTexture(*image);
         }
         tempRenderTextures.clear();
+
+        if (!cameraSelected)
+            UnloadRenderTexture(cameraRenderTexture);
     }
 
     Cleanup();
