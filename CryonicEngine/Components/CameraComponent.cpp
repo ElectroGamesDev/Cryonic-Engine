@@ -1,6 +1,8 @@
 #include "CameraComponent.h"
 #include "raylib.h"
 
+CameraComponent CameraComponent::main(nullptr);
+
 void CameraComponent::Start()
 {
     main = *this;
