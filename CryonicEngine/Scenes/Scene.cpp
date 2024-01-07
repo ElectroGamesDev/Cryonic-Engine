@@ -1,5 +1,6 @@
 #include "Scene.h"
 #include <algorithm>
+#include "../Components/Component.h"
 
 Scene::Scene(const std::filesystem::path& path, std::vector<GameObject> gameObjects)
     : m_Path(path), m_GameObjects(gameObjects)
@@ -23,6 +24,11 @@ void Scene::SetPath(std::filesystem::path path)
 void Scene::AddGameObject(GameObject& gameObject)
 {
     m_GameObjects.push_back(gameObject);
+
+    // Need to reassign gameObject to components of all game objects as vector resize breaks pointers
+    for (GameObject& gameObject : GetGameObjects())
+        for (Component* component : gameObject.GetComponents())
+            component->gameObject = &gameObject;
 }
 
 void Scene::RemoveGameObject(GameObject* gameObject)
@@ -32,6 +38,11 @@ void Scene::RemoveGameObject(GameObject* gameObject)
     if (it != m_GameObjects.end()) {
         //delete& (*it);
         m_GameObjects.erase(it);
+
+        // Need to reassign gameObject to components of all game objects as vector resize breaks pointers
+        for (GameObject& gameObject : GetGameObjects())
+            for (Component* component : gameObject.GetComponents())
+                component->gameObject = &gameObject;
     }
 }
 
