@@ -26,6 +26,16 @@ int main(void)
     camera.position.z = -25;
     camera.projection = CAMERA_PERSPECTIVE;
     camera.target = { 0.0f, 0.0f, 0.0f };
+	
+	for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+	{
+		if (!gameObject.IsActive()) continue;
+		for (Component* component : gameObject.GetComponents())
+		{
+			if (!component->IsActive()) continue;
+			component->Start();
+		}
+	}
 
     while (!WindowShouldClose())
     {
@@ -40,7 +50,7 @@ int main(void)
 			if (!gameObject.IsActive()) continue;
 			for (Component* component : gameObject.GetComponents())
 			{
-				if (!component->IsActive() || !component->runInEditor) continue;
+				if (!component->IsActive()) continue;
 				component->Update(GetFrameTime());
 			}
 		}

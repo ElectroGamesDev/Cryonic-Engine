@@ -6,6 +6,7 @@
 #include <fstream>
 #include "Scenes/SceneManager.h"
 #include "Utilities.h"
+#include "Components/ScriptLoader.h"
 
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
@@ -181,6 +182,9 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .js
     }
 
     CopyApiFiles(projectData.path / "api", buildPath / "Source");
+
+    if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source"))
+        return;
 
     // Saves original path, sets new current path, and then run cmake and mingw32-make
     std::filesystem::path originalPath = std::filesystem::current_path();

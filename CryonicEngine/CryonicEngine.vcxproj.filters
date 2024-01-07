@@ -84,6 +84,9 @@
     <ClCompile Include="Components\MeshRenderer.cpp">
       <Filter>Source Files\Components</Filter>
     </ClCompile>
+    <ClCompile Include="Components\ScriptLoader.cpp">
+      <Filter>Source Files\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -150,6 +153,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Components\MeshRenderer.h">
+      <Filter>Header Files\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\ScriptLoader.h">
       <Filter>Header Files\Components</Filter>
     </ClInclude>
   </ItemGroup>

@@ -9,9 +9,10 @@
 #include <algorithm>
 #include <cctype>
 #include "json.hpp"
-#include "../Components/Component.h"
 
+#include "../Components/Component.h"
 #include "../Components/MeshRenderer.h"
+#include "../Components/ScriptComponent.h"
 
 using json = nlohmann::json;
 
@@ -66,12 +67,17 @@ bool SceneManager::SaveScene(Scene* scene)
             json componentData;
             componentData["name"] = component->name;
             componentData["active"] = component->IsActive();
-            componentData["runInEditor"] = component->runInEditor;
+            //componentData["runInEditor"] = component->runInEditor;
 
             // Temporary solution
             if (dynamic_cast<MeshRenderer*>(component))
             {
                 componentData["model_path"] = dynamic_cast<MeshRenderer*>(component)->GetModelPath();
+            }
+            else if (dynamic_cast<ScriptComponent*>(component))
+            {
+                componentData["cpp_path"] = dynamic_cast<ScriptComponent*>(component)->GetCppPath();
+                componentData["header_path"] = dynamic_cast<ScriptComponent*>(component)->GetHeaderPath();
             }
 
             componentsData.push_back(componentData);
@@ -188,10 +194,19 @@ bool SceneManager::LoadScene(const std::filesystem::path& filePath)
             // Temporary solution
             if (componentData["name"] == "MeshRenderer")
             {
-                MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
-                meshRenderer.gameObject = &gameObject;
-                meshRenderer.SetModelPath(componentData["model_path"]);
-                meshRenderer.SetModel(LoadModel(meshRenderer.GetModelPath().string().c_str()));
+                MeshRenderer& component = gameObject.AddComponent<MeshRenderer>();
+                //component.gameObject = &gameObject;
+                component.SetModelPath(componentData["model_path"]);
+                component.SetModel(LoadModel(component.GetModelPath().string().c_str()));
+            }
+            else if (componentData["name"] == "ScriptComponent")
+            {
+                ScriptComponent& component = gameObject.AddComponent<ScriptComponent>();
+                //component.gameObject = &gameObject;
+                component.SetCppPath(componentData["cpp_path"]);
+                component.SetHeaderPath(componentData["header_path"]);
+                component.SetName(component.GetHeaderPath().stem().string());
+                //component.name = component.GetName();
             }
         }
 

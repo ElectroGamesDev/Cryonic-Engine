@@ -152,6 +152,7 @@
     <ClCompile Include="Components\Component.cpp" />
     <ClCompile Include="Components\MeshRenderer.cpp" />
     <ClCompile Include="Components\ScriptComponent.cpp" />
+    <ClCompile Include="Components\ScriptLoader.cpp" />
     <ClCompile Include="ConsoleLogger.cpp" />
     <ClCompile Include="CryonicEngine.cpp" />
     <ClCompile Include="Editor.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="Components\Component.h" />
     <ClInclude Include="Components\MeshRenderer.h" />
     <ClInclude Include="Components\ScriptComponent.h" />
+    <ClInclude Include="Components\ScriptLoader.h" />
     <ClInclude Include="ConsoleLogger.h" />
     <ClInclude Include="CryonicAPI.h" />
     <ClInclude Include="Editor.h" />

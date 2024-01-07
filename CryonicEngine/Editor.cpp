@@ -14,6 +14,7 @@
 #include "Utilities.h"
 #include <variant>
 #include "Components/MeshRenderer.h"
+#include "Components/ScriptComponent.h"
 
 const float DEG = 180.0f / PI;
 const float RAD = PI / 180.0f;
@@ -529,7 +530,9 @@ void Editor::RenderScriptCreateWin()
                 ImGui::End();
                 return;
             }
-            // Copy and paste preset ehader and cpp
+            std::filesystem::path miscPath = std::filesystem::path(__FILE__).parent_path() / "resources" / "misc";
+            std::filesystem::copy_file(miscPath / "ScriptPreset.h", fileExplorerPath / (name + ".h"));
+            std::filesystem::copy_file(miscPath / "ScriptPreset.cpp", fileExplorerPath / (name + ".cpp"));
             scriptCreateWinOpen = false;
         }
         if (!canCreate) ImGui::EndDisabled();
@@ -539,7 +542,8 @@ void Editor::RenderScriptCreateWin()
 
 void Editor::RenderComponentsWin()
 {
-    if (!componentsWindowOpen) return;
+    if (!componentsWindowOpen || !std::holds_alternative<GameObject*>(objectInProperties)) return;
+
     if (resetComponentsWin)
     {
         ImGui::SetNextWindowSize(ImVec2(300, 400));
@@ -557,11 +561,22 @@ void Editor::RenderComponentsWin()
         }
         ImGui::Separator();
         // External Components
-        for (const auto& file : std::filesystem::recursive_directory_iterator(projectData.path))
+        for (const auto& file : std::filesystem::recursive_directory_iterator(projectData.path / "Assets"))
         {
             if (!std::filesystem::is_regular_file(file) || file.path().extension() != ".h") continue;
             if (ImGui::Button(file.path().stem().string().c_str(), ImVec2(buttonWidth, 0)))
             {
+                std::filesystem::path path = std::filesystem::relative(file.path(), projectData.path / "Assets");
+
+                // Todo: First search same folder for .cpp if its not there, then search all sub folders, then all previous folders.
+                std::filesystem::path cppPath = path;
+                cppPath.replace_extension(".cpp");
+                ScriptComponent* scriptComponent = &std::get<GameObject*>(objectInProperties)->AddComponent<ScriptComponent>();
+                scriptComponent->SetHeaderPath(path.string());
+                scriptComponent->SetCppPath(cppPath);
+                scriptComponent->SetName(path.stem().string());
+                //scriptComponent->name = file.path().stem().string();
+
                 componentsWindowOpen = false;
                 resetComponentsWin = true;
             }
@@ -742,7 +757,10 @@ void Editor::RenderProperties()
                 componentsNum++;
                 float buttonWidth = ImGui::GetWindowWidth() - 15;
                 ImGui::Separator();
-                ImGui::Text(component->name.c_str());
+                if (typeid(*component) == typeid(ScriptComponent))
+                    ImGui::Text(dynamic_cast<ScriptComponent*>(component)->GetName().c_str());
+                else
+                    ImGui::Text(component->name.c_str());
                 ImGui::SameLine();
 
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));

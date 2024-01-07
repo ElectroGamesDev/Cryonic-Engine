@@ -1,13 +1,15 @@
 #include "ScriptComponent.h"
+#include "ScriptLoader.h"
 
 void ScriptComponent::Start()
 {
-
+	// Todo: Move this to Awake()
+	SetupScriptComponent(this);
+	// Todo: Remove Component
 }
 
 void ScriptComponent::Update(float deltaTime)
 {
-
 }
 
 void ScriptComponent::Destroy()
@@ -15,12 +17,32 @@ void ScriptComponent::Destroy()
 
 }
 
-void ScriptComponent::SetPath(std::filesystem::path path)
+void ScriptComponent::SetHeaderPath(std::filesystem::path path)
 {
-	_path = path;
+	_headerPath = path;
 }
 
-std::filesystem::path ScriptComponent::GetPath()
+void ScriptComponent::SetCppPath(std::filesystem::path path)
 {
-	return _path;
+	_CppPath = path;
+}
+
+std::filesystem::path ScriptComponent::GetHeaderPath()
+{
+	return _headerPath;
+}
+
+std::filesystem::path ScriptComponent::GetCppPath()
+{
+	return _CppPath;
+}
+
+void ScriptComponent::SetName(std::string name)
+{
+	_name = name;
+}
+
+std::string ScriptComponent::GetName()
+{
+	return _name;
 }
