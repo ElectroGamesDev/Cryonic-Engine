@@ -16,6 +16,9 @@
 #include "Components/MeshRenderer.h"
 #include "Components/ScriptComponent.h"
 #include "Components/CameraComponent.h"
+#include "IconManager.h"
+
+Camera Editor::camera = { 0 };
 
 const float DEG = 180.0f / PI;
 const float RAD = PI / 180.0f;
@@ -49,7 +52,7 @@ bool resetCameraView = true;
 
 std::filesystem::path fileExplorerPath;
 
-std::unordered_map<std::string, Texture2D*> imageTextures;
+//std::unordered_map<std::string, Texture2D*> imageTextures;
 std::vector<Texture2D*> tempTextures;
 std::vector<RenderTexture2D*> tempRenderTextures;
 
@@ -288,6 +291,8 @@ void Editor::UpdateViewport()
         }
     }
 
+    //DrawBillboard(camera, *IconManager::imageTextures["CameraGizmoIcon"], {0, 5, 0}, 5.0f, WHITE);
+
     EndMode3D();
     EndTextureMode();
 }
@@ -316,7 +321,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             // Creates back button
             ImGui::SetCursorPosY(nextY);
             ImGui::SetCursorPosX(nextX);
-            if (rlImGuiImageButtonSize("##BackButton", imageTextures["FolderIcon"], ImVec2(32, 32)))
+            if (rlImGuiImageButtonSize("##BackButton", IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
             {
                 fileExplorerPath = fileExplorerPath.parent_path();
                 ImGui::PopID();
@@ -344,7 +349,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             ImVec2 pos = ImGui::GetCursorPos();
             if (entry.is_directory())
             {
-                if (rlImGuiImageButtonSize(("##" + id).c_str(), imageTextures["FolderIcon"], ImVec2(32, 32)))
+                if (rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
                 {
                     fileExplorerPath = entry.path();
                     ImGui::PopID();
@@ -357,7 +362,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 std::string extension = entry.path().extension().string();
                 if (extension == ".cpp")
                 {
-                    if (rlImGuiImageButtonSize(("##" + id).c_str(), imageTextures["CppIcon"], ImVec2(32, 32)))
+                    if (rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CppIcon"], ImVec2(32, 32)))
                     {
                         std::string command = "code " + entry.path().string();
                         std::system(command.c_str());
@@ -365,7 +370,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".h")
                 {
-                    if (rlImGuiImageButtonSize(("##" + id).c_str(), imageTextures["HeaderIcon"], ImVec2(32, 32)))
+                    if (rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["HeaderIcon"], ImVec2(32, 32)))
                     {
                         std::string command = "code " + entry.path().string();
                         std::system(command.c_str());
@@ -974,7 +979,7 @@ void Editor::RenderTopbar()
 
         ImGui::SetCursorPos(ImVec2(currentWidth / 2 - 20, 2));
 
-        if (rlImGuiImageButtonSize("##PlayButton", imageTextures["PlayIcon"], ImVec2(20, 20)))
+        if (rlImGuiImageButtonSize("##PlayButton", IconManager::imageTextures["PlayIcon"], ImVec2(20, 20)))
         {
             //startStopPlaying = true;
             //paused = false;
@@ -988,7 +993,7 @@ void Editor::RenderTopbar()
 
         ImGui::SetCursorPos(ImVec2(currentWidth / 2 + 20, 2));
 
-        if (rlImGuiImageButtonSize("##PauseButton", imageTextures["GrayedPauseIcon"], ImVec2(20, 20)))
+        if (rlImGuiImageButtonSize("##PauseButton", IconManager::imageTextures["GrayedPauseIcon"], ImVec2(20, 20)))
         {
             //if (playing) paused = !paused;
         }
@@ -1183,22 +1188,9 @@ void Editor::InitScenes()
     else SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
 }
 
-void Editor::InitImages()
-{
-    for (const std::filesystem::path& path : std::filesystem::directory_iterator(std::filesystem::path(__FILE__).parent_path() / "resources" / "images"))
-    {
-        imageTextures[path.stem().string()] = new Texture2D(LoadTexture(path.string().c_str()));
-    }
-}
-
 void Editor::Cleanup()
 {
-    for (auto& image : imageTextures)
-    {
-        UnloadTexture(*image.second);
-        //delete image.second;
-    }
-    imageTextures.clear();
+    IconManager::Cleanup();
 
     for (auto& image : tempTextures)
     {
@@ -1253,7 +1245,8 @@ void Editor::Init(ProjectData _projectData)
     ImGui_ImplRaylib_Init();
     FontManager::InitFontManager();
     InitFonts();
-    InitImages();
+    //InitImages();
+    IconManager::Init();
     InitMisc();
     InitScenes(); // Must go after InitMisc()
 

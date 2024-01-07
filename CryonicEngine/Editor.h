@@ -28,7 +28,9 @@ public:
 	void SetupViewport();
 
 	void Cleanup();
+
+	static Camera camera;
+
 private:
-	Camera camera = { 0 };
 	ProjectData projectData;
 };
