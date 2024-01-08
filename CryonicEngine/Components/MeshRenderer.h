@@ -22,6 +22,7 @@ public:
 	void SetBounds(BoundingBox bounds);
 
 private:
+	bool setShader = false;
 	Model model;
 	bool modelSet = false;
 	std::filesystem::path modelPath;

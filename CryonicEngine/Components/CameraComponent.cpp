@@ -3,11 +3,11 @@
 #include "../IconManager.h"
 #include "../Editor.h"
 
-CameraComponent CameraComponent::main(nullptr);
+CameraComponent* CameraComponent::main = nullptr;
 
 void CameraComponent::Start()
 {
-    main = *this;
+    main = this;
 }
 
 void CameraComponent::Update(float deltaTime)
@@ -18,5 +18,10 @@ void CameraComponent::Update(float deltaTime)
 
 void CameraComponent::EditorUpdate()
 {
+    if (!setMain)
+    {
+        setMain = false;
+        main = this;
+    }
     Draw3DBillboard(Editor::camera, *IconManager::imageTextures["CameraGizmoIcon"], gameObject->transform.GetPosition(), 2.0f, { 255, 255, 255, 150 });
 }

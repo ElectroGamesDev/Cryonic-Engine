@@ -1,5 +1,6 @@
 #include "MeshRenderer.h"
 #include "rlgl.h"
+#include "../ShaderManager.h"
 
 Model MeshRenderer::GetModel() const
 {
@@ -35,6 +36,12 @@ void MeshRenderer::SetBounds(BoundingBox bounds)
 
 void MeshRenderer::Update(float deltaTime)
 {
+    if (!setShader)
+    {
+        bool setShader = true;
+        // Todo: Move to OnEnable(), and this sets the shader for all models, not just this one.
+        GetModel().materials->shader = ShaderManager::shaders[ShaderManager::LitStandard];
+    }
     rlPushMatrix();
 
     // build up the transform
@@ -47,6 +54,7 @@ void MeshRenderer::Update(float deltaTime)
     // apply the transform
     rlMultMatrixf(MatrixToFloat(transform));
 
+    BeginShaderMode(ShaderManager::shaders[ShaderManager::LitStandard]); // Todo: Check if this works with custom models
     // draw model
     if ((std::filesystem::exists(GetModelPath())))
         DrawModel(GetModel(), Vector3Zero(), 1, WHITE);
@@ -60,6 +68,7 @@ void MeshRenderer::Update(float deltaTime)
     {
         // Invalid model path
     }
+    EndShaderMode();
 
     rlPopMatrix();
 }

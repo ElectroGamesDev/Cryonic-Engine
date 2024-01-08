@@ -17,6 +17,7 @@
 #include "Components/ScriptComponent.h"
 #include "Components/CameraComponent.h"
 #include "IconManager.h"
+#include "ShaderManager.h"
 
 Camera Editor::camera = { 0 };
 
@@ -1193,6 +1194,7 @@ void Editor::InitScenes()
 void Editor::Cleanup()
 {
     IconManager::Cleanup();
+    ShaderManager::Cleanup();
 
     for (auto& image : tempTextures)
     {
@@ -1251,12 +1253,14 @@ void Editor::Init(ProjectData _projectData)
     IconManager::Init();
     InitMisc();
     InitScenes(); // Must go after InitMisc()
+    ShaderManager::Init();
 
     SetupViewport();
 
     while (!WindowShouldClose())
     {
         FontManager::UpdateFonts();
+        ShaderManager::UpdateShaders();
 
         ImGui_ImplRaylib_ProcessEvents();
 

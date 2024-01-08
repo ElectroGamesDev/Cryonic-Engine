@@ -6,6 +6,7 @@
 #include "Scenes/SceneManager.h"
 #include "imgui_impl_raylib.h"
 #include "Components/Component.h"
+#include "ShaderManager.h"
 
 Camera camera = { 0 };
 
@@ -27,6 +28,8 @@ int main(void)
     camera.projection = CAMERA_PERSPECTIVE;
     camera.target = { 0.0f, 0.0f, 0.0f };
 	
+	ShaderManager::Init();
+	
 	for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 	{
 		if (!gameObject.IsActive()) continue;
@@ -39,6 +42,8 @@ int main(void)
 
     while (!WindowShouldClose())
     {
+		ShaderManager::UpdateShaders();
+		
         BeginDrawing();
 		
 		ClearBackground(SKYBLUE);
@@ -61,6 +66,7 @@ int main(void)
     }
 
     //Cleanup();
+	ShaderManager::Cleanup();
     CloseWindow();
 	return 0;
 }

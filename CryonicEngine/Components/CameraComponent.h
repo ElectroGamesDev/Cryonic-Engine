@@ -28,5 +28,6 @@ public:
 	//void Destroy() override;
 	Camera camera = { 0 };
 
-	static CameraComponent main;
+	static CameraComponent* main;
+	bool setMain = false;
 };
