@@ -14,6 +14,7 @@
 #include "../Components/MeshRenderer.h"
 #include "../Components/ScriptComponent.h"
 #include "../Components/CameraComponent.h"
+#include "../Components/Lighting.h"
 
 using json = nlohmann::json;
 
@@ -198,7 +199,11 @@ bool SceneManager::LoadScene(const std::filesystem::path& filePath)
                 MeshRenderer& component = gameObject.AddComponent<MeshRenderer>();
                 //component.gameObject = &gameObject;
                 component.SetModelPath(componentData["model_path"]);
-                component.SetModel(LoadModel(component.GetModelPath().string().c_str()));
+
+                if (component.GetModelPath().string() == "Cube")
+                    component.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
+                else
+                    component.SetModel(LoadModel(component.GetModelPath().string().c_str()));
             }
             else if (componentData["name"] == "ScriptComponent")
             {
@@ -211,6 +216,8 @@ bool SceneManager::LoadScene(const std::filesystem::path& filePath)
             }
             else if (componentData["name"] == "CameraComponent")
                 gameObject.AddComponent<CameraComponent>();
+            else if (componentData["name"] == "Lighting")
+                gameObject.AddComponent<Lighting>();
         }
 
 

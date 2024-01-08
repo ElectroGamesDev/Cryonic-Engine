@@ -99,6 +99,9 @@
     <ClCompile Include="ShaderManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Components\Lighting.cpp">
+      <Filter>Source Files\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -181,6 +184,9 @@
     </ClInclude>
     <ClInclude Include="ShaderManager.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Lighting.h">
+      <Filter>Header Files\Components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

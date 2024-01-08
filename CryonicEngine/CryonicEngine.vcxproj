@@ -151,6 +151,7 @@
     <ClCompile Include="..\includes\imgui\rlImGui.cpp" />
     <ClCompile Include="Components\CameraComponent.cpp" />
     <ClCompile Include="Components\Component.cpp" />
+    <ClCompile Include="Components\Lighting.cpp" />
     <ClCompile Include="Components\MeshRenderer.cpp" />
     <ClCompile Include="Components\ScriptComponent.cpp" />
     <ClCompile Include="Components\ScriptLoader.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="..\includes\json.hpp" />
     <ClInclude Include="Components\CameraComponent.h" />
     <ClInclude Include="Components\Component.h" />
+    <ClInclude Include="Components\Lighting.h" />
     <ClInclude Include="Components\MeshRenderer.h" />
     <ClInclude Include="Components\ScriptComponent.h" />
     <ClInclude Include="Components\ScriptLoader.h" />

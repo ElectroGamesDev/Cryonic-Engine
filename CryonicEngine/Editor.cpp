@@ -16,6 +16,7 @@
 #include "Components/MeshRenderer.h"
 #include "Components/ScriptComponent.h"
 #include "Components/CameraComponent.h"
+#include "Components/Lighting.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
 
@@ -567,8 +568,16 @@ void Editor::RenderComponentsWin()
     {
         // Internal Components
         float buttonWidth = ImGui::GetWindowWidth() - 28;
+        // Todo: Add MeshRenderer
         if (ImGui::Button("Camera", ImVec2(buttonWidth, 0)))
         {
+            std::get<GameObject*>(objectInProperties)->AddComponent<CameraComponent>();
+            componentsWindowOpen = false;
+            resetComponentsWin = true;
+        }
+        else if (ImGui::Button("Light", ImVec2(buttonWidth, 0)))
+        {
+            std::get<GameObject*>(objectInProperties)->AddComponent<Lighting>();
             componentsWindowOpen = false;
             resetComponentsWin = true;
         }
@@ -923,6 +932,12 @@ void Editor::RenderHierarchy()
                     objectToCreate = "Camera";
                 }
 
+                if (ImGui::MenuItem("Light"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Light";
+                }
+
                 if (objectToCreate != "")
                 {
                     GameObject gameObject;
@@ -934,6 +949,8 @@ void Editor::RenderHierarchy()
                         gameObject.SetName("GameObject");
                     else if (objectToCreate == "Camera")
                         gameObject.AddComponent<CameraComponent>();
+                    else if (objectToCreate == "Light")
+                        gameObject.AddComponent<Lighting>();
                     else
                     {
                         MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();

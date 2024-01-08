@@ -14,7 +14,7 @@ public:
 	void Update(float deltaTime) override;
 	void Destroy() override;
 
-	Model GetModel() const;
+	Model& GetModel();
 	void SetModel(Model model);
 	std::filesystem::path GetModelPath() const;
 	void SetModelPath(std::filesystem::path path);

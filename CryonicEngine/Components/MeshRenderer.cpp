@@ -2,7 +2,7 @@
 #include "rlgl.h"
 #include "../ShaderManager.h"
 
-Model MeshRenderer::GetModel() const
+Model& MeshRenderer::GetModel()
 {
     return model;
 }
@@ -36,12 +36,6 @@ void MeshRenderer::SetBounds(BoundingBox bounds)
 
 void MeshRenderer::Update(float deltaTime)
 {
-    if (!setShader)
-    {
-        bool setShader = true;
-        // Todo: Move to OnEnable(), and this sets the shader for all models, not just this one.
-        GetModel().materials->shader = ShaderManager::shaders[ShaderManager::LitStandard];
-    }
     rlPushMatrix();
 
     // build up the transform
@@ -56,8 +50,20 @@ void MeshRenderer::Update(float deltaTime)
 
     BeginShaderMode(ShaderManager::shaders[ShaderManager::LitStandard]); // Todo: Check if this works with custom models
     // draw model
-    if ((std::filesystem::exists(GetModelPath())))
+    if ((std::filesystem::exists(GetModelPath())) || GetModelPath() == "Cube")
+    {
+        if (!setShader)
+        {
+            bool setShader = true;
+            // Todo: Move to OnEnable(), and this sets the shader for all models, not just this one.
+            GetModel().materials->shader = ShaderManager::shaders[ShaderManager::LitStandard];
+
+            for (size_t i = 0; i < model.materialCount; ++i)
+                model.materials[i].shader = ShaderManager::shaders[ShaderManager::LitStandard];
+        }
         DrawModel(GetModel(), Vector3Zero(), 1, WHITE);
+    }
+
     else if (GetModelPath() == "Cube")
         DrawCube(Vector3Zero(), 1, 1, 1, LIGHTGRAY);
     else if (GetModelPath() == "Plane")
