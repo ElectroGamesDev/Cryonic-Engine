@@ -202,6 +202,14 @@ bool SceneManager::LoadScene(const std::filesystem::path& filePath)
 
                 if (component.GetModelPath().string() == "Cube")
                     component.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
+                if (component.GetModelPath().string() == "Plane")
+                    component.SetModel(LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1)));
+                if (component.GetModelPath().string() == "Sphere")
+                    component.SetModel(LoadModelFromMesh(GenMeshSphere(1, 1, 1)));
+                if (component.GetModelPath().string() == "Cylinder")
+                    component.SetModel(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)));
+                if (component.GetModelPath().string() == "Cone")
+                    component.SetModel(LoadModelFromMesh(GenMeshCone(1, 1, 1)));
                 else
                     component.SetModel(LoadModel(component.GetModelPath().string().c_str()));
             }

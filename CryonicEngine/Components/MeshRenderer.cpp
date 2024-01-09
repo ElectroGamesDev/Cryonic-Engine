@@ -50,14 +50,13 @@ void MeshRenderer::Update(float deltaTime)
 
     BeginShaderMode(ShaderManager::shaders[ShaderManager::LitStandard]); // Todo: Check if this works with custom models
     // draw model
-    if ((std::filesystem::exists(GetModelPath())) || GetModelPath() == "Cube")
+    if ((std::filesystem::exists(GetModelPath())) || GetModelPath() == "Cube" || GetModelPath() == "Sphere" || GetModelPath() == "Plane" || GetModelPath() == "Cone" || GetModelPath() == "Cylinder")
     {
         if (!setShader)
         {
             bool setShader = true;
-            // Todo: Move to OnEnable(), and this sets the shader for all models, not just this one.
-            GetModel().materials->shader = ShaderManager::shaders[ShaderManager::LitStandard];
 
+            // Todo: Move to OnEnable(), and this sets the shader for all models, not just this one.
             for (size_t i = 0; i < model.materialCount; ++i)
                 model.materials[i].shader = ShaderManager::shaders[ShaderManager::LitStandard];
         }

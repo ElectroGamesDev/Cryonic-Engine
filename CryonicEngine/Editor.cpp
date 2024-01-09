@@ -914,10 +914,10 @@ void Editor::RenderHierarchy()
                     objectToCreate = "Cube";
                 }
 
-                if (ImGui::MenuItem("Create Capsule"))
+                if (ImGui::MenuItem("Create Cylinder"))
                 {
                     hierarchyContextMenuOpen = false;
-                    objectToCreate = "Capsule";
+                    objectToCreate = "Cylinder";
                 }
 
                 if (ImGui::MenuItem("Create Sphere"))
@@ -930,6 +930,12 @@ void Editor::RenderHierarchy()
                 {
                     hierarchyContextMenuOpen = false;
                     objectToCreate = "Plane";
+                }
+
+                if (ImGui::MenuItem("Create Cone"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Cone";
                 }
 
                 if (ImGui::MenuItem("Create Camera"))
@@ -961,6 +967,17 @@ void Editor::RenderHierarchy()
                     {
                         MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
                         meshRenderer.SetModelPath(objectToCreate);
+
+                        if (objectToCreate == "Cube")
+                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
+                        else if (objectToCreate == "Plane")
+                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1)));
+                        else if (objectToCreate == "Sphere")
+                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshSphere(1, 1, 1)));
+                        else if (objectToCreate == "Cylinder")
+                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)));
+                        else if (objectToCreate == "Cone")
+                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCone(1, 1, 1)));
                     }
 
                     SceneManager::GetActiveScene()->AddGameObject(gameObject);
