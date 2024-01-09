@@ -15,7 +15,7 @@ out vec4 finalColor;
 
 // NOTE: Add here your custom variables
 
-#define     MAX_LIGHTS              4
+#define     MAX_LIGHTS              1
 #define     LIGHT_DIRECTIONAL       0
 #define     LIGHT_POINT             1
 
@@ -25,6 +25,7 @@ struct Light {
     vec3 position;
     vec3 target;
     vec4 color;
+	float intensity;
 };
 
 // Input lighting values
@@ -58,9 +59,14 @@ void main()
             {
                 light = normalize(lights[i].position - fragPosition);
             }
+			
+			// Factor in intensity and range
+			float distanceToLight = length(lights[i].position - fragPosition);
+			float attenuation = 1.0 / (1.0 + 0.1 * distanceToLight + 0.01 * distanceToLight * distanceToLight);
 
             float NdotL = max(dot(normal, light), 0.0);
-            lightDot += lights[i].color.rgb*NdotL;
+            // Apply intensity and range to the lightDot calculation
+			lightDot += lights[i].color.rgb * NdotL * lights[i].intensity * attenuation;
 
             float specCo = 0.0;
             if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine

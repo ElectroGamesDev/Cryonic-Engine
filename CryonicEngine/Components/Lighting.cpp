@@ -15,7 +15,7 @@ void Lighting::Update(float deltaTime)
 	if (!setup)
 	{
 		setup = true;
-		light = CreateLight(LIGHT_POINT, gameObject->transform.GetPosition(), Vector3Zero(), BLUE, ShaderManager::shaders[ShaderManager::LitStandard]);
+		light = CreateLight(LIGHT_DIRECTIONAL, gameObject->transform.GetPosition(), Vector3Zero(), WHITE, ShaderManager::shaders[ShaderManager::LitStandard]);
 	}
 
 	if (!Vector3Equals(gameObject->transform.GetPosition(), lastPosition))

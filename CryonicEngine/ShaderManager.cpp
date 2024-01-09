@@ -1,10 +1,14 @@
 #include "ShaderManager.h"
 #include "Components/CameraComponent.h"
 
+#include "raylib.h"
+#include "raymath.h"
+#include "rlgl.h"
+
 #define RLIGHTS_IMPLEMENTATION
 #include "rlights.h"
 
-#if defined(PLATFORM_DESKTOP)
+#if defined(PLATFORM_DESKTOP)  // I had to remove PLATFORM_DESKTOP from predefines to stop crash so this code is useless and GLSL_VERSION is always 100 right now.
 #define GLSL_VERSION            330
 #else   // PLATFORM_ANDROID, PLATFORM_WEB
 #define GLSL_VERSION            100
@@ -23,12 +27,15 @@ void ShaderManager::Cleanup()
 
 void ShaderManager::Init()
 {
-    shaders[LitStandard] = LoadShader(TextFormat("resources/shaders/glsl%i/lighting.vs", GLSL_VERSION), TextFormat("resources/shaders/glsl%i/lighting.fs", GLSL_VERSION));
+    //shaders[LitStandard] = LoadShader(("resources/shaders/glsl" + std::to_string(GLSL_VERSION) + "/lighting.vs").c_str(), ("resources/shaders/glsl" + std::to_string(GLSL_VERSION) + "/lighting.fs").c_str());
+    shaders[LitStandard] = LoadShader("resources/shaders/glsl330/lighting.vs", "resources/shaders/glsl330/lighting.fs");
+
     // Can put below in a for loop
     shaders[LitStandard].locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shaders[LitStandard], "viewPos");
     int ambientLoc = GetShaderLocation(shaders[LitStandard], "ambient");
     float ambientValues[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
     SetShaderValue(shaders[LitStandard], ambientLoc, ambientValues, SHADER_UNIFORM_VEC4);
+
 }
 
 void ShaderManager::UpdateShaders()

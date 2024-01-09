@@ -20,6 +20,8 @@
 #include "IconManager.h"
 #include "ShaderManager.h"
 
+#include "rlights.h" // Remove
+
 Camera Editor::camera = { 0 };
 
 const float DEG = 180.0f / PI;
@@ -61,6 +63,8 @@ std::vector<RenderTexture2D*> tempRenderTextures;
 Quaternion Orientation = QuaternionIdentity();
 
 float cameraSpeed = 1;
+
+Model model; // REMOVE
 
 RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path modelPath, int textureSize)
 {
@@ -282,6 +286,8 @@ void Editor::UpdateViewport()
     BeginMode3D(camera);
 
     DrawGrid(100, 10.0f);
+
+    DrawModel(model, Vector3Zero(), 1.0f, WHITE); // REMOVE
 
     for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
@@ -1272,10 +1278,27 @@ void Editor::Init(ProjectData _projectData)
     InitScenes(); // Must go after InitMisc()
     ShaderManager::Init();
 
+    //model = LoadModelFromMesh(GenMeshCube(5,1,5)); // Remove
+
+    //ShaderManager::shaders[ShaderManager::LitStandard] = LoadShader(TextFormat("resources/shaders/glsl%i/lighting.vs", 330),
+        //TextFormat("resources/shaders/glsl%i/lighting.fs", 330)); // Remvoe
+     //ShaderManager::shaders[ShaderManager::LitStandard].locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(ShaderManager::shaders[ShaderManager::LitStandard], "viewPos");// Remove
+    //int ambientLoc = GetShaderLocation(ShaderManager::shaders[ShaderManager::LitStandard], "ambient"); // Remove
+    //float value[4] = {0.1f, 0.1f, 0.1f, 1.0f}; // Remove
+    //SetShaderValue(ShaderManager::shaders[ShaderManager::LitStandard], ambientLoc, value, SHADER_UNIFORM_VEC4); // Remove
+
+    //model.materials[0].shader = ShaderManager::shaders[ShaderManager::LitStandard]; // Remove
+
+    //Light light = CreateLight(LIGHT_POINT, { 0, 1, 0 }, Vector3Zero(), BLUE, ShaderManager::shaders[ShaderManager::LitStandard]); // Remove
+
     SetupViewport();
 
     while (!WindowShouldClose())
     {
+        //float cameraPos[3] = { camera.position.x, camera.position.y, camera.position.z }; // Remove
+        //SetShaderValue(ShaderManager::shaders[ShaderManager::LitStandard], ShaderManager::shaders[ShaderManager::LitStandard].locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3); // Remove
+        //UpdateLightValues(ShaderManager::shaders[ShaderManager::LitStandard], light); // Remove
+        
         FontManager::UpdateFonts();
         ShaderManager::UpdateShaders();
 
@@ -1283,6 +1306,17 @@ void Editor::Init(ProjectData _projectData)
 
         ImGui_ImplRaylib_NewFrame();
         ImGui::NewFrame();
+
+        //for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects()) // Lighting, Remove this
+        //{
+        //    if (!gameObject.IsActive()) continue;
+        //    for (Component* component : gameObject.GetComponents())
+        //    {
+        //        Lighting* lighting = dynamic_cast<Lighting*>(component);
+        //        if (!component->IsActive() || lighting == nullptr) continue;
+        //        component->Update(GetFrameTime());
+        //    }
+        //}
 
         UpdateViewport();
         Render();
