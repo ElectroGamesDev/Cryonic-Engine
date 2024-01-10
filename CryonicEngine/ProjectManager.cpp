@@ -10,7 +10,8 @@
 
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
-    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "resources", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components" };
+    // Editor and IconManager needed for gizmos
+    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "resources", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager"};
      
     if (!std::filesystem::exists(destination))
         std::filesystem::create_directories(destination);
@@ -23,7 +24,7 @@ void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem:
             {
                 if (!std::filesystem::exists(destination / file.path().filename()))
                     std::filesystem::create_directory(destination / file.path().filename());
-                std::filesystem::copy(file.path(), destination / file.path().filename());
+                std::filesystem::copy(file.path(), destination / file.path().filename(), std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
             }
             else
                 std::filesystem::copy(file.path(), destination);
@@ -181,7 +182,15 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .js
         return;
     }
 
-    CopyApiFiles(projectData.path / "api", buildPath / "Source");
+    if (!std::filesystem::exists(projectData.path / "api"))
+    {
+        std::filesystem::create_directories(projectData.path / "api");
+        Utilities::HideFile(projectData.path / "api");
+    }
+    std::filesystem::remove_all(projectData.path / "api");
+
+    CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), projectData.path / "api");
+    CopyApiFiles(projectData.path / "api", buildPath / "Source"); // Todo: Copy all files
 
     if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source"))
         return;
@@ -207,7 +216,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .js
     // Cleanup
     ConsoleLogger::InfoLog("Build Log - Cleaning up", false);
 
-    CleanupBuildFolder(buildPath);
+    //CleanupBuildFolder(buildPath);
 
     ConsoleLogger::InfoLog("Build Log - Build complete", false);
 

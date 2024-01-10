@@ -6,9 +6,8 @@
 #include "Scenes/SceneManager.h"
 #include "imgui_impl_raylib.h"
 #include "Components/Component.h"
+#include "Components/CameraComponent.h"
 #include "ShaderManager.h"
-
-Camera camera = { 0 };
 
 int main(void)
 {
@@ -20,13 +19,6 @@ int main(void)
 	
 	SceneManager::LoadScene(std::filesystem::current_path() / "Scenes" / "Default.scene");
 	SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
-	
-	camera.fovy = 45;
-    camera.up.y = 1;
-    camera.position.y = 3;
-    camera.position.z = -25;
-    camera.projection = CAMERA_PERSPECTIVE;
-    camera.target = { 0.0f, 0.0f, 0.0f };
 	
 	ShaderManager::Init();
 	
@@ -48,7 +40,7 @@ int main(void)
 		
 		ClearBackground(SKYBLUE);
 		
-		BeginMode3D(camera);
+		BeginMode3D(CameraComponent::main->camera);
 		
 		for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 		{

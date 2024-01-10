@@ -368,16 +368,16 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 {
                     if (rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CppIcon"], ImVec2(32, 32)))
                     {
-                        std::string command = "code " + entry.path().string();
-                        std::system(command.c_str());
+                        //std::string command = "code " + entry.path().string(); // VSCode
+                        std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
                     }
                 }
                 else if (extension == ".h")
                 {
                     if (rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["HeaderIcon"], ImVec2(32, 32)))
                     {
-                        std::string command = "code " + entry.path().string();
-                        std::system(command.c_str());
+                        //std::string command = "code " + entry.path().string(); // VSCode
+                        std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
                     }
                 }
                 else if (extension == ".png" || extension == ".jpg" || extension == ".webp")
@@ -386,7 +386,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                     if (rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32)))
                     {
-                        std::string command = "start " + entry.path().string();
+                        std::string command = "start \"" + entry.path().string() + "\"";
                         std::system(command.c_str());
                     }
 
