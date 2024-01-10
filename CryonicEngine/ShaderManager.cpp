@@ -28,7 +28,18 @@ void ShaderManager::Cleanup()
 void ShaderManager::Init()
 {
     //shaders[LitStandard] = LoadShader(("resources/shaders/glsl" + std::to_string(GLSL_VERSION) + "/lighting.vs").c_str(), ("resources/shaders/glsl" + std::to_string(GLSL_VERSION) + "/lighting.fs").c_str());
-    shaders[LitStandard] = LoadShader("resources/shaders/glsl330/lighting.vs", "resources/shaders/glsl330/lighting.fs");
+
+    // Using __FILE__ since if I don't, game builds will get the path of the .exe and not ShaderManger.cpp file
+    shaders[LitStandard] = LoadShader((std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
+
+    std::string currentDirectory = GetWorkingDirectory();
+    std::string relativePath = "resources/shaders/glsl330/lighting.vs";
+
+    // Combine the current directory and relative path
+    std::string fullPath = currentDirectory + "/" + relativePath;
+
+    // Output the full path
+    ConsoleLogger::InfoLog("Full path: " + fullPath);
 
     // Can put below in a for loop
     shaders[LitStandard].locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shaders[LitStandard], "viewPos");
