@@ -27,7 +27,6 @@ void SpriteRenderer::Update(float deltaTime)
 {
     if ((std::filesystem::exists(texturePath)))
     {
-        //DrawTextureEx(texture, { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y }, 0,  WHITE);
         DrawTexturePro(texture,
             {
             0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)
