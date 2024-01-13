@@ -14,6 +14,8 @@
 ProjectData projectData;
 std::filesystem::path projectsPath;
 bool openEditor = false;
+std::string templateName;
+std::string templateDescription;
 
 enum WindowOpened
 {
@@ -62,6 +64,30 @@ void RenderMainWin()
     ImGui::End();
 }
 
+void SelectBlank3DTemplate()
+{
+    projectData.is3D = true;
+    projectData.templateData._template = Templates::Blank3D;
+    templateName = "                  Blank 3D";
+    templateDescription = "A foundational starting point for 3D projects\noffering an empty scene with only a camera.";
+}
+
+void SelectBlank2DTemplate()
+{
+    projectData.is3D = false;
+    projectData.templateData._template = Templates::Blank2D;
+    templateName = "                  Blank 2D";
+    templateDescription = "A foundational starting point for 2D projects\noffering an empty scene with only a camera.";
+}
+
+void SelectSidescrollerTemplate()
+{
+    projectData.is3D = true;
+    projectData.templateData._template = Templates::Sidescroller3D;
+    templateName = "            3D Side-Scroller";
+    templateDescription = "          A template designed for creating\n                  side-scrolling 3D games.";
+}
+
 void RenderProjectCreateWin() // Todo: Add grayed out button
 {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -74,21 +100,15 @@ void RenderProjectCreateWin() // Todo: Add grayed out button
     ImGui::Text("Templates");
     ImGui::SetCursorPos(ImVec2(10, 50));
     if (ImGui::Button("Blank 3D", ImVec2(175, 50)))
-    {
-        
-    }
+        SelectBlank3DTemplate();
     ImGui::SetCursorPos(ImVec2(10, 120));
     if (ImGui::Button("Blank 2D", ImVec2(175, 50)))
-    {
-
-    }
+        SelectBlank2DTemplate();
     ImGui::PopFont();
     ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 20, false));
     ImGui::SetCursorPos(ImVec2(10, 190));
-    if (ImGui::Button("2.5D Side-Scroller", ImVec2(175, 50)))
-    {
-
-    }
+    if (ImGui::Button("3D Side-Scroller", ImVec2(175, 50)))
+        SelectSidescrollerTemplate();
     ImGui::PopFont();
 
     ImGui::GetWindowDrawList()->AddLine(ImVec2(200, 0), ImVec2(200, 600), IM_COL32(45, 45, 45, 255), 3);
@@ -99,12 +119,12 @@ void RenderProjectCreateWin() // Todo: Add grayed out button
 
     ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 30, false));
     ImGui::SetCursorPos(ImVec2(325, 265));
-    ImGui::Text("            Template Name");
+    ImGui::Text(templateName.c_str());
     ImGui::PopFont();
 
     ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 20, false));
     ImGui::SetCursorPos(ImVec2(325, 300));
-    ImGui::TextColored(ImVec4(0.85f, 0.85f, 0.85f, 1), "                    Template Description");
+    ImGui::TextColored(ImVec4(0.85f, 0.85f, 0.85f, 1), templateDescription.c_str());
 
     ImGui::SetCursorPos(ImVec2(350, 350));
     ImGui::Text("Project Name");
@@ -157,6 +177,7 @@ void RenderProjectCreateWin() // Todo: Add grayed out button
             {
             case 0:
                 // No error, project creation was a success
+                projectData.path = projectData.path / projectData.name;
                 openEditor = true;
                 break;
             }
@@ -171,6 +192,7 @@ void RenderProjectCreateWin() // Todo: Add grayed out button
 
     ImGui::End();
 }
+
 
 void InitFonts()
 {
@@ -246,7 +268,7 @@ void InitMisc()
     if (!std::filesystem::exists(projectsPath)) std::filesystem::create_directory(projectsPath);
 
     projectData.path = projectsPath;
-    projectData.templateData._template = Templates::Blank3D;
+    SelectBlank3DTemplate();
 }
 
 void Cleanup()
