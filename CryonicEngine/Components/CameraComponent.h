@@ -11,12 +11,15 @@ public:
 		name = "CameraComponent";
 		runInEditor = true;
 
+		if (ProjectManager::projectData.is3D)
+			camera.projection = CAMERA_PERSPECTIVE;
+		else
+			camera.projection = CAMERA_ORTHOGRAPHIC;
 		camera.fovy = 45;
 		camera.up.y = 1;
 		camera.position.y = 0;
 		camera.position.z = 0;
 		camera.position.x = 0;
-		camera.projection = CAMERA_PERSPECTIVE;
 		camera.target = { 0.0f, 0.0f, 0.0f };
 
 		// Todo: Near Plane
