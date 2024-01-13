@@ -1367,8 +1367,8 @@ void Editor::InitStyle()
 
 void Editor::InitMisc()
 {
-    if (projectData.path.stem().string() != projectData.name)
-        projectData.path = projectData.path / projectData.name;
+    //if (projectData.path.stem().string() != projectData.name)
+    //    projectData.path = projectData.path / projectData.name;
 
     char* userProfile;
     size_t len;

@@ -4,9 +4,13 @@
 #include <direct.h>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include "Scenes/SceneManager.h"
 #include "Utilities.h"
 #include "Components/ScriptLoader.h"
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
@@ -34,35 +38,38 @@ void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem:
 
 int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catch
 {
-    std::filesystem::path path = projectData.path / projectData.name;
-    ConsoleLogger::InfoLog("Project \"" + projectData.name + "\" is being created at the path \"" + path.string() + "\"");
+    projectData.path = projectData.path / projectData.name;
+    //std::filesystem::path path = projectData.path / projectData.name;
+    ConsoleLogger::InfoLog("Project \"" + projectData.name + "\" is being created at the path \"" + projectData.path.string() + "\"");
 
-    std::filesystem::create_directory(path);
-    if (!std::filesystem::exists(path)) return 1;
+    std::filesystem::create_directory(projectData.path);
+    if (!std::filesystem::exists(projectData.path)) return 1;
 
-    std::filesystem::create_directory(path / "api");
-    std::filesystem::create_directory(path / "Settings");
-    std::filesystem::create_directory(path / "Plugins");
-    std::filesystem::create_directory(path / "Assets");
-    std::filesystem::create_directory(path / "Assets" / "Scripts");
-    std::filesystem::create_directory(path / "Assets" / "Scenes");
+    std::filesystem::create_directory(projectData.path / "api");
+    std::filesystem::create_directory(projectData.path / "Settings");
+    std::filesystem::create_directory(projectData.path / "Plugins");
+    std::filesystem::create_directory(projectData.path / "Assets");
+    std::filesystem::create_directory(projectData.path / "Assets" / "Scripts");
+    std::filesystem::create_directory(projectData.path / "Assets" / "Scenes");
 
-    Utilities::HideFile(path / "api");
+    Utilities::HideFile(projectData.path / "api");
 
-    CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), path / "api");
+    CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), projectData.path / "api");
 
     switch (projectData.templateData._template)
     {
-    case Platformer25D:
+    case Sidescroller3D:
     case Blank3D:
-        std::filesystem::create_directory(path / "Assets" / "Models");
+        std::filesystem::create_directory(projectData.path / "Assets" / "Models");
         break;
     case Blank2D:
-        std::filesystem::create_directory(path / "Assets" / "Sprites");
+        std::filesystem::create_directory(projectData.path / "Assets" / "Sprites");
         break;
     default:
         break;
     }
+
+    SaveProjectData(projectData);
 
     return 0;
 }
@@ -237,8 +244,97 @@ void ProjectManager::SaveProject()
 
 ProjectData ProjectManager::LoadProject(std::filesystem::path path)
 {
-    ProjectData projectData;
-    projectData.name = path.stem().string();
+    ProjectData projectData = LoadProjectData(path);
+    //projectData.name = path.stem().string();
     projectData.path = path.string();
+    return projectData;
+}
+
+void ProjectManager::SaveProjectData(ProjectData projectData) // Todo: Encode File
+{
+    json projectDataJson;
+
+    projectDataJson["name"] = projectData.name;
+    projectDataJson["is3D"] = projectData.is3D;
+    
+    std::filesystem::path path = (projectData.path / "ProjectSettings.cry");
+
+    std::string formattedPath = path.string();
+    std::size_t found = formattedPath.find('\\'); // Todo: Check if I need to format the path
+    while (found != std::string::npos) {
+        formattedPath.replace(found, 1, "\\\\");
+        found = formattedPath.find('\\', found + 2);
+    }
+    formattedPath.erase(std::remove_if(formattedPath.begin(), formattedPath.end(), [](char c) {
+        return !std::isprint(static_cast<unsigned char>(c));
+        }), formattedPath.end());
+
+    std::ofstream file(formattedPath);
+    file << std::setw(4) << projectDataJson << std::endl;
+    file.close();
+
+    if (file.fail() && file.bad())
+    {
+        if (file.eof())
+        {
+            ConsoleLogger::ErrorLog("End of file reached while project data at the path '" + path.string() + "'");
+        }
+        else if (file.fail())
+        {
+            ConsoleLogger::ErrorLog("The project data file at the path \"" + path.string() + "\" failed to open. The file can't be found or you have invalid permissions.");
+        }
+        else if (file.bad())
+        {
+            char errorMessage[256];\
+            strerror_s(errorMessage, sizeof(errorMessage), errno);
+            ConsoleLogger::WarningLog("The project data failed to save. Error: " + std::string(errorMessage));
+        }
+        else if (file.is_open())
+        {
+            ConsoleLogger::ErrorLog("The project data failed to save because the save file is open in another program");
+        }
+        else
+        {
+            char errorMessage[256];
+            strerror_s(errorMessage, sizeof(errorMessage), errno);
+            ConsoleLogger::WarningLog("The project data failed to save. Error: " + std::string(errorMessage));
+        }
+        return;
+    }
+    ConsoleLogger::InfoLog("The project data has been saved");
+}
+
+ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) // Todo: Decode File
+{
+    if (!std::filesystem::exists(projectPath / "ProjectSettings.cry"))
+    {
+        ConsoleLogger::WarningLog("The project's data is missing, creating a new one.");
+        // Todo: Create new Project Data. Check stuff like where Models or Sprites folder exists, etc to determine whether its a 2D or 3D game.
+        throw std::runtime_error("Project data is missing at the path: " + (projectPath / "ProjectSettings.cry").string());
+    }
+
+    std::string filePathString = (projectPath / "ProjectSettings.cry").string();
+    filePathString.erase(std::remove_if(filePathString.begin(), filePathString.end(),
+        [](char c) { return !std::isprint(c); }), filePathString.end());
+
+    std::ifstream file(filePathString);
+    if (!file.is_open())
+    {
+        ConsoleLogger::WarningLog("Can not open the project data file.");
+        // Todo: Handle this
+        throw std::runtime_error("Failed to open the project data at the path: " + (projectPath / "ProjectSettings.cry").string());
+    }
+    std::stringstream fileStream;
+    fileStream << file.rdbuf();
+    file.close();
+
+    json projectDataJson = json::parse(fileStream.str());
+
+    ProjectData projectData;
+    projectData.name = std::string(projectDataJson["name"]);
+    projectData.is3D = bool(projectDataJson["is3D"]);
+
+    ConsoleLogger::InfoLog("Project data has been loaded");
+
     return projectData;
 }
