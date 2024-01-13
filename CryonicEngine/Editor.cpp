@@ -138,7 +138,8 @@ void Editor::RenderViewport()
             rmbDown = true;
             //HideCursor();
             //DisableCursor();
-            UpdateCamera(&camera, CAMERA_PERSPECTIVE);
+            if (projectData.is3D)
+                UpdateCamera(&camera, CAMERA_PERSPECTIVE);
             //    UpdateCamera(&camera, CAMERA_FREE);
             //    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
             //    {
@@ -277,11 +278,15 @@ void Editor::UpdateViewport()
     //camera.position.x = (float)(sinf((float)GetTime() / period) * magnitude);
 
     BeginTextureMode(ViewTexture);
-    ClearBackground(SKYBLUE);
 
-    BeginMode3D(camera);
-
-    DrawGrid(100, 10.0f);
+    if (projectData.is3D)
+    {
+        ClearBackground(SKYBLUE);
+        BeginMode3D(camera);
+        DrawGrid(100, 10.0f);
+    }
+    else
+        ClearBackground(GRAY);
 
     for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
@@ -297,7 +302,8 @@ void Editor::UpdateViewport()
 
     //DrawBillboard(camera, *IconManager::imageTextures["CameraGizmoIcon"], {0, 5, 0}, 5.0f, WHITE);
 
-    EndMode3D();
+    if (projectData.is3D)
+        EndMode3D();
     EndTextureMode();
 }
 
