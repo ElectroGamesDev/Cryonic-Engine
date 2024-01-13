@@ -17,7 +17,7 @@ ProjectData ProjectManager::projectData;
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
     // Editor and IconManager needed for gizmos
-    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "resources", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager"};
+    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "resources", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager", "InputSystem", "RaylibInputWrapper", "Wrappers"};
      
     if (!std::filesystem::exists(destination))
         std::filesystem::create_directories(destination);
