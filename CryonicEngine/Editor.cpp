@@ -17,8 +17,10 @@
 #include "Components/ScriptComponent.h"
 #include "Components/CameraComponent.h"
 #include "Components/Lighting.h"
+#include "Components/SpriteRenderer.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
+#include "ProjectManager.h"
 
 Camera Editor::camera = { 0 };
 
@@ -138,7 +140,7 @@ void Editor::RenderViewport()
             rmbDown = true;
             //HideCursor();
             //DisableCursor();
-            if (projectData.is3D)
+            if (ProjectManager::projectData.is3D)
                 UpdateCamera(&camera, CAMERA_PERSPECTIVE);
             //    UpdateCamera(&camera, CAMERA_FREE);
             //    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
@@ -215,7 +217,7 @@ void Editor::UpdateViewport()
                 IsFileExtension(droppedFiles.paths[0], ".iqm") ||
                 IsFileExtension(droppedFiles.paths[0], ".m3d"))       // Model file formats supported
             {
-                std::filesystem::path folderPath = projectData.path / "Assets" / "Models";
+                std::filesystem::path folderPath = ProjectManager::projectData.path / "Assets" / "Models";
                 if (!std::filesystem::exists(folderPath))
                     std::filesystem::create_directories(folderPath);
 
@@ -279,14 +281,16 @@ void Editor::UpdateViewport()
 
     BeginTextureMode(ViewTexture);
 
-    if (projectData.is3D)
+    if (ProjectManager::projectData.is3D)
     {
         ClearBackground(SKYBLUE);
-        BeginMode3D(camera);
-        DrawGrid(100, 10.0f);
     }
     else
         ClearBackground(GRAY);
+    BeginMode3D(camera);
+
+    if (ProjectManager::projectData.is3D)
+        DrawGrid(100, 10.0f);
 
     for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
@@ -302,8 +306,7 @@ void Editor::UpdateViewport()
 
     //DrawBillboard(camera, *IconManager::imageTextures["CameraGizmoIcon"], {0, 5, 0}, 5.0f, WHITE);
 
-    if (projectData.is3D)
-        EndMode3D();
+    EndMode3D();
     EndTextureMode();
 }
 
@@ -314,7 +317,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         resetFileExplorerWin = false;
         ImGui::SetNextWindowSize(ImVec2(1920, 282));
         ImGui::SetNextWindowPos(ImVec2(0, 788));
-        fileExplorerPath = projectData.path / "Assets"; // Todo: Make sure Assets path exists, if not then create it.
+        fileExplorerPath = ProjectManager::projectData.path / "Assets"; // Todo: Make sure Assets path exists, if not then create it.
     }
     ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings;
 
@@ -325,7 +328,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
     {
         //ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 10, false));
         // Back Folder/Button if not in Assets folder
-        if (fileExplorerPath != projectData.path / "Assets")
+        if (fileExplorerPath != ProjectManager::projectData.path / "Assets")
         {
             ImGui::PushID(fileExplorerPath.string().c_str()); // set unique ID based on the path string
             // Creates back button
@@ -589,12 +592,12 @@ void Editor::RenderComponentsWin()
         }
         ImGui::Separator();
         // External Components
-        for (const auto& file : std::filesystem::recursive_directory_iterator(projectData.path / "Assets"))
+        for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
         {
             if (!std::filesystem::is_regular_file(file) || file.path().extension() != ".h") continue;
             if (ImGui::Button(file.path().stem().string().c_str(), ImVec2(buttonWidth, 0)))
             {
-                std::filesystem::path path = std::filesystem::relative(file.path(), projectData.path / "Assets");
+                std::filesystem::path path = std::filesystem::relative(file.path(), ProjectManager::projectData.path / "Assets");
 
                 // Todo: First search same folder for .cpp if its not there, then search all sub folders, then all previous folders.
                 std::filesystem::path cppPath = path;
@@ -932,52 +935,63 @@ void Editor::RenderHierarchy()
 
             std::string objectToCreate = "";
 
-            if (ImGui::MenuItem("Create Empty"))
+            if (ProjectManager::projectData.is3D)
             {
-                hierarchyContextMenuOpen = false;
-                objectToCreate = "Empty";
-            }
+                if (ImGui::MenuItem("Create Empty"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Empty";
+                }
 
-            if (ImGui::MenuItem("Create Cube"))
-            {
-                hierarchyContextMenuOpen = false;
-                objectToCreate = "Cube";
-            }
+                if (ImGui::MenuItem("Create Cube"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Cube";
+                }
 
-            if (ImGui::MenuItem("Create Cylinder"))
-            {
-                hierarchyContextMenuOpen = false;
-                objectToCreate = "Cylinder";
-            }
+                if (ImGui::MenuItem("Create Cylinder"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Cylinder";
+                }
 
-            if (ImGui::MenuItem("Create Sphere"))
-            {
-                hierarchyContextMenuOpen = false;
-                objectToCreate = "Sphere";
-            }
+                if (ImGui::MenuItem("Create Sphere"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Sphere";
+                }
 
-            if (ImGui::MenuItem("Create Plane"))
-            {
-                hierarchyContextMenuOpen = false;
-                objectToCreate = "Plane";
-            }
+                if (ImGui::MenuItem("Create Plane"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Plane";
+                }
 
-            if (ImGui::MenuItem("Create Cone"))
+                if (ImGui::MenuItem("Create Cone"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Cone";
+                }
+
+                if (ImGui::MenuItem("Light"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Light";
+                }
+            }
+            else
             {
-                hierarchyContextMenuOpen = false;
-                objectToCreate = "Cone";
+                if (ImGui::MenuItem("Create Square"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Square";
+                }
             }
 
             if (ImGui::MenuItem("Create Camera"))
             {
                 hierarchyContextMenuOpen = false;
                 objectToCreate = "Camera";
-            }
-
-            if (ImGui::MenuItem("Light"))
-            {
-                hierarchyContextMenuOpen = false;
-                objectToCreate = "Light";
             }
 
             if (objectToCreate != "")
@@ -995,19 +1009,28 @@ void Editor::RenderHierarchy()
                     gameObject.AddComponent<Lighting>();
                 else
                 {
-                    MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
-                    meshRenderer.SetModelPath(objectToCreate);
+                    if (ProjectManager::projectData.is3D)
+                    {
+                        MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                        meshRenderer.SetModelPath(objectToCreate);
 
-                    if (objectToCreate == "Cube")
-                        meshRenderer.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
-                    else if (objectToCreate == "Plane")
-                        meshRenderer.SetModel(LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1)));
-                    else if (objectToCreate == "Sphere")
-                        meshRenderer.SetModel(LoadModelFromMesh(GenMeshSphere(1, 1, 1)));
-                    else if (objectToCreate == "Cylinder")
-                        meshRenderer.SetModel(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)));
-                    else if (objectToCreate == "Cone")
-                        meshRenderer.SetModel(LoadModelFromMesh(GenMeshCone(1, 1, 1)));
+                        if (objectToCreate == "Cube")
+                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
+                        else if (objectToCreate == "Plane")
+                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1)));
+                        else if (objectToCreate == "Sphere")
+                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshSphere(1, 1, 1)));
+                        else if (objectToCreate == "Cylinder")
+                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)));
+                        else if (objectToCreate == "Cone")
+                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCone(1, 1, 1)));
+                    }
+                    else
+                    {
+                        SpriteRenderer& spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+                        spriteRenderer.SetTexturePath(objectToCreate);
+                    }
+
                 }
 
                 SceneManager::GetActiveScene()->AddGameObject(gameObject);
@@ -1243,7 +1266,7 @@ void Editor::Render(void)
             {
                 if (ImGui::MenuItem("Windows", ""))
                 {
-                    ProjectManager::BuildToWindows(projectData);
+                    ProjectManager::BuildToWindows(ProjectManager::projectData);
                 }
                 ImGui::EndMenu();
             }
@@ -1254,13 +1277,13 @@ void Editor::Render(void)
             if (ImGui::MenuItem("Reload API Files", "")) // Todo: Move this into settings or help
             {
                 ConsoleLogger::InfoLog("Reloading API Files");
-                if (!std::filesystem::exists(projectData.path / "api"))
+                if (!std::filesystem::exists(ProjectManager::projectData.path / "api"))
                 {
-                    std::filesystem::create_directories(projectData.path / "api");
-                    Utilities::HideFile(projectData.path / "api");
+                    std::filesystem::create_directories(ProjectManager::projectData.path / "api");
+                    Utilities::HideFile(ProjectManager::projectData.path / "api");
                 }
-                std::filesystem::remove_all(projectData.path / "api");
-                ProjectManager::CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), projectData.path / "api");
+                std::filesystem::remove_all(ProjectManager::projectData.path / "api");
+                ProjectManager::CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), ProjectManager::projectData.path / "api");
             }
             ImGui::EndMenu();
         }
@@ -1294,12 +1317,26 @@ void Editor::SetupViewport()
 {
     ViewTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 
-    camera.fovy = 45;
-    camera.up.y = 1;
-    camera.position.y = 3;
-    camera.position.z = -25;
-    camera.projection = CAMERA_PERSPECTIVE;
-    camera.target = { 0.0f, 0.0f, 0.0f };
+    if (ProjectManager::projectData.is3D)
+    {
+        camera.fovy = 45;
+        camera.up.y = 1;
+        camera.position.y = 3;
+        camera.position.z = -25;
+        camera.projection = CAMERA_PERSPECTIVE;
+        camera.target = { 0.0f, 0.0f, 0.0f };
+    }
+    else
+    {
+        //camera2D.zoom = 1;
+        //camera2D.rotation = 0.0f;
+
+        camera.projection = CAMERA_ORTHOGRAPHIC;
+        camera.up.y = 1;
+        camera.fovy = 45;
+        camera.target = { 0.0f, 0.0f, 0.0f };
+        camera.position = {0, 3, -25};
+    }
 }
 
 void CloseViewport()
@@ -1387,7 +1424,7 @@ void Editor::InitMisc()
 void Editor::InitScenes()
 {
     // Loads all scenes in /Assets/Scenes
-    std::filesystem::path scenesPath = projectData.path / "Assets" / "Scenes";
+    std::filesystem::path scenesPath = ProjectManager::projectData.path / "Assets" / "Scenes";
     std::filesystem::path selectedScenePath;
     if (std::filesystem::exists(scenesPath))
     {
@@ -1445,11 +1482,10 @@ void Editor::Cleanup()
     ImGui::DestroyContext();
 }
 
-void Editor::Init(ProjectData _projectData)
+void Editor::Init()
 {
-    projectData = _projectData;
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI); // FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT
-    InitWindow(GetScreenWidth(), GetScreenHeight(), ("Cryonic Engine - v0.1-ALPHA - " + projectData.name).c_str());
+    InitWindow(GetScreenWidth(), GetScreenHeight(), ("Cryonic Engine - v0.1-ALPHA - " + ProjectManager::projectData.name).c_str());
     MaximizeWindow();
     SetWindowMinSize(100, 100);
     SetTargetFPS(144); // Todo: Set target FPS to monitor refresh rate and handle editor being moved across monitors or just take the higher refresh rate

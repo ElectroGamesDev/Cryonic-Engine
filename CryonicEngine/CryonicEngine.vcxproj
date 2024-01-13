@@ -162,6 +162,7 @@
     <ClCompile Include="FontManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="IconManager.cpp" />
+    <ClCompile Include="Components\SpriteRenderer.cpp" />
     <ClCompile Include="ProjectManager.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\SceneManager.cpp" />
@@ -192,6 +193,7 @@
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="IconManager.h" />
+    <ClInclude Include="Components\SpriteRenderer.h" />
     <ClInclude Include="ProjectManager.h" />
     <ClInclude Include="Scenes\Scene.h" />
     <ClInclude Include="Scenes\SceneManager.h" />

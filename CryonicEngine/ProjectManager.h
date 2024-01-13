@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ProjectManager.h"
 #include "ConsoleLogger.h"
 //#include "CryonicEngine.h"
 #include <filesystem>
@@ -43,4 +42,6 @@ public:
     static void BuildToWindows(ProjectData projectData);
     static void SaveProject();
     static ProjectData LoadProject(std::filesystem::path path);
+    
+    static ProjectData projectData;
 };

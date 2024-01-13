@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ProjectManager.h"
 #include "GameObject.h"
 
 class Editor
@@ -13,7 +12,7 @@ public:
 	void InitMisc();
 	void InitScenes();
 	void InitImages();
-	void Init(ProjectData _projectData);
+	void Init();
 
 	void RenderViewport();
 	void RenderFileExplorer();
@@ -32,7 +31,5 @@ public:
 	void Cleanup();
 
 	static Camera camera;
-
-private:
-	ProjectData projectData;
+	static Camera2D camera2D;
 };

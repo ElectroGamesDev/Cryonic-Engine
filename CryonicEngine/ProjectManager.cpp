@@ -12,6 +12,8 @@
 
 using json = nlohmann::json;
 
+ProjectData ProjectManager::projectData;
+
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
     // Editor and IconManager needed for gizmos

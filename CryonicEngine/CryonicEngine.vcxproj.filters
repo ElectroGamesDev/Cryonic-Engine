@@ -102,6 +102,9 @@
     <ClCompile Include="Components\Lighting.cpp">
       <Filter>Source Files\Components</Filter>
     </ClCompile>
+    <ClCompile Include="Components\SpriteRenderer.cpp">
+      <Filter>Source Files\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -186,6 +189,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Components\Lighting.h">
+      <Filter>Header Files\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\SpriteRenderer.h">
       <Filter>Header Files\Components</Filter>
     </ClInclude>
   </ItemGroup>

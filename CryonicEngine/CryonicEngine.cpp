@@ -10,8 +10,9 @@
 #include <fstream>
 #include "Utilities.h"
 #include <variant>
+#include "ProjectManager.h"
 
-ProjectData projectData;
+//ProjectData projectData;
 std::filesystem::path projectsPath;
 bool openEditor = false;
 std::string templateName;
@@ -50,8 +51,9 @@ void RenderMainWin()
         if (path != "")
         {
             openEditor = true;
-            projectData.path = path;
-            projectData.name = projectData.path.stem().string();
+            ProjectManager::projectData = ProjectManager::LoadProjectData(path);
+            ProjectManager::projectData.path = path;
+            //projectData.name = projectData.path.stem().string();
         }
     }
     ImGui::PopFont();
@@ -66,24 +68,24 @@ void RenderMainWin()
 
 void SelectBlank3DTemplate()
 {
-    projectData.is3D = true;
-    projectData.templateData._template = Templates::Blank3D;
+    ProjectManager::projectData.is3D = true;
+    ProjectManager::projectData.templateData._template = Templates::Blank3D;
     templateName = "                  Blank 3D";
     templateDescription = "A foundational starting point for 3D projects\noffering an empty scene with only a camera.";
 }
 
 void SelectBlank2DTemplate()
 {
-    projectData.is3D = false;
-    projectData.templateData._template = Templates::Blank2D;
+    ProjectManager::projectData.is3D = false;
+    ProjectManager::projectData.templateData._template = Templates::Blank2D;
     templateName = "                  Blank 2D";
     templateDescription = "A foundational starting point for 2D projects\noffering an empty scene with only a camera.";
 }
 
 void SelectSidescrollerTemplate()
 {
-    projectData.is3D = true;
-    projectData.templateData._template = Templates::Sidescroller3D;
+    ProjectManager::projectData.is3D = true;
+    ProjectManager::projectData.templateData._template = Templates::Sidescroller3D;
     templateName = "            3D Side-Scroller";
     templateDescription = "          A template designed for creating\n                  side-scrolling 3D games.";
 }
@@ -137,12 +139,12 @@ void RenderProjectCreateWin() // Todo: Add grayed out button
     ImGui::SetCursorPos(ImVec2(350, 425));
     ImGui::Text("Project Location");
     ImGui::SetCursorPos(ImVec2(350, 450));
-    if (ImGui::Button(projectData.path.string().c_str(), ImVec2(300, 25)))
+    if (ImGui::Button(ProjectManager::projectData.path.string().c_str(), ImVec2(300, 25)))
     {
-        std::filesystem::path path = Utilities::SelectFolderDialog(projectData.path);
+        std::filesystem::path path = Utilities::SelectFolderDialog(ProjectManager::projectData.path);
         if (path != "")
         {
-            projectData.path = path;
+            ProjectManager::projectData.path = path;
         }
     }
     ImGui::PopFont();
@@ -169,15 +171,15 @@ void RenderProjectCreateWin() // Todo: Add grayed out button
     ImGui::SetCursorPos(ImVec2(525, 525));
     if (ImGui::Button("Create", ImVec2(150, 35)))
     {
-        projectData.name = nameBuffer;
-        if (!std::filesystem::exists(projectData.path / projectData.name))
+        ProjectManager::projectData.name = nameBuffer;
+        if (!std::filesystem::exists(ProjectManager::projectData.path / ProjectManager::projectData.name))
         {
-            int error = ProjectManager::CreateProject(projectData);
+            int error = ProjectManager::CreateProject(ProjectManager::projectData);
             switch (error)
             {
             case 0:
                 // No error, project creation was a success
-                projectData.path = projectData.path / projectData.name;
+                ProjectManager::projectData.path = ProjectManager::projectData.path / ProjectManager::projectData.name;
                 openEditor = true;
                 break;
             }
@@ -267,7 +269,7 @@ void InitMisc()
     projectsPath = std::filesystem::path(userProfile) / "Documents" / "Cryonic Engine Projects";
     if (!std::filesystem::exists(projectsPath)) std::filesystem::create_directory(projectsPath);
 
-    projectData.path = projectsPath;
+    ProjectManager::projectData.path = projectsPath;
     SelectBlank3DTemplate();
 }
 
@@ -328,6 +330,6 @@ void main()
     if (openEditor)
     {
         Editor editor;
-        editor.Init(projectData);
+        editor.Init();
     }
 }

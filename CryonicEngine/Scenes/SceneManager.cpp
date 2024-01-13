@@ -15,6 +15,8 @@
 #include "../Components/ScriptComponent.h"
 #include "../Components/CameraComponent.h"
 #include "../Components/Lighting.h"
+#include "../Components/SpriteRenderer.h"
+#include "../ProjectManager.h"
 
 using json = nlohmann::json;
 
@@ -75,6 +77,10 @@ bool SceneManager::SaveScene(Scene* scene)
             if (dynamic_cast<MeshRenderer*>(component))
             {
                 componentData["model_path"] = dynamic_cast<MeshRenderer*>(component)->GetModelPath();
+            }
+            if (dynamic_cast<SpriteRenderer*>(component))
+            {
+                componentData["texture_path"] = dynamic_cast<SpriteRenderer*>(component)->GetTexturePath();
             }
             else if (dynamic_cast<ScriptComponent*>(component))
             {
@@ -141,7 +147,7 @@ bool SceneManager::SaveScene(Scene* scene)
     return true;
 }
 
-bool SceneManager::LoadScene(const std::filesystem::path& filePath)
+bool SceneManager::LoadScene(std::filesystem::path filePath)
 {
     if (!std::filesystem::exists(filePath) || filePath.extension() != ".scene")
     {
@@ -212,6 +218,14 @@ bool SceneManager::LoadScene(const std::filesystem::path& filePath)
                     component.SetModel(LoadModelFromMesh(GenMeshCone(1, 1, 1)));
                 else
                     component.SetModel(LoadModel(component.GetModelPath().string().c_str()));
+            }
+            else if (componentData["name"] == "SpriteRenderer")
+            {
+                SpriteRenderer& component = gameObject.AddComponent<SpriteRenderer>();
+                component.SetTexturePath(componentData["texture_path"]);
+
+                if (component.GetTexturePath().string() != "Square")
+                    component.SetTexture(LoadTexture((ProjectManager::projectData.path / component.GetTexturePath()).string().c_str()));
             }
             else if (componentData["name"] == "ScriptComponent")
             {
