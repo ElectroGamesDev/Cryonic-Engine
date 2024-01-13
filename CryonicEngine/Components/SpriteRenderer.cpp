@@ -38,7 +38,8 @@ void SpriteRenderer::Update(float deltaTime)
                 texture.height* gameObject->transform.GetScale().y
         },
                 {
-                texture.width * 0.5f, texture.height * 0.5f // Origin may be gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y
+                texture.width * gameObject->transform.GetScale().x / 2,
+                texture.height * gameObject->transform.GetScale().y / 2
             },
                 gameObject->transform.GetRotationEuler().y,
                     WHITE);
