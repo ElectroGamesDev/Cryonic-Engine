@@ -1,6 +1,8 @@
 #include "GameObject.h"
 #include "Scenes/SceneManager.h"
 #include "ConsoleLogger.h"
+#include <cstdlib>
+#include <ctime>
 
 GameObject::GameObject(int id)
 {
@@ -9,7 +11,14 @@ GameObject::GameObject(int id)
     //this->bounds = bounds;
     //this->active = active;
     //this->name = name;
-    this->id = id;
+    //this->id = id;
+    static bool seeded = false;
+    if (!seeded)
+    {
+        srand(static_cast<unsigned int>(time(0)));
+        seeded = true;
+    }
+    this->id = 100000 + rand() % 900000; // Todo: Make sure this is always unique
 }
 
 //Model GameObject::GetModel() const

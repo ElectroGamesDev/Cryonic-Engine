@@ -849,6 +849,51 @@ void Editor::RenderProperties()
     ImGui::End();
 }
 
+bool Editor::RenderHierarchyNode(GameObject& gameObject, bool normalColor)
+{
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+
+    if (normalColor)
+        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(36, 40, 43, 255)); // 53, 53, 53
+    else
+        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(45, 48, 51, 255)); // 62, 62, 62
+
+    //ImGui::PushStyleColor(ImGuiCol_Header, {64, 64, 64, 255});
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    if (selectedObject != nullptr && selectedObject->GetId() == gameObject.GetId())
+        flags |= ImGuiTreeNodeFlags_Selected;
+
+    if (ImGui::TreeNodeEx((gameObject.GetName() + "##" + std::to_string(gameObject.GetId())).c_str(), flags))
+    {
+        if (ImGui::IsItemClicked())
+        {
+            objectInProperties = &gameObject;
+            selectedObject = &gameObject;
+
+            if (selectedObject->GetComponent<CameraComponent>() != nullptr)
+                cameraSelected = true;
+            else if (cameraSelected)
+            {
+                cameraSelected = false;
+                resetCameraView = true;
+            }
+        }
+        //if (HasChildNodes(nodeName))
+        //{
+        //    for (auto& childNode : GetChildNodes(nodeName))
+        //    {
+        //        DrawHierarchyNode(childNode.c_str());
+        //    }
+        //}
+        ImGui::TreePop();
+    }
+
+    return normalColor; // Todo: If has child and child is open, return the lowest color rather than this node's color
+}
+
 void Editor::RenderHierarchy()
 {
     if (resetHierarchy)
@@ -858,19 +903,116 @@ void Editor::RenderHierarchy()
         resetHierarchy = false;
     }
     ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings;
-    if (ImGui::Begin("Hierachy", nullptr, windowFlags))
+    ImGui::Begin("Hierachy", nullptr, windowFlags);
+
+    ImGui::BeginTable("HierarchyTable", 1);
+
+    bool hierarchyRowColor = true;
+
+    for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
-        for (int i = 0; i < SceneManager::GetActiveScene()->GetGameObjects().size(); i++) // Todo: I am doing this both in ShowProperties and ShowViewport, maybe merge them to use the same loop?
+        hierarchyRowColor = !RenderHierarchyNode(gameObject, hierarchyRowColor);
+    }
+
+    hierarchyRowColor = false;
+    ImGui::EndTable();
+
+    if (hierarchyContextMenuOpen || (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
+    {
+        hierarchyContextMenuOpen = true;
+        if (ImGui::BeginPopupContextWindow())
         {
-            std::string objectName = SceneManager::GetActiveScene()->GetGameObjects()[i].GetName();
-            if (objectName.length() > round(ImGui::GetWindowWidth() / 11)) {
-                objectName = objectName.substr(0, round(ImGui::GetWindowWidth() / 11));
-                objectName = objectName + "...";
-            }
-            if (ImGui::Button((objectName + "##" + std::to_string(SceneManager::GetActiveScene()->GetGameObjects()[i].GetId())).c_str(), ImVec2((ImGui::GetWindowWidth() - 15), 0)))
+            ImGui::Separator();
+
+            std::string objectToCreate = "";
+
+            if (ImGui::MenuItem("Create Empty"))
             {
-                objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects()[i];
-                selectedObject = &SceneManager::GetActiveScene()->GetGameObjects()[i];
+                hierarchyContextMenuOpen = false;
+                objectToCreate = "Empty";
+            }
+
+            if (ImGui::MenuItem("Create Cube"))
+            {
+                hierarchyContextMenuOpen = false;
+                objectToCreate = "Cube";
+            }
+
+            if (ImGui::MenuItem("Create Cylinder"))
+            {
+                hierarchyContextMenuOpen = false;
+                objectToCreate = "Cylinder";
+            }
+
+            if (ImGui::MenuItem("Create Sphere"))
+            {
+                hierarchyContextMenuOpen = false;
+                objectToCreate = "Sphere";
+            }
+
+            if (ImGui::MenuItem("Create Plane"))
+            {
+                hierarchyContextMenuOpen = false;
+                objectToCreate = "Plane";
+            }
+
+            if (ImGui::MenuItem("Create Cone"))
+            {
+                hierarchyContextMenuOpen = false;
+                objectToCreate = "Cone";
+            }
+
+            if (ImGui::MenuItem("Create Camera"))
+            {
+                hierarchyContextMenuOpen = false;
+                objectToCreate = "Camera";
+            }
+
+            if (ImGui::MenuItem("Light"))
+            {
+                hierarchyContextMenuOpen = false;
+                objectToCreate = "Light";
+            }
+
+            if (objectToCreate != "")
+            {
+                GameObject gameObject;
+                gameObject.transform.SetPosition({ 0,0,0 });
+                gameObject.transform.SetScale({ 1,1,1 });
+                gameObject.transform.SetRotation(QuaternionIdentity());
+                gameObject.SetName(objectToCreate);
+                if (objectToCreate == "Empty")
+                    gameObject.SetName("GameObject");
+                else if (objectToCreate == "Camera")
+                    gameObject.AddComponent<CameraComponent>();
+                else if (objectToCreate == "Light")
+                    gameObject.AddComponent<Lighting>();
+                else
+                {
+                    MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                    meshRenderer.SetModelPath(objectToCreate);
+
+                    if (objectToCreate == "Cube")
+                        meshRenderer.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
+                    else if (objectToCreate == "Plane")
+                        meshRenderer.SetModel(LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1)));
+                    else if (objectToCreate == "Sphere")
+                        meshRenderer.SetModel(LoadModelFromMesh(GenMeshSphere(1, 1, 1)));
+                    else if (objectToCreate == "Cylinder")
+                        meshRenderer.SetModel(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)));
+                    else if (objectToCreate == "Cone")
+                        meshRenderer.SetModel(LoadModelFromMesh(GenMeshCone(1, 1, 1)));
+                }
+
+                SceneManager::GetActiveScene()->AddGameObject(gameObject);
+
+                for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back().GetComponents())
+                {
+                    component->gameObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
+                }
+
+                selectedObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
+                objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects().back();
 
                 if (selectedObject->GetComponent<CameraComponent>() != nullptr)
                     cameraSelected = true;
@@ -880,125 +1022,163 @@ void Editor::RenderHierarchy()
                     resetCameraView = true;
                 }
             }
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
-        }
-        // Add a scrollable text box
-        //ImGui::BeginChild("Scrolling Region", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
-        //ImGui::Text("Scrollable Text");
-        //ImGui::EndChild();
 
-        if (hierarchyContextMenuOpen || (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
-        {
-            hierarchyContextMenuOpen = true;
-            if (ImGui::BeginPopupContextWindow())
-            {
-                ImGui::Separator();
-
-                std::string objectToCreate = "";
-
-                if (ImGui::MenuItem("Create Empty"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Empty";
-                }
-
-                if (ImGui::MenuItem("Create Cube"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Cube";
-                }
-
-                if (ImGui::MenuItem("Create Cylinder"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Cylinder";
-                }
-
-                if (ImGui::MenuItem("Create Sphere"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Sphere";
-                }
-
-                if (ImGui::MenuItem("Create Plane"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Plane";
-                }
-
-                if (ImGui::MenuItem("Create Cone"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Cone";
-                }
-
-                if (ImGui::MenuItem("Create Camera"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Camera";
-                }
-
-                if (ImGui::MenuItem("Light"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Light";
-                }
-
-                if (objectToCreate != "")
-                {
-                    GameObject gameObject;
-                    gameObject.transform.SetPosition({ 0,0,0 });
-                    gameObject.transform.SetScale({ 1,1,1 });
-                    gameObject.transform.SetRotation(QuaternionIdentity());
-                    gameObject.SetName(objectToCreate);
-                    if (objectToCreate == "Empty")
-                        gameObject.SetName("GameObject");
-                    else if (objectToCreate == "Camera")
-                        gameObject.AddComponent<CameraComponent>();
-                    else if (objectToCreate == "Light")
-                        gameObject.AddComponent<Lighting>();
-                    else
-                    {
-                        MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
-                        meshRenderer.SetModelPath(objectToCreate);
-
-                        if (objectToCreate == "Cube")
-                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
-                        else if (objectToCreate == "Plane")
-                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1)));
-                        else if (objectToCreate == "Sphere")
-                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshSphere(1, 1, 1)));
-                        else if (objectToCreate == "Cylinder")
-                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)));
-                        else if (objectToCreate == "Cone")
-                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCone(1, 1, 1)));
-                    }
-
-                    SceneManager::GetActiveScene()->AddGameObject(gameObject);
-
-                    for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back().GetComponents())
-                    {
-                        component->gameObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
-                    }
-
-                    selectedObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
-                    objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects().back();
-
-                    if (selectedObject->GetComponent<CameraComponent>() != nullptr)
-                        cameraSelected = true;
-                    else if (cameraSelected)
-                    {
-                        cameraSelected = false;
-                        resetCameraView = true;
-                    }
-                }
-
-                ImGui::EndPopup();
-            }
+            ImGui::EndPopup();
         }
     }
     ImGui::End();
 }
+
+//void Editor::RenderHierarchy()
+//{
+//    if (resetHierarchy)
+//    {
+//        ImGui::SetNextWindowSize(ImVec2(277, 736));
+//        ImGui::SetNextWindowPos(ImVec2(0, 52));
+//        resetHierarchy = false;
+//    }
+//    ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings;
+//    if (ImGui::Begin("Hierachy", nullptr, windowFlags))
+//    {
+//        for (int i = 0; i < SceneManager::GetActiveScene()->GetGameObjects().size(); i++) // Todo: I am doing this both in ShowProperties and ShowViewport, maybe merge them to use the same loop?
+//        {
+//            std::string objectName = SceneManager::GetActiveScene()->GetGameObjects()[i].GetName();
+//            if (objectName.length() > round(ImGui::GetWindowWidth() / 11)) {
+//                objectName = objectName.substr(0, round(ImGui::GetWindowWidth() / 11));
+//                objectName = objectName + "...";
+//            }
+//            if (ImGui::Button((objectName + "##" + std::to_string(SceneManager::GetActiveScene()->GetGameObjects()[i].GetId())).c_str(), ImVec2((ImGui::GetWindowWidth() - 15), 0)))
+//            {
+//                objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects()[i];
+//                selectedObject = &SceneManager::GetActiveScene()->GetGameObjects()[i];
+//
+//                if (selectedObject->GetComponent<CameraComponent>() != nullptr)
+//                    cameraSelected = true;
+//                else if (cameraSelected)
+//                {
+//                    cameraSelected = false;
+//                    resetCameraView = true;
+//                }
+//            }
+//            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
+//        }
+//        // Add a scrollable text box
+//        //ImGui::BeginChild("Scrolling Region", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+//        //ImGui::Text("Scrollable Text");
+//        //ImGui::EndChild();
+//
+//        if (hierarchyContextMenuOpen || (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
+//        {
+//            hierarchyContextMenuOpen = true;
+//            if (ImGui::BeginPopupContextWindow())
+//            {
+//                ImGui::Separator();
+//
+//                std::string objectToCreate = "";
+//
+//                if (ImGui::MenuItem("Create Empty"))
+//                {
+//                    hierarchyContextMenuOpen = false;
+//                    objectToCreate = "Empty";
+//                }
+//
+//                if (ImGui::MenuItem("Create Cube"))
+//                {
+//                    hierarchyContextMenuOpen = false;
+//                    objectToCreate = "Cube";
+//                }
+//
+//                if (ImGui::MenuItem("Create Cylinder"))
+//                {
+//                    hierarchyContextMenuOpen = false;
+//                    objectToCreate = "Cylinder";
+//                }
+//
+//                if (ImGui::MenuItem("Create Sphere"))
+//                {
+//                    hierarchyContextMenuOpen = false;
+//                    objectToCreate = "Sphere";
+//                }
+//
+//                if (ImGui::MenuItem("Create Plane"))
+//                {
+//                    hierarchyContextMenuOpen = false;
+//                    objectToCreate = "Plane";
+//                }
+//
+//                if (ImGui::MenuItem("Create Cone"))
+//                {
+//                    hierarchyContextMenuOpen = false;
+//                    objectToCreate = "Cone";
+//                }
+//
+//                if (ImGui::MenuItem("Create Camera"))
+//                {
+//                    hierarchyContextMenuOpen = false;
+//                    objectToCreate = "Camera";
+//                }
+//
+//                if (ImGui::MenuItem("Light"))
+//                {
+//                    hierarchyContextMenuOpen = false;
+//                    objectToCreate = "Light";
+//                }
+//
+//                if (objectToCreate != "")
+//                {
+//                    GameObject gameObject;
+//                    gameObject.transform.SetPosition({ 0,0,0 });
+//                    gameObject.transform.SetScale({ 1,1,1 });
+//                    gameObject.transform.SetRotation(QuaternionIdentity());
+//                    gameObject.SetName(objectToCreate);
+//                    if (objectToCreate == "Empty")
+//                        gameObject.SetName("GameObject");
+//                    else if (objectToCreate == "Camera")
+//                        gameObject.AddComponent<CameraComponent>();
+//                    else if (objectToCreate == "Light")
+//                        gameObject.AddComponent<Lighting>();
+//                    else
+//                    {
+//                        MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
+//                        meshRenderer.SetModelPath(objectToCreate);
+//
+//                        if (objectToCreate == "Cube")
+//                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
+//                        else if (objectToCreate == "Plane")
+//                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1)));
+//                        else if (objectToCreate == "Sphere")
+//                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshSphere(1, 1, 1)));
+//                        else if (objectToCreate == "Cylinder")
+//                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)));
+//                        else if (objectToCreate == "Cone")
+//                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCone(1, 1, 1)));
+//                    }
+//
+//                    SceneManager::GetActiveScene()->AddGameObject(gameObject);
+//
+//                    for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back().GetComponents())
+//                    {
+//                        component->gameObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
+//                    }
+//
+//                    selectedObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
+//                    objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects().back();
+//
+//                    if (selectedObject->GetComponent<CameraComponent>() != nullptr)
+//                        cameraSelected = true;
+//                    else if (cameraSelected)
+//                    {
+//                        cameraSelected = false;
+//                        resetCameraView = true;
+//                    }
+//                }
+//
+//                ImGui::EndPopup();
+//            }
+//        }
+//    }
+//    ImGui::End();
+//}
 
 void Editor::RenderTopbar()
 {

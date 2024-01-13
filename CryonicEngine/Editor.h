@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ProjectManager.h"
+#include "GameObject.h"
 
 class Editor
 {
@@ -17,6 +18,7 @@ public:
 	void RenderViewport();
 	void RenderFileExplorer();
 	void RenderProperties();
+	bool RenderHierarchyNode(GameObject& gameObject, bool normalColor);
 	void RenderHierarchy();
 	void RenderTopbar();
 	void RenderComponentsWin();
