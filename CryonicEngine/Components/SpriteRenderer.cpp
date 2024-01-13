@@ -47,8 +47,8 @@ void SpriteRenderer::Update(float deltaTime)
     {
         DrawRectanglePro(
             {
-                gameObject->transform.GetPosition().x - (2.5f * gameObject->transform.GetScale().x / 2),
-                gameObject->transform.GetPosition().y - (2.5f * gameObject->transform.GetScale().y / 2),
+                gameObject->transform.GetPosition().x,
+                gameObject->transform.GetPosition().y,
                 5 * gameObject->transform.GetScale().x,
                 5 * gameObject->transform.GetScale().y
             },
