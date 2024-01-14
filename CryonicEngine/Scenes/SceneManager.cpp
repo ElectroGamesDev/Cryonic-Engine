@@ -16,7 +16,10 @@
 #include "../Components/CameraComponent.h"
 #include "../Components/Lighting.h"
 #include "../Components/SpriteRenderer.h"
+
+#if defined(EDITOR)
 #include "../ProjectManager.h"
+#endif
 
 using json = nlohmann::json;
 
@@ -225,7 +228,15 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.SetTexturePath(componentData["texture_path"]);
 
                 if (component.GetTexturePath().string() != "Square")
-                    component.SetTexture(LoadTexture((ProjectManager::projectData.path / component.GetTexturePath()).string().c_str()));
+                {
+                    std::filesystem::path path;
+                    #if defined(EDITOR)
+                    path = ProjectManager::projectData.path;
+                    #else
+                    // Todo: set path for built games
+                    #endif
+                    component.SetTexture(LoadTexture((path / component.GetTexturePath()).string().c_str()));
+                }
             }
             else if (componentData["name"] == "ScriptComponent")
             {

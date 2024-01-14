@@ -11,10 +11,10 @@ public:
 		name = "CameraComponent";
 		runInEditor = true;
 
-		if (ProjectManager::projectData.is3D)
+		//if (ProjectManager::projectData.is3D) // Todo: Re-add this
 			camera.projection = CAMERA_PERSPECTIVE;
-		else
-			camera.projection = CAMERA_ORTHOGRAPHIC;
+		//else
+		//	camera.projection = CAMERA_ORTHOGRAPHIC;
 		camera.fovy = 45;
 		camera.up.y = 1;
 		camera.position.y = 0;
