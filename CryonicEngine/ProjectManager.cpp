@@ -214,7 +214,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .js
 
     ConsoleLogger::InfoLog("Build Log - Running mingw32-make", false);
 
-    system(("mingw32-make -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 0.75f))) + " PLATFORM=PLATFORM_DESKTOP").c_str()); // Todo: Make the number of cores configurable
+    system(("mingw32-make -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1))) + " PLATFORM=PLATFORM_DESKTOP").c_str()); // Todo: Make the number of cores configurable, and default at 75%
 
     // Resets the current path
     _chdir(originalPath.string().c_str());
