@@ -106,6 +106,9 @@ public:
         void SetPosition(Vector3 position) { _position = position; }
         Vector3 GetPosition() { return _position; }
 
+        void SetLocalPosition(Vector3 position) { _position = position; }
+        Vector3 GetLocalPosition() { return _position; }
+
         void SetRotation(Quaternion rotation) { _rotation = rotation; }
         Quaternion GetRotation() { return _rotation; }
 
@@ -121,6 +124,9 @@ public:
 
         void SetScale(Vector3 scale) { _scale = scale; }
         Vector3 GetScale() { return _scale; }
+
+        void SetLocalScale(Vector3 scale) { _scale = scale; }
+        Vector3 GetLocalScale() { return _scale; }
 
         Transform& operator=(const Transform& other) {
             if (this != &other) {

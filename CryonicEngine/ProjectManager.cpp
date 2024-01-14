@@ -225,7 +225,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .js
     // Cleanup
     ConsoleLogger::InfoLog("Build Log - Cleaning up", false);
 
-    //CleanupBuildFolder(buildPath);
+    CleanupBuildFolder(buildPath);
 
     ConsoleLogger::InfoLog("Build Log - Build complete", false);
 
