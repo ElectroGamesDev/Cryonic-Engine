@@ -1,6 +1,7 @@
 #include "Utilities.h"
 #include <ShlObj.h>
 #include <fileapi.h>
+#include <Windows.h>
 
 void Utilities::HideFile(std::filesystem::path path) // Todo: Figure out why the file isn't being hidden
 {
@@ -10,6 +11,14 @@ void Utilities::HideFile(std::filesystem::path path) // Todo: Figure out why the
 void Utilities::OpenPathInExplorer(std::filesystem::path path)
 {
 	ShellExecute(NULL, L"open", path.wstring().c_str(), NULL, NULL, SW_SHOWDEFAULT);
+}
+
+int Utilities::GetNumberOfCores()
+{
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);
+
+    return sysInfo.dwNumberOfProcessors;
 }
 
 std::string Utilities::SelectFolderDialog(const std::filesystem::path& projectPath)
