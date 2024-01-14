@@ -632,7 +632,12 @@ void Editor::RenderCameraView()
     }
 
     BeginTextureMode(cameraRenderTexture);
-    ClearBackground(SKYBLUE);
+    if (ProjectManager::projectData.is3D)
+    {
+        ClearBackground(SKYBLUE);
+    }
+    else
+        ClearBackground(GRAY);
 
     BeginMode3D(selectedObject->GetComponent<CameraComponent>()->camera);
 
