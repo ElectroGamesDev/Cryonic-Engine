@@ -28,4 +28,4 @@ Cryonic Engine is open for contributions. Feel free to fork the repository, make
 
 ## License
 
-Cryonic Engine is licensed under the [MIT License](link-to-license).
+Cryonic Engine is licensed under the [GPL-3.0 License](LICENSE).
