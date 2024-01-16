@@ -47,15 +47,15 @@ void Scene::RemoveGameObject(GameObject* gameObject)
 }
 
 
-std::vector<GameObject>& Scene::GetGameObjects() {
+std::vector<GameObject>& Scene::GetGameObjects()
+{
     return m_GameObjects;
 }
 
-GameObject* Scene::GetGameObject(const std::string& name) {
-    for (GameObject& gameObject : m_GameObjects) {
-        if (gameObject.GetName() == name) {
+GameObject* Scene::GetGameObject(const std::string& name)
+{
+    for (GameObject& gameObject : m_GameObjects)
+        if (gameObject.GetName() == name)
             return &gameObject;
-        }
-    }
     return nullptr;
 }
