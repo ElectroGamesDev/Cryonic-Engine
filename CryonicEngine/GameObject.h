@@ -2,11 +2,13 @@
 
 #include <string>
 #include <vector>
+#include <deque>
 #include "imgui.h"
 #include "ConsoleLogger.h"
 #include "raylib.h"
 #include "raymath.h"
 #include <filesystem>
+#include <memory>
 
 class Component;
 
@@ -42,6 +44,21 @@ public:
     bool IsActive() const;
     int GetId() const;
     bool active = true;
+
+    void SetParent(GameObject* gameObject);
+    GameObject* GetParent();
+
+    GameObject* GetChild(int index);
+    GameObject* FindChild(std::string name);
+
+    std::deque<GameObject*>& GetChildren();
+
+    void SetSiblingIndex(int index);
+    int GetSiblingIndex();
+
+    std::deque<GameObject*>& GetSiblings();
+
+    bool IsChild(GameObject& gameObject, GameObject* parent = nullptr);
 
     template <typename T>
     T& AddComponent() {
@@ -100,7 +117,6 @@ public:
         Vector3 _position = {0,0,0};
         Quaternion _rotation = QuaternionIdentity();
         Vector3 _scale = { 1,1,1 };
-        Vector3 _realScale;
 
 
         void SetPosition(Vector3 position) { _position = position; }
@@ -122,6 +138,16 @@ public:
         */
         Vector3 GetRotationEuler() { return Vector3Scale(QuaternionToEuler(_rotation), DEG); }
 
+        /**
+        Set the game object's local rotation in degrees
+        */
+        void SetLocalRotationEuler(Vector3 rotation) { _rotation = QuaternionFromEuler((float)rotation.x * RAD, rotation.y * RAD, rotation.z * RAD); }
+        /**
+        Get the game object's local rotation in degrees
+        @return Vector3 euler of the rotation
+        */
+        Vector3 GetLocalRotationEuler() { return Vector3Scale(QuaternionToEuler(_rotation), DEG); }
+
         void SetScale(Vector3 scale) { _scale = scale; }
         Vector3 GetScale() { return _scale; }
 
@@ -133,7 +159,6 @@ public:
                 _position = other._position;
                 _rotation = other._rotation;
                 _scale = other._scale;
-                _realScale = other._realScale;
             }
             return *this;
         }
@@ -148,10 +173,7 @@ public:
                 _rotation.w == other._rotation.w &&
                 _scale.x == other._scale.x &&
                 _scale.y == other._scale.y &&
-                _scale.z == other._scale.z &&
-                _realScale.x == other._realScale.x &&
-                _realScale.y == other._realScale.y &&
-                _realScale.z == other._realScale.z);
+                _scale.z == other._scale.z);
         }
 
         bool operator!=(const Transform& other) const {
@@ -164,7 +186,10 @@ private:
     //std::filesystem::path modelPath;
     //BoundingBox bounds;
     //Material material;
+
     std::string name;
     int id;
     std::vector<Component*> components;
+    GameObject* parentGameObject;
+    std::deque<GameObject*> childGameObjects;
 };

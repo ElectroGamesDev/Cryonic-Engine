@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "../Components/Component.h"
 
-Scene::Scene(const std::filesystem::path& path, std::vector<GameObject> gameObjects)
+Scene::Scene(const std::filesystem::path& path, std::deque<GameObject> gameObjects)
     : m_Path(path), m_GameObjects(gameObjects)
 {
 }
@@ -47,7 +47,7 @@ void Scene::RemoveGameObject(GameObject* gameObject)
 }
 
 
-std::vector<GameObject>& Scene::GetGameObjects()
+std::deque<GameObject>& Scene::GetGameObjects()
 {
     return m_GameObjects;
 }

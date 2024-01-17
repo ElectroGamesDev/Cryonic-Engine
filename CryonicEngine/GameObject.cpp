@@ -11,14 +11,16 @@ GameObject::GameObject(int id)
     //this->bounds = bounds;
     //this->active = active;
     //this->name = name;
-    //this->id = id;
+    this->id = id;
     static bool seeded = false;
     if (!seeded)
     {
         srand(static_cast<unsigned int>(time(0)));
         seeded = true;
     }
-    this->id = 100000 + rand() % 900000; // Todo: Make sure this is always unique
+
+    if (id == 0)
+        this->id = 100000 + rand() % 900000; // Todo: Make sure this is always unique
 }
 
 //Model GameObject::GetModel() const
@@ -164,4 +166,83 @@ bool GameObject::operator!=(const GameObject& other) const
 GameObject::~GameObject()
 {
 
+}
+
+bool GameObject::IsChild(GameObject& gameObject, GameObject* parent)
+{
+    if (parent == nullptr)
+        parent = &gameObject;
+
+    if (std::find(childGameObjects.begin(), childGameObjects.end(), parent) != childGameObjects.end())
+        return true;
+
+    for (GameObject* child : childGameObjects)
+        if (child->IsChild(*parent))
+            return true;
+
+    return false;
+
+}
+
+void GameObject::SetParent(GameObject* gameObject)
+{
+    // Todo: Set Local and Global position/rotation/scale
+    if (parentGameObject != nullptr && gameObject != nullptr && gameObject->GetId() == parentGameObject->GetId())
+        return;
+
+    if (parentGameObject != nullptr)
+        parentGameObject->childGameObjects.erase(std::remove(parentGameObject->childGameObjects.begin(), parentGameObject->childGameObjects.end(), this), parentGameObject->childGameObjects.end());
+
+    if (gameObject != nullptr && childGameObjects.size() > 0 && IsChild(*gameObject))
+        gameObject->SetParent(parentGameObject);
+
+    parentGameObject = gameObject;
+    if (parentGameObject != nullptr) // If its nullptr, then the game object will become a root game object.
+    {
+        parentGameObject->childGameObjects.push_back(this);
+        if (!parentGameObject->active) // Todo: Check parentActive
+            active = false; // Todo: Set parentActive instead
+    }
+}
+
+GameObject* GameObject::GetParent()
+{
+    return parentGameObject;
+}
+
+GameObject* GameObject::GetChild(int index)
+{
+    if (index < 0 || index >= childGameObjects.size())
+    {
+        ConsoleLogger::WarningLog("Unknown user script called GetChild() with an out of bounds index. The index must be less than the child count. Index: " + std::to_string(index) + ", Number of children: " + std::to_string(childGameObjects.size()), false);
+        return nullptr;
+    }
+    else
+        return childGameObjects[index];
+}
+
+GameObject* GameObject::FindChild(std::string name)
+{
+    return nullptr;
+}
+
+std::deque<GameObject*>& GameObject::GetChildren()
+{
+    return childGameObjects;
+}
+
+void GameObject::SetSiblingIndex(int index)
+{
+    // Todo: Add this
+}
+
+int GameObject::GetSiblingIndex()
+{
+    // Todo: Add this
+    return 0;
+}
+
+std::deque<GameObject*>& GameObject::GetSiblings()
+{
+    return parentGameObject->childGameObjects;
 }

@@ -67,6 +67,11 @@ bool SceneManager::SaveScene(Scene* scene)
         //gameObjectData["tint"] = { object.GetTint().Value.x, object.GetTint().Value.y, object.GetTint().Value.z, object.GetTint().Value.w };
         //gameObjectData["z_order"] = object.GetZOrder();
 
+        if (object.GetParent() != nullptr)
+            gameObjectData["parent_id"] = object.GetParent()->GetId();
+        else
+            gameObjectData["parent_id"] = -1;
+
         // Save components
         json componentsData;
         for (Component* component : object.GetComponents())
@@ -180,6 +185,8 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
     // Create new scene
     Scene scene = Scene(filePath, {});
 
+    std::unordered_map<int, int> parentObjects;
+
     // Create game objects
     for (const auto& gameObjectData : sceneData["game_objects"])
     {
@@ -198,6 +205,8 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
         gameObject.transform.SetRotation(Quaternion{ gameObjectData["rotation"][0], gameObjectData["rotation"][1], gameObjectData["rotation"][2], gameObjectData["rotation"][3]});
         //gameObject.SetTint(ImVec4(gameObjectData["tint"][0], gameObjectData["tint"][1], gameObjectData["tint"][2], gameObjectData["tint"][3]));
         //gameObject.SetZOrder(gameObjectData["z_order"]);
+
+        parentObjects[gameObjectData["id"]] = gameObjectData["parent_id"];
 
         // Load components
         for (const auto& componentData : gameObjectData["components"])
@@ -257,25 +266,33 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
         // Add game object to scene
         scene.AddGameObject(gameObject);
     }
+
+    for (GameObject& gameObject : scene.GetGameObjects()) // Set Parent
+        if (parentObjects[gameObject.GetId()] != 0)
+            for (GameObject& go : scene.GetGameObjects())
+                if (go.GetId() == parentObjects[gameObject.GetId()])
+                {
+                    gameObject.SetParent(&go);
+                    break;
+                }
+
+
     bool sceneFound = false;
-    for (Scene& scenes : m_scenes) {
-        if (scenes.GetPath() == scene.GetPath()) {
+    for (Scene& scenes : m_scenes)
+        if (scenes.GetPath() == scene.GetPath())
+        {
             SetActiveScene(&scenes);
             sceneFound = true;
         }
-    }
+
     if (!sceneFound)
     {
         AddScene(scene);
         SetActiveScene(&GetScenes()->back());
 
         for (GameObject& gameObject : GetActiveScene()->GetGameObjects())
-        {
             for (Component* component : gameObject.GetComponents())
-            {
                 component->gameObject = &gameObject;
-            }
-        }
     }
     ConsoleLogger::InfoLog("The scene \"" + filePath.stem().string() + "\" has been loaded");
     return true;
