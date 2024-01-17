@@ -17,7 +17,7 @@ public:
 	void RenderViewport();
 	void RenderFileExplorer();
 	void RenderProperties();
-	bool RenderHierarchyNode(GameObject& gameObject, bool normalColor);
+	bool RenderHierarchyNode(GameObject* gameObject, bool normalColor);
 	void RenderHierarchy();
 	void RenderTopbar();
 	void RenderComponentsWin();

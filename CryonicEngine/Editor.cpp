@@ -44,6 +44,8 @@ bool cameraSelected = false;
 
 bool explorerContextMenuOpen = false;
 bool hierarchyContextMenuOpen = false;
+GameObject* objectInHierarchyContextMenu = nullptr;
+bool hierarchyObjectClicked = false;
 bool componentsWindowOpen = false;
 bool scriptCreateWinOpen = false;
 
@@ -863,7 +865,7 @@ void Editor::RenderProperties()
     ImGui::End();
 }
 
-bool Editor::RenderHierarchyNode(GameObject& gameObject, bool normalColor)
+bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor)
 {
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
@@ -875,17 +877,21 @@ bool Editor::RenderHierarchyNode(GameObject& gameObject, bool normalColor)
 
     //ImGui::PushStyleColor(ImGuiCol_Header, {64, 64, 64, 255});
 
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanAvailWidth;
+    ImGuiTreeNodeFlags flags =  ImGuiTreeNodeFlags_SpanAvailWidth;
 
-    if (selectedObject != nullptr && selectedObject->GetId() == gameObject.GetId())
+    if (selectedObject != nullptr && selectedObject->GetId() == gameObject->GetId())
         flags |= ImGuiTreeNodeFlags_Selected;
 
-    if (ImGui::TreeNodeEx((gameObject.GetName() + "##" + std::to_string(gameObject.GetId())).c_str(), flags))
+    if (gameObject->GetChildren().size() <= 0)
+        flags |= ImGuiTreeNodeFlags_Leaf;
+
+    if (ImGui::TreeNodeEx((gameObject->GetName() + "##" + std::to_string(gameObject->GetId())).c_str(), flags))
     {
         if (ImGui::IsItemClicked())
         {
-            objectInProperties = &gameObject;
-            selectedObject = &gameObject;
+            hierarchyObjectClicked = true;
+            objectInProperties = gameObject;
+            selectedObject = gameObject;
 
             if (selectedObject->GetComponent<CameraComponent>() != nullptr)
                 cameraSelected = true;
@@ -895,13 +901,12 @@ bool Editor::RenderHierarchyNode(GameObject& gameObject, bool normalColor)
                 resetCameraView = true;
             }
         }
-        //if (HasChildNodes(nodeName))
-        //{
-        //    for (auto& childNode : GetChildNodes(nodeName))
-        //    {
-        //        DrawHierarchyNode(childNode.c_str());
-        //    }
-        //}
+        else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+            objectInHierarchyContextMenu = gameObject;
+
+        for (GameObject* child : gameObject->GetChildren())
+            normalColor = RenderHierarchyNode(child, normalColor);
+
         ImGui::TreePop();
     }
 
@@ -916,6 +921,7 @@ void Editor::RenderHierarchy()
         ImGui::SetNextWindowPos(ImVec2(0, 52));
         resetHierarchy = false;
     }
+    hierarchyObjectClicked = false;
     ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings;
     ImGui::Begin("Hierachy", nullptr, windowFlags);
 
@@ -924,9 +930,8 @@ void Editor::RenderHierarchy()
     bool hierarchyRowColor = true;
 
     for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
-    {
-        hierarchyRowColor = !RenderHierarchyNode(gameObject, hierarchyRowColor);
-    }
+        if (gameObject.GetParent() == nullptr)
+            hierarchyRowColor = !RenderHierarchyNode(&gameObject, hierarchyRowColor);
 
     hierarchyRowColor = false;
     ImGui::EndTable();
@@ -934,7 +939,7 @@ void Editor::RenderHierarchy()
     if (hierarchyContextMenuOpen || (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
     {
         hierarchyContextMenuOpen = true;
-        if (ImGui::BeginPopupContextWindow())
+        if (ImGui::BeginPopupContextWindow("HierarchyContextMenu"))
         {
             ImGui::Separator();
 
@@ -999,8 +1004,24 @@ void Editor::RenderHierarchy()
                 objectToCreate = "Camera";
             }
 
+            if (objectInHierarchyContextMenu != nullptr && ImGui::MenuItem("Delete"))
+            {
+                hierarchyObjectClicked = true;
+                hierarchyContextMenuOpen = false;
+
+                if (std::holds_alternative<GameObject*>(objectInProperties) && std::get<GameObject*>(objectInProperties)->GetId() == objectInHierarchyContextMenu->GetId())
+                    objectInProperties = std::monostate{};
+                if (selectedObject != nullptr && objectInHierarchyContextMenu->GetId() == selectedObject->GetId())
+                    selectedObject = nullptr;
+
+                SceneManager::GetActiveScene()->RemoveGameObject(objectInHierarchyContextMenu);
+                objectInHierarchyContextMenu = nullptr;
+            }
+
             if (objectToCreate != "")
             {
+                hierarchyObjectClicked = true;
+
                 GameObject gameObject;
                 gameObject.transform.SetPosition({ 0,0,0 });
                 gameObject.transform.SetScale({ 1,1,1 });
@@ -1041,9 +1062,10 @@ void Editor::RenderHierarchy()
                 SceneManager::GetActiveScene()->AddGameObject(gameObject);
 
                 for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back().GetComponents())
-                {
                     component->gameObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
-                }
+
+                if (objectInHierarchyContextMenu != nullptr)
+                    SceneManager::GetActiveScene()->GetGameObjects().back().SetParent(objectInHierarchyContextMenu);
 
                 selectedObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
                 objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects().back();
@@ -1059,6 +1081,22 @@ void Editor::RenderHierarchy()
 
             ImGui::EndPopup();
         }
+        if (hierarchyContextMenuOpen && !ImGui::IsPopupOpen("HierarchyContextMenu"))
+        {
+            objectInHierarchyContextMenu = nullptr;
+            hierarchyContextMenuOpen = false;
+        }
+    }
+    else if (!hierarchyObjectClicked && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
+    {
+        if (selectedObject)
+        {
+            selectedObject = nullptr;
+            cameraSelected = false;
+            resetCameraView = true;
+        }
+        if (std::holds_alternative<GameObject*>(objectInProperties))
+            objectInProperties = std::monostate{};
     }
     ImGui::End();
 }
