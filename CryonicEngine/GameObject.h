@@ -190,6 +190,6 @@ private:
     std::string name;
     int id;
     std::vector<Component*> components;
-    GameObject* parentGameObject;
+    GameObject* parentGameObject = nullptr;
     std::deque<GameObject*> childGameObjects;
 };

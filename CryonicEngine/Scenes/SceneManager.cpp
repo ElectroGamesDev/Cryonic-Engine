@@ -47,34 +47,34 @@ bool SceneManager::SaveScene(Scene* scene)
     json sceneData;
 
     // Save game objects
-    for (GameObject& object : scene->GetGameObjects())
+    for (GameObject* object : scene->GetGameObjects())
     {
         json gameObjectData;
 
         // Save texture
-        //if (object.GetTexture() != nullptr) {
-        //    gameObjectData["texture_path"] = object.GetPath();
+        //if (object->GetTexture() != nullptr) {
+        //    gameObjectData["texture_path"] = object->GetPath();
         //}
 
-        //gameObjectData["model_path"] = object.GetModelPath().string();
-        gameObjectData["name"] = object.GetName();
-        gameObjectData["position"] = { object.transform.GetPosition().x, object.transform.GetPosition().y, object.transform.GetPosition().z };
-        //gameObjectData["real_size"] = { object.GetRealSize().x, object.GetRealSize().y, object.GetRealSize().z };
-        gameObjectData["size"] = { object.transform.GetScale().x, object.transform.GetScale().y, object.transform.GetScale().z};
-        gameObjectData["rotation"] = { object.transform.GetRotation().x, object.transform.GetRotation().y, object.transform.GetRotation().z, object.transform.GetRotation().w };
-        gameObjectData["id"] = object.GetId();
+        //gameObjectData["model_path"] = object->GetModelPath().string();
+        gameObjectData["name"] = object->GetName();
+        gameObjectData["position"] = { object->transform.GetPosition().x, object->transform.GetPosition().y, object->transform.GetPosition().z };
+        //gameObjectData["real_size"] = { object->GetRealSize().x, object->GetRealSize().y, object->GetRealSize().z };
+        gameObjectData["size"] = { object->transform.GetScale().x, object->transform.GetScale().y, object->transform.GetScale().z};
+        gameObjectData["rotation"] = { object->transform.GetRotation().x, object->transform.GetRotation().y, object->transform.GetRotation().z, object->transform.GetRotation().w };
+        gameObjectData["id"] = object->GetId();
 
-        //gameObjectData["tint"] = { object.GetTint().Value.x, object.GetTint().Value.y, object.GetTint().Value.z, object.GetTint().Value.w };
-        //gameObjectData["z_order"] = object.GetZOrder();
+        //gameObjectData["tint"] = { object->GetTint().Value.x, object->GetTint().Value.y, object->GetTint().Value.z, object->GetTint().Value.w };
+        //gameObjectData["z_order"] = object->GetZOrder();
 
-        if (object.GetParent() != nullptr)
-            gameObjectData["parent_id"] = object.GetParent()->GetId();
+        if (object->GetParent() != nullptr)
+            gameObjectData["parent_id"] = object->GetParent()->GetId();
         else
             gameObjectData["parent_id"] = -1;
 
         // Save components
         json componentsData;
-        for (Component* component : object.GetComponents())
+        for (Component* component : object->GetComponents())
         {
             json componentData;
             componentData["name"] = component->name;
@@ -191,20 +191,20 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
     for (const auto& gameObjectData : sceneData["game_objects"])
     {
         // Create new game object
-        GameObject gameObject = GameObject(gameObjectData["id"]);
+        GameObject* gameObject = scene.AddGameObject(gameObjectData["id"]);
         std::string objectName = gameObjectData["name"];
 
         // Load name, position, real size, size, rotation, id, tint, zOrder
-        //gameObject.SetModelPath(gameObjectData["model_path"]);
-        //gameObject.SetModel(LoadModel(gameObject.GetModelPath().string().c_str()));
-        gameObject.SetName(gameObjectData["name"]);
-        gameObject.transform.SetPosition(Vector3{ gameObjectData["position"][0], gameObjectData["position"][1], gameObjectData["position"][2] });
-        //gameObject.transform.SetRealSize(Vector3{gameObjectData["real_size"][0], gameObjectData["real_size"][1], gameObjectData["real_size"][2] });
-        gameObject.transform.SetScale(Vector3{ gameObjectData["size"][0], gameObjectData["size"][1], gameObjectData["size"][2] });
-        //gameObject.SetRotation(Quaternion{ gameObjectData["rotation"][0], gameObjectData["rotation"][1], gameObjectData["rotation"][2] });
-        gameObject.transform.SetRotation(Quaternion{ gameObjectData["rotation"][0], gameObjectData["rotation"][1], gameObjectData["rotation"][2], gameObjectData["rotation"][3]});
-        //gameObject.SetTint(ImVec4(gameObjectData["tint"][0], gameObjectData["tint"][1], gameObjectData["tint"][2], gameObjectData["tint"][3]));
-        //gameObject.SetZOrder(gameObjectData["z_order"]);
+        //gameObject->SetModelPath(gameObjectData["model_path"]);
+        //gameObject->SetModel(LoadModel(gameObject->GetModelPath().string().c_str()));
+        gameObject->SetName(gameObjectData["name"]);
+        gameObject->transform.SetPosition(Vector3{ gameObjectData["position"][0], gameObjectData["position"][1], gameObjectData["position"][2] });
+        //gameObject->transform.SetRealSize(Vector3{gameObjectData["real_size"][0], gameObjectData["real_size"][1], gameObjectData["real_size"][2] });
+        gameObject->transform.SetScale(Vector3{ gameObjectData["size"][0], gameObjectData["size"][1], gameObjectData["size"][2] });
+        //gameObject->SetRotation(Quaternion{ gameObjectData["rotation"][0], gameObjectData["rotation"][1], gameObjectData["rotation"][2] });
+        gameObject->transform.SetRotation(Quaternion{ gameObjectData["rotation"][0], gameObjectData["rotation"][1], gameObjectData["rotation"][2], gameObjectData["rotation"][3]});
+        //gameObject->SetTint(ImVec4(gameObjectData["tint"][0], gameObjectData["tint"][1], gameObjectData["tint"][2], gameObjectData["tint"][3]));
+        //gameObject->SetZOrder(gameObjectData["z_order"]);
 
         parentObjects[gameObjectData["id"]] = gameObjectData["parent_id"];
 
@@ -214,7 +214,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             // Temporary solution
             if (componentData["name"] == "MeshRenderer")
             {
-                MeshRenderer& component = gameObject.AddComponent<MeshRenderer>();
+                MeshRenderer& component = gameObject->AddComponent<MeshRenderer>();
                 //component.gameObject = &gameObject;
                 component.SetModelPath(componentData["model_path"]);
 
@@ -233,7 +233,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "SpriteRenderer")
             {
-                SpriteRenderer& component = gameObject.AddComponent<SpriteRenderer>();
+                SpriteRenderer& component = gameObject->AddComponent<SpriteRenderer>();
                 component.SetTexturePath(componentData["texture_path"]);
 
                 if (component.GetTexturePath().string() != "Square")
@@ -249,7 +249,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "ScriptComponent")
             {
-                ScriptComponent& component = gameObject.AddComponent<ScriptComponent>();
+                ScriptComponent& component = gameObject->AddComponent<ScriptComponent>();
                 //component.gameObject = &gameObject;
                 component.SetCppPath(componentData["cpp_path"]);
                 component.SetHeaderPath(componentData["header_path"]);
@@ -257,22 +257,22 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 //component.name = component.GetName();
             }
             else if (componentData["name"] == "CameraComponent")
-                gameObject.AddComponent<CameraComponent>();
+                gameObject->AddComponent<CameraComponent>();
             else if (componentData["name"] == "Lighting")
-                gameObject.AddComponent<Lighting>();
+                gameObject->AddComponent<Lighting>();
         }
 
 
         // Add game object to scene
-        scene.AddGameObject(gameObject);
+        //scene.AddGameObject();
     }
 
-    for (GameObject& gameObject : scene.GetGameObjects()) // Set Parent
-        if (parentObjects[gameObject.GetId()] != 0)
-            for (GameObject& go : scene.GetGameObjects())
-                if (go.GetId() == parentObjects[gameObject.GetId()])
+    for (GameObject* gameObject : scene.GetGameObjects()) // Set Parent
+        if (parentObjects[gameObject->GetId()] != 0)
+            for (GameObject* go : scene.GetGameObjects())
+                if (go->GetId() == parentObjects[gameObject->GetId()])
                 {
-                    gameObject.SetParent(&go);
+                    gameObject->SetParent(go);
                     break;
                 }
 
@@ -290,11 +290,12 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
         AddScene(scene);
         SetActiveScene(&GetScenes()->back());
 
-        for (GameObject& gameObject : GetActiveScene()->GetGameObjects())
-            for (Component* component : gameObject.GetComponents())
-                component->gameObject = &gameObject;
+        for (GameObject* gameObject : GetActiveScene()->GetGameObjects())
+            for (Component* component : gameObject->GetComponents())
+                component->gameObject = gameObject;
     }
     ConsoleLogger::InfoLog("The scene \"" + filePath.stem().string() + "\" has been loaded");
+
     return true;
 }
 

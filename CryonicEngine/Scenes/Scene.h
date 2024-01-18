@@ -8,17 +8,17 @@
 
 class Scene {
 public:
-    Scene(const std::filesystem::path& path = {}, std::deque<GameObject> gameObjects = {});
+    Scene(const std::filesystem::path& path = {}, std::deque<GameObject*> gameObjects = {});
     ~Scene();
 
     std::filesystem::path GetPath();
     void SetPath(std::filesystem::path path);
-    void AddGameObject(GameObject& gameObject);
+    GameObject* AddGameObject(int id = 0);
     void RemoveGameObject(GameObject* gameObject);
-    std::deque<GameObject>& GetGameObjects();
+    std::deque<GameObject*>& GetGameObjects();
     GameObject* GetGameObject(const std::string& name); 
 
 private:
     std::filesystem::path m_Path;
-    std::deque<GameObject> m_GameObjects;
+    std::deque<GameObject*> m_GameObjects;
 };

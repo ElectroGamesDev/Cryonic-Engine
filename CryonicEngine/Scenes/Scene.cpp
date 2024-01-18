@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "../Components/Component.h"
 
-Scene::Scene(const std::filesystem::path& path, std::deque<GameObject> gameObjects)
+Scene::Scene(const std::filesystem::path& path, std::deque<GameObject*> gameObjects)
     : m_Path(path), m_GameObjects(gameObjects)
 {
 }
@@ -21,41 +21,45 @@ void Scene::SetPath(std::filesystem::path path)
     m_Path = path;
 }
 
-void Scene::AddGameObject(GameObject& gameObject)
+// Todo: Internal only
+GameObject* Scene::AddGameObject(int id)
 {
-    m_GameObjects.push_back(gameObject);
+    m_GameObjects.push_back(new GameObject(id));
 
-    // Need to reassign gameObject to components of all game objects as vector resize breaks pointers
-    for (GameObject& gameObject : GetGameObjects())
-        for (Component* component : gameObject.GetComponents())
-            component->gameObject = &gameObject;
+    return m_GameObjects.back();
 }
+
+//void Scene::RemoveGameObject(GameObject* gameObject)
+//{
+//    auto it = std::find_if(m_GameObjects.begin(), m_GameObjects.end(),
+//        [gameObject](const GameObject& go) { return go.GetId() == gameObject->GetId(); });
+//    if (it != m_GameObjects.end()) {
+//        //delete& (*it);
+//        m_GameObjects.erase(it);
+//
+//    }
+//}
 
 void Scene::RemoveGameObject(GameObject* gameObject)
 {
     auto it = std::find_if(m_GameObjects.begin(), m_GameObjects.end(),
-        [gameObject](const GameObject& go) { return go.GetId() == gameObject->GetId(); });
+        [gameObject](const GameObject* go) { return go->GetId() == gameObject->GetId(); });
     if (it != m_GameObjects.end()) {
-        //delete& (*it);
+        //delete *it; // Uncomment if needed (depends on ownership semantics)
         m_GameObjects.erase(it);
-
-        // Need to reassign gameObject to components of all game objects as vector resize breaks pointers
-        for (GameObject& gameObject : GetGameObjects())
-            for (Component* component : gameObject.GetComponents())
-                component->gameObject = &gameObject;
     }
 }
 
 
-std::deque<GameObject>& Scene::GetGameObjects()
+std::deque<GameObject*>& Scene::GetGameObjects()
 {
     return m_GameObjects;
 }
 
 GameObject* Scene::GetGameObject(const std::string& name)
 {
-    for (GameObject& gameObject : m_GameObjects)
-        if (gameObject.GetName() == name)
-            return &gameObject;
+    for (GameObject* gameObject : m_GameObjects)
+        if (gameObject->GetName() == name)
+            return gameObject;
     return nullptr;
 }

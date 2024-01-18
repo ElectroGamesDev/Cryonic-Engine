@@ -238,29 +238,29 @@ void Editor::UpdateViewport()
 
                 std::filesystem::copy_file(droppedFiles.paths[0], folderPath / filename);
 
-                GameObject gameObject;
+                GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
                 Material material;
-                MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
                 meshRenderer.SetModelPath(folderPath / filename);
                 meshRenderer.SetModel(LoadModel(meshRenderer.GetModelPath().string().c_str()));
-                gameObject.transform.SetPosition({ 0,0,0 });
-                //gameObject.SetRealSize(gameObject.GetModel().s);
-                gameObject.transform.SetScale({ 1,1,1 });
-                gameObject.transform.SetRotation(QuaternionIdentity());
-                gameObject.SetName((folderPath / filename).stem().string());
+                gameObject->transform.SetPosition({ 0,0,0 });
+                //gameObject->SetRealSize(gameObject->GetModel().s);
+                gameObject->transform.SetScale({ 1,1,1 });
+                gameObject->transform.SetRotation(QuaternionIdentity());
+                gameObject->SetName((folderPath / filename).stem().string());
                 //material.SetDiffuseMap();
-                // gameObject.GetModel().materials[0].maps[MATERIAL_MAP_DIFFUSE].texture
-                //gameObject.SetMaterial(.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture; // Set current map diffuse texture
+                // gameObject->GetModel().materials[0].maps[MATERIAL_MAP_DIFFUSE].texture
+                //gameObject->SetMaterial(.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture; // Set current map diffuse texture
 
-                SceneManager::GetActiveScene()->AddGameObject(gameObject);
+                //SceneManager::GetActiveScene()->AddGameObject(gameObject);
 
-                for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back().GetComponents())
+                for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
                 {
-                    component->gameObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
+                    component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
                 }
 
-                selectedObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
-                objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects().back();
+                selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
+                objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
 
                 // TODO: Move camera position from target enough distance to visualize model properly
             }
@@ -294,10 +294,10 @@ void Editor::UpdateViewport()
     if (ProjectManager::projectData.is3D)
         DrawGrid(100, 10.0f);
 
-    for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+    for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
-        if (!gameObject.IsActive()) continue;
-        for (Component* component : gameObject.GetComponents())
+        if (!gameObject->IsActive()) continue;
+        for (Component* component : gameObject->GetComponents())
         {
             if (!component->IsActive()) continue;
             if (component->runInEditor)
@@ -645,10 +645,10 @@ void Editor::RenderCameraView()
 
     DrawGrid(100, 10.0f);
 
-    for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+    for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
-        if (!gameObject.IsActive()) continue;
-        for (Component* component : gameObject.GetComponents())
+        if (!gameObject->IsActive()) continue;
+        for (Component* component : gameObject->GetComponents())
         {
             if (!component->IsActive() || !component->runInEditor) continue;
             component->Update(GetFrameTime());
@@ -676,7 +676,7 @@ void Editor::RenderProperties()
         resetPropertiesWin = false;
     }
     ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings;
-    if (ImGui::Begin("Properties", nullptr, windowFlags) && std::holds_alternative<GameObject*>(objectInProperties) && std::find_if(SceneManager::GetActiveScene()->GetGameObjects().begin(), SceneManager::GetActiveScene()->GetGameObjects().end(), [&](const auto& obj) { return &obj == std::get<GameObject*>(objectInProperties); }) != SceneManager::GetActiveScene()->GetGameObjects().end())
+    if (ImGui::Begin("Properties", nullptr, windowFlags) && std::holds_alternative<GameObject*>(objectInProperties) && std::find_if(SceneManager::GetActiveScene()->GetGameObjects().begin(), SceneManager::GetActiveScene()->GetGameObjects().end(), [&](const auto& obj) { return obj == std::get<GameObject*>(objectInProperties); }) != SceneManager::GetActiveScene()->GetGameObjects().end())
     {
         ImGui::BeginGroup();
         if (std::holds_alternative<GameObject*>(objectInProperties))
@@ -929,9 +929,9 @@ void Editor::RenderHierarchy()
 
     bool hierarchyRowColor = true;
 
-    for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
-        if (gameObject.GetParent() == nullptr)
-            hierarchyRowColor = !RenderHierarchyNode(&gameObject, hierarchyRowColor);
+    for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+        if (gameObject->GetParent() == nullptr)
+            hierarchyRowColor = !RenderHierarchyNode(gameObject, hierarchyRowColor);
 
     hierarchyRowColor = false;
     ImGui::EndTable();
@@ -1022,22 +1022,22 @@ void Editor::RenderHierarchy()
             {
                 hierarchyObjectClicked = true;
 
-                GameObject gameObject;
-                gameObject.transform.SetPosition({ 0,0,0 });
-                gameObject.transform.SetScale({ 1,1,1 });
-                gameObject.transform.SetRotation(QuaternionIdentity());
-                gameObject.SetName(objectToCreate);
+                GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
+                gameObject->transform.SetPosition({ 0,0,0 });
+                gameObject->transform.SetScale({ 1,1,1 });
+                gameObject->transform.SetRotation(QuaternionIdentity());
+                gameObject->SetName(objectToCreate);
                 if (objectToCreate == "Empty")
-                    gameObject.SetName("GameObject");
+                    gameObject->SetName("GameObject");
                 else if (objectToCreate == "Camera")
-                    gameObject.AddComponent<CameraComponent>();
+                    gameObject->AddComponent<CameraComponent>();
                 else if (objectToCreate == "Light")
-                    gameObject.AddComponent<Lighting>();
+                    gameObject->AddComponent<Lighting>();
                 else
                 {
                     if (ProjectManager::projectData.is3D)
                     {
-                        MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                        MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
                         meshRenderer.SetModelPath(objectToCreate);
 
                         if (objectToCreate == "Cube")
@@ -1053,22 +1053,22 @@ void Editor::RenderHierarchy()
                     }
                     else
                     {
-                        SpriteRenderer& spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+                        SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
                         spriteRenderer.SetTexturePath(objectToCreate);
                     }
 
                 }
 
-                SceneManager::GetActiveScene()->AddGameObject(gameObject);
+                //SceneManager::GetActiveScene()->AddGameObject(gameObject);
 
-                for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back().GetComponents())
-                    component->gameObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
+                for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
+                    component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
 
                 if (objectInHierarchyContextMenu != nullptr)
-                    SceneManager::GetActiveScene()->GetGameObjects().back().SetParent(objectInHierarchyContextMenu);
+                    SceneManager::GetActiveScene()->GetGameObjects().back()->SetParent(objectInHierarchyContextMenu);
 
-                selectedObject = &SceneManager::GetActiveScene()->GetGameObjects().back();
-                objectInProperties = &SceneManager::GetActiveScene()->GetGameObjects().back();
+                selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
+                objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
 
                 if (selectedObject->GetComponent<CameraComponent>() != nullptr)
                     cameraSelected = true;
@@ -1199,19 +1199,19 @@ void Editor::RenderHierarchy()
 //                if (objectToCreate != "")
 //                {
 //                    GameObject gameObject;
-//                    gameObject.transform.SetPosition({ 0,0,0 });
-//                    gameObject.transform.SetScale({ 1,1,1 });
-//                    gameObject.transform.SetRotation(QuaternionIdentity());
-//                    gameObject.SetName(objectToCreate);
+//                    gameObject->transform.SetPosition({ 0,0,0 });
+//                    gameObject->transform.SetScale({ 1,1,1 });
+//                    gameObject->transform.SetRotation(QuaternionIdentity());
+//                    gameObject->SetName(objectToCreate);
 //                    if (objectToCreate == "Empty")
-//                        gameObject.SetName("GameObject");
+//                        gameObject->SetName("GameObject");
 //                    else if (objectToCreate == "Camera")
-//                        gameObject.AddComponent<CameraComponent>();
+//                        gameObject->AddComponent<CameraComponent>();
 //                    else if (objectToCreate == "Light")
-//                        gameObject.AddComponent<Lighting>();
+//                        gameObject->AddComponent<Lighting>();
 //                    else
 //                    {
-//                        MeshRenderer& meshRenderer = gameObject.AddComponent<MeshRenderer>();
+//                        MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
 //                        meshRenderer.SetModelPath(objectToCreate);
 //
 //                        if (objectToCreate == "Cube")
@@ -1479,6 +1479,7 @@ void Editor::InitScenes()
             }
         }
     }
+
     // No scenes found, create a new one
     if (selectedScenePath.empty())
     {
@@ -1510,9 +1511,9 @@ void Editor::Cleanup()
     }
     tempRenderTextures.clear();
 
-    for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+    for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
-        for (Component* component : gameObject.GetComponents())
+        for (Component* component : gameObject->GetComponents())
         {
             component->Destroy();
         }

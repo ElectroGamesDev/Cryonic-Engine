@@ -187,6 +187,7 @@ bool GameObject::IsChild(GameObject& gameObject, GameObject* parent)
 void GameObject::SetParent(GameObject* gameObject)
 {
     // Todo: Set Local and Global position/rotation/scale
+
     if (parentGameObject != nullptr && gameObject != nullptr && gameObject->GetId() == parentGameObject->GetId())
         return;
 
