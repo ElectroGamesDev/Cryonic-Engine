@@ -22,10 +22,10 @@ int main(void)
 	
 	ShaderManager::Init();
 	
-	for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 	{
-		if (!gameObject.IsActive()) continue;
-		for (Component* component : gameObject.GetComponents())
+		if (!gameObject->IsActive()) continue;
+		for (Component* component : gameObject->GetComponents())
 		{
 			if (!component->IsActive()) continue;
 			component->Start();
@@ -42,10 +42,10 @@ int main(void)
 		
 		BeginMode3D(CameraComponent::main->camera);
 		
-		for (GameObject& gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+		for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 		{
-			if (!gameObject.IsActive()) continue;
-			for (Component* component : gameObject.GetComponents())
+			if (!gameObject->IsActive()) continue;
+			for (Component* component : gameObject->GetComponents())
 			{
 				if (!component->IsActive()) continue;
 				component->Update(GetFrameTime());
