@@ -42,6 +42,8 @@ std::variant<std::monostate, GameObject*, Material*> objectInProperties = std::m
 GameObject* selectedObject = nullptr;
 bool cameraSelected = false;
 
+Vector2 lastMousePosition = { 0 };
+
 bool explorerContextMenuOpen = false;
 bool hierarchyContextMenuOpen = false;
 GameObject* objectInHierarchyContextMenu = nullptr;
@@ -139,11 +141,21 @@ void Editor::RenderViewport()
         if (ImGui::IsWindowHovered() && IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) // Todo: Maybe change to viewportFocused instead of IsWindowFocused
         {
             //    // Todo: Add SHIFT to speed up by x2, and scroll weel to change speed
-            rmbDown = true;
+            //rmbDown = true;
             //HideCursor();
             //DisableCursor();
+
             if (ProjectManager::projectData.is3D)
                 UpdateCamera(&camera, CAMERA_PERSPECTIVE);
+
+            else
+            {
+                Vector2 mousePosition = GetMousePosition();
+                Vector2 deltaMouse = Vector2Subtract(mousePosition, lastMousePosition);
+                camera.position.x += deltaMouse.x * 0.1f;
+                camera.position.y += deltaMouse.y * 0.1f;
+                camera.target = Vector3Add(camera.position, {0,0,1});
+            }
             //    UpdateCamera(&camera, CAMERA_FREE);
             //    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
             //    {
@@ -191,6 +203,7 @@ void Editor::RenderViewport()
             //ShowCursor();
             //EnableCursor();
         }
+        lastMousePosition = GetMousePosition();
     }
     ImGui::End();
     ImGui::PopStyleVar();
