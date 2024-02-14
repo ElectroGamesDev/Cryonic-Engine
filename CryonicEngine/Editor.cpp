@@ -135,8 +135,6 @@ void Editor::RenderViewport()
 
         viewportHovered = ImGui::IsWindowHovered();
 
-        // Camera Movement
-
 
         if (ImGui::IsWindowHovered() && IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) // Todo: Maybe change to viewportFocused instead of IsWindowFocused
         {
@@ -204,7 +202,23 @@ void Editor::RenderViewport()
             //EnableCursor();
         }
         lastMousePosition = GetMousePosition();
+
+        // Move Tool Arrows
+        if (selectedObject != nullptr)
+        {
+            Vector2 pos = GetWorldToScreen(selectedObject->transform.GetPosition(), camera);
+            // Divding positions by Raylib window size then multiply it by Viewport window size.
+            pos.x = pos.x / GetScreenWidth() * ImGui::GetWindowSize().x;
+            pos.y = pos.y / GetScreenHeight() * ImGui::GetWindowSize().y;
+            ImGui::SetCursorPos(ImVec2(pos.x - 10, pos.y - 35));
+            rlImGuiImageSizeV(IconManager::imageTextures["GreenArrow"], { 20, 40 });
+            ImGui::SetCursorPos(ImVec2(pos.x + 5, pos.y));
+            rlImGuiImageSizeV(IconManager::imageTextures["RedArrow"], { 40, 20 });
+            ImGui::SetCursorPos(ImVec2(pos.x + 3, pos.y - 8));
+            rlImGuiImageSizeV(IconManager::imageTextures["XYMoveTool"], { 15, 15 });
+        }
     }
+
     ImGui::End();
     ImGui::PopStyleVar();
 }
@@ -318,8 +332,6 @@ void Editor::UpdateViewport()
             component->EditorUpdate();
         }
     }
-
-    //DrawBillboard(camera, *IconManager::imageTextures["CameraGizmoIcon"], {0, 5, 0}, 5.0f, WHITE);
 
     EndMode3D();
     EndTextureMode();
