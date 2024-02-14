@@ -159,7 +159,7 @@ void RenderProjectCreateWin() // Todo: Add grayed out button
     }
 
     std::string newName = nameBuffer;
-    newName.erase(std::remove_if(newName.begin(), newName.end(), [](unsigned char c) {
+    newName.erase(std::remove_if(newName.begin(), newName.end(), [](unsigned char c) { // Todo: Don't think this should be done each frame?
         return std::isspace(c);
         }), newName.end());
 

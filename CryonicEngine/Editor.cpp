@@ -643,9 +643,10 @@ void Editor::RenderCameraView()
 
     BeginMode3D(selectedObject->GetComponent<CameraComponent>()->camera);
 
-    DrawGrid(100, 10.0f);
+    //if (ProjectManager::projectData.is3D)
+    //    DrawGrid(100, 10.0f);
 
-    for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+    for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects()) // Todo: This is different from the main editor camera. Check if this needs to be updated.
     {
         if (!gameObject->IsActive()) continue;
         for (Component* component : gameObject->GetComponents())
