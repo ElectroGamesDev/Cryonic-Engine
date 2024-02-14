@@ -236,7 +236,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 SpriteRenderer& component = gameObject->AddComponent<SpriteRenderer>();
                 component.SetTexturePath(componentData["texture_path"]);
 
-                if (component.GetTexturePath().string() != "Square")
+                if (component.GetTexturePath().string() != "Square" || component.GetTexturePath().string() != "Circle")
                 {
                     std::filesystem::path path;
                     #if defined(EDITOR)

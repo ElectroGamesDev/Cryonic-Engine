@@ -60,6 +60,13 @@ void SpriteRenderer::Update(float deltaTime)
                 WHITE);
 
     }
+    else if (texturePath == "Circle")
+    {
+        DrawCircle(gameObject->transform.GetPosition().x,
+            gameObject->transform.GetPosition().y,
+            gameObject->transform.GetScale().x,
+            WHITE);
+    }
     else
     {
         // Invalid texture path

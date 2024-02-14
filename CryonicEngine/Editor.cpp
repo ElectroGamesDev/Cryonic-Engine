@@ -1055,6 +1055,11 @@ void Editor::RenderHierarchy()
                     hierarchyContextMenuOpen = false;
                     objectToCreate = "Square";
                 }
+                if (ImGui::MenuItem("Create Circle"))
+                {
+                    hierarchyContextMenuOpen = false;
+                    objectToCreate = "Circle";
+                }
             }
 
             if (ImGui::MenuItem("Create Camera"))
