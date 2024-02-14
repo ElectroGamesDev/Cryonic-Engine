@@ -40,6 +40,9 @@ Vector4 viewportPosition;
 
 std::variant<std::monostate, GameObject*, Material*> objectInProperties = std::monostate{}; // Make a struct or something that holds a Path and ifstream String. Not specific to material so prefabs and stuff can use
 GameObject* selectedObject = nullptr;
+bool movingObjectX = false;
+bool movingObjectY = false;
+bool movingObjectZ = false;
 bool cameraSelected = false;
 
 Vector2 lastMousePosition = { 0 };
@@ -201,7 +204,6 @@ void Editor::RenderViewport()
             //ShowCursor();
             //EnableCursor();
         }
-        lastMousePosition = GetMousePosition();
 
         // Move Tool Arrows
         if (selectedObject != nullptr)
@@ -212,11 +214,42 @@ void Editor::RenderViewport()
             pos.y = pos.y / GetScreenHeight() * ImGui::GetWindowSize().y;
             ImGui::SetCursorPos(ImVec2(pos.x - 10, pos.y - 35));
             rlImGuiImageSizeV(IconManager::imageTextures["GreenArrow"], { 20, 40 });
+            if (!movingObjectY && ImGui::IsItemHovered() && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+                movingObjectY = true;
             ImGui::SetCursorPos(ImVec2(pos.x + 5, pos.y));
             rlImGuiImageSizeV(IconManager::imageTextures["RedArrow"], { 40, 20 });
+            if (!movingObjectX && ImGui::IsItemHovered() && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+                movingObjectX = true;
             ImGui::SetCursorPos(ImVec2(pos.x + 3, pos.y - 8));
             rlImGuiImageSizeV(IconManager::imageTextures["XYMoveTool"], { 15, 15 });
+            if (!movingObjectX && !movingObjectY && ImGui::IsItemHovered() && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) // Todo: Fix this so if the user is moving with the X or Y arrow and move mouse up to XY move square, it will not switch to the XY square move tool
+            {
+                movingObjectX = true;
+                movingObjectY = true;
+            }
+            if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+            {
+                movingObjectY = false;
+                movingObjectX = false;
+            }
+
+            if (movingObjectX || movingObjectY || movingObjectZ)
+            {
+                Vector2 mousePosition = GetMousePosition();
+                Vector2 deltaMouse = Vector2Subtract(mousePosition, lastMousePosition);
+                float x = selectedObject->transform.GetPosition().x;
+                float y = selectedObject->transform.GetPosition().y;
+                float z = selectedObject->transform.GetPosition().z;
+                if (movingObjectX) // Todo: Dividing by 15 is a horrible solution. Fix this
+                    x -= deltaMouse.x / 15;
+                if (movingObjectY)
+                    y -= deltaMouse.y / 15;
+                if (movingObjectZ)
+                    z -= deltaMouse.x / 15;
+                selectedObject->transform.SetPosition({ x, y, z });
+            }
         }
+        lastMousePosition = GetMousePosition();
     }
 
     ImGui::End();
