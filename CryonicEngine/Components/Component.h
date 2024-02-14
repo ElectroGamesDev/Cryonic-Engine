@@ -4,6 +4,9 @@
 #include "../GameObject.h"
 //class GameObject;
 
+#define Expose
+#define NotExposed
+
 class Component
 {
 public:
