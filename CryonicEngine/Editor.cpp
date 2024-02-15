@@ -3,6 +3,9 @@
 #include "rlgl.h"
 #include <iostream>
 #include <fstream>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 #include <variant>
 #include "Editor.h"
 #include "FontManager.h"
@@ -70,6 +73,8 @@ std::vector<RenderTexture2D*> tempRenderTextures;
 Quaternion Orientation = QuaternionIdentity();
 
 float cameraSpeed = 1;
+
+float oneSecondDelay = 1;
 
 RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path modelPath, int textureSize)
 {
@@ -911,6 +916,105 @@ void Editor::RenderProperties()
                     //std::get<GameObject*>(objectInProperties)->RemoveComponent<component>();
                 }
                 ImGui::PopStyleColor(3);
+
+                if (typeid(*component) == typeid(ScriptComponent) && (component->exposedVariables == nullptr || oneSecondDelay <= 0)) // Todo: Do not check them for updates. Also check if its empty // Todo: Threading
+                {
+
+                    if (component->exposedVariables == nullptr || component->exposedVariables[1].empty()) // Todo: Check every ~1 second if the file is modified and if should get exposed variables again. DONOT change values, only remove removed variables
+                        component->exposedVariables = Utilities::GetExposedVariables(ProjectManager::projectData.path / "Assets" / dynamic_cast<ScriptComponent*>(component)->GetHeaderPath()); // Todo: Add Threading
+                    else
+                    {
+                        auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(std::filesystem::last_write_time(ProjectManager::projectData.path / "Assets" / dynamic_cast<ScriptComponent*>(component)->GetHeaderPath()) - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
+                        std::time_t tt = std::chrono::system_clock::to_time_t(sctp);
+
+                        if (component->exposedVariables[0].get<int>() != tt)
+                        {
+                            nlohmann::json updatedJson = Utilities::GetExposedVariables(ProjectManager::projectData.path / "Assets" / dynamic_cast<ScriptComponent*>(component)->GetHeaderPath()); // Todo: Add Threading
+
+                            for (auto updatedElement = updatedJson[1].begin(); updatedElement != updatedJson[1].end(); ++updatedElement)
+                            {
+                                for (auto oldElement = component->exposedVariables[1].begin(); oldElement != component->exposedVariables[1].end(); ++oldElement)
+                                {
+                                    if ((*updatedElement)[0] == (*oldElement)[0] && (*updatedElement)[1] == (*oldElement)[1])
+                                    {
+                                        (*updatedElement)[2] = (*oldElement)[2];
+                                        //(*updatedElement)[4] = (*oldElement)[4];
+                                        break;
+                                    }
+                                }
+                            }
+
+                            component->exposedVariables = updatedJson;
+                        }
+                    }
+                }
+                if (component->exposedVariables != nullptr) // Todo: Add Threading
+                {
+                    //ConsoleLogger::InfoLog(component->exposedVariables.dump(4));
+                    for (auto it = component->exposedVariables[1].begin(); it != component->exposedVariables[1].end(); ++it)
+                    {
+                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
+                        std::string name = (*it)[3];
+                        //ImGui::NewLine();
+                        ImGui::Text(name.c_str());
+                        if ((*it)[0] == "bool")
+                        {
+                            ImGui::SameLine();
+                            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                            bool value = (*it)[2].get<bool>();
+                            if (ImGui::Checkbox(("##" + name).c_str(), &value))
+                                (*it)[2] = value;
+                            //std::string value = (*it)[5];
+                            //ImGui::SetNextItemWidth(60);
+                            //if (ImGui::BeginCombo(("##" + name).c_str(), value.c_str()))
+                            //{
+                            //    if (ImGui::Selectable("True", value == "true"))
+                            //    {
+                            //        (*it)[2] = "true";
+                            //        (*it)[4] = "True";
+                            //    }
+                            //    if (ImGui::Selectable("False", value == "false"))
+                            //    {
+                            //        (*it)[2] = "false";
+                            //        (*it)[4] = "False";
+                            //    }
+                            //    ImGui::EndCombo();
+                            //}
+                        }
+                        else if ((*it)[0] == "string" || (*it)[0] == "char")
+                        {
+                            ImGui::SameLine();
+                            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                            ImGui::SetNextItemWidth(120);
+                            std::string inputText = (*it)[2].get<std::string>();
+                            char buffer[256];
+                            strcpy_s(buffer, sizeof(buffer), inputText.c_str());
+                            ImGui::InputText(("##" + name).c_str(), buffer, sizeof(buffer));
+                            (*it)[2] = buffer;
+                        }
+                        else if ((*it)[0] == "float")
+                        {
+                            ImGui::SameLine();
+                            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                            ImGui::SetNextItemWidth(60);
+                            float value = (*it)[2].get<float>();
+                            ImGui::InputFloat(("##" + name).c_str(), &value);
+                            (*it)[2] = value;
+                        }
+                        else if ((*it)[0] == "int")
+                        {
+                            ImGui::SameLine();
+                            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                            ImGui::SetNextItemWidth(60);
+                            int value = (*it)[2].get<int>();
+                            ImGui::InputInt(("##" + name).c_str(), &value, 0, 0);
+                            (*it)[2] = value;
+                        }
+                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
+                        //ConsoleLogger::ErrorLog("Found Exposed Variable: " + it->dump());
+                    }
+                }
+
                 // Configeration properties here
             }
             // Component button
@@ -1480,7 +1584,7 @@ void Editor::InitStyle()
     style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
     style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
     style.Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
-    style.Colors[ImGuiCol_CheckMark] = ImVec4(0.11f, 0.64f, 0.92f, 1.00f);
+    style.Colors[ImGuiCol_CheckMark] = ImVec4(1, 1, 1, 1.00f); // ImVec4(0.11f, 0.64f, 0.92f, 1.00f)
     style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.11f, 0.64f, 0.92f, 1.00f);
     style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.08f, 0.50f, 0.72f, 1.00f);
     style.Colors[ImGuiCol_Button] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
@@ -1623,6 +1727,7 @@ void Editor::Init()
 
     while (!WindowShouldClose())
     {
+        oneSecondDelay -= GetFrameTime();
         FontManager::UpdateFonts();
         ShaderManager::UpdateShaders();
 
@@ -1658,6 +1763,9 @@ void Editor::Init()
 
         if (!cameraSelected)
             UnloadRenderTexture(cameraRenderTexture);
+
+        if (oneSecondDelay <= 0)
+            oneSecondDelay = 1;
     }
 
     Cleanup();

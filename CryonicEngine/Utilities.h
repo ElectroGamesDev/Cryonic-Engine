@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <json.hpp>
 
 class Utilities {
 public:
@@ -8,4 +9,5 @@ public:
     static std::string SelectFolderDialog(const std::filesystem::path& projectPath);
     static void HideFile(std::filesystem::path path);
     static int GetNumberOfCores();
+    static nlohmann::json GetExposedVariables(std::filesystem::path path);
 };
