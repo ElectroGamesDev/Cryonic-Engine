@@ -13,7 +13,7 @@
 class Component
 {
 public:
-    Component(GameObject* obj) : gameObject(obj) {};
+    Component(GameObject* obj);
     virtual ~Component() {};
     template<typename T>
     T& GetComponent()
@@ -29,6 +29,7 @@ public:
     bool runInEditor = false;
     bool runInGame = true;
     bool active = true;
+    int id;
 
 #if defined(EDITOR)
     nlohmann::json exposedVariables = nullptr;
