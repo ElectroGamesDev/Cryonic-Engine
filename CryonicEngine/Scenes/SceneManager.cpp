@@ -79,6 +79,7 @@ bool SceneManager::SaveScene(Scene* scene)
             json componentData;
             componentData["name"] = component->name;
             componentData["active"] = component->IsActive();
+            componentData["id"] = component->id;
             //componentData["runInEditor"] = component->runInEditor;
 
             // Temporary solution
@@ -217,6 +218,8 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 MeshRenderer& component = gameObject->AddComponent<MeshRenderer>();
                 //component.gameObject = &gameObject;
                 component.SetModelPath(componentData["model_path"]);
+                component.SetActive(componentData["active"]);
+                component.id = componentData["id"];
 
                 if (component.GetModelPath().string() == "Cube")
                     component.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
@@ -235,6 +238,8 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             {
                 SpriteRenderer& component = gameObject->AddComponent<SpriteRenderer>();
                 component.SetTexturePath(componentData["texture_path"]);
+                component.SetActive(componentData["active"]);
+                component.id = componentData["id"];
 
                 if (component.GetTexturePath().string() != "Square" || component.GetTexturePath().string() != "Circle")
                 {
@@ -254,12 +259,22 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.SetCppPath(componentData["cpp_path"]);
                 component.SetHeaderPath(componentData["header_path"]);
                 component.SetName(component.GetHeaderPath().stem().string());
+                component.SetActive(componentData["active"]);
+                component.id = componentData["id"];
                 //component.name = component.GetName();
             }
             else if (componentData["name"] == "CameraComponent")
-                gameObject->AddComponent<CameraComponent>();
+            {
+                CameraComponent& component = gameObject->AddComponent<CameraComponent>();
+                component.SetActive(componentData["active"]);
+                component.id = componentData["id"];
+            }
             else if (componentData["name"] == "Lighting")
-                gameObject->AddComponent<Lighting>();
+            {
+                Lighting& component = gameObject->AddComponent<Lighting>();
+                component.SetActive(componentData["active"]);
+                component.id = componentData["id"];
+            }
         }
 
 
