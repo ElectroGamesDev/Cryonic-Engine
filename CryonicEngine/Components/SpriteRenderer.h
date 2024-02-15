@@ -20,7 +20,8 @@ public:
 	void SetTexturePath(std::filesystem::path path);
 
 private:
-	Expose Texture2D texture;
+	Texture2D texture;
 	bool textureSet = false;
+	bool color;
 	std::filesystem::path texturePath;
 };
