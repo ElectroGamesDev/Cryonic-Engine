@@ -80,6 +80,7 @@ bool SceneManager::SaveScene(Scene* scene)
             componentData["name"] = component->name;
             componentData["active"] = component->IsActive();
             componentData["id"] = component->id;
+            componentData["exposed_variables"] = component->exposedVariables;
             //componentData["runInEditor"] = component->runInEditor;
 
             // Temporary solution
@@ -220,6 +221,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.SetModelPath(componentData["model_path"]);
                 component.SetActive(componentData["active"]);
                 component.id = componentData["id"];
+                component.exposedVariables = componentData["exposed_variables"];
 
                 if (component.GetModelPath().string() == "Cube")
                     component.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
@@ -240,6 +242,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.SetTexturePath(componentData["texture_path"]);
                 component.SetActive(componentData["active"]);
                 component.id = componentData["id"];
+                component.exposedVariables = componentData["exposed_variables"];
 
                 if (component.GetTexturePath().string() != "Square" || component.GetTexturePath().string() != "Circle")
                 {
@@ -261,6 +264,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.SetName(component.GetHeaderPath().stem().string());
                 component.SetActive(componentData["active"]);
                 component.id = componentData["id"];
+                component.exposedVariables = componentData["exposed_variables"];
                 //component.name = component.GetName();
             }
             else if (componentData["name"] == "CameraComponent")
@@ -268,12 +272,14 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 CameraComponent& component = gameObject->AddComponent<CameraComponent>();
                 component.SetActive(componentData["active"]);
                 component.id = componentData["id"];
+                component.exposedVariables = componentData["exposed_variables"];
             }
             else if (componentData["name"] == "Lighting")
             {
                 Lighting& component = gameObject->AddComponent<Lighting>();
                 component.SetActive(componentData["active"]);
                 component.id = componentData["id"];
+                component.exposedVariables = componentData["exposed_variables"];
             }
         }
 
