@@ -288,7 +288,15 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
         //scene.AddGameObject();
     }
 
-    for (GameObject* gameObject : scene.GetGameObjects()) // Set Parent
+    for (GameObject* gameObject : scene.GetGameObjects())
+    {
+        // Set exposed variables values
+        #if !defined(EDITOR)
+        for (Component* component : gameObject->GetComponents())
+            component->SetExposedVariables();
+        #endif
+
+        // Set parents
         if (parentObjects[gameObject->GetId()] != 0)
             for (GameObject* go : scene.GetGameObjects())
                 if (go->GetId() == parentObjects[gameObject->GetId()])
@@ -296,6 +304,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                     gameObject->SetParent(go);
                     break;
                 }
+    }
 
 
     bool sceneFound = false;
