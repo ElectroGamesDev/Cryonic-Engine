@@ -28,7 +28,9 @@ public:
     std::string name;
     bool runInEditor = false;
     bool runInGame = true;
+    // Hide In API
     bool active = true;
+    // Hide In API
     int id;
 
 #if defined(EDITOR)
@@ -37,6 +39,9 @@ public:
 
     void SetActive(bool active) { this->active = active; };
     bool IsActive() const { return active; };
+
+    // Hide In API
+    virtual void SetExposedVariables() {};
 
     virtual void Start() {};
     virtual void Update(float deltaTime) {};
