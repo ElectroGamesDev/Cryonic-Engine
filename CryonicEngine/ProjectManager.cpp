@@ -164,7 +164,7 @@ void ProjectManager::CleanupBuildFolder(std::filesystem::path path)
 //    return true;
 //}
 
-void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .json format file that contains information like scenes and which scene should be first opened
+void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make a .json format file that contains information like scenes and which scene should be first opened
 {
     // Todo: Change path of models and include models in build
     SaveProject();
@@ -204,6 +204,8 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .js
     if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source"))
         return;
 
+    GenerateExposedVariablesFunctions(buildPath / "Source");
+
     // Saves original path, sets new current path, and then run cmake and mingw32-make
     std::filesystem::path originalPath = std::filesystem::current_path();
     _chdir(buildPath.string().c_str());
@@ -225,7 +227,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Maybe make a .js
     // Cleanup
     ConsoleLogger::InfoLog("Build Log - Cleaning up", false);
 
-    CleanupBuildFolder(buildPath);
+    //CleanupBuildFolder(buildPath);
 
     ConsoleLogger::InfoLog("Build Log - Build complete", false);
 
@@ -339,4 +341,191 @@ ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) /
     ConsoleLogger::InfoLog("Project data has been loaded");
 
     return projectData;
+}
+
+void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path path)
+{
+    // I need to loop through each component of each gameobject of each scene. Then store the component name, ID, and values in an array.
+    // Then I need to loop through the scripts (inside the build folder, not assets folder) and look for headers. Then when I find a header, check if that header is the name of one of my components
+    // Stored in the array. If it is, then loop thruogh values of it in the array and create the functio nand switch
+
+    std::unordered_map<std::filesystem::path, std::unordered_map<int, nlohmann::json>> components;
+
+    // Todo: If a component in one scene as the same ID as a component in another scene, it will cause issues.
+    for (Scene& scene : *SceneManager::GetScenes()) // Todo: Only iterate the scenes that are set to be built
+    {
+        for (GameObject* gameObject : scene.GetGameObjects())
+        {
+            for (Component* component : gameObject->GetComponents())
+            {
+                ScriptComponent* scriptComponent = dynamic_cast<ScriptComponent*>(component);
+                if (!scriptComponent)
+                    continue;
+                components[scriptComponent->GetHeaderPath()][scriptComponent->id] = scriptComponent->exposedVariables;
+            }
+        }
+    }
+
+    for (const auto& component : components)
+    {
+        if (!std::filesystem::exists(path / component.first.filename()))
+        {
+            // Todo: Do something if the file does not exist
+            ConsoleLogger::ErrorLog("Failed find " + (path / component.first.filename()).string()); // Todo: Remove this warning
+            continue;
+        }
+        // Todo: This assume the .cpp is in teh same location as the header. Consider getting the .cpp path from the Component and store it in the components map
+        if (!std::filesystem::exists(path / (component.first.stem().string() + ".cpp")))
+        {
+            // Todo: Do something if the file does not exist
+            ConsoleLogger::ErrorLog("Failed find " + (path / (component.first.stem().string() + ".cpp")).string()); // Todo: Remove this warning
+            continue;
+        }
+
+        // Todo: This will not work if a function has "{" before class declaration, such as in variables or in a comment
+
+        // Create function in header
+        std::ifstream headerFile(path / component.first.filename());
+        if (!headerFile.is_open())
+        {
+            // Todo: Do something if file failed to open
+            continue;
+        }
+
+        
+        bool foundPublic = false;
+        std::string line;
+        while (std::getline(headerFile, line))
+        {
+            if (line.find("public:") != std::string::npos)
+            {
+                foundPublic = true;
+                break;
+            }
+        }
+
+        headerFile.clear();
+        headerFile.seekg(0, std::ios::beg);
+
+        line = "";
+        bool placedFunction = false;
+        std::ofstream tempHeader(path / (component.first.stem().string() + ".temp"));
+        while (std::getline(headerFile, line))
+        {
+            if (foundPublic)
+            {
+                if (!placedFunction && line.find("public:") != std::string::npos) // Todo: Should probably remove whitespaces incase someone wrote it like this, "public :"
+                {
+                    tempHeader << line << std::endl;
+                    tempHeader << "void SetExposedVariables() override;\n";
+                    placedFunction = true;
+                }
+                else
+                    tempHeader << line << std::endl;
+            }
+            else
+            {
+                if (!placedFunction && line.find("{") != std::string::npos)
+                {
+                    tempHeader << line << std::endl;
+                    tempHeader << "public:\nvoid SetExposedVariables() override;\nprivate:\n";
+                    placedFunction = true;
+                }
+                else
+                    tempHeader << line << std::endl;
+            }
+        }
+
+        headerFile.close();
+        tempHeader.close();
+
+        std::filesystem::remove(path / component.first.filename());
+        std::filesystem::rename(path / (component.first.stem().string() + ".temp"), path / component.first.filename());
+
+        if (!placedFunction)
+        {
+            // Todo: Failed to find a place to put the SetExposedVariables() function
+            ConsoleLogger::ErrorLog("Failed to find a place to put SetExposedVariables() in " + (path / component.first.filename()).string()); // Todo: Remove this warning
+            continue;
+        }
+
+        // Create function in CPP
+        std::ifstream cppFile(path / (component.first.stem().string() + ".cpp"));
+        if (!cppFile.is_open())
+        {
+            // Todo: Do something if file failed to open
+            continue;
+        }
+
+        line = "";
+        placedFunction = false;
+        bool lastLineWasInclude = false;
+        std::ofstream tempCpp(path / (component.first.stem().string() + ".temp"));
+        while (std::getline(cppFile, line))
+        {
+            if (!placedFunction)
+            {
+                if (lastLineWasInclude && line.find("#include") == std::string::npos)
+                {
+                    tempCpp << ("void " + component.first.stem().string() + "::SetExposedVariables() {\n");
+
+                    tempCpp << "switch (id) {\n";
+
+                    for (const auto& data : component.second)
+                    {
+                        tempCpp << "case " + std::to_string(data.first) + std::string(":\n");
+                        for (auto variables = data.second[1].begin(); variables != data.second[1].end(); ++variables)
+                        {
+                            if ((*variables)[0] == "float")
+                                tempCpp << (*variables)[1].get<std::string>() + " = " + (*variables)[2].dump() + "f;\n";
+                            else
+                                tempCpp << (*variables)[1].get<std::string>() + " = " + (*variables)[2].dump() + ";\n";
+                        }
+                        tempCpp << "break;\n";
+                    }
+
+                    tempCpp << "}\n}\n";
+                    placedFunction = true;
+                }
+
+                tempCpp << line << std::endl;
+
+                if (!placedFunction && line.find("#include") != std::string::npos)
+                    lastLineWasInclude = true;
+                else
+                    lastLineWasInclude = false;
+            }
+            else
+                tempCpp << line << std::endl;
+        }
+
+        cppFile.close();
+        tempCpp.close();
+
+        std::filesystem::remove(path / (component.first.stem().string() + ".cpp"));
+        std::filesystem::rename(path / (component.first.stem().string() + ".temp"), path / (component.first.stem().string() + ".cpp"));
+
+        if (!placedFunction)
+        {
+            // Todo: Failed to find a place to put the SetExposedVariables() function
+            ConsoleLogger::ErrorLog("Failed to find a place to put SetExposedVariables() in " + (path / (component.first.stem().string() + ".cpp")).string()); // Todo: Remove this warning
+            continue;
+        }
+        // Iterate component.first[1]
+    }
+
+    //for (const auto& file : std::filesystem::recursive_directory_iterator(path))
+    //{
+    //    if (!std::filesystem::is_directory(file))
+    //    {
+    //        if (file.path().extension() == ".h")
+    //        {
+
+    //        }
+    //        else if (file.path().extension() == ".cpp")
+    //        {
+
+    //        }
+    //    }
+    //}
 }

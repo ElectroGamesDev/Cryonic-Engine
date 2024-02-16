@@ -33,6 +33,7 @@ struct ProjectData
 
 class ProjectManager {
 public:
+    static void GenerateExposedVariablesFunctions(std::filesystem::path path);
     static void SaveProjectData(ProjectData projectData);
     static ProjectData LoadProjectData(std::filesystem::path projectPath);
     static int CreateProject(ProjectData projectData);

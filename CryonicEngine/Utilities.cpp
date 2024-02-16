@@ -7,8 +7,11 @@
 #include <sstream>
 #include <string>
 #include <array>
+#include <vector>
 #include <chrono>
 #include <iomanip>
+#include <unordered_map>
+#include <json.hpp>
 
 std::string dataTypes[5] = {
     "int", "float", "bool", "char", "string"

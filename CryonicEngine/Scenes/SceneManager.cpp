@@ -10,6 +10,7 @@
 #include <cctype>
 #include "json.hpp"
 
+#include "../Components/ScriptLoader.h"
 #include "../Components/Component.h"
 #include "../Components/MeshRenderer.h"
 #include "../Components/ScriptComponent.h"
@@ -80,7 +81,9 @@ bool SceneManager::SaveScene(Scene* scene)
             componentData["name"] = component->name;
             componentData["active"] = component->IsActive();
             componentData["id"] = component->id;
+            #if defined(EDITOR)
             componentData["exposed_variables"] = component->exposedVariables;
+            #endif
             //componentData["runInEditor"] = component->runInEditor;
 
             // Temporary solution
@@ -221,7 +224,9 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.SetModelPath(componentData["model_path"]);
                 component.SetActive(componentData["active"]);
                 component.id = componentData["id"];
+                #if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
+                #endif
 
                 if (component.GetModelPath().string() == "Cube")
                     component.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
@@ -242,7 +247,9 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.SetTexturePath(componentData["texture_path"]);
                 component.SetActive(componentData["active"]);
                 component.id = componentData["id"];
+#if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
+#endif
 
                 if (component.GetTexturePath().string() != "Square" || component.GetTexturePath().string() != "Circle")
                 {
@@ -257,6 +264,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "ScriptComponent")
             {
+#if defined(EDITOR)
                 ScriptComponent& component = gameObject->AddComponent<ScriptComponent>();
                 //component.gameObject = &gameObject;
                 component.SetCppPath(componentData["cpp_path"]);
@@ -266,20 +274,27 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.id = componentData["id"];
                 component.exposedVariables = componentData["exposed_variables"];
                 //component.name = component.GetName();
+#else
+                SetupScriptComponent(gameObject, componentData["id"], componentData["active"]);
+#endif
             }
             else if (componentData["name"] == "CameraComponent")
             {
                 CameraComponent& component = gameObject->AddComponent<CameraComponent>();
                 component.SetActive(componentData["active"]);
                 component.id = componentData["id"];
+                #if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
+                #endif
             }
             else if (componentData["name"] == "Lighting")
             {
                 Lighting& component = gameObject->AddComponent<Lighting>();
                 component.SetActive(componentData["active"]);
                 component.id = componentData["id"];
+#if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
+#endif
             }
         }
 
@@ -291,9 +306,11 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
     for (GameObject* gameObject : scene.GetGameObjects())
     {
         // Set exposed variables values
-        #if !defined(EDITOR)
+#if !defined(EDITOR)
         for (Component* component : gameObject->GetComponents())
+        {
             component->SetExposedVariables();
+    }
         #endif
 
         // Set parents
