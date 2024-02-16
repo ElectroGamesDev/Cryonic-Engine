@@ -30,6 +30,7 @@ Camera Editor::camera = { 0 };
 const float DEG = 180.0f / PI;
 const float RAD = PI / 180.0f;
 
+bool closeEditor = false;
 bool viewportOpen = true;
 bool viewportFocused = false;
 bool viewportHovered = false;
@@ -1460,12 +1461,28 @@ void Editor::RenderTopbar()
 
 void Editor::Render(void)
 {
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-    ImGui::SetNextWindowBgAlpha(0.0f);
-    ImGui::Begin("##EditorWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-    if (ImGui::BeginMenuBar()) {
+    RenderViewport();
+    RenderHierarchy();
+    RenderProperties();
+    //RenderConsole();
+    RenderFileExplorer();
+    RenderTopbar();
+    RenderCameraView();
+    RenderComponentsWin();
+    RenderScriptCreateWin();
+
+
+    // Todo: Move this to RenderTitleBar()
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImVec2(190, 20));
+    ImGui::SetNextWindowBgAlpha(0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::Begin("##MenuBar", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
+
+    if (ImGui::BeginMenuBar())
+    {
+        ImGui::SetCursorPos(ImVec2(5, 0));
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open Project", "Ctrl+O")) {}
             if (ImGui::MenuItem("Save Project", "Ctrl+S"))
@@ -1482,6 +1499,7 @@ void Editor::Render(void)
             }
             ImGui::EndMenu();
         }
+        ImGui::SetCursorPos(ImVec2(43, 0));
         if (ImGui::BeginMenu("Edit")) {
             if (ImGui::MenuItem("Project Settings", "")) {}
             if (ImGui::MenuItem("Reload API Files", "")) // Todo: Move this into settings or help
@@ -1497,6 +1515,7 @@ void Editor::Render(void)
             }
             ImGui::EndMenu();
         }
+        ImGui::SetCursorPos(ImVec2(85, 0));
         if (ImGui::BeginMenu("Window")) {
             if (ImGui::MenuItem("Hierarchy", "")) {}
             if (ImGui::MenuItem("File Explorer", "")) {}
@@ -1504,6 +1523,7 @@ void Editor::Render(void)
             if (ImGui::MenuItem("Sprite Editor", "")) {}
             ImGui::EndMenu();
         }
+        ImGui::SetCursorPos(ImVec2(152, 0));
         if (ImGui::BeginMenu("Help")) {
             ImGui::EndMenu();
         }
@@ -1512,15 +1532,31 @@ void Editor::Render(void)
 
     ImGui::End();
 
-    RenderViewport();
-    RenderHierarchy();
-    RenderProperties();
-    //RenderConsole();
-    RenderFileExplorer();
-    RenderTopbar();
-    RenderCameraView();
-    RenderComponentsWin();
-    RenderScriptCreateWin();
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::SetNextWindowBgAlpha(1.0f);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.14f, 0.14f, 0.14f, 1.00f));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.14f, 0.14f, 0.14f, 1.00f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::Begin("##EditorWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
+
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x - 40, 0));
+    if (ImGui::Button("-", ImVec2(20, 20)))
+    {
+        MinimizeWindow();
+    }
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x - 20, 0));
+    if (ImGui::Button("x", ImVec2(20, 20)))
+    {
+        // Todo: Popup save warning if the scene has not been saved. Popup options "Save & Quit", "Quit Without Saving", and "Cancel"
+        closeEditor = true;
+    }
+
+    ImGui::End();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
 }
 
 void Editor::SetupViewport()
@@ -1565,12 +1601,13 @@ void Editor::InitFonts()
 void Editor::InitStyle()
 {
     ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowBorderSize = 1.0f;
     style.Colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
     style.Colors[ImGuiCol_WindowBg] = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
     style.Colors[ImGuiCol_ChildBg] = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
     style.Colors[ImGuiCol_PopupBg] = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
-    style.Colors[ImGuiCol_Border] = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
+    style.Colors[ImGuiCol_Border] = ImVec4(0.0f, 0.0f, 0.0f, 0.50f);
     style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
     style.Colors[ImGuiCol_FrameBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
     style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
@@ -1695,7 +1732,7 @@ void Editor::Cleanup()
 
 void Editor::Init()
 {
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI); // FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT
+    SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI); // FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT
     InitWindow(GetScreenWidth(), GetScreenHeight(), ("Cryonic Engine - v0.1-ALPHA - " + ProjectManager::projectData.name).c_str());
     MaximizeWindow();
     SetWindowMinSize(100, 100);
@@ -1706,6 +1743,8 @@ void Editor::Init()
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enabled Docking
+    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     // Enabled Multi-Viewports
     io.ConfigWindowsMoveFromTitleBarOnly = true;
 
     // Setup Dear ImGui style
@@ -1724,7 +1763,7 @@ void Editor::Init()
 
     SetupViewport();
 
-    while (!WindowShouldClose())
+    while (!closeEditor)
     {
         oneSecondDelay -= GetFrameTime();
         FontManager::UpdateFonts();
