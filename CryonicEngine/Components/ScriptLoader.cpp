@@ -4,10 +4,13 @@
 #include <vector>
 #include <algorithm>
 
-void SetupScriptComponent(GameObject* gameObject)
+void SetupScriptComponent(GameObject* gameObject, int id, bool active)
 {
 // SetupScriptComponent
-	//gameObject->AddComponent<ComponentName>().gameObject = gameObject;
+    //COMPONENT& component = gameObject->AddComponent<COMPONENT>();
+    //component.gameObject = gameObject;
+    //component.id = id;
+    //component.SetActive(active);
 }
 
 bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path buildPath)
@@ -66,7 +69,7 @@ bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path build
                 auto functionInsertionIndex = std::distance(lines.begin(), insertionPoint) + 1;
                 for (const std::string& name : scriptNames)
                 {
-                    lines.insert(lines.begin() + functionInsertionIndex, "gameObject->AddComponent<" + name + ">().gameObject = gameObject;");
+                    lines.insert(lines.begin() + functionInsertionIndex, name + "& component = gameObject->AddComponent<" + name + ">(); component.gameObject = gameObject; component.id = id; component.SetActive(active);");
                     functionInsertionIndex++;
                 }
             }
