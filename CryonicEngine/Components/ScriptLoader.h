@@ -4,6 +4,6 @@
 #include "ScriptComponent.h"
 #include <filesystem>
 
-void SetupScriptComponent(ScriptComponent* scriptComponent);
+void SetupScriptComponent(GameObject* gameObject);
 
 bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path buildPath);

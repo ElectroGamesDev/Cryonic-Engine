@@ -4,12 +4,10 @@
 #include <vector>
 #include <algorithm>
 
-void SetupScriptComponent(ScriptComponent* scriptComponent)
+void SetupScriptComponent(GameObject* gameObject)
 {
-    // Todo: Need to make this not AddComponent since ScriptComponent is already a component. Add it to component in scriptComponent. But then GetComponent<>() wont work
-    //  unless I add support for it in GetComponent<>() or create a new function like GetScript<>().
 // SetupScriptComponent
-	//scriptComponent->gameObject->AddComponent<ComponentName>().gameObject = scriptComponent->gameObject;
+	//gameObject->AddComponent<ComponentName>().gameObject = gameObject;
 }
 
 bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path buildPath)
@@ -68,7 +66,7 @@ bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path build
                 auto functionInsertionIndex = std::distance(lines.begin(), insertionPoint) + 1;
                 for (const std::string& name : scriptNames)
                 {
-                    lines.insert(lines.begin() + functionInsertionIndex, "scriptComponent->gameObject->AddComponent<" + name + ">().gameObject = scriptComponent->gameObject;");
+                    lines.insert(lines.begin() + functionInsertionIndex, "gameObject->AddComponent<" + name + ">().gameObject = gameObject;");
                     functionInsertionIndex++;
                 }
             }

@@ -3,9 +3,6 @@
 
 void ScriptComponent::Start()
 {
-	// Todo: Move this to Awake()
-	SetupScriptComponent(this);
-	// Todo: Remove Component
 }
 
 void ScriptComponent::Update(float deltaTime)
