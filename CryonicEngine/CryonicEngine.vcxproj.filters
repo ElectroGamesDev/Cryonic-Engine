@@ -206,5 +206,8 @@
     <ClInclude Include="RaylibInputWrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\includes\imgui\IconsFontAwesome6.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

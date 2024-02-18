@@ -15,6 +15,7 @@ public:
 	void Init();
 
 	void RenderViewport();
+	void RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnDefault);
 	void RenderFileExplorer();
 	void RenderProperties();
 	bool RenderHierarchyNode(GameObject* gameObject, bool normalColor);
@@ -23,6 +24,7 @@ public:
 	void RenderComponentsWin();
 	void RenderScriptCreateWin();
 	void RenderCameraView();
+	void RenderConsole();
 	void Render();
 
 	void UpdateViewport();

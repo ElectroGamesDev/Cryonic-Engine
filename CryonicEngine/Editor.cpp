@@ -12,6 +12,8 @@
 #include "ConsoleLogger.h"
 #include "Scenes/SceneManager.h"
 #include <imgui_impl_raylib.h>
+#include <imgui_internal.h>
+#include "IconsFontAwesome6.h"
 //#include "NewMaterial.h"
 #include <fstream>
 #include "Utilities.h"
@@ -29,6 +31,8 @@ Camera Editor::camera = { 0 };
 
 const float DEG = 180.0f / PI;
 const float RAD = PI / 180.0f;
+
+ImGuiID dockspaceID;
 
 bool closeEditor = false;
 bool viewportOpen = true;
@@ -74,8 +78,14 @@ std::vector<RenderTexture2D*> tempRenderTextures;
 Quaternion Orientation = QuaternionIdentity();
 
 float cameraSpeed = 1;
-
 float oneSecondDelay = 1;
+
+enum Tool
+{
+    Move,
+    Rotate,
+    Scale
+}; Tool toolSelected = Move;
 
 RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path modelPath, int textureSize)
 {
@@ -126,21 +136,45 @@ RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path modelPath, int
 void Editor::RenderViewport()
 {
     if (!viewportOpen) return;
-    if (resetPropertiesWin)
-    {
-        ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2((float)GetScreenWidth(), (float)GetScreenHeight()));
-        //ImGui::SetNextWindowSize(ImVec2(1280, 720));
-        ImGui::SetNextWindowSize(ImVec2(1366, 736));
-        ImGui::SetNextWindowPos(ImVec2(277, 52));
-    }
+    //if (resetPropertiesWin)
+    //{
+    //    ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2((float)GetScreenWidth(), (float)GetScreenHeight()));
+    //    //ImGui::SetNextWindowSize(ImVec2(1280, 720));
+    //    ImGui::SetNextWindowSize(ImVec2(1366, 736));
+    //    ImGui::SetNextWindowPos(ImVec2(277, 52));
+    //}
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     // Todo: Use resize events
 
-    if (ImGui::Begin("Viewport", &viewportOpen, ImGuiWindowFlags_NoScrollbar))
+    if (ImGui::Begin((ICON_FA_CUBES + std::string(" Viewport")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
     {
         viewportPosition = { ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y };
         viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
         rlImGuiImageRenderTextureFit(&ViewTexture, true);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.f, 0.f, 0.f, 0.f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
+        ImGui::SetCursorPos(ImVec2(5, 27));
+        std::string version = "";
+        if (toolSelected == Move)
+            version ="Selected";
+        if (rlImGuiImageButtonSize("##MoveTool", IconManager::imageTextures["MoveTool" + version + "Icon"], { 20, 20 }))
+            toolSelected = Move;
+        ImGui::SetCursorPos(ImVec2(27, 27));
+        version = "";
+        if (toolSelected == Rotate)
+            version = "Selected";
+        if (rlImGuiImageButtonSize("##RotateTool", IconManager::imageTextures["RotateTool" + version + "Icon"], { 20, 20 }))
+            toolSelected = Rotate;
+        ImGui::SetCursorPos(ImVec2(49, 27));
+        version = "";
+        if (toolSelected == Scale)
+            version = "Selected";
+        if (rlImGuiImageButtonSize("##ScaleTool", IconManager::imageTextures["ScaleTool" + version + "Icon"], { 20, 20 }))
+            toolSelected = Scale;
+        ImGui::PopStyleColor(3);
+
 
         viewportHovered = ImGui::IsWindowHovered();
 
@@ -381,33 +415,81 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
     if (resetFileExplorerWin)
     {
         resetFileExplorerWin = false;
-        ImGui::SetNextWindowSize(ImVec2(1920, 282));
-        ImGui::SetNextWindowPos(ImVec2(0, 788));
+    //    ImGui::SetNextWindowSize(ImVec2(1920, 282));
+    //    ImGui::SetNextWindowPos(ImVec2(0, 788));
         fileExplorerPath = ProjectManager::projectData.path / "Assets"; // Todo: Make sure Assets path exists, if not then create it.
     }
-    ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings;
+    ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse;
 
-    float nextX = 10;
-    float nextY = 30;
+    float nextX = 310;
+    float nextY = 55;
 
-    if (ImGui::Begin("File Explorer", nullptr, windowFlags))
+    if (ImGui::Begin((ICON_FA_FOLDER_OPEN + std::string(" File Explorer")).c_str(), nullptr, windowFlags))
     {
-        //ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 10, false));
-        // Back Folder/Button if not in Assets folder
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.f, 0.f, 0.f, 0.f));
+
+        ImGui::SetCursorPos(ImVec2(305, 22));
+        if (rlImGuiImageButtonSize("##FileAddButton", IconManager::imageTextures["AddIcon"], ImVec2(16, 16)))
+            explorerContextMenuOpen = true; // Todo: Not working
+
+        //ImGui::SetCursorPos(ImVec2(325, 23));
+        //if (rlImGuiImageButtonSize("##FileHomeButton", IconManager::imageTextures["HomeIcon"], ImVec2(17, 17)))
+        //    fileExplorerPath = ProjectManager::projectData.path / "Assets";
+
+        std::filesystem::path fileExplorerTempPath = fileExplorerPath;
+        std::filesystem::path path = ProjectManager::projectData.path;
+        ImGui::SetCursorPos(ImVec2(335, 22));
+        bool relative = false;
+        for (const auto& dir : fileExplorerTempPath)
+        {
+            if (!relative && dir == "Assets")
+                relative = true;
+            if (relative)
+            {
+                if (dir != "Assets")
+                {
+                    ImGui::Text(ICON_FA_ARROW_RIGHT);
+                    ImGui::SameLine();
+                }
+                path /= dir;
+                if (ImGui::Button((dir.string() + "##" + std::to_string(ImGui::GetCursorPosX())).c_str()))
+                    fileExplorerPath = path;
+                ImGui::SameLine();
+                //ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20); // Todo: Shouldn't use fixed value here. Should calculate the length of the button
+            }
+        }
+
+        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 260, 25));
+        ImGui::SetNextItemWidth(250);
+        static char searchBuffer[256] = "";
+        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 10, false));
+        if (ImGui::InputText("##FileSearch", searchBuffer, sizeof(searchBuffer), 0))
+        {
+            // Todo: Add Search
+        }
+        ImGui::PopFont();
+        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 262, 25));
+        rlImGuiImageSize(IconManager::imageTextures["SearchIcon"], 17, 17);
+
+        ImGui::GetWindowDrawList()->AddLine(ImVec2(ImGui::GetWindowPos().x + 300, ImGui::GetWindowPos().y + 45), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowWidth(), ImGui::GetWindowPos().y + 45), IM_COL32(0, 0, 0, 255), 1);
+
+        // Back Button if not in /Assets folder
         if (fileExplorerPath != ProjectManager::projectData.path / "Assets")
         {
             ImGui::PushID(fileExplorerPath.string().c_str()); // set unique ID based on the path string
             // Creates back button
             ImGui::SetCursorPosY(nextY);
             ImGui::SetCursorPosX(nextX);
-            if (rlImGuiImageButtonSize("##BackButton", IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
+            if (rlImGuiImageButtonSize("##FileBackButton", IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
             {
                 fileExplorerPath = fileExplorerPath.parent_path();
+                ImGui::PopStyleColor(2);
                 ImGui::PopID();
                 ImGui::End();
                 return;
             }
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY());
             ImGui::SetCursorPosX(nextX + 5);
             ImGui::Text("Back");
             nextX += 60;
@@ -431,6 +513,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
                 {
                     fileExplorerPath = entry.path();
+                    ImGui::PopStyleColor(2);
                     ImGui::PopID();
                     ImGui::End();
                     return;
@@ -525,7 +608,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     continue;
                 }
             }
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY());
             ImGui::SetCursorPosX(nextX - 2);
             ImGui::Text(fileName.c_str());
 
@@ -533,12 +616,28 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
             if (nextX > 1900)
             {
-                nextX = 10;
+                nextX = 310;
                 nextY = nextY + 75;
             }
             ImGui::PopID();
         }
+        ImGui::PopStyleColor(2);
 
+
+        // Mini Left File Explorer
+        int xSize = 300;
+        ImGui::GetWindowDrawList()->AddLine(ImVec2(ImGui::GetWindowPos().x + xSize, ImGui::GetWindowPos().y), ImVec2(ImGui::GetWindowPos().x + xSize, ImGui::GetWindowPos().y + ImGui::GetWindowWidth()), IM_COL32(0, 0, 0, 255), 1);
+        ImGui::SetCursorPos(ImVec2(0,25));
+        if (ImGui::BeginChild("##FileExplorerTree", ImVec2(xSize, ImGui::GetWindowHeight() - 35))) // Todo: Make this a dockable window or something so it resizes properly and can be resized. Check if I need this -35 (or if 35 is the best number)
+        {
+            ImGui::BeginTable("FileExplorerTreeTable", 1);
+            RenderFileExplorerTreeNode(ProjectManager::projectData.path / "Assets", true);
+            ImGui::EndTable();
+        }
+        ImGui::EndChild();
+
+
+        // Context Menu
         if (explorerContextMenuOpen || (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
         {
             explorerContextMenuOpen = true;
@@ -580,6 +679,50 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         }
     }
     ImGui::End();
+}
+
+void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnDefault)
+{
+    bool hasChildren = false;
+    for (const auto& entry : std::filesystem::directory_iterator(path))
+    {
+        if (entry.is_directory())
+        {
+            hasChildren = true;
+            break;
+        }
+    }
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
+    if (!hasChildren)
+        flags |= ImGuiTreeNodeFlags_Leaf;
+    else
+        flags |= ImGuiTreeNodeFlags_OpenOnArrow;
+
+    if (path == fileExplorerPath)
+        flags |= ImGuiTreeNodeFlags_Selected;
+
+    if (openOnDefault)
+        flags |= ImGuiTreeNodeFlags_DefaultOpen;
+
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+
+    if (ImGui::TreeNodeEx((ICON_FA_FOLDER_OPEN + std::string(" ") + path.stem().string() + "##" + path.string()).c_str(), flags))
+    {
+        if (!ImGui::IsItemToggledOpen())
+        {
+            if (ImGui::IsItemClicked())
+                fileExplorerPath = path;
+            for (const auto& entry : std::filesystem::directory_iterator(path))
+            {
+                if (entry.is_directory())
+                    RenderFileExplorerTreeNode(entry, false);
+            }
+        }
+
+        ImGui::TreePop();
+    }
 }
 
 void Editor::RenderScriptCreateWin()
@@ -734,14 +877,14 @@ void Editor::RenderProperties()
 {
     static bool show = true;
 
-    if (resetPropertiesWin)
-    {
-        ImGui::SetNextWindowSize(ImVec2(300, 736));
-        ImGui::SetNextWindowPos(ImVec2(1643, 52));
-        resetPropertiesWin = false;
-    }
-    ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings;
-    if (ImGui::Begin("Properties", nullptr, windowFlags) && std::holds_alternative<GameObject*>(objectInProperties) && std::find_if(SceneManager::GetActiveScene()->GetGameObjects().begin(), SceneManager::GetActiveScene()->GetGameObjects().end(), [&](const auto& obj) { return obj == std::get<GameObject*>(objectInProperties); }) != SceneManager::GetActiveScene()->GetGameObjects().end())
+    //if (resetPropertiesWin)
+    //{
+    //    ImGui::SetNextWindowSize(ImVec2(300, 736));
+    //    ImGui::SetNextWindowPos(ImVec2(1643, 52));
+    //    resetPropertiesWin = false;
+    //}
+    ImGuiWindowFlags windowFlags =  ImGuiWindowFlags_NoCollapse;
+    if (ImGui::Begin((ICON_FA_GEARS + std::string(" Properties")).c_str(), nullptr, windowFlags) && std::holds_alternative<GameObject*>(objectInProperties) && std::find_if(SceneManager::GetActiveScene()->GetGameObjects().begin(), SceneManager::GetActiveScene()->GetGameObjects().end(), [&](const auto& obj) { return obj == std::get<GameObject*>(objectInProperties); }) != SceneManager::GetActiveScene()->GetGameObjects().end())
     {
         ImGui::BeginGroup();
         if (std::holds_alternative<GameObject*>(objectInProperties))
@@ -752,18 +895,60 @@ void Editor::RenderProperties()
             ImGui::SameLine();
             char nameBuffer[256] = {};
             strcpy_s(nameBuffer, std::get<GameObject*>(objectInProperties)->GetName().c_str());
-            ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 67);
+            ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 45);
             if (ImGui::InputText("##ObjectNameText", nameBuffer, sizeof(nameBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
                 std::get<GameObject*>(objectInProperties)->SetName(std::string(nameBuffer));
             }
+            // Layers & Tags
+            ImGui::NewLine();
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 10);
+            int width = (ImGui::GetWindowWidth() - 125) / 2;
+            ImGui::Text("Layers:");
+            ImGui::SameLine();
+            static const char* layers[] = { "Default", "UI" };
+            static int selectedLayer = 0;
+            ImGui::SetNextItemWidth(width);
+            if (ImGui::BeginCombo("##Layers", layers[selectedLayer]))
+            {
+                for (int i = 0; i < IM_ARRAYSIZE(layers); i++)
+                {
+                    const bool isSelected = (selectedLayer == i);
+                    if (ImGui::Selectable(layers[i], isSelected))
+                        selectedLayer = i;
+
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::SameLine();
+            ImGui::Text("Tag:");
+            ImGui::SameLine();
+            static const char* tags[] = { "None" };
+            static int selectedTag = 0;
+            ImGui::SetNextItemWidth(width);
+            if (ImGui::BeginCombo("##Tags", tags[selectedTag]))
+            {
+                for (int i = 0; i < IM_ARRAYSIZE(tags); i++)
+                {
+                    const bool isSelected = (selectedTag == i);
+                    if (ImGui::Selectable(tags[i], isSelected))
+                        selectedTag = i;
+
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
             // Position
+            width = (ImGui::GetWindowWidth() - 165) / 3;
             ImGui::NewLine();
             ImGui::Text("Position:   ");
             ImGui::SameLine();
             ImGui::Text("X");
             ImGui::SameLine();
             float xPos = std::get<GameObject*>(objectInProperties)->transform.GetPosition().x;
-            ImGui::SetNextItemWidth(50);
+            ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectXPos", &xPos, 0, 0, "%.10g")) {
                 std::get<GameObject*>(objectInProperties)->transform.SetPosition(Vector3{ xPos, std::get<GameObject*>(objectInProperties)->transform.GetPosition().y, std::get<GameObject*>(objectInProperties)->transform.GetPosition().z });
             }
@@ -771,7 +956,7 @@ void Editor::RenderProperties()
             ImGui::Text("Y");
             ImGui::SameLine();
             float yPos = std::get<GameObject*>(objectInProperties)->transform.GetPosition().y;
-            ImGui::SetNextItemWidth(50);
+            ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectYPos", &yPos, 0, 0, "%.10g")) {
                 std::get<GameObject*>(objectInProperties)->transform.SetPosition(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetPosition().x, yPos, std::get<GameObject*>(objectInProperties)->transform.GetPosition().z });
             }
@@ -779,19 +964,19 @@ void Editor::RenderProperties()
             ImGui::Text("Z");
             ImGui::SameLine();
             float zPos = std::get<GameObject*>(objectInProperties)->transform.GetPosition().z;
-            ImGui::SetNextItemWidth(50);
+            ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectZPos", &zPos, 0, 0, "%.10g")) {
                 std::get<GameObject*>(objectInProperties)->transform.SetPosition(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetPosition().x, std::get<GameObject*>(objectInProperties)->transform.GetPosition().y, zPos });
             }
             // Scale
             ImGui::NewLine();
-            ImGui::Text("Scale:      ");
+            ImGui::Text("Scale:        ");
             ImGui::SameLine();
             ImGui::Text("X");
             ImGui::SameLine();
             //float xScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().x / std::get<GameObject*>(objectInProperties)->GetRealSize().x;
             float xScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().x;
-            ImGui::SetNextItemWidth(50);
+            ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectXScale", &xScale, 0, 0, "%.10g")) {
                 //std::get<GameObject*>(objectInProperties)->transform.SetScale(Vector3{ xScale * std::get<GameObject*>(objectInProperties)->GetRealSize().x, std::get<GameObject*>(objectInProperties)->transform.GetScale().y, std::get<GameObject*>(objectInProperties)->transform.GetScale().z });
                 std::get<GameObject*>(objectInProperties)->transform.SetScale(Vector3{ xScale, std::get<GameObject*>(objectInProperties)->transform.GetScale().y, std::get<GameObject*>(objectInProperties)->transform.GetScale().z });
@@ -801,7 +986,7 @@ void Editor::RenderProperties()
             ImGui::SameLine();
             //float yScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().y / std::get<GameObject*>(objectInProperties)->GetRealSize().y;
             float yScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().y;
-            ImGui::SetNextItemWidth(50);
+            ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectYScale", &yScale, 0, 0, "%.10g")) {
                 std::get<GameObject*>(objectInProperties)->transform.SetScale(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetScale().x, yScale, std::get<GameObject*>(objectInProperties)->transform.GetScale().z });
             }
@@ -810,7 +995,7 @@ void Editor::RenderProperties()
             ImGui::SameLine();
             //float zScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().z / std::get<GameObject*>(objectInProperties)->GetRealSize().z;
             float zScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().z;
-            ImGui::SetNextItemWidth(50);
+            ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectZScale", &zScale, 0, 0, "%.10g")) {
                 std::get<GameObject*>(objectInProperties)->transform.SetScale(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetScale().x, std::get<GameObject*>(objectInProperties)->transform.GetScale().y, zScale });
             }
@@ -823,7 +1008,7 @@ void Editor::RenderProperties()
             ImGui::Text("X");
             ImGui::SameLine();
             int xRot = static_cast<int>(rot.x);
-            ImGui::SetNextItemWidth(50);
+            ImGui::SetNextItemWidth(width);
             if (ImGui::InputInt("##ObjectXRotation", &xRot, 0, 0)) {
                 std::get<GameObject*>(objectInProperties)->transform.SetRotation(QuaternionFromEuler((float)xRot * RAD, rot.y * RAD, rot.z * RAD));
             }
@@ -831,7 +1016,7 @@ void Editor::RenderProperties()
             ImGui::Text("Y");
             ImGui::SameLine();
             int yRot = static_cast<int>(rot.y);
-            ImGui::SetNextItemWidth(50);
+            ImGui::SetNextItemWidth(width);
             if (ImGui::InputInt("##ObjectYRotation", &yRot, 0, 0)) {
                 std::get<GameObject*>(objectInProperties)->transform.SetRotation(QuaternionFromEuler(rot.x * RAD, yRot * RAD, rot.z * RAD));
             }
@@ -839,61 +1024,12 @@ void Editor::RenderProperties()
             ImGui::Text("Z");
             ImGui::SameLine();
             int zRot = static_cast<int>(rot.z);
-            ImGui::SetNextItemWidth(50);
+            ImGui::SetNextItemWidth(width);
             if (ImGui::InputInt("##ObjectZRotation", &zRot, 0, 0)) {
                 std::get<GameObject*>(objectInProperties)->transform.SetRotation(QuaternionFromEuler(rot.x * RAD, rot.y * RAD, zRot * RAD));
             }
-            // Order
-            //ImGui::NewLine();
-            //ImGui::Text("Order:      ");
-            //ImGui::SameLine();
-            //char orderBuffer[256] = {};
-            //sprintf_s(orderBuffer, sizeof(orderBuffer), "%d", std::get<GameObject*>(objectInProperties)->GetZOrder());
-            //ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 15);
-            //ImGui::SetNextItemWidth(50);
-            //if (ImGui::InputText("##ObjectOrder", orderBuffer, sizeof(orderBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            //    std::get<GameObject*>(objectInProperties)->SetZOrder(std::stof(orderBuffer));
-            //}
-            // Tint
-            //ImGui::NewLine();
-            //ImGui::Text("Colour:     ");
-            //ImGui::SameLine();
-            //ImGui::Text("R");
-            //ImGui::SameLine();
-            //char rBufferTint[256] = {};
-            //float tintValue = std::get<GameObject*>(objectInProperties)->GetTint().Value.x;
-            //sprintf_s(rBufferTint, sizeof(rBufferTint), "%.0f", tintValue * 255);
-            //ImGui::SetNextItemWidth(27);
-            //if (ImGui::InputText("##ObjectRTint", rBufferTint, sizeof(rBufferTint), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            //    std::get<GameObject*>(objectInProperties)->SetTint(ImColor(std::stof(rBufferTint) / 255, std::get<GameObject*>(objectInProperties)->GetTint().Value.y, std::get<GameObject*>(objectInProperties)->GetTint().Value.z, std::get<GameObject*>(objectInProperties)->GetTint().Value.w));
-            //}
-            //ImGui::SameLine();
-            //ImGui::Text("G");
-            //ImGui::SameLine();
-            //char gBufferTint[256] = {};
-            //sprintf_s(gBufferTint, sizeof(gBufferTint), "%.0f", std::get<GameObject*>(objectInProperties)->GetTint().Value.y * 255);
-            //ImGui::SetNextItemWidth(27);
-            //if (ImGui::InputText("##ObjectGTint", gBufferTint, sizeof(gBufferTint), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            //    std::get<GameObject*>(objectInProperties)->SetTint(ImColor(std::get<GameObject*>(objectInProperties)->GetTint().Value.x, std::stof(gBufferTint) / 255, std::get<GameObject*>(objectInProperties)->GetTint().Value.z, std::get<GameObject*>(objectInProperties)->GetTint().Value.w));
-            //}
-            //ImGui::SameLine();
-            //ImGui::Text("B");
-            //ImGui::SameLine();
-            //char bBufferTint[256] = {};
-            //sprintf_s(bBufferTint, sizeof(bBufferTint), "%.0f", std::get<GameObject*>(objectInProperties)->GetTint().Value.z * 255);
-            //ImGui::SetNextItemWidth(27);
-            //if (ImGui::InputText("##ObjectBTint", bBufferTint, sizeof(bBufferTint), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            //    std::get<GameObject*>(objectInProperties)->SetTint(ImColor(std::get<GameObject*>(objectInProperties)->GetTint().Value.x, std::get<GameObject*>(objectInProperties)->GetTint().Value.y, std::stof(bBufferTint) / 255, std::get<GameObject*>(objectInProperties)->GetTint().Value.w));
-            //}
-            //ImGui::SameLine();
-            //ImGui::Text("A");
-            //ImGui::SameLine();
-            //char aBufferTint[256] = {};
-            //sprintf_s(aBufferTint, sizeof(aBufferTint), "%.0f", std::get<GameObject*>(objectInProperties)->GetTint().Value.w * 255);
-            //ImGui::SetNextItemWidth(27);
-            //if (ImGui::InputText("##ObjectATint", aBufferTint, sizeof(aBufferTint), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            //    std::get<GameObject*>(objectInProperties)->SetTint(ImColor(std::get<GameObject*>(objectInProperties)->GetTint().Value.x, std::get<GameObject*>(objectInProperties)->GetTint().Value.y, std::get<GameObject*>(objectInProperties)->GetTint().Value.z, std::stof(aBufferTint) / 255));
-            //}
+
+            ImGui::NewLine();
              
             //Components
             int componentsNum = 0;
@@ -901,130 +1037,161 @@ void Editor::RenderProperties()
             {
                 componentsNum++;
                 float buttonWidth = ImGui::GetWindowWidth() - 15;
-                ImGui::Separator();
+                //ImGui::Separator();
+                int deleteYPos = ImGui::GetCursorPosY();
+                std::string name;
                 if (typeid(*component) == typeid(ScriptComponent))
-                    ImGui::Text(dynamic_cast<ScriptComponent*>(component)->GetName().c_str());
+                    name = ICON_FA_FILE_CODE + std::string(" ") + dynamic_cast<ScriptComponent*>(component)->GetName();
                 else
-                    ImGui::Text(component->name.c_str());
-                ImGui::SameLine();
-
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 40);
-                if (ImGui::Button(("X##" + std::to_string(componentsNum)).c_str()))
+                    name = component->iconUnicode + " " + component->name;
+                ImGui::SetNextItemWidth(buttonWidth);
+                if (ImGui::CollapsingHeader((name + "##" + std::to_string(ImGui::GetCursorPosY())).c_str())) // Todo: Figure out why the width isn't being set on this
                 {
-                    //std::get<GameObject*>(objectInProperties)->RemoveComponent<component>();
-                }
-                ImGui::PopStyleColor(3);
+                    int windowHeight = 1;
+                    if (component->exposedVariables != nullptr)
+                        windowHeight = component->exposedVariables[1].size() * 33;
 
-                if (typeid(*component) == typeid(ScriptComponent) && (component->exposedVariables == nullptr || oneSecondDelay <= 0)) // Todo: Do not check them for updates. Also check if its empty // Todo: Threading
-                {
-                    if (component->exposedVariables == nullptr || component->exposedVariables[0].empty()) // Todo: Check every ~1 second if the file is modified and if should get exposed variables again. DONOT change values, only remove removed variables
-                        component->exposedVariables = Utilities::GetExposedVariables(ProjectManager::projectData.path / "Assets" / dynamic_cast<ScriptComponent*>(component)->GetHeaderPath()); // Todo: Add Threading
-                    else
+                    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.22f, 0.22f, 0.22f, 1.00f));
+                    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.0f);
+                    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
+                    ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPosX(), ImGui::GetCursorPosY() - 5));
+                    // Todo: Is creating a child window the best thing to do here?
+                    ImGui::BeginChild((std::to_string(ImGui::GetCursorPosY())).c_str(), ImVec2(buttonWidth, windowHeight), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysUseWindowPadding);
+                    if (typeid(*component) == typeid(ScriptComponent) && (component->exposedVariables == nullptr || oneSecondDelay <= 0)) // Todo: Do not check them for updates. Also check if its empty // Todo: Threading
                     {
-                        auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(std::filesystem::last_write_time(ProjectManager::projectData.path / "Assets" / dynamic_cast<ScriptComponent*>(component)->GetHeaderPath()) - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
-                        std::time_t tt = std::chrono::system_clock::to_time_t(sctp);
-
-                        if (component->exposedVariables[0].get<int>() != tt)
+                        if (component->exposedVariables == nullptr || component->exposedVariables[0].empty()) // Todo: Check every ~1 second if the file is modified and if should get exposed variables again. DONOT change values, only remove removed variables
+                            component->exposedVariables = Utilities::GetExposedVariables(ProjectManager::projectData.path / "Assets" / dynamic_cast<ScriptComponent*>(component)->GetHeaderPath()); // Todo: Add Threading
+                        else
                         {
-                            nlohmann::json updatedJson = Utilities::GetExposedVariables(ProjectManager::projectData.path / "Assets" / dynamic_cast<ScriptComponent*>(component)->GetHeaderPath()); // Todo: Add Threading
+                            auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(std::filesystem::last_write_time(ProjectManager::projectData.path / "Assets" / dynamic_cast<ScriptComponent*>(component)->GetHeaderPath()) - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
+                            std::time_t tt = std::chrono::system_clock::to_time_t(sctp);
 
-                            for (auto updatedElement = updatedJson[1].begin(); updatedElement != updatedJson[1].end(); ++updatedElement)
+                            if (component->exposedVariables[0].get<int>() != tt)
                             {
-                                for (auto oldElement = component->exposedVariables[1].begin(); oldElement != component->exposedVariables[1].end(); ++oldElement)
+                                nlohmann::json updatedJson = Utilities::GetExposedVariables(ProjectManager::projectData.path / "Assets" / dynamic_cast<ScriptComponent*>(component)->GetHeaderPath()); // Todo: Add Threading
+
+                                for (auto updatedElement = updatedJson[1].begin(); updatedElement != updatedJson[1].end(); ++updatedElement)
                                 {
-                                    if ((*updatedElement)[0] == (*oldElement)[0] && (*updatedElement)[1] == (*oldElement)[1])
+                                    for (auto oldElement = component->exposedVariables[1].begin(); oldElement != component->exposedVariables[1].end(); ++oldElement)
                                     {
-                                        (*updatedElement)[2] = (*oldElement)[2];
-                                        //(*updatedElement)[4] = (*oldElement)[4];
-                                        break;
+                                        if ((*updatedElement)[0] == (*oldElement)[0] && (*updatedElement)[1] == (*oldElement)[1])
+                                        {
+                                            (*updatedElement)[2] = (*oldElement)[2];
+                                            //(*updatedElement)[4] = (*oldElement)[4];
+                                            break;
+                                        }
                                     }
                                 }
+
+                                component->exposedVariables = updatedJson;
                             }
-
-                            component->exposedVariables = updatedJson;
                         }
                     }
-                }
-                if (component->exposedVariables != nullptr) // Todo: Add Threading
-                {
-                    //ConsoleLogger::InfoLog(component->exposedVariables.dump(4));
-                    for (auto it = component->exposedVariables[1].begin(); it != component->exposedVariables[1].end(); ++it)
+                    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.16f, 0.17f, 0.18f, 1.00f));
+                    if (component->exposedVariables != nullptr) // Todo: Add Threading
                     {
-                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
-                        std::string name = (*it)[3];
-                        //ImGui::NewLine();
-                        ImGui::Text(name.c_str());
-                        if ((*it)[0] == "bool")
+                        //ConsoleLogger::InfoLog(component->exposedVariables.dump(4));
+                        for (auto it = component->exposedVariables[1].begin(); it != component->exposedVariables[1].end(); ++it)
                         {
-                            ImGui::SameLine();
-                            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
-                            bool value = (*it)[2].get<bool>();
-                            if (ImGui::Checkbox(("##" + name).c_str(), &value))
+                            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
+                            std::string name = (*it)[3];
+                            //ImGui::NewLine();
+                            ImGui::Text(name.c_str());
+                            if ((*it)[0] == "bool")
+                            {
+                                ImGui::SameLine();
+                                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                bool value = (*it)[2].get<bool>();
+                                if (ImGui::Checkbox(("##" + name).c_str(), &value))
+                                    (*it)[2] = value;
+                                //std::string value = (*it)[5];
+                                //ImGui::SetNextItemWidth(60);
+                                //if (ImGui::BeginCombo(("##" + name).c_str(), value.c_str()))
+                                //{
+                                //    if (ImGui::Selectable("True", value == "true"))
+                                //    {
+                                //        (*it)[2] = "true";
+                                //        (*it)[4] = "True";
+                                //    }
+                                //    if (ImGui::Selectable("False", value == "false"))
+                                //    {
+                                //        (*it)[2] = "false";
+                                //        (*it)[4] = "False";
+                                //    }
+                                //    ImGui::EndCombo();
+                                //}
+                            }
+                            else if ((*it)[0] == "string" || (*it)[0] == "char")
+                            {
+                                ImGui::SameLine();
+                                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                ImGui::SetNextItemWidth(120);
+                                std::string inputText = (*it)[2].get<std::string>();
+                                char buffer[256];
+                                strcpy_s(buffer, sizeof(buffer), inputText.c_str());
+                                ImGui::InputText(("##" + name).c_str(), buffer, sizeof(buffer));
+                                (*it)[2] = buffer;
+                            }
+                            else if ((*it)[0] == "float")
+                            {
+                                ImGui::SameLine();
+                                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                ImGui::SetNextItemWidth(60);
+                                float value = (*it)[2].get<float>();
+                                ImGui::InputFloat(("##" + name).c_str(), &value);
                                 (*it)[2] = value;
-                            //std::string value = (*it)[5];
-                            //ImGui::SetNextItemWidth(60);
-                            //if (ImGui::BeginCombo(("##" + name).c_str(), value.c_str()))
-                            //{
-                            //    if (ImGui::Selectable("True", value == "true"))
-                            //    {
-                            //        (*it)[2] = "true";
-                            //        (*it)[4] = "True";
-                            //    }
-                            //    if (ImGui::Selectable("False", value == "false"))
-                            //    {
-                            //        (*it)[2] = "false";
-                            //        (*it)[4] = "False";
-                            //    }
-                            //    ImGui::EndCombo();
-                            //}
+                            }
+                            else if ((*it)[0] == "int")
+                            {
+                                ImGui::SameLine();
+                                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                ImGui::SetNextItemWidth(60);
+                                int value = (*it)[2].get<int>();
+                                ImGui::InputInt(("##" + name).c_str(), &value, 0, 0);
+                                (*it)[2] = value;
+                            }
+                            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
+                            //ConsoleLogger::ErrorLog("Found Exposed Variable: " + it->dump());
                         }
-                        else if ((*it)[0] == "string" || (*it)[0] == "char")
-                        {
-                            ImGui::SameLine();
-                            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
-                            ImGui::SetNextItemWidth(120);
-                            std::string inputText = (*it)[2].get<std::string>();
-                            char buffer[256];
-                            strcpy_s(buffer, sizeof(buffer), inputText.c_str());
-                            ImGui::InputText(("##" + name).c_str(), buffer, sizeof(buffer));
-                            (*it)[2] = buffer;
-                        }
-                        else if ((*it)[0] == "float")
-                        {
-                            ImGui::SameLine();
-                            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
-                            ImGui::SetNextItemWidth(60);
-                            float value = (*it)[2].get<float>();
-                            ImGui::InputFloat(("##" + name).c_str(), &value);
-                            (*it)[2] = value;
-                        }
-                        else if ((*it)[0] == "int")
-                        {
-                            ImGui::SameLine();
-                            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
-                            ImGui::SetNextItemWidth(60);
-                            int value = (*it)[2].get<int>();
-                            ImGui::InputInt(("##" + name).c_str(), &value, 0, 0);
-                            (*it)[2] = value;
-                        }
-                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
-                        //ConsoleLogger::ErrorLog("Found Exposed Variable: " + it->dump());
                     }
+                    ImGui::PopStyleColor();
+                    ImGui::EndChild();
+                    ImGui::PopStyleVar(2);
+                    ImGui::PopStyleColor();
                 }
-
-                // Configeration properties here
+                int oldYPos = ImGui::GetCursorPosY();
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                //ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+                ImGui::SameLine();
+                ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 50, deleteYPos));
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.16f, 0.17f, 0.18f, 1.00f));
+                ImGui::Checkbox("##ComponentActive", &component->active);
+                ImGui::PopStyleColor();
+                ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 25, deleteYPos));
+                if (ImGui::Button(("X##" + std::to_string(componentsNum)).c_str()))
+                {
+                    //std::get<GameObject*>(objectInProperties)->RemoveComponent<component>(); // Todo: Add this
+                }
+                ImGui::PopStyleColor(2);
+                ImGui::SetCursorPosY(oldYPos);
             }
-            // Component button
             ImGui::NewLine();
-            if (ImGui::Button("Add Component", ImVec2(ImGui::GetWindowWidth() - 37, 0))) {
+            ImGui::SetCursorPos(ImVec2(25, ImGui::GetCursorPosY() - 15));
+            if (ImGui::Button("Add Component", ImVec2(ImGui::GetWindowWidth() - 50, 0)))
                 componentsWindowOpen = true;
-            }
         }
         ImGui::EndGroup();
     }
+    ImGui::End();
+}
+
+void Editor::RenderConsole()
+{
+    if (ImGui::Begin((ICON_FA_CODE + std::string(" Console")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
+    {
+    }
+
     ImGui::End();
 }
 
@@ -1047,28 +1214,37 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor)
 
     if (gameObject->GetChildren().size() <= 0)
         flags |= ImGuiTreeNodeFlags_Leaf;
+    else flags |= ImGuiTreeNodeFlags_OpenOnArrow;
 
-    if (ImGui::TreeNodeEx((gameObject->GetName() + "##" + std::to_string(gameObject->GetId())).c_str(), flags))
+    //std::string icon = ICON_FA_CUBE;
+    //if (gameObject->GetComponent<CameraComponent>()) // Todo: Not sure if this is a good idea to check if it has teh Camera component every frame.
+    //    icon = ICON_FA_CAMERA;
+
+    if (ImGui::TreeNodeEx((ICON_FA_CUBE + std::string(" ") + gameObject->GetName() + "##" + std::to_string(gameObject->GetId())).c_str(), flags))
     {
-        if (ImGui::IsItemClicked())
+        if (!ImGui::IsItemToggledOpen())
         {
-            hierarchyObjectClicked = true;
-            objectInProperties = gameObject;
-            selectedObject = gameObject;
-
-            if (selectedObject->GetComponent<CameraComponent>() != nullptr)
-                cameraSelected = true;
-            else if (cameraSelected)
+            if (ImGui::IsItemClicked())
             {
-                cameraSelected = false;
-                resetCameraView = true;
-            }
-        }
-        else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
-            objectInHierarchyContextMenu = gameObject;
+                hierarchyObjectClicked = true;
+                objectInProperties = gameObject;
+                selectedObject = gameObject;
 
-        for (GameObject* child : gameObject->GetChildren())
-            normalColor = RenderHierarchyNode(child, normalColor);
+                if (selectedObject->GetComponent<CameraComponent>() != nullptr)
+                    cameraSelected = true;
+                else if (cameraSelected)
+                {
+                    cameraSelected = false;
+                    resetCameraView = true;
+                }
+            }
+            else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+                objectInHierarchyContextMenu = gameObject;
+
+
+            for (GameObject* child : gameObject->GetChildren())
+                normalColor = RenderHierarchyNode(child, normalColor);
+        }
 
         ImGui::TreePop();
     }
@@ -1078,15 +1254,16 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor)
 
 void Editor::RenderHierarchy()
 {
-    if (resetHierarchy)
-    {
-        ImGui::SetNextWindowSize(ImVec2(277, 736));
-        ImGui::SetNextWindowPos(ImVec2(0, 52));
-        resetHierarchy = false;
-    }
+    //if (resetHierarchy)
+    //{
+    //    ImGui::SetNextWindowSize(ImVec2(277, 736));
+    //    ImGui::SetNextWindowPos(ImVec2(0, 52));
+    //    resetHierarchy = false;
+    //}
+    //ImGui::SetNextWindowDockID(ImGui::GetID("DockSpace"), ImGuiCond_Once | ImGuiDir_Right);
+    //ImGui::DockBuilderDockWindow();
     hierarchyObjectClicked = false;
-    ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings;
-    ImGui::Begin("Hierachy", nullptr, windowFlags);
+    ImGui::Begin((ICON_FA_SITEMAP + std::string(" Hierarchy")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse);
 
     ImGui::BeginTable("HierarchyTable", 1);
 
@@ -1424,10 +1601,10 @@ void Editor::RenderTopbar()
 {
     int currentWidth = GetScreenWidth();
     int currentHeight = GetScreenHeight();
-    ImGui::SetNextWindowSize(ImVec2(currentWidth, 25));
-    ImGui::SetNextWindowPos(ImVec2(0, 20));
+    ImGui::SetNextWindowSize(ImVec2(currentWidth, 15));
+    ImGui::SetNextWindowPos(ImVec2(0, 30));
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiTableFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize;
-    if (ImGui::Begin("Top Bar", nullptr, windowFlags))
+    if (ImGui::Begin("##TopBar", nullptr, windowFlags))
     {
         // Play Button
         ImTextureID playIconTexture;
@@ -1461,21 +1638,60 @@ void Editor::RenderTopbar()
 
 void Editor::Render(void)
 {
+    // Todo: Put this in RenderDockSpace()
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowPos(ImVec2(0, 31));
+    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth(), GetScreenHeight() - 31));
+    ImGui::SetNextWindowBgAlpha(0.0f);
+    ImGui::Begin("##DockSpace", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBringToFrontOnFocus);
+    dockspaceID = ImGui::GetID("DockSpace"); // Todo: Do this in the init so it only sets the ID once
+    if (ImGui::DockBuilderGetNode(dockspaceID) == NULL)
+    {
+        ImGui::DockBuilderRemoveNode(dockspaceID);
+        ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoCloseButton);
+        ImGui::DockBuilderSetNodeSize(dockspaceID, ImGui::GetWindowSize());
+
+        ImGuiID dock_main_id = dockspaceID;
+        ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.20f, NULL, &dock_main_id);
+        ImGuiID dock_id_left = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.15f, NULL, &dock_main_id);
+        ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.20f, NULL, &dock_main_id);
+
+        ImGui::DockBuilderDockWindow((ICON_FA_SITEMAP + std::string(" Hierarchy")).c_str(), dock_id_left);
+        ImGui::DockBuilderDockWindow((ICON_FA_CUBES + std::string(" Viewport")).c_str(), dock_main_id);
+        ImGui::DockBuilderDockWindow((ICON_FA_GEARS + std::string(" Properties")).c_str(), dock_id_right);
+        ImGui::DockBuilderDockWindow((ICON_FA_FOLDER_OPEN + std::string(" File Explorer")).c_str(), dock_id_bottom);
+        ImGui::DockBuilderDockWindow((ICON_FA_CODE + std::string(" Console")).c_str(), dock_id_bottom);
+        ImGui::DockBuilderFinish(dockspaceID);
+    }
+    ImGui::DockSpace(dockspaceID);
+    ImGui::End();
+    ImGui::PopStyleVar();
+
+    // Todo: Docksapce and EditorWindow should  be the same
+
+    ImGui::SetNextWindowPos(ImVec2(0, 30));
+    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth(), GetScreenHeight() - 30));
+    ImGui::SetNextWindowBgAlpha(1.0f);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.14f, 0.14f, 0.14f, 1.00f));
+    ImGui::Begin("##EditorWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
+
+    ImGui::End();
+    ImGui::PopStyleColor();
 
     RenderViewport();
     RenderHierarchy();
     RenderProperties();
-    //RenderConsole();
     RenderFileExplorer();
-    RenderTopbar();
+    RenderConsole();
     RenderCameraView();
     RenderComponentsWin();
     RenderScriptCreateWin();
+    //RenderTopbar();
 
 
     // Todo: Move this to RenderTitleBar()
     ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(ImVec2(190, 20));
+    ImGui::SetNextWindowSize(ImVec2(190, 30));
     ImGui::SetNextWindowBgAlpha(0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::Begin("##MenuBar", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
@@ -1533,24 +1749,32 @@ void Editor::Render(void)
     ImGui::End();
 
     ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth(), 30));
     ImGui::SetNextWindowBgAlpha(1.0f);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.14f, 0.14f, 0.14f, 1.00f));
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.14f, 0.14f, 0.14f, 1.00f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("##EditorWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
+    ImGui::Begin("##MenuBar2", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x - 40, 0));
-    if (ImGui::Button("-", ImVec2(20, 20)))
+    // Todo: It may be best to calculate the position only in Init and window resize.
+    // Todo: Store the version in a variable and use that both in this titlebar, and the Raylib window titlebar 
+    std::string text = "Cryonic Engine v0.1 - " + ProjectManager::projectData.name;
+    ImGui::SetCursorPos(ImVec2((ImGui::GetWindowSize().x - ImGui::CalcTextSize(text.c_str()).x) * 0.5f, 7.5f));
+    ImGui::Text((text).c_str());
+
+    ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x - 60, 0));
+    if (ImGui::Button("-", ImVec2(30, 30)))
     {
         MinimizeWindow();
     }
-    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x - 20, 0));
-    if (ImGui::Button("x", ImVec2(20, 20)))
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x - 30, 0));
+    if (ImGui::Button("x", ImVec2(30, 30)))
     {
         // Todo: Popup save warning if the scene has not been saved. Popup options "Save & Quit", "Quit Without Saving", and "Cancel"
         closeEditor = true;
     }
+    ImGui::PopFont();
 
     ImGui::End();
     ImGui::PopStyleVar();
@@ -1596,6 +1820,7 @@ void Editor::InitFonts()
     // First font created is the default folt. This should be Familiar-Pro-Bold 15
     FontManager::CreateFonts("Familiar-Pro-Bold", { 15, 10, 18, 20, 25, 30 });
     FontManager::CreateFont("BoldMarker", 90);
+    FontManager::CreateFont("fa-solid-900", 15, true);
 }
 
 void Editor::InitStyle()
@@ -1733,7 +1958,7 @@ void Editor::Cleanup()
 void Editor::Init()
 {
     SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI); // FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT
-    InitWindow(GetScreenWidth(), GetScreenHeight(), ("Cryonic Engine - v0.1-ALPHA - " + ProjectManager::projectData.name).c_str());
+    InitWindow(GetScreenWidth(), GetScreenHeight(), ("Cryonic Engine v0.1 - " + ProjectManager::projectData.name).c_str());
     MaximizeWindow();
     SetWindowMinSize(100, 100);
     SetTargetFPS(144); // Todo: Set target FPS to monitor refresh rate and handle editor being moved across monitors or just take the higher refresh rate
