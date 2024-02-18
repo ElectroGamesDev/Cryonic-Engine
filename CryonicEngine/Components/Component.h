@@ -25,6 +25,8 @@ public:
         return gameObject;
     }
     
+    // Hide in API
+    std::string iconUnicode = "";
     std::string name;
     bool runInEditor = false;
     bool runInGame = true;

@@ -9,6 +9,7 @@ public:
 	{
 		runInEditor = true;
 		name = "MeshRenderer";
+		iconUnicode = "\xef\x86\xb2";
 	}
 	void Start() override {};
 	void Update(float deltaTime) override;

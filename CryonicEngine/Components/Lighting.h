@@ -9,6 +9,7 @@ public:
 	Lighting(GameObject* obj) : Component(obj)
 	{
 		name = "Lighting";
+		iconUnicode = "\xef\x83\xab";
 		runInEditor = true;
 	}
 	//void Start() override;

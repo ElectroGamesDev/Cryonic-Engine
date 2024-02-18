@@ -9,6 +9,7 @@ public:
 	{
 		runInEditor = true;
 		name = "SpriteRenderer";
+		iconUnicode = "\xef\x87\x85";
 	}
 	void Start() override {};
 	void Update(float deltaTime) override;

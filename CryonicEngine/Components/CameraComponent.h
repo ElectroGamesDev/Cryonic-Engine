@@ -9,6 +9,7 @@ public:
 	CameraComponent(GameObject* obj) : Component(obj)
 	{
 		name = "CameraComponent";
+		iconUnicode = "\xef\x80\xb0";
 		runInEditor = true;
 
 		//if (ProjectManager::projectData.is3D) // Todo: Re-add this
