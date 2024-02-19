@@ -1036,6 +1036,7 @@ void Editor::RenderProperties()
             ImGui::NewLine();
              
             //Components
+            static std::string popupOpened = "";
             int componentsNum = 0;
             for (Component* component : std::get<GameObject*>(objectInProperties)->GetComponents())
             {
@@ -1153,6 +1154,21 @@ void Editor::RenderProperties()
                                 int value = (*it)[2].get<int>();
                                 ImGui::InputInt(("##" + name).c_str(), &value, 0, 0);
                                 (*it)[2] = value;
+                            }
+                            else if ((*it)[0] == "Color")
+                            {
+                                ImGui::SameLine();
+                                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                ImGui::SetNextItemWidth(60);
+                                //int value = (*it)[2].get<int>();
+                                //ImGui::InputInt(("##" + name).c_str(), &value, 0, 0);
+                                //(*it)[2] = value;
+                                
+                                // Code from SpriteLab
+                                //ImVec4 previousColor = ImVec4(static_cast<float>(selectedProject->brush.colour.r) / 255, static_cast<float>(selectedProject->brush.colour.g) / 255,
+                                    //static_cast<float>(selectedProject->brush.colour.b) / 255, static_cast<float>(selectedProject->brush.colour.a) / 255);
+
+                                //ImGui::ColorPicker4("##ColourPicker", (float*)&colourPickerColour, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoLabel, (float*)&previousColor);
                             }
                             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
                             //ConsoleLogger::ErrorLog("Found Exposed Variable: " + it->dump());

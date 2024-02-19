@@ -345,10 +345,6 @@ ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) /
 
 void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path path)
 {
-    // I need to loop through each component of each gameobject of each scene. Then store the component name, ID, and values in an array.
-    // Then I need to loop through the scripts (inside the build folder, not assets folder) and look for headers. Then when I find a header, check if that header is the name of one of my components
-    // Stored in the array. If it is, then loop thruogh values of it in the array and create the functio nand switch
-
     std::unordered_map<std::filesystem::path, std::unordered_map<int, nlohmann::json>> components;
 
     // Todo: If a component in one scene as the same ID as a component in another scene, it will cause issues.
