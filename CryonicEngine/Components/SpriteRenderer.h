@@ -46,6 +46,6 @@ public:
 private:
 	Texture2D texture;
 	bool textureSet = false;
-	Expose Color color;
+	Expose Color color = {255, 255, 255, 255};
 	std::filesystem::path texturePath;
 };
