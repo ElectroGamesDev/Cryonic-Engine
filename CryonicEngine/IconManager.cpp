@@ -1,7 +1,7 @@
 #include "IconManager.h"
 #include <filesystem>
 
-std::unordered_map<std::string, Texture2D*> IconManager::imageTextures;
+std::unordered_map<std::string, RaylibWrapper::Texture2D*> IconManager::imageTextures;
 
 void IconManager::Cleanup()
 {
@@ -17,6 +17,6 @@ void IconManager::Init()
 {
     for (const std::filesystem::path& path : std::filesystem::directory_iterator(std::filesystem::path(__FILE__).parent_path() / "resources" / "images"))
     {
-        imageTextures[path.stem().string()] = new Texture2D(LoadTexture(path.string().c_str()));
+        imageTextures[path.stem().string()] = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(path.string().c_str()));
     }
 }

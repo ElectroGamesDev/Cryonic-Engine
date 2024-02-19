@@ -1,11 +1,13 @@
+#if defined(EDITOR)
 #include "FontManager.h"
 #include <vector>
 #include <iostream>
 #include <unordered_map> 
 #include <utility>
 #include "ConsoleLogger.h"
-#include "imgui_impl_raylib.h"
+//#include "imgui_impl_raylib.h"
 #include "IconsFontAwesome6.h"
+#include "RaylibWrapper.h"
 
 static ImFont* defaultFont;
 static std::vector<std::pair<std::string, int>> unloadedFonts;
@@ -15,21 +17,23 @@ static bool updateFonts = false;
 void FontManager::InitFontManager()
 {
 	defaultFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("resources/fonts/Familiar-Pro-Bold.ttf", 16);
-	Imgui_ImplRaylib_BuildFontAtlas();
+	RaylibWrapper::Imgui_ImplRaylib_BuildFontAtlas();
 }
 
 ImFont* FontManager::CreateFont(std::string font, int size, bool iconFont)
 {
 	if (iconFont)
 	{
+#if defined(EDITOR)
 		ImFontConfig config;
 		config.MergeMode = true;
 		static const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
 		ImGuiIO& io = ImGui::GetIO();
 		io.Fonts->AddFontFromFileTTF(("resources/fonts/" + font + ".ttf").c_str(), size, &config, icon_ranges);
 		//io.Fonts->Build();
-		Imgui_ImplRaylib_BuildFontAtlas();
+		RaylibWrapper::Imgui_ImplRaylib_BuildFontAtlas();
 		ConsoleLogger::InfoLog(font + " font created at size " + std::to_string(size));
+#endif
 	}
 	else
 	{
@@ -87,5 +91,6 @@ void FontManager::UpdateFonts()
 	}
 	unloadedFonts.clear();
 
-	Imgui_ImplRaylib_BuildFontAtlas();
+	RaylibWrapper::Imgui_ImplRaylib_BuildFontAtlas();
 }
+#endif

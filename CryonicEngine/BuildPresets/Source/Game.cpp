@@ -1,21 +1,23 @@
-#include "raylib.h"
-#include "raymath.h"
-#include "rlgl.h"
+//#include "raylib.h"
+//#include "raymath.h"
+//#include "rlgl.h"
 #include <iostream>
 #include "ConsoleLogger.h"
 #include "Scenes/SceneManager.h"
-#include "imgui_impl_raylib.h"
+//#include "imgui_impl_raylib.h"
 #include "Components/Component.h"
 #include "Components/CameraComponent.h"
 #include "ShaderManager.h"
+#include "RaylibModelWrapper.h"
+#include "RaylibWrapper.h"
 
 int main(void)
 {
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI); // FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT
-    InitWindow(GetScreenWidth(), GetScreenHeight(), ("Game Name Here"));
-    ToggleFullscreen();
-    SetWindowMinSize(100, 100);
-    //SetTargetFPS(144);
+	RaylibWrapper::SetConfigFlags(RaylibWrapper::FLAG_WINDOW_RESIZABLE | RaylibWrapper::FLAG_WINDOW_HIGHDPI | RaylibWrapper::FLAG_MSAA_4X_HINT | RaylibWrapper::FLAG_VSYNC_HINT); // Todo: Make FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT optional
+	RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), ("Game Name Here"));
+	RaylibWrapper::ToggleFullscreen();
+	RaylibWrapper::SetWindowMinSize(100, 100);
+	RaylibWrapper::SetTargetFPS(144); // Todo: Option to set this to montitor refresh rate
 	
 	SceneManager::LoadScene(std::filesystem::current_path() / "Scenes" / "Default.scene");
 	SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
@@ -32,15 +34,16 @@ int main(void)
 		}
 	}
 
-    while (!WindowShouldClose())
+    while (!RaylibWrapper::WindowShouldClose())
     {
-		ShaderManager::UpdateShaders();
+		if (CameraComponent::main != nullptr)
+            ShaderManager::UpdateShaders(CameraComponent::main->gameObject->transform.GetPosition().x, CameraComponent::main->gameObject->transform.GetPosition().y, CameraComponent::main->gameObject->transform.GetPosition().z);
 		
-        BeginDrawing();
+		RaylibWrapper::BeginDrawing();
 		
-		ClearBackground(SKYBLUE);
+		RaylibWrapper::ClearBackground({ 135, 206, 235, 255 });
 		
-		BeginMode3D(CameraComponent::main->camera);
+		CameraComponent::main->raylibCamera.BeginMode3D();
 		
 		for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 		{
@@ -48,17 +51,19 @@ int main(void)
 			for (Component* component : gameObject->GetComponents())
 			{
 				if (!component->IsActive()) continue;
-				component->Update(GetFrameTime());
+				component->Update(RaylibWrapper::GetFrameTime());
 			}
 		}
 		
-		EndMode3D();
+		RaylibWrapper::EndMode3D();
 		
-        EndDrawing();
+		RaylibWrapper::EndDrawing();
     }
+
+	// Todo: Run component disabled function
 
     //Cleanup();
 	ShaderManager::Cleanup();
-    CloseWindow();
+    RaylibWrapper::CloseWindow();
 	return 0;
 }

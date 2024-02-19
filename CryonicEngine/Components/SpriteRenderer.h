@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Component.h"
+#include "../CryonicCore.h"
 
 class SpriteRenderer : public Component
 {
@@ -11,6 +12,7 @@ public:
 		name = "SpriteRenderer";
 		iconUnicode = "\xef\x87\x85";
 	}
+	// Hide everything from API
 	void Start() override {};
 	void Update(float deltaTime) override;
 	void Destroy() override;

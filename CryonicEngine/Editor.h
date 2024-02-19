@@ -1,11 +1,12 @@
 #pragma once
 
 #include "GameObject.h"
+#include "RaylibWrapper.h"
 
 class Editor
 {
 public:
-	RenderTexture2D* CreateModelPreview(std::filesystem::path modelPath, int textureSize);
+	RaylibWrapper::RenderTexture2D* CreateModelPreview(std::filesystem::path modelPath, int textureSize);
 
 	void InitFonts();
 	void InitStyle();
@@ -32,6 +33,6 @@ public:
 
 	void Cleanup();
 
-	static Camera camera;
-	static Camera2D camera2D;
+	static RaylibWrapper::Camera camera;
+	static RaylibWrapper::Camera2D camera2D;
 };

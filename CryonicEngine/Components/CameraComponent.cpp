@@ -1,11 +1,30 @@
 #include "CameraComponent.h"
 #include "../CryonicCore.h"
 #if defined(EDITOR)
-#include "../IconManager.h"
-#include "../Editor.h"
+//#include "../IconManager.h"
+//#include "../Editor.h"
 #endif
 
 CameraComponent* CameraComponent::main = nullptr;
+
+CameraComponent::CameraComponent(GameObject* obj) : Component(obj)
+{
+	name = "CameraComponent";
+	iconUnicode = "\xef\x80\xb0";
+	runInEditor = true;
+
+	//if (ProjectManager::projectData.is3D) // Todo: Re-add this
+	raylibCamera.SetProjection(0);
+	//else
+	//	raylibCamera.SetProjection(1);
+	raylibCamera.SetFOVY(45);
+	raylibCamera.SetUpY(1);
+	raylibCamera.SetPosition(0, 0, 0);
+	raylibCamera.SetTarget(0, 0,0);
+
+	// Todo: Near Plane
+	// Todo: Far Planer
+}
 
 void CameraComponent::Start()
 {
@@ -14,8 +33,12 @@ void CameraComponent::Start()
 
 void CameraComponent::Update(float deltaTime)
 {
-    camera.position = gameObject->transform.GetPosition();
-    camera.target = Vector3Add(gameObject->transform.GetPosition(), Vector3RotateByQuaternion({0,0,1}, gameObject->transform.GetRotation()));
+	Vector3 pos = gameObject->transform.GetPosition();
+	raylibCamera.SetPosition(pos.x, pos.y, pos.z);
+
+	Vector3 target = gameObject->transform.GetPosition() + RotateVector3ByQuaternion({ 0,0,1 }, gameObject->transform.GetRotation());
+	raylibCamera.SetTarget(target.x, target.y, target.z);
+    //camera.target = Vector3Add(gameObject->transform.GetPosition(), Vector3RotateByQuaternion({0,0,1}, gameObject->transform.GetRotation()));
 }
 
 #if defined(EDITOR)
@@ -26,6 +49,6 @@ void CameraComponent::EditorUpdate()
         setMain = false;
         main = this;
     }
-    Draw3DBillboard(Editor::camera, *IconManager::imageTextures["CameraGizmoIcon"], gameObject->transform.GetPosition(), 2.0f, { 255, 255, 255, 150 });
+    // Draw3DBillboard(Editor::camera, *IconManager::imageTextures["CameraGizmoIcon"], gameObject->transform.GetPosition(), 2.0f, { 255, 255, 255, 150 }); // Todo: Re-add this
 }
 #endif

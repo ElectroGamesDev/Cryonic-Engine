@@ -1,17 +1,16 @@
 #include "MeshRenderer.h"
-#include "rlgl.h"
-#include "../ShaderManager.h"
+//#include "rlgl.h"
+//#include "../ShaderManager.h"
 
-Model& MeshRenderer::GetModel()
+RaylibModel& MeshRenderer::GetModel()
 {
-    return model;
+    return raylibModel;
 }
 
-void MeshRenderer::SetModel(Model model)
+void MeshRenderer::SetModel(ModelType model, std::filesystem::path path, Shaders shader)
 {
-    this->model = model;
-    this->bounds = GetMeshBoundingBox(model.meshes[0]); // Todo: Set the correct scale depending on size variable.
-    this->modelSet = true;
+    //this->raylibModel = model;
+    this->modelSet = raylibModel.Create(model, path, shader);
 }
 
 std::filesystem::path MeshRenderer::GetModelPath() const
@@ -24,55 +23,16 @@ void MeshRenderer::SetModelPath(std::filesystem::path path)
     this->modelPath = path;
 }
 
-BoundingBox MeshRenderer::GetBounds() const
-{
-    return bounds;
-}
-
-void MeshRenderer::SetBounds(BoundingBox bounds)
-{
-    this->bounds = bounds;
-}
-
 void MeshRenderer::Update(float deltaTime)
 {
-    rlPushMatrix();
-
-    // build up the transform
-    Matrix transform = MatrixTranslate(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z);
-
-    transform = MatrixMultiply(QuaternionToMatrix(gameObject->transform.GetRotation()), transform);
-
-    transform = MatrixMultiply(MatrixScale(gameObject->transform.GetScale().x, gameObject->transform.GetScale().y, gameObject->transform.GetScale().z), transform);
-
-    // apply the transform
-    rlMultMatrixf(MatrixToFloat(transform));
-
-    BeginShaderMode(ShaderManager::shaders[ShaderManager::LitStandard]); // Todo: Check if this works with custom models
-    // draw model
-    if ((std::filesystem::exists(GetModelPath())) || GetModelPath() == "Cube" || GetModelPath() == "Sphere" || GetModelPath() == "Plane" || GetModelPath() == "Cone" || GetModelPath() == "Cylinder")
-    {
-        if (!setShader)
-        {
-            bool setShader = true;
-
-            // Todo: Move to OnEnable(), and this sets the shader for all models, not just this one.
-            for (size_t i = 0; i < model.materialCount; ++i)
-                model.materials[i].shader = ShaderManager::shaders[ShaderManager::LitStandard];
-        }
-        DrawModel(GetModel(), Vector3Zero(), 1, WHITE);
-    }
-    else
-    {
-        // Invalid model path
-    }
-    EndShaderMode();
-
-    rlPopMatrix();
+    Vector3 position = gameObject->transform.GetPosition();
+    Quaternion rotation = gameObject->transform.GetRotation();
+    Vector3 scale = gameObject->transform.GetScale();
+    raylibModel.DrawModelWrapper(position.x, position.y, position.z, scale.x, scale.y, scale.z, rotation.x, rotation.y, rotation.z, rotation.w, 255, 255, 255, 255);
 }
 
 void MeshRenderer::Destroy()
 {
     if (modelSet)
-        UnloadModel(GetModel());
+        raylibModel.Unload();
 }

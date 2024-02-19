@@ -1,6 +1,5 @@
 #include "SpriteRenderer.h"
-#include "rlgl.h"
-#include "../ShaderManager.h"
+#include "../RaylibDrawWrapper.h"
 
 Texture2D& SpriteRenderer::GetTexture()
 {
@@ -27,45 +26,34 @@ void SpriteRenderer::Update(float deltaTime)
 {
     if ((std::filesystem::exists(texturePath)))
     {
-        DrawTexturePro(texture,
-            {
-            0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)
-        },
-            {
-            gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y,
-                texture.width* gameObject->transform.GetScale().x,
-                texture.height* gameObject->transform.GetScale().y
-        },
-                {
-                texture.width * gameObject->transform.GetScale().x / 2,
-                texture.height * gameObject->transform.GetScale().y / 2
-            },
-                gameObject->transform.GetRotationEuler().y,
-                    WHITE);
+        // Todo: Re-add this
+        //DrawTexturePro(texture,
+        //    {
+        //    0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)
+        //},
+        //    {
+        //    gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y,
+        //        texture.width* gameObject->transform.GetScale().x,
+        //        texture.height* gameObject->transform.GetScale().y
+        //},
+        //        {
+        //        texture.width * gameObject->transform.GetScale().x / 2,
+        //        texture.height * gameObject->transform.GetScale().y / 2
+        //    },
+        //        gameObject->transform.GetRotationEuler().y,
+        //            WHITE);
     }
     else if (texturePath == "Square")
     {
-        DrawRectanglePro(
-            {
-                gameObject->transform.GetPosition().x,
-                gameObject->transform.GetPosition().y,
-                5 * gameObject->transform.GetScale().x,
-                5 * gameObject->transform.GetScale().y
-            },
-            {
-                5 * gameObject->transform.GetScale().x / 2,
-                5 * gameObject->transform.GetScale().y / 2
-            },
-                gameObject->transform.GetRotation().y,
-                WHITE);
+        Vector3 position = gameObject->transform.GetPosition();
+        Vector3 scale = gameObject->transform.GetScale();
+        DrawRectangleWrapper(position.x, position.y, scale.x, scale.y, gameObject->transform.GetRotation().y, 255, 255, 255, 255);
 
     }
     else if (texturePath == "Circle")
     {
-        DrawCircle(gameObject->transform.GetPosition().x,
-            gameObject->transform.GetPosition().y,
-            gameObject->transform.GetScale().x,
-            WHITE);
+        Vector3 position = gameObject->transform.GetPosition();
+        DrawCircleWrapper(position.x, position.y, gameObject->transform.GetScale().x, 255, 255, 255, 255);
     }
     else
     {
@@ -75,6 +63,6 @@ void SpriteRenderer::Update(float deltaTime)
 
 void SpriteRenderer::Destroy()
 {
-    if (textureSet)
-        UnloadTexture(texture);
+    //if (textureSet)
+    //    UnloadTexture(texture);
 }

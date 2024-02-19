@@ -1,16 +1,17 @@
 #include "CryonicEngine.h"
-#include "raylib.h"
+//#include "raylib.h"
 #include <iostream>
 #include <fstream>
 #include <variant>
 #include "Editor.h"
 #include "FontManager.h"
 #include "ConsoleLogger.h"
-#include <imgui_impl_raylib.h>
+//#include <imgui_impl_raylib.h>
 #include <fstream>
 #include "Utilities.h"
 #include <variant>
 #include "ProjectManager.h"
+#include "RaylibWrapper.h"
 
 //ProjectData projectData;
 std::filesystem::path projectsPath;
@@ -275,15 +276,15 @@ void InitMisc()
 
 void Cleanup()
 {
-    ImGui_ImplRaylib_Shutdown();
+    RaylibWrapper::ImGui_ImplRaylib_Shutdown();
     ImGui::DestroyContext();
 }
 
 void main()
 {
-    InitWindow(800, 600, ("Cryonic Engine - v0.1-ALPHA"));
-    SetWindowMinSize(800, 600);
-    SetTargetFPS(60);
+    RaylibWrapper::InitWindow(800, 600, ("Cryonic Engine - v0.1-ALPHA"));
+    RaylibWrapper::SetWindowMinSize(800, 600);
+    RaylibWrapper::SetTargetFPS(60);
 
     // Setup Dear ImGui context
     ImGui::CreateContext();
@@ -297,19 +298,19 @@ void main()
     InitStyle();
 
     // Setup Platform/Renderer backends
-    ImGui_ImplRaylib_Init();
+    RaylibWrapper::ImGui_ImplRaylib_Init();
     FontManager::InitFontManager();
     InitFonts();
     InitMisc();
 
 
-    while (!WindowShouldClose() && !openEditor)
+    while (!RaylibWrapper::WindowShouldClose() && !openEditor)
     {
         FontManager::UpdateFonts();
 
-        ImGui_ImplRaylib_ProcessEvents();
+        RaylibWrapper::ImGui_ImplRaylib_ProcessEvents();
 
-        ImGui_ImplRaylib_NewFrame();
+        RaylibWrapper::ImGui_ImplRaylib_NewFrame();
         ImGui::NewFrame();
 
         if (windowOpened == MainWin) RenderMainWin();
@@ -317,15 +318,15 @@ void main()
 
         ImGui::Render();
 
-        BeginDrawing(); 
-        ClearBackground(Color{35,35,35,255});
+        RaylibWrapper::BeginDrawing();
+        RaylibWrapper::ClearBackground({35,35,35,255});
 
-        ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
-        EndDrawing();
+        RaylibWrapper::ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
+        RaylibWrapper::EndDrawing();
     }
 
     Cleanup();
-    CloseWindow();
+    RaylibWrapper::CloseWindow();
 
     if (openEditor)
     {

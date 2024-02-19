@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Component.h"
+#include "../RaylibModelWrapper.h"
 
 class MeshRenderer : public Component
 {
@@ -11,21 +12,19 @@ public:
 		name = "MeshRenderer";
 		iconUnicode = "\xef\x86\xb2";
 	}
+	/// Hide everything in this in the API
 	void Start() override {};
 	void Update(float deltaTime) override;
 	void Destroy() override;
 
-	Model& GetModel();
-	void SetModel(Model model);
+	RaylibModel& GetModel();
+	void SetModel(ModelType model, std::filesystem::path path, Shaders shader);
 	std::filesystem::path GetModelPath() const;
 	void SetModelPath(std::filesystem::path path);
-	BoundingBox GetBounds() const;
-	void SetBounds(BoundingBox bounds);
 
 private:
 	bool setShader = false;
-	Model model;
+	RaylibModel raylibModel;
 	bool modelSet = false;
 	std::filesystem::path modelPath;
-	BoundingBox bounds;
 };

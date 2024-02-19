@@ -17,7 +17,7 @@ ProjectData ProjectManager::projectData;
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
     // Editor and IconManager needed for gizmos
-    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "resources", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager", "InputSystem", "RaylibInputWrapper", "Wrappers"};
+    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "resources", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager", "InputSystem", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
      
     if (!std::filesystem::exists(destination))
         std::filesystem::create_directories(destination);
@@ -227,7 +227,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
     // Cleanup
     ConsoleLogger::InfoLog("Build Log - Cleaning up", false);
 
-    //CleanupBuildFolder(buildPath);
+    CleanupBuildFolder(buildPath);
 
     ConsoleLogger::InfoLog("Build Log - Build complete", false);
 

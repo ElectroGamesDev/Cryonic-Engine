@@ -5,7 +5,6 @@
 #include <iostream>
 #include <sstream>
 //#include "../Editor.h"
-#include "imgui.h"
 #include <algorithm>
 #include <cctype>
 #include "json.hpp"
@@ -229,17 +228,17 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 #endif
 
                 if (component.GetModelPath().string() == "Cube")
-                    component.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
-                if (component.GetModelPath().string() == "Plane")
-                    component.SetModel(LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1)));
-                if (component.GetModelPath().string() == "Sphere")
-                    component.SetModel(LoadModelFromMesh(GenMeshSphere(1, 1, 1)));
-                if (component.GetModelPath().string() == "Cylinder")
-                    component.SetModel(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)));
-                if (component.GetModelPath().string() == "Cone")
-                    component.SetModel(LoadModelFromMesh(GenMeshCone(1, 1, 1)));
+                    component.SetModel(Cube, component.GetModelPath().string(), LitStandard);
+                else if (component.GetModelPath().string() == "Plane")
+                    component.SetModel(Plane, component.GetModelPath().string(), LitStandard);
+                else if (component.GetModelPath().string() == "Sphere")
+                    component.SetModel(Sphere, component.GetModelPath().string(), LitStandard);
+                else if (component.GetModelPath().string() == "Cylinder")
+                    component.SetModel(Cylinder, component.GetModelPath().string(), LitStandard);
+                else if (component.GetModelPath().string() == "Cone")
+                    component.SetModel(Cone, component.GetModelPath().string(), LitStandard);
                 else
-                    component.SetModel(LoadModel(component.GetModelPath().string().c_str()));
+                    component.SetModel(Custom, component.GetModelPath().string(), LitStandard);
             }
             else if (componentData["name"] == "SpriteRenderer")
             {
@@ -259,7 +258,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                     #else
                     // Todo: set path for built games
                     #endif
-                    component.SetTexture(LoadTexture((path / component.GetTexturePath()).string().c_str()));
+                    //component.SetTexture(LoadTexture((path / component.GetTexturePath()).string().c_str())); // Todo: Re-add this
                 }
             }
             else if (componentData["name"] == "ScriptComponent")
@@ -362,7 +361,7 @@ Scene* SceneManager::CreateScene()
     else
         cameraObject->transform.SetPosition({ 0,0, -50 });
     cameraObject->transform.SetScale({ 1,1,1 });
-    cameraObject->transform.SetRotation(QuaternionIdentity());
+    cameraObject->transform.SetRotation(Quaternion::Identity());
     cameraObject->SetName("Camera");
     CameraComponent& camera = cameraObject->AddComponent<CameraComponent>();
     camera.gameObject = cameraObject;

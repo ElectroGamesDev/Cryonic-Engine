@@ -1,6 +1,6 @@
-#include "raylib.h"
-#include "raymath.h"
-#include "rlgl.h"
+//#include "raylib.h"
+//#include "raymath.h"
+//#include "rlgl.h"
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -11,10 +11,9 @@
 #include "FontManager.h"
 #include "ConsoleLogger.h"
 #include "Scenes/SceneManager.h"
-#include <imgui_impl_raylib.h>
+//#include <imgui_impl_raylib.h>
 #include <imgui_internal.h>
 #include "IconsFontAwesome6.h"
-//#include "NewMaterial.h"
 #include <fstream>
 #include "Utilities.h"
 #include <variant>
@@ -26,11 +25,13 @@
 #include "IconManager.h"
 #include "ShaderManager.h"
 #include "ProjectManager.h"
+//#include "RaylibWrapper.h"
+#include "RaylibModelWrapper.h"
 
-Camera Editor::camera = { 0 };
+RaylibWrapper::Camera Editor::camera = { 0 };
 
-const float DEG = 180.0f / PI;
-const float RAD = PI / 180.0f;
+const float DEG = 180.0f / 3.14159265358979323846f;
+const float RAD = 3.14159265358979323846f / 180.0f;
 
 ImGuiID dockspaceID;
 
@@ -39,21 +40,21 @@ bool viewportOpen = true;
 bool viewportFocused = false;
 bool viewportHovered = false;
 bool rmbDown = false;
-RenderTexture ViewTexture;
-RenderTexture cameraRenderTexture;
-Texture2D GridTexture = { 0 };
+RaylibWrapper::RenderTexture ViewTexture;
+RaylibWrapper::RenderTexture cameraRenderTexture;
+RaylibWrapper::Texture2D GridTexture = { 0 };
 
 bool viewportOpened = true;
 Vector4 viewportPosition;
 
-std::variant<std::monostate, GameObject*, Material*> objectInProperties = std::monostate{}; // Make a struct or something that holds a Path and ifstream String. Not specific to material so prefabs and stuff can use
+std::variant<std::monostate, GameObject*> objectInProperties = std::monostate{}; // Make a struct or something that holds a Path and ifstream String. Not specific to material so prefabs and stuff can use
 GameObject* selectedObject = nullptr;
 bool movingObjectX = false;
 bool movingObjectY = false;
 bool movingObjectZ = false;
 bool cameraSelected = false;
 
-Vector2 lastMousePosition = { 0 };
+RaylibWrapper::Vector2 lastMousePosition = { 0 };
 
 bool explorerContextMenuOpen = false;
 bool hierarchyContextMenuOpen = false;
@@ -72,11 +73,10 @@ bool resetCameraView = true;
 std::filesystem::path fileExplorerPath;
 
 //std::unordered_map<std::string, Texture2D*> imageTextures;
-std::vector<Texture2D*> tempTextures;
-std::vector<RenderTexture2D*> tempRenderTextures;
+std::vector<RaylibWrapper::Texture2D*> tempTextures;
+std::vector<RaylibWrapper::RenderTexture2D*> tempRenderTextures;
 
-Quaternion Orientation = QuaternionIdentity();
-
+//Quaternion Orientation = Quaternion::Identity();
 float cameraSpeed = 1;
 float oneSecondDelay = 1;
 
@@ -87,43 +87,45 @@ enum Tool
     Scale
 }; Tool toolSelected = Move;
 
-RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path modelPath, int textureSize)
+RaylibWrapper::RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path modelPath, int textureSize)
 {
     // Load the 3D model
-    Model model = LoadModel(modelPath.string().c_str());
+
+    RaylibModel model;
+    model.Create(Custom, modelPath.string().c_str(), LitStandard);
 
     // Set a basic camera to view the model
-    Camera camera = { 0 };
+    RaylibWrapper::Camera camera = { 0 };
     camera.position = { 0.0f, 0.0f, 6.0f };
     camera.target = { 0.0f, 0.0f, 0.0f };
     camera.up = { 0.0f, 1.0f, 0.0f };
     camera.fovy = 45.0f;
-    camera.projection = CAMERA_PERSPECTIVE;
+    camera.projection = RaylibWrapper::CAMERA_PERSPECTIVE;
 
     // Create a render texture
     //RenderTexture2D target = LoadRenderTexture(textureSize, textureSize);
-    tempRenderTextures.push_back(new RenderTexture2D(LoadRenderTexture(textureSize, textureSize)));
+    tempRenderTextures.push_back(new RaylibWrapper::RenderTexture2D(RaylibWrapper::LoadRenderTexture(textureSize, textureSize)));
 
     // Render model to texture
     BeginTextureMode(*tempRenderTextures.back());
 
     // Clear the render texture
-    ClearBackground(Color{ 63, 63, 63, 255 });
+    RaylibWrapper::ClearBackground(RaylibWrapper::Color{ 63, 63, 63, 255 });
 
     // Set camera position and projection for rendering
-    BeginMode3D(camera);
+    RaylibWrapper::BeginMode3D(camera);
 
     // Draw the model
-    DrawModel(model, { 0,0,0 }, 1.0f, WHITE);
+    model.DrawModelWrapper(0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 255, 255, 255, 255);
 
-    EndMode3D();
+    RaylibWrapper::EndMode3D();
 
-    EndTextureMode();
+    RaylibWrapper::EndTextureMode();
 
     //std::cout << "Path: " << modelPath << ", Texture Size: " << textureSize << std::endl;
 
     // Unload the model
-    UnloadModel(model);
+    model.Unload();
 
     //tempTextures.push_back(new Texture2D(target.texture));
 
@@ -159,19 +161,19 @@ void Editor::RenderViewport()
         std::string version = "";
         if (toolSelected == Move)
             version ="Selected";
-        if (rlImGuiImageButtonSize("##MoveTool", IconManager::imageTextures["MoveTool" + version + "Icon"], { 20, 20 }))
+        if (RaylibWrapper::rlImGuiImageButtonSize("##MoveTool", IconManager::imageTextures["MoveTool" + version + "Icon"], { 20, 20 }))
             toolSelected = Move;
         ImGui::SetCursorPos(ImVec2(27, 27));
         version = "";
         if (toolSelected == Rotate)
             version = "Selected";
-        if (rlImGuiImageButtonSize("##RotateTool", IconManager::imageTextures["RotateTool" + version + "Icon"], { 20, 20 }))
+        if (RaylibWrapper::rlImGuiImageButtonSize("##RotateTool", IconManager::imageTextures["RotateTool" + version + "Icon"], { 20, 20 }))
             toolSelected = Rotate;
         ImGui::SetCursorPos(ImVec2(49, 27));
         version = "";
         if (toolSelected == Scale)
             version = "Selected";
-        if (rlImGuiImageButtonSize("##ScaleTool", IconManager::imageTextures["ScaleTool" + version + "Icon"], { 20, 20 }))
+        if (RaylibWrapper::rlImGuiImageButtonSize("##ScaleTool", IconManager::imageTextures["ScaleTool" + version + "Icon"], { 20, 20 }))
             toolSelected = Scale;
         ImGui::PopStyleColor(3);
 
@@ -179,7 +181,7 @@ void Editor::RenderViewport()
         viewportHovered = ImGui::IsWindowHovered();
 
 
-        if (ImGui::IsWindowHovered() && IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) // Todo: Maybe change to viewportFocused instead of IsWindowFocused
+        if (ImGui::IsWindowHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT)) // Todo: Maybe change to viewportFocused instead of IsWindowFocused
         {
             //    // Todo: Add SHIFT to speed up by x2, and scroll weel to change speed
             //rmbDown = true;
@@ -187,15 +189,15 @@ void Editor::RenderViewport()
             //DisableCursor();
 
             if (ProjectManager::projectData.is3D)
-                UpdateCamera(&camera, CAMERA_PERSPECTIVE);
+                RaylibWrapper::UpdateCamera(&camera, RaylibWrapper::CAMERA_PERSPECTIVE);
 
             else
             {
-                Vector2 mousePosition = GetMousePosition();
-                Vector2 deltaMouse = Vector2Subtract(mousePosition, lastMousePosition);
+                RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
+                RaylibWrapper::Vector2 deltaMouse = RaylibWrapper::Vector2Subtract(mousePosition, lastMousePosition);
                 camera.position.x += deltaMouse.x * 0.1f;
                 camera.position.y += deltaMouse.y * 0.1f;
-                camera.target = Vector3Add(camera.position, {0,0,1});
+                camera.target = RaylibWrapper::Vector3Add(camera.position, {0,0,1});
             }
             //    UpdateCamera(&camera, CAMERA_FREE);
             //    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
@@ -239,7 +241,7 @@ void Editor::RenderViewport()
             //        //UpdateCamera(&camera, CAMERA_FIRST_PERSON);
             //    }
         }
-        else if (rmbDown && IsMouseButtonUp(MOUSE_BUTTON_RIGHT))
+        else if (rmbDown && RaylibWrapper::IsMouseButtonUp(RaylibWrapper::MOUSE_BUTTON_RIGHT))
         {
             //ShowCursor();
             //EnableCursor();
@@ -248,26 +250,27 @@ void Editor::RenderViewport()
         // Move Tool Arrows
         if (selectedObject != nullptr)
         {
-            Vector2 pos = GetWorldToScreen(selectedObject->transform.GetPosition(), camera);
+            Vector3 position = selectedObject->transform.GetPosition();
+            RaylibWrapper::Vector2 pos = RaylibWrapper::GetWorldToScreen({ position.x, position.y, position.z}, camera);
             // Divding positions by Raylib window size then multiply it by Viewport window size.
-            pos.x = pos.x / GetScreenWidth() * ImGui::GetWindowSize().x;
-            pos.y = pos.y / GetScreenHeight() * ImGui::GetWindowSize().y;
+            pos.x = pos.x / RaylibWrapper::GetScreenWidth() * ImGui::GetWindowSize().x;
+            pos.y = pos.y / RaylibWrapper::GetScreenHeight() * ImGui::GetWindowSize().y;
             ImGui::SetCursorPos(ImVec2(pos.x - 10, pos.y - 35));
-            rlImGuiImageSizeV(IconManager::imageTextures["GreenArrow"], { 20, 40 });
-            if (!movingObjectY && ImGui::IsItemHovered() && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["GreenArrow"], { 20, 40 });
+            if (!movingObjectY && ImGui::IsItemHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_LEFT))
                 movingObjectY = true;
             ImGui::SetCursorPos(ImVec2(pos.x + 5, pos.y));
-            rlImGuiImageSizeV(IconManager::imageTextures["RedArrow"], { 40, 20 });
-            if (!movingObjectX && ImGui::IsItemHovered() && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["RedArrow"], { 40, 20 });
+            if (!movingObjectX && ImGui::IsItemHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_LEFT))
                 movingObjectX = true;
             ImGui::SetCursorPos(ImVec2(pos.x + 3, pos.y - 8));
-            rlImGuiImageSizeV(IconManager::imageTextures["XYMoveTool"], { 15, 15 });
-            if (!movingObjectX && !movingObjectY && ImGui::IsItemHovered() && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) // Todo: Fix this so if the user is moving with the X or Y arrow and move mouse up to XY move square, it will not switch to the XY square move tool
+            RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["XYMoveTool"], { 15, 15 });
+            if (!movingObjectX && !movingObjectY && ImGui::IsItemHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_LEFT)) // Todo: Fix this so if the user is moving with the X or Y arrow and move mouse up to XY move square, it will not switch to the XY square move tool
             {
                 movingObjectX = true;
                 movingObjectY = true;
             }
-            if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+            if (RaylibWrapper::IsMouseButtonReleased(RaylibWrapper::MOUSE_BUTTON_LEFT))
             {
                 movingObjectY = false;
                 movingObjectX = false;
@@ -275,8 +278,8 @@ void Editor::RenderViewport()
 
             if (movingObjectX || movingObjectY || movingObjectZ)
             {
-                Vector2 mousePosition = GetMousePosition();
-                Vector2 deltaMouse = Vector2Subtract(mousePosition, lastMousePosition);
+                RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
+                RaylibWrapper::Vector2 deltaMouse = RaylibWrapper::Vector2Subtract(mousePosition, lastMousePosition);
                 float x = selectedObject->transform.GetPosition().x;
                 float y = selectedObject->transform.GetPosition().y;
                 float z = selectedObject->transform.GetPosition().z;
@@ -289,7 +292,7 @@ void Editor::RenderViewport()
                 selectedObject->transform.SetPosition({ x, y, z });
             }
         }
-        lastMousePosition = GetMousePosition();
+        lastMousePosition = RaylibWrapper::GetMousePosition();
     }
 
     ImGui::End();
@@ -299,100 +302,100 @@ void Editor::RenderViewport()
 void Editor::UpdateViewport()
 {
     if (!viewportOpen) return;
-    if (IsWindowResized())
+    if (RaylibWrapper::IsWindowResized())
     {
         UnloadRenderTexture(ViewTexture);
-        ViewTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+        ViewTexture = RaylibWrapper::LoadRenderTexture(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight());
     }
 
     // Load new models/textures on drag&drop
-    if (viewportHovered && IsFileDropped())
-    {
-        FilePathList droppedFiles = LoadDroppedFiles();
+    //if (viewportHovered && RaylibWrapper::IsFileDropped()) // Todo: Re-add this, maybe using ImGui instead
+    //{
+    //    FilePathList droppedFiles = LoadDroppedFiles();
 
-        if (droppedFiles.count == 1) // Todo: Add support for multiple files dropped.
-        {
-            if (IsFileExtension(droppedFiles.paths[0], ".obj") ||
-                IsFileExtension(droppedFiles.paths[0], ".gltf") ||
-                IsFileExtension(droppedFiles.paths[0], ".glb") ||
-                IsFileExtension(droppedFiles.paths[0], ".vox") ||
-                IsFileExtension(droppedFiles.paths[0], ".iqm") ||
-                IsFileExtension(droppedFiles.paths[0], ".m3d"))       // Model file formats supported
-            {
-                std::filesystem::path folderPath = ProjectManager::projectData.path / "Assets" / "Models";
-                if (!std::filesystem::exists(folderPath))
-                    std::filesystem::create_directories(folderPath);
+    //    if (droppedFiles.count == 1) // Todo: Add support for multiple files dropped.
+    //    {
+    //        if (IsFileExtension(droppedFiles.paths[0], ".obj") ||
+    //            IsFileExtension(droppedFiles.paths[0], ".gltf") ||
+    //            IsFileExtension(droppedFiles.paths[0], ".glb") ||
+    //            IsFileExtension(droppedFiles.paths[0], ".vox") ||
+    //            IsFileExtension(droppedFiles.paths[0], ".iqm") ||
+    //            IsFileExtension(droppedFiles.paths[0], ".m3d"))       // Model file formats supported
+    //        {
+    //            std::filesystem::path folderPath = ProjectManager::projectData.path / "Assets" / "Models";
+    //            if (!std::filesystem::exists(folderPath))
+    //                std::filesystem::create_directories(folderPath);
 
-                fileExplorerPath = folderPath;
-                std::filesystem::path filePath = droppedFiles.paths[0];
+    //            fileExplorerPath = folderPath;
+    //            std::filesystem::path filePath = droppedFiles.paths[0];
 
-                std::string filename = filePath.filename().string();
-                std::string extension = filePath.extension().string();
+    //            std::string filename = filePath.filename().string();
+    //            std::string extension = filePath.extension().string();
 
-                int counter = 1;
-                while (std::filesystem::exists(folderPath / filename)) {
-                    // File with the same name exists, append a number to the filename
-                    filename = filePath.stem().string() + std::to_string(counter) + extension;
-                    counter++;
-                }
+    //            int counter = 1;
+    //            while (std::filesystem::exists(folderPath / filename)) {
+    //                // File with the same name exists, append a number to the filename
+    //                filename = filePath.stem().string() + std::to_string(counter) + extension;
+    //                counter++;
+    //            }
 
-                std::filesystem::copy_file(droppedFiles.paths[0], folderPath / filename);
+    //            std::filesystem::copy_file(droppedFiles.paths[0], folderPath / filename);
 
-                GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
-                Material material;
-                MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
-                meshRenderer.SetModelPath(folderPath / filename);
-                meshRenderer.SetModel(LoadModel(meshRenderer.GetModelPath().string().c_str()));
-                gameObject->transform.SetPosition({ 0,0,0 });
-                //gameObject->SetRealSize(gameObject->GetModel().s);
-                gameObject->transform.SetScale({ 1,1,1 });
-                gameObject->transform.SetRotation(QuaternionIdentity());
-                gameObject->SetName((folderPath / filename).stem().string());
-                //material.SetDiffuseMap();
-                // gameObject->GetModel().materials[0].maps[MATERIAL_MAP_DIFFUSE].texture
-                //gameObject->SetMaterial(.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture; // Set current map diffuse texture
+    //            GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
+    //            Material material;
+    //            MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
+    //            meshRenderer.SetModelPath(folderPath / filename);
+    //            meshRenderer.SetModel(LoadModel(meshRenderer.GetModelPath().string().c_str()));
+    //            gameObject->transform.SetPosition({ 0,0,0 });
+    //            //gameObject->SetRealSize(gameObject->GetModel().s);
+    //            gameObject->transform.SetScale({ 1,1,1 });
+    //            gameObject->transform.SetRotation(QuaternionIdentity());
+    //            gameObject->SetName((folderPath / filename).stem().string());
+    //            //material.SetDiffuseMap();
+    //            // gameObject->GetModel().materials[0].maps[MATERIAL_MAP_DIFFUSE].texture
+    //            //gameObject->SetMaterial(.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture; // Set current map diffuse texture
 
-                //SceneManager::GetActiveScene()->AddGameObject(gameObject);
+    //            //SceneManager::GetActiveScene()->AddGameObject(gameObject);
 
-                for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
-                {
-                    component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
-                }
+    //            for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
+    //            {
+    //                component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
+    //            }
 
-                selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
-                objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
+    //            selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
+    //            objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
 
-                // TODO: Move camera position from target enough distance to visualize model properly
-            }
-            else if (IsFileExtension(droppedFiles.paths[0], ".png"))  // Texture file formats supported
-            {
-                // Unload current model texture and load new one
-                //UnloadTexture(texture);
-                //texture = LoadTexture(droppedFiles.paths[0]);
-                //model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
-            }
-        }
+    //            // TODO: Move camera position from target enough distance to visualize model properly
+    //        }
+    //        else if (IsFileExtension(droppedFiles.paths[0], ".png"))  // Texture file formats supported
+    //        {
+    //            // Unload current model texture and load new one
+    //            //UnloadTexture(texture);
+    //            //texture = LoadTexture(droppedFiles.paths[0]);
+    //            //model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+    //        }
+    //    }
 
-        UnloadDroppedFiles(droppedFiles);    // Unload filepaths from memory
-    }
+    //    UnloadDroppedFiles(droppedFiles);    // Unload filepaths from memory
+    //}
 
     //float period = 10;
     //float magnitude = 25;
 
     //camera.position.x = (float)(sinf((float)GetTime() / period) * magnitude);
 
-    BeginTextureMode(ViewTexture);
+    RaylibWrapper::BeginTextureMode(ViewTexture);
 
     if (ProjectManager::projectData.is3D)
     {
-        ClearBackground(SKYBLUE);
+        RaylibWrapper::ClearBackground({ 135, 206, 235, 255 });
     }
     else
-        ClearBackground(GRAY);
-    BeginMode3D(camera);
+        RaylibWrapper::ClearBackground({128, 128, 128, 255});
+    RaylibWrapper::BeginMode3D(camera);
 
     if (ProjectManager::projectData.is3D)
-        DrawGrid(100, 10.0f);
+        RaylibWrapper::DrawGrid(100, 10.0f);
 
     for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
@@ -401,13 +404,13 @@ void Editor::UpdateViewport()
         {
             if (!component->IsActive()) continue;
             if (component->runInEditor)
-                component->Update(GetFrameTime());
+                component->Update(RaylibWrapper::GetFrameTime());
             component->EditorUpdate();
         }
     }
 
-    EndMode3D();
-    EndTextureMode();
+    RaylibWrapper::EndMode3D();
+    RaylibWrapper::EndTextureMode();
 }
 
 void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted folder.
@@ -430,7 +433,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.f, 0.f, 0.f, 0.f));
 
         ImGui::SetCursorPos(ImVec2(305, 22));
-        if (rlImGuiImageButtonSize("##FileAddButton", IconManager::imageTextures["AddIcon"], ImVec2(16, 16)))
+        if (RaylibWrapper::rlImGuiImageButtonSize("##FileAddButton", IconManager::imageTextures["AddIcon"], ImVec2(16, 16)))
             explorerContextMenuOpen = true; // Todo: Not working
 
         //ImGui::SetCursorPos(ImVec2(325, 23));
@@ -470,7 +473,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         }
         ImGui::PopFont();
         ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 262, 25));
-        rlImGuiImageSize(IconManager::imageTextures["SearchIcon"], 17, 17);
+        RaylibWrapper::rlImGuiImageSize(IconManager::imageTextures["SearchIcon"], 17, 17);
 
         ImGui::GetWindowDrawList()->AddLine(ImVec2(ImGui::GetWindowPos().x + 300, ImGui::GetWindowPos().y + 45), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowWidth(), ImGui::GetWindowPos().y + 45), IM_COL32(0, 0, 0, 255), 1);
 
@@ -481,7 +484,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             // Creates back button
             ImGui::SetCursorPosY(nextY);
             ImGui::SetCursorPosX(nextX);
-            if (rlImGuiImageButtonSize("##FileBackButton", IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
+            if (RaylibWrapper::rlImGuiImageButtonSize("##FileBackButton", IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
             {
                 fileExplorerPath = fileExplorerPath.parent_path();
                 ImGui::PopStyleColor(2);
@@ -510,7 +513,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             ImVec2 pos = ImGui::GetCursorPos();
             if (entry.is_directory())
             {
-                if (rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
+                if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
                 {
                     fileExplorerPath = entry.path();
                     ImGui::PopStyleColor(2);
@@ -524,7 +527,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 std::string extension = entry.path().extension().string();
                 if (extension == ".cpp")
                 {
-                    if (rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CppIcon"], ImVec2(32, 32)))
+                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CppIcon"], ImVec2(32, 32)))
                     {
                         //std::string command = "code " + entry.path().string(); // VSCode
                         std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
@@ -532,7 +535,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".h")
                 {
-                    if (rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["HeaderIcon"], ImVec2(32, 32)))
+                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["HeaderIcon"], ImVec2(32, 32)))
                     {
                         //std::string command = "code " + entry.path().string(); // VSCode
                         std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
@@ -540,9 +543,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".png" || extension == ".jpg" || extension == ".webp")
                 {
-                    tempTextures.push_back(new Texture2D(LoadTexture(entry.path().string().c_str())));
+                    tempTextures.push_back(new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(entry.path().string().c_str())));
 
-                    if (rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32)))
+                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32)))
                     {
                         std::string command = "start \"" + entry.path().string() + "\"";
                         std::system(command.c_str());
@@ -598,7 +601,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".obj" || extension == ".gltf" || extension == ".glb" || extension == ".vox" || extension == ".iqm" || extension == ".m3d")
                 {
-                    if (rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(32, 32)))
+                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(32, 32)))
                     {
                     }
                 }
@@ -729,7 +732,7 @@ void Editor::RenderScriptCreateWin()
 {
     if (!scriptCreateWinOpen) return;
     ImGui::SetNextWindowSize(ImVec2(180, 180));
-    ImGui::SetNextWindowPos(ImVec2((GetScreenWidth() - 180) / 2, (GetScreenHeight() - 180) / 2));
+    ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 180) / 2, (RaylibWrapper::GetScreenHeight() - 180) / 2));
     if (ImGui::Begin("Create Script", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         ImGui::Text("Script Name");
@@ -779,7 +782,7 @@ void Editor::RenderComponentsWin()
     if (resetComponentsWin)
     {
         ImGui::SetNextWindowSize(ImVec2(300, 400));
-        ImGui::SetNextWindowPos(ImVec2((GetScreenWidth() - 300) / 2, (GetScreenHeight() - 400) / 2));
+        ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 300) / 2, (RaylibWrapper::GetScreenHeight() - 400) / 2));
         resetComponentsWin = false;
     }
     if (ImGui::Begin("Add Component", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NoCollapse))
@@ -831,24 +834,24 @@ void Editor::RenderCameraView()
 
     if (resetCameraView)
     {
-        cameraRenderTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+        cameraRenderTexture = RaylibWrapper::LoadRenderTexture(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight());
         ImGui::SetNextWindowSize(ImVec2(200, 112));
         if (!viewportOpened)
-            ImGui::SetNextWindowPos(ImVec2((GetScreenWidth() - 200) / 2, (GetScreenHeight() - 112) / 2));
+            ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 200) / 2, (RaylibWrapper::GetScreenHeight() - 112) / 2));
         else
             ImGui::SetNextWindowPos(ImVec2(viewportPosition.z - 200, viewportPosition.w - 112));
         resetCameraView = false;
     }
 
-    BeginTextureMode(cameraRenderTexture);
+    RaylibWrapper::BeginTextureMode(cameraRenderTexture);
     if (ProjectManager::projectData.is3D)
     {
-        ClearBackground(SKYBLUE);
+        RaylibWrapper::ClearBackground({ 135, 206, 235, 255 });
     }
     else
-        ClearBackground(GRAY);
+        RaylibWrapper::ClearBackground({128, 128, 128, 255});
 
-    BeginMode3D(selectedObject->GetComponent<CameraComponent>()->camera);
+    selectedObject->GetComponent<CameraComponent>()->raylibCamera.BeginMode3D();
 
     //if (ProjectManager::projectData.is3D)
     //    DrawGrid(100, 10.0f);
@@ -859,12 +862,13 @@ void Editor::RenderCameraView()
         for (Component* component : gameObject->GetComponents())
         {
             if (!component->IsActive() || !component->runInEditor) continue;
-            component->Update(GetFrameTime());
+            component->Update(RaylibWrapper::GetFrameTime());
         }
     }
 
-    EndMode3D();
-    EndTextureMode();
+    RaylibWrapper::EndMode3D();
+
+    RaylibWrapper::EndTextureMode();
 
     if (ImGui::Begin("Camera View", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
     {
@@ -1000,8 +1004,7 @@ void Editor::RenderProperties()
                 std::get<GameObject*>(objectInProperties)->transform.SetScale(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetScale().x, std::get<GameObject*>(objectInProperties)->transform.GetScale().y, zScale });
             }
             // Rotation
-            //Vector3 rot = QuaternionToEuler(std::get<GameObject*>(objectInProperties)->transform.GetRotation());
-            Vector3 rot = Vector3Scale(QuaternionToEuler(std::get<GameObject*>(objectInProperties)->transform.GetRotation()), DEG);
+            Vector3 rot = QuaternionToEuler(std::get<GameObject*>(objectInProperties)->transform.GetRotation()) * DEG;
             ImGui::NewLine();
             ImGui::Text("Rotation:   ");
             ImGui::SameLine();
@@ -1009,8 +1012,9 @@ void Editor::RenderProperties()
             ImGui::SameLine();
             int xRot = static_cast<int>(rot.x);
             ImGui::SetNextItemWidth(width);
+            // Todo: Create the bool "rotation" updated and if its updated on X, Y, Z, set it to true, then below check if its true and if it is, update the rotation. This way it reduces duplicate code. DO the same with Position and Scale
             if (ImGui::InputInt("##ObjectXRotation", &xRot, 0, 0)) {
-                std::get<GameObject*>(objectInProperties)->transform.SetRotation(QuaternionFromEuler((float)xRot * RAD, rot.y * RAD, rot.z * RAD));
+                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion((float)xRot* RAD, rot.y* RAD, rot.z* RAD));
             }
             ImGui::SameLine();
             ImGui::Text("Y");
@@ -1018,7 +1022,7 @@ void Editor::RenderProperties()
             int yRot = static_cast<int>(rot.y);
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputInt("##ObjectYRotation", &yRot, 0, 0)) {
-                std::get<GameObject*>(objectInProperties)->transform.SetRotation(QuaternionFromEuler(rot.x * RAD, yRot * RAD, rot.z * RAD));
+                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion((float)xRot* RAD, rot.y* RAD, rot.z* RAD));
             }
             ImGui::SameLine();
             ImGui::Text("Z");
@@ -1026,7 +1030,7 @@ void Editor::RenderProperties()
             int zRot = static_cast<int>(rot.z);
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputInt("##ObjectZRotation", &zRot, 0, 0)) {
-                std::get<GameObject*>(objectInProperties)->transform.SetRotation(QuaternionFromEuler(rot.x * RAD, rot.y * RAD, zRot * RAD));
+                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion((float)xRot * RAD, rot.y * RAD, rot.z * RAD));
             }
 
             ImGui::NewLine();
@@ -1370,7 +1374,7 @@ void Editor::RenderHierarchy()
                 GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
                 gameObject->transform.SetPosition({ 0,0,0 });
                 gameObject->transform.SetScale({ 1,1,1 });
-                gameObject->transform.SetRotation(QuaternionIdentity());
+                gameObject->transform.SetRotation(Quaternion::Identity());
                 gameObject->SetName(objectToCreate);
                 if (objectToCreate == "Empty")
                     gameObject->SetName("GameObject");
@@ -1386,15 +1390,15 @@ void Editor::RenderHierarchy()
                         meshRenderer.SetModelPath(objectToCreate);
 
                         if (objectToCreate == "Cube")
-                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCube(1, 1, 1)));
+                            meshRenderer.SetModel(Cube, "Cube", LitStandard);
                         else if (objectToCreate == "Plane")
-                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1)));
+                            meshRenderer.SetModel(Plane, "Plane", LitStandard);
                         else if (objectToCreate == "Sphere")
-                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshSphere(1, 1, 1)));
+                            meshRenderer.SetModel(Sphere, "Sphere", LitStandard);
                         else if (objectToCreate == "Cylinder")
-                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)));
+                            meshRenderer.SetModel(Cylinder, "Cylinder", LitStandard);
                         else if (objectToCreate == "Cone")
-                            meshRenderer.SetModel(LoadModelFromMesh(GenMeshCone(1, 1, 1)));
+                            meshRenderer.SetModel(Cone, "Cone", LitStandard);
                     }
                     else
                     {
@@ -1599,8 +1603,8 @@ void Editor::RenderHierarchy()
 
 void Editor::RenderTopbar()
 {
-    int currentWidth = GetScreenWidth();
-    int currentHeight = GetScreenHeight();
+    int currentWidth = RaylibWrapper::GetScreenWidth();
+    int currentHeight = RaylibWrapper::GetScreenHeight();
     ImGui::SetNextWindowSize(ImVec2(currentWidth, 15));
     ImGui::SetNextWindowPos(ImVec2(0, 30));
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiTableFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize;
@@ -1613,7 +1617,7 @@ void Editor::RenderTopbar()
 
         ImGui::SetCursorPos(ImVec2(currentWidth / 2 - 20, 2));
 
-        if (rlImGuiImageButtonSize("##PlayButton", IconManager::imageTextures["PlayIcon"], ImVec2(20, 20)))
+        if (RaylibWrapper::rlImGuiImageButtonSize("##PlayButton", IconManager::imageTextures["PlayIcon"], ImVec2(20, 20)))
         {
             //startStopPlaying = true;
             //paused = false;
@@ -1627,7 +1631,7 @@ void Editor::RenderTopbar()
 
         ImGui::SetCursorPos(ImVec2(currentWidth / 2 + 20, 2));
 
-        if (rlImGuiImageButtonSize("##PauseButton", IconManager::imageTextures["GrayedPauseIcon"], ImVec2(20, 20)))
+        if (RaylibWrapper::rlImGuiImageButtonSize("##PauseButton", IconManager::imageTextures["GrayedPauseIcon"], ImVec2(20, 20)))
         {
             //if (playing) paused = !paused;
         }
@@ -1641,7 +1645,7 @@ void Editor::Render(void)
     // Todo: Put this in RenderDockSpace()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowPos(ImVec2(0, 31));
-    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth(), GetScreenHeight() - 31));
+    ImGui::SetNextWindowSize(ImVec2(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight() - 31));
     ImGui::SetNextWindowBgAlpha(0.0f);
     ImGui::Begin("##DockSpace", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBringToFrontOnFocus);
     dockspaceID = ImGui::GetID("DockSpace"); // Todo: Do this in the init so it only sets the ID once
@@ -1670,7 +1674,7 @@ void Editor::Render(void)
     // Todo: Docksapce and EditorWindow should  be the same
 
     ImGui::SetNextWindowPos(ImVec2(0, 30));
-    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth(), GetScreenHeight() - 30));
+    ImGui::SetNextWindowSize(ImVec2(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight() - 30));
     ImGui::SetNextWindowBgAlpha(1.0f);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.14f, 0.14f, 0.14f, 1.00f));
     ImGui::Begin("##EditorWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
@@ -1749,7 +1753,7 @@ void Editor::Render(void)
     ImGui::End();
 
     ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(ImVec2(GetScreenWidth(), 30));
+    ImGui::SetNextWindowSize(ImVec2(RaylibWrapper::GetScreenWidth(), 30));
     ImGui::SetNextWindowBgAlpha(1.0f);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.14f, 0.14f, 0.14f, 1.00f));
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.14f, 0.14f, 0.14f, 1.00f));
@@ -1766,7 +1770,7 @@ void Editor::Render(void)
     ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x - 60, 0));
     if (ImGui::Button("-", ImVec2(30, 30)))
     {
-        MinimizeWindow();
+        RaylibWrapper::MinimizeWindow();
     }
     ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x - 30, 0));
     if (ImGui::Button("x", ImVec2(30, 30)))
@@ -1785,7 +1789,7 @@ void Editor::Render(void)
 
 void Editor::SetupViewport()
 {
-    ViewTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+    ViewTexture = RaylibWrapper::LoadRenderTexture(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight());
 
     if (ProjectManager::projectData.is3D)
     {
@@ -1793,7 +1797,7 @@ void Editor::SetupViewport()
         camera.up.y = 1;
         camera.position.y = 3;
         camera.position.z = -25;
-        camera.projection = CAMERA_PERSPECTIVE;
+        camera.projection = RaylibWrapper::CAMERA_PERSPECTIVE;
         camera.target = { 0.0f, 0.0f, 0.0f };
     }
     else
@@ -1801,7 +1805,7 @@ void Editor::SetupViewport()
         //camera2D.zoom = 1;
         //camera2D.rotation = 0.0f;
 
-        camera.projection = CAMERA_ORTHOGRAPHIC;
+        camera.projection = RaylibWrapper::CAMERA_ORTHOGRAPHIC;
         camera.up.y = 1;
         camera.fovy = 45;
         camera.target = { 0.0f, 0.0f, 0.0f };
@@ -1811,8 +1815,8 @@ void Editor::SetupViewport()
 
 void CloseViewport()
 {
-    UnloadRenderTexture(ViewTexture);
-    UnloadTexture(GridTexture);
+    RaylibWrapper::UnloadRenderTexture(ViewTexture);
+    RaylibWrapper::UnloadTexture(GridTexture);
 }
 
 void Editor::InitFonts()
@@ -1951,17 +1955,17 @@ void Editor::Cleanup()
     if (cameraSelected)
         UnloadRenderTexture(cameraRenderTexture);
 
-    ImGui_ImplRaylib_Shutdown();
+    RaylibWrapper::ImGui_ImplRaylib_Shutdown();
     ImGui::DestroyContext();
 }
 
 void Editor::Init()
 {
-    SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI); // FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT
-    InitWindow(GetScreenWidth(), GetScreenHeight(), ("Cryonic Engine v0.1 - " + ProjectManager::projectData.name).c_str());
-    MaximizeWindow();
-    SetWindowMinSize(100, 100);
-    SetTargetFPS(144); // Todo: Set target FPS to monitor refresh rate and handle editor being moved across monitors or just take the higher refresh rate
+    RaylibWrapper::SetConfigFlags(RaylibWrapper::FLAG_WINDOW_UNDECORATED | RaylibWrapper::FLAG_WINDOW_RESIZABLE | RaylibWrapper::FLAG_WINDOW_HIGHDPI);// FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT
+    RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), ("Cryonic Engine v0.1 - " + ProjectManager::projectData.name).c_str());
+    RaylibWrapper::MaximizeWindow();
+    RaylibWrapper::SetWindowMinSize(100, 100);
+    RaylibWrapper::SetTargetFPS(144); // Todo: Set target FPS to monitor refresh rate and handle editor being moved across monitors or just take the higher refresh rate
 
     // Setup Dear ImGui context
     ImGui::CreateContext();
@@ -1977,7 +1981,7 @@ void Editor::Init()
     InitStyle();
 
     // Setup Platform/Renderer backends
-    ImGui_ImplRaylib_Init();
+    RaylibWrapper::ImGui_ImplRaylib_Init();
     FontManager::InitFontManager();
     InitFonts();
     //InitImages();
@@ -1990,13 +1994,14 @@ void Editor::Init()
 
     while (!closeEditor)
     {
-        oneSecondDelay -= GetFrameTime();
+        oneSecondDelay -= RaylibWrapper::GetFrameTime();
         FontManager::UpdateFonts();
-        ShaderManager::UpdateShaders();
+        if (CameraComponent::main != nullptr)
+            ShaderManager::UpdateShaders(CameraComponent::main->gameObject->transform.GetPosition().x, CameraComponent::main->gameObject->transform.GetPosition().y, CameraComponent::main->gameObject->transform.GetPosition().z);
 
-        ImGui_ImplRaylib_ProcessEvents();
+        RaylibWrapper::ImGui_ImplRaylib_ProcessEvents();
 
-        ImGui_ImplRaylib_NewFrame();
+        RaylibWrapper::ImGui_ImplRaylib_NewFrame();
         ImGui::NewFrame();
 
         UpdateViewport();
@@ -2005,32 +2010,31 @@ void Editor::Init()
         // Rendering
         ImGui::Render();
 
-        BeginDrawing();
-        ClearBackground(DARKGRAY);
-
-        ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
-        EndDrawing();
+        RaylibWrapper::BeginDrawing();
+        RaylibWrapper::ClearBackground({64,64,64,255});
+        RaylibWrapper::ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
+        RaylibWrapper::EndDrawing();
 
         for (auto& image : tempTextures)
         {
-            UnloadTexture(*image);
+            RaylibWrapper::UnloadTexture(*image);
             delete image;
         }
         tempTextures.clear();
 
         for (auto& image : tempRenderTextures)
         {
-            UnloadRenderTexture(*image);
+            RaylibWrapper::UnloadRenderTexture(*image);
         }
         tempRenderTextures.clear();
 
         if (!cameraSelected)
-            UnloadRenderTexture(cameraRenderTexture);
+            RaylibWrapper::UnloadRenderTexture(cameraRenderTexture);
 
         if (oneSecondDelay <= 0)
             oneSecondDelay = 1;
     }
 
     Cleanup();
-    CloseWindow();
+    RaylibWrapper::CloseWindow();
 }

@@ -1,10 +1,11 @@
 #pragma once
 
+#if defined(EDITOR)
 #include <iostream>
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "rlImGui.h"
+//#include "rlImGui.h"
 #include "imgui.h"
 
 class FontManager
@@ -16,3 +17,4 @@ public:
     static void UpdateFonts();
     static void InitFontManager();
 };
+#endif
