@@ -274,7 +274,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.exposedVariables = componentData["exposed_variables"];
                 //component.name = component.GetName();
 #else
-                SetupScriptComponent(gameObject, componentData["id"], componentData["active"]);
+                SetupScriptComponent(gameObject, componentData["id"], componentData["active"], std::filesystem::path(componentData["header_path"]).stem().string());
 #endif
             }
             else if (componentData["name"] == "CameraComponent")

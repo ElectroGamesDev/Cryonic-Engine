@@ -4,43 +4,44 @@
 #include <vector>
 #include <algorithm>
 
-void SetupScriptComponent(GameObject* gameObject, int id, bool active)
+void SetupScriptComponent(GameObject* gameObject, int id, bool active, std::string scriptName)
 {
+    if (true == false) {}
 // SetupScriptComponent
-    //COMPONENT& component = gameObject->AddComponent<COMPONENT>();
-    //component.gameObject = gameObject;
-    //component.id = id;
-    //component.SetActive(active);
+        //COMPONENT& component = gameObject->AddComponent<COMPONENT>();
+        //component.gameObject = gameObject;
+        //component.id = id;
+        //component.SetActive(active);
 }
 
 bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path buildPath)
 {
-	// Todo: Find all scripts in path other than just in the Scripts folder
+    // Todo: Find all scripts in path other than just in the Scripts folder
 
-	//std::filesystem::copy_file(std::filesystem::path(__FILE__), buildPath / "Components" / "ScriptLoader.cpp");
-	//std::filesystem::copy_file(std::filesystem::path(__FILE__).parent_path() / "ScriptLoader.h", buildPath / "Components" / "ScriptLoader.h");
+    //std::filesystem::copy_file(std::filesystem::path(__FILE__), buildPath / "Components" / "ScriptLoader.cpp");
+    //std::filesystem::copy_file(std::filesystem::path(__FILE__).parent_path() / "ScriptLoader.h", buildPath / "Components" / "ScriptLoader.h");
 
-	std::filesystem::path scriptLoaderPath = buildPath / "Components" / "ScriptLoader.cpp";
+    std::filesystem::path scriptLoaderPath = buildPath / "Components" / "ScriptLoader.cpp";
 
     std::vector<std::string> scriptNames;
     std::vector<std::filesystem::path> paths;
 
     paths.push_back(scriptLoaderPath);
-	for (const auto& entry : std::filesystem::directory_iterator(projectPath))
-	{
-		if (std::filesystem::is_regular_file(entry.path()))
-		{
+    for (const auto& entry : std::filesystem::directory_iterator(projectPath))
+    {
+        if (std::filesystem::is_regular_file(entry.path()))
+        {
             std::filesystem::copy_file(entry, buildPath / entry.path().filename());
 
             if (entry.path().extension() == ".h")
                 scriptNames.push_back(entry.path().stem().string());
 
             paths.push_back(buildPath / entry.path().filename());
-		}
-	}
+        }
+    }
 
-	for (const std::filesystem::path path : paths)
-	{
+    for (const std::filesystem::path path : paths)
+    {
         std::ifstream fileIn(path);
 
         if (!fileIn.is_open())
@@ -69,7 +70,7 @@ bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path build
                 auto functionInsertionIndex = std::distance(lines.begin(), insertionPoint) + 1;
                 for (const std::string& name : scriptNames)
                 {
-                    lines.insert(lines.begin() + functionInsertionIndex, name + "& component = gameObject->AddComponent<" + name + ">(); component.gameObject = gameObject; component.id = id; component.SetActive(active);");
+                    lines.insert(lines.begin() + functionInsertionIndex, "else if (scriptName == \"" + name + "\") {" + name + "& component = gameObject->AddComponent<" + name + ">(); component.gameObject = gameObject; component.id = id; component.SetActive(active); }");
                     functionInsertionIndex++;
                 }
             }
@@ -105,7 +106,7 @@ bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path build
             fileOut << updatedLine << '\n';
 
         fileOut.close();
-	}
+    }
 
     return true;
 }
