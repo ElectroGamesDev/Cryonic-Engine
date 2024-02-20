@@ -604,6 +604,21 @@ namespace RaylibWrapper {
         ::DrawGrid(slices, spacing);
     }
 
+
+    // Basic 2D Collisions
+    bool CheckCollisionRecs(Rectangle rec1, Rectangle rec2) {
+        return ::CheckCollisionRecs({rec1.x, rec1.y, rec1.width, rec1.height}, { rec2.x, rec2.y, rec2.width, rec2.height });
+    }
+
+    bool CheckCollisionCircles(Vector2 center1, float radius1, Vector2 center2, float radius2) {
+        return ::CheckCollisionCircles({ center1.x, center1.y }, radius1, { center2.x, center2.y }, radius2);
+    }
+
+    bool CheckCollisionCircleRec(Vector2 center, float radius, Rectangle rec) {
+        return ::CheckCollisionCircleRec({center.x, center.y}, radius, { rec.x, rec.y, rec.width, rec.height });
+    }
+
+
     //Vector Math
     Vector2 Vector2Add(Vector2 v1, Vector2 v2)
     {

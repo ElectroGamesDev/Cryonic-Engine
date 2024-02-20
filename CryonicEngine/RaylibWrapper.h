@@ -708,6 +708,11 @@ namespace RaylibWrapper
     void DrawGrid(int slices, float spacing);
 
 
+    // Basic 2D Collisions
+    bool CheckCollisionRecs(Rectangle rec1, Rectangle rec2);
+    bool CheckCollisionCircles(Vector2 center1, float radius1, Vector2 center2, float radius2);
+    bool CheckCollisionCircleRec(Vector2 center, float radius, Rectangle rec);
+
 
 #if defined(EDITOR)
     // ImGui Raylib
