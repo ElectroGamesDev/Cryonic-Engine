@@ -469,7 +469,10 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
 
                     for (const auto& data : component.second)
                     {
+                        if (data.second.is_null())
+                            continue;
                         tempCpp << "case " + std::to_string(data.first) + std::string(":\n");
+                        //ConsoleLogger::ErrorLog("Exposed Variables Json: " + data.second.dump(4));
                         for (auto variables = data.second[1].begin(); variables != data.second[1].end(); ++variables)
                         {
                             if ((*variables)[0] == "float")
