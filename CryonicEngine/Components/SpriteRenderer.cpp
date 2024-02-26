@@ -47,19 +47,29 @@ void SpriteRenderer::Update(float deltaTime)
     {
         Vector3 position = gameObject->transform.GetPosition();
         Vector3 scale = gameObject->transform.GetScale();
-        DrawRectangleWrapper(position.x, position.y, scale.x, scale.y, gameObject->transform.GetRotation().y, color.r, color.g, color.b, color.a);
+        DrawRectangleWrapper(position.x, position.y, scale.x, scale.y, gameObject->transform.GetRotation().y, tint.r, tint.g, tint.b, tint.a);
 
     }
     else if (texturePath == "Circle")
     {
         Vector3 position = gameObject->transform.GetPosition();
-        DrawCircleWrapper(position.x, position.y, gameObject->transform.GetScale().x, color.r, color.g, color.b, color.a);
+        DrawCircleWrapper(position.x, position.y, gameObject->transform.GetScale().x, tint.r, tint.g, tint.b, tint.a);
     }
     else
     {
         // Invalid texture path
     }
 }
+
+#if defined(EDITOR)
+void SpriteRenderer::EditorUpdate()
+{
+    tint.r = exposedVariables[1][0][2][0].get<int>();
+    tint.g = exposedVariables[1][0][2][1].get<int>();
+    tint.b = exposedVariables[1][0][2][2].get<int>();
+    tint.a = exposedVariables[1][0][2][3].get<int>();
+}
+#endif
 
 void SpriteRenderer::Destroy()
 {

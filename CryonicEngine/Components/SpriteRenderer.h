@@ -21,7 +21,7 @@ public:
                 [
                     "Color",
                     "tint",
-                    [ "255", "255", "255", "255" ],
+                    [ 255, 255, 255, 255 ],
                     "Tint"
                 ]
             ]
@@ -33,6 +33,9 @@ public:
 	// Hide everything from API
 	void Start() override {};
 	void Update(float deltaTime) override;
+#if defined(EDITOR)
+	void EditorUpdate() override;
+#endif
 	void Destroy() override;
 
 	Texture2D& GetTexture();
@@ -43,6 +46,6 @@ public:
 private:
 	Texture2D texture;
 	bool textureSet = false;
-	Expose Color color = {255, 255, 255, 255};
+	Expose Color tint = {255, 255, 255, 255};
 	std::filesystem::path texturePath;
 };

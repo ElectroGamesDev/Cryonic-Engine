@@ -877,6 +877,26 @@ void Editor::RenderCameraView()
     ImGui::End();
 }
 
+int Editor::RenderColorPicker(std::string name, ImVec2 position, ImVec4& selectedColor, ImVec4& previousColor) // Todo: Does this really need to be in the Editor.h? Also Add Undo/Redo
+{
+    // Todo: Change background/window color to be brighter
+    // return 0 = do nothing, 1 = update color, 2 = update color and close
+    static bool open = true;
+    int action = 0;
+    ImGui::SetNextWindowSize(ImVec2(250, 250));
+    ImGui::SetNextWindowPos(position);
+    ImGui::Begin(name.c_str(), &open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking);
+    if (ImGui::ColorPicker4(("##ColorPicker" + name).c_str(), (float*)&selectedColor, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoLabel, (float*)&previousColor))
+        action = 1;
+    if (!open)
+    {
+        open = true;
+        action = 2;
+    }
+    ImGui::End();
+    return action;
+}
+
 void Editor::RenderProperties()
 {
     static bool show = true;
@@ -1036,7 +1056,10 @@ void Editor::RenderProperties()
             ImGui::NewLine();
              
             //Components
-            static std::string popupOpened = "";
+            static nlohmann::json* colorPopupOpened;
+            static ImVec4 selectedColor;
+            static ImVec4 previousColor;
+            static ImVec2 popupPosition;
             int componentsNum = 0;
             for (Component* component : std::get<GameObject*>(objectInProperties)->GetComponents())
             {
@@ -1159,16 +1182,20 @@ void Editor::RenderProperties()
                             {
                                 ImGui::SameLine();
                                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
-                                ImGui::SetNextItemWidth(60);
-                                //int value = (*it)[2].get<int>();
-                                //ImGui::InputInt(("##" + name).c_str(), &value, 0, 0);
-                                //(*it)[2] = value;
-                                
-                                // Code from SpriteLab
-                                //ImVec4 previousColor = ImVec4(static_cast<float>(selectedProject->brush.colour.r) / 255, static_cast<float>(selectedProject->brush.colour.g) / 255,
-                                    //static_cast<float>(selectedProject->brush.colour.b) / 255, static_cast<float>(selectedProject->brush.colour.a) / 255);
-
-                                //ImGui::ColorPicker4("##ColourPicker", (float*)&colourPickerColour, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoLabel, (float*)&previousColor);
+                                // Todo: Add black outline
+                                if (ImGui::ColorButton(("##" + name).c_str(), ImVec4((*it)[2][0], (*it)[2][1], (*it)[2][2], (*it)[2][3]), 0, ImVec2(20, 20)))
+                                {
+                                    if (colorPopupOpened != nullptr && colorPopupOpened[3] == name)
+                                        colorPopupOpened = nullptr;
+                                    else
+                                    {
+                                        colorPopupOpened = &(*it);
+                                        previousColor = ImVec4((*it)[2][0] / 255, (*it)[2][1] / 255, (*it)[2][2] / 255, (*it)[2][3] / 255);
+                                        selectedColor = previousColor;
+                                    }
+                                }
+                                if (colorPopupOpened != nullptr && (*colorPopupOpened)[3].get<std::string>() == name)
+                                    popupPosition = ImVec2(ImGui::GetWindowPos().x - 250, ImGui::GetCursorPosY() + ImGui::GetWindowPos().y);
                             }
                             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
                             //ConsoleLogger::ErrorLog("Found Exposed Variable: " + it->dump());
@@ -1180,6 +1207,7 @@ void Editor::RenderProperties()
                     ImGui::PopStyleColor();
                 }
                 int oldYPos = ImGui::GetCursorPosY();
+
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
                 //ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
@@ -1196,10 +1224,25 @@ void Editor::RenderProperties()
                 ImGui::PopStyleColor(2);
                 ImGui::SetCursorPosY(oldYPos);
             }
+
             ImGui::NewLine();
             ImGui::SetCursorPos(ImVec2(25, ImGui::GetCursorPosY() - 15));
             if (ImGui::Button("Add Component", ImVec2(ImGui::GetWindowWidth() - 50, 0)))
                 componentsWindowOpen = true;
+
+            if (colorPopupOpened != nullptr)
+            {
+                int action = RenderColorPicker("Tint", popupPosition, selectedColor, previousColor);
+                if (action != 0)
+                {
+                    (*colorPopupOpened)[2][0] = selectedColor.x * 255;
+                    (*colorPopupOpened)[2][1] = selectedColor.y * 255;
+                    (*colorPopupOpened)[2][2] = selectedColor.z * 255;
+                    (*colorPopupOpened)[2][3] = selectedColor.w * 255;
+                    if (action == 2)
+                        colorPopupOpened = nullptr;
+                }
+            }
         }
         ImGui::EndGroup();
     }
