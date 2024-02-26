@@ -355,9 +355,19 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
             for (Component* component : gameObject->GetComponents())
             {
                 ScriptComponent* scriptComponent = dynamic_cast<ScriptComponent*>(component);
-                if (!scriptComponent)
-                    continue;
-                components[scriptComponent->GetHeaderPath()][scriptComponent->id] = scriptComponent->exposedVariables;
+                if (scriptComponent)
+                {
+                    if (scriptComponent->exposedVariables.is_null())
+                        continue;
+                    components[scriptComponent->GetHeaderPath()][scriptComponent->id] = scriptComponent->exposedVariables;
+                }
+                else
+                {
+                    Component* _component = dynamic_cast<Component*>(component);
+                    if (_component->exposedVariables.is_null())
+                        continue;
+                    components[_component->name][_component->id] = _component->exposedVariables;
+                }
             }
         }
     }
@@ -469,8 +479,6 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
 
                     for (const auto& data : component.second)
                     {
-                        if (data.second.is_null())
-                            continue;
                         tempCpp << "case " + std::to_string(data.first) + std::string(":\n");
                         //ConsoleLogger::ErrorLog("Exposed Variables Json: " + data.second.dump(4));
                         for (auto variables = data.second[1].begin(); variables != data.second[1].end(); ++variables)
