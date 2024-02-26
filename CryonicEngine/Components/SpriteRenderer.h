@@ -43,9 +43,10 @@ public:
 	std::filesystem::path GetTexturePath() const;
 	void SetTexturePath(std::filesystem::path path);
 
+	Color tint = { 255, 255, 255, 255 };
+
 private:
 	Texture2D texture;
 	bool textureSet = false;
-	Expose Color tint = {255, 255, 255, 255};
 	std::filesystem::path texturePath;
 };
