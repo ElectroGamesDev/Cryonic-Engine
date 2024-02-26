@@ -1253,8 +1253,8 @@ void Editor::RenderConsole()
 {
     if (ImGui::Begin((ICON_FA_CODE + std::string(" Console")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
     {
+        ImGui::Text(ConsoleLogger::consoleText.c_str());
     }
-
     ImGui::End();
 }
 

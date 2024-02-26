@@ -18,4 +18,6 @@ public:
         std::string message;
         ConsoleLogType type;
     };
+
+    static std::string consoleText;
 };
