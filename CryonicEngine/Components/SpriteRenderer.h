@@ -13,25 +13,22 @@ public:
 		name = "SpriteRenderer";
 		iconUnicode = "\xef\x87\x85";
 
-//#if defined(EDITOR)
-//		nlohmann::json jsonArray = nlohmann::json::array();
-//		jsonArray.push_back(0);
-//
-//		nlohmann::json variablesArray = nlohmann::json::array();
-//		variablesArray.push_back("Color");
-//		variablesArray.push_back("tint");
-//		nlohmann::json colorArray = nlohmann::json::array();
-//		colorArray.push_back("255");
-//		colorArray.push_back("255");
-//		colorArray.push_back("255");
-//		colorArray.push_back("255");
-//		variablesArray.push_back(colorArray);
-//		variablesArray.push_back("Tint");
-//
-//		jsonArray.push_back(variablesArray);
-//
-//		exposedVariables = jsonArray;
-//#endif
+#if defined(EDITOR)
+		std::string variables = R"(
+        [
+            0,
+            [
+                [
+                    "Color",
+                    "tint",
+                    [ "255", "255", "255", "255" ],
+                    "Tint"
+                ]
+            ]
+        ]
+    )";
+		exposedVariables = nlohmann::json::parse(variables);
+#endif
 	}
 	// Hide everything from API
 	void Start() override {};
