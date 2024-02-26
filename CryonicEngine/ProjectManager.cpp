@@ -347,6 +347,7 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
 {
     std::unordered_map<std::filesystem::path, std::unordered_map<int, nlohmann::json>> components;
 
+    // Todo: Put components in relative paths to the Assets/, this will fix the issues with determining whether a component is internal or external
     // Todo: If a component in one scene as the same ID as a component in another scene, it will cause issues.
     for (Scene& scene : *SceneManager::GetScenes()) // Todo: Only iterate the scenes that are set to be built
     {
@@ -366,7 +367,7 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
                     Component* _component = dynamic_cast<Component*>(component);
                     if (_component->exposedVariables.is_null())
                         continue;
-                    components[_component->name][_component->id] = _component->exposedVariables;
+                    components["Components/" + _component->name + ".h"][_component->id] = _component->exposedVariables;
                 }
             }
         }
@@ -374,28 +375,35 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
 
     for (const auto& component : components)
     {
-        if (!std::filesystem::exists(path / component.first.filename()))
+        if (!std::filesystem::exists(path / component.first.filename()) && !std::filesystem::exists(path / "Components" / component.first.filename())) // Todo: Should probably store whether the component is internal or not instead of doing this
         {
             // Todo: Do something if the file does not exist
-            ConsoleLogger::ErrorLog("Failed find " + (path / component.first.filename()).string()); // Todo: Remove this warning
+            ConsoleLogger::ErrorLog("Failed to find " + (path / component.first.filename()).string()); // Todo: Remove this warning, or maybe keep it for developer mode
             continue;
         }
-        // Todo: This assume the .cpp is in teh same location as the header. Consider getting the .cpp path from the Component and store it in the components map
-        if (!std::filesystem::exists(path / (component.first.stem().string() + ".cpp")))
+        // Todo: This assume the .cpp is in the same location as the header. Consider getting the .cpp path from the Component and store it in the components map
+        if (!std::filesystem::exists(path / (component.first.stem().string() + ".cpp")) && !std::filesystem::exists(path / "Components" / (component.first.stem().string() + ".cpp")))
         {
             // Todo: Do something if the file does not exist
-            ConsoleLogger::ErrorLog("Failed find " + (path / (component.first.stem().string() + ".cpp")).string()); // Todo: Remove this warning
+            ConsoleLogger::ErrorLog("Failed to find " + (path / (component.first.stem().string() + ".cpp")).string()); // Todo: Remove this warning, or maybe keep it for developer mode
             continue;
         }
 
         // Todo: This will not work if a function has "{" before class declaration, such as in variables or in a comment
 
+        bool internal = false;
         // Create function in header
         std::ifstream headerFile(path / component.first.filename());
         if (!headerFile.is_open())
         {
-            // Todo: Do something if file failed to open
-            continue;
+            // Todo: This is a horrible solution for opening internal components
+            headerFile.open(path / "Components" / component.first.filename());
+            if (!headerFile.is_open())
+            {
+                // Todo: Do something if file failed to open
+                continue;
+            }
+            internal = true;
         }
 
         
@@ -415,7 +423,13 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
 
         line = "";
         bool placedFunction = false;
-        std::ofstream tempHeader(path / (component.first.stem().string() + ".temp"));
+        // Todo: Find a better way to check if this is internal, like using full paths instead of file names. Same with tempCpp below
+        std::ofstream tempHeader;
+        if (internal)
+            tempHeader.open(path / "Components" / (component.first.stem().string() + ".temp"));
+        else
+            tempHeader.open(path / (component.first.stem().string() + ".temp"));
+        //std::ofstream tempHeader(path / (component.first.stem().string() + ".temp"));
         while (std::getline(headerFile, line))
         {
             if (foundPublic)
@@ -445,8 +459,17 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
         headerFile.close();
         tempHeader.close();
 
-        std::filesystem::remove(path / component.first.filename());
-        std::filesystem::rename(path / (component.first.stem().string() + ".temp"), path / component.first.filename());
+        // Todo: Find a better way to check if this is internal, like using full paths instead of file names
+        if (internal)
+        {
+            std::filesystem::remove(path / "Components" / component.first.filename());
+            std::filesystem::rename(path / "Components" / (component.first.stem().string() + ".temp"), path / "Components" / component.first.filename());
+        }
+        else
+        {
+            std::filesystem::remove(path / component.first.filename());
+            std::filesystem::rename(path / (component.first.stem().string() + ".temp"), path / component.first.filename());
+        }
 
         if (!placedFunction)
         {
@@ -459,14 +482,24 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
         std::ifstream cppFile(path / (component.first.stem().string() + ".cpp"));
         if (!cppFile.is_open())
         {
-            // Todo: Do something if file failed to open
-            continue;
+            // Todo: This is a horrible solution for opening internal components
+            cppFile.open(path / "Components" / (component.first.stem().string() + ".cpp"));
+            if (!cppFile.is_open())
+            {
+                // Todo: Do something if file failed to open
+                continue;
+            }
         }
 
         line = "";
         placedFunction = false;
         bool lastLineWasInclude = false;
-        std::ofstream tempCpp(path / (component.first.stem().string() + ".temp"));
+        //std::ofstream tempCpp(path / (component.first.stem().string() + ".temp"));
+        std::ofstream tempCpp;
+        if (internal)
+            tempCpp.open(path / "Components" / (component.first.stem().string() + ".temp"));
+        else
+            tempCpp.open(path / (component.first.stem().string() + ".temp"));
         while (std::getline(cppFile, line))
         {
             if (!placedFunction)
@@ -480,11 +513,13 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
                     for (const auto& data : component.second)
                     {
                         tempCpp << "case " + std::to_string(data.first) + std::string(":\n");
-                        //ConsoleLogger::ErrorLog("Exposed Variables Json: " + data.second.dump(4));
+                        ConsoleLogger::ErrorLog("Exposed Variables Json: " + data.second.dump(4));
                         for (auto variables = data.second[1].begin(); variables != data.second[1].end(); ++variables)
                         {
                             if ((*variables)[0] == "float")
                                 tempCpp << (*variables)[1].get<std::string>() + " = " + (*variables)[2].dump() + "f;\n";
+                            else if ((*variables)[0] == "Color")
+                                tempCpp << (*variables)[1].get<std::string>() + " = {" + std::to_string((*variables)[2][0].get<int>()) + "," + std::to_string((*variables)[2][1].get<int>()) + "," + std::to_string((*variables)[2][2].get<int>()) + "," + std::to_string((*variables)[2][3].get<int>()) + "};\n";
                             else
                                 tempCpp << (*variables)[1].get<std::string>() + " = " + (*variables)[2].dump() + ";\n";
                         }
@@ -509,8 +544,16 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
         cppFile.close();
         tempCpp.close();
 
-        std::filesystem::remove(path / (component.first.stem().string() + ".cpp"));
-        std::filesystem::rename(path / (component.first.stem().string() + ".temp"), path / (component.first.stem().string() + ".cpp"));
+        if (internal)
+        {
+            std::filesystem::remove(path / "Components" / (component.first.stem().string() + ".cpp"));
+            std::filesystem::rename(path / "Components" / (component.first.stem().string() + ".temp"), path / "Components" / (component.first.stem().string() + ".cpp"));
+        }
+        else
+        {
+            std::filesystem::remove(path / (component.first.stem().string() + ".cpp"));
+            std::filesystem::rename(path / (component.first.stem().string() + ".temp"), path / (component.first.stem().string() + ".cpp"));
+        }
 
         if (!placedFunction)
         {
