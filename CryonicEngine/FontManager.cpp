@@ -4,7 +4,7 @@
 #include <iostream>
 #include <unordered_map> 
 #include <utility>
-#include "ConsoleLogger.h"
+//#include "ConsoleLogger.h"
 //#include "imgui_impl_raylib.h"
 #include "IconsFontAwesome6.h"
 #include "RaylibWrapper.h"
@@ -32,7 +32,7 @@ ImFont* FontManager::CreateFont(std::string font, int size, bool iconFont)
 		io.Fonts->AddFontFromFileTTF(("resources/fonts/" + font + ".ttf").c_str(), size, &config, icon_ranges);
 		//io.Fonts->Build();
 		RaylibWrapper::Imgui_ImplRaylib_BuildFontAtlas();
-		ConsoleLogger::InfoLog(font + " font created at size " + std::to_string(size));
+		//ConsoleLogger::InfoLog(font + " font created at size " + std::to_string(size));
 #endif
 	}
 	else
@@ -40,7 +40,7 @@ ImFont* FontManager::CreateFont(std::string font, int size, bool iconFont)
 		//fonts[font][size] = io.Fonts->AddFontFromFileTTF(("resources/fonts/" + font +".ttf").c_str(), size);
 		//Imgui_ImplRaylib_BuildFontAtlas();
 		unloadedFonts.push_back(std::make_pair(font, size));
-		ConsoleLogger::InfoLog(font + " font created at size " + std::to_string(size));
+		//ConsoleLogger::InfoLog(font + " font created at size " + std::to_string(size));
 		//return fonts[font][size];
 		updateFonts = true;
 	}
