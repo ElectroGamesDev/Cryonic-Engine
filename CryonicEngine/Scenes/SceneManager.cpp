@@ -16,6 +16,7 @@
 #include "../Components/CameraComponent.h"
 #include "../Components/Lighting.h"
 #include "../Components/SpriteRenderer.h"
+#include "../Components/Collider2D.h"
 
 #if defined(EDITOR)
 #include "../ProjectManager.h"
@@ -87,6 +88,7 @@ bool SceneManager::SaveScene(Scene* scene)
             //componentData["runInEditor"] = component->runInEditor;
 
             // Temporary solution
+            // Todo: maybe put these in Exposed Variables (but not visible in Properties), or something similar to ExposedVariables like SerializedVariables
             if (dynamic_cast<MeshRenderer*>(component))
             {
                 componentData["model_path"] = dynamic_cast<MeshRenderer*>(component)->GetModelPath();
@@ -291,6 +293,15 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             else if (componentData["name"] == "Lighting")
             {
                 Lighting& component = gameObject->AddComponent<Lighting>();
+                component.SetActive(componentData["active"]);
+                component.id = componentData["id"];
+#if defined(EDITOR)
+                component.exposedVariables = componentData["exposed_variables"];
+#endif
+            }
+            else if (componentData["name"] == "Collider2D")
+            {
+                Collider2D& component = gameObject->AddComponent<Collider2D>();
                 component.SetActive(componentData["active"]);
                 component.id = componentData["id"];
 #if defined(EDITOR)

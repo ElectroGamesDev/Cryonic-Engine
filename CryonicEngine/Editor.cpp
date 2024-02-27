@@ -22,6 +22,7 @@
 #include "Components/CameraComponent.h"
 #include "Components/Lighting.h"
 #include "Components/SpriteRenderer.h"
+#include "Components/Collider2D.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
 #include "ProjectManager.h"
@@ -802,6 +803,12 @@ void Editor::RenderComponentsWin()
             componentsWindowOpen = false;
             resetComponentsWin = true;
         }
+        else if (ImGui::Button("Collider2D", ImVec2(buttonWidth, 0)))
+        {
+            std::get<GameObject*>(objectInProperties)->AddComponent<Collider2D>();
+            componentsWindowOpen = false;
+            resetComponentsWin = true;
+        }
         ImGui::Separator();
         // External Components
         for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
@@ -1466,6 +1473,8 @@ void Editor::RenderHierarchy()
                     {
                         SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
                         spriteRenderer.SetTexturePath(objectToCreate);
+
+                        gameObject->AddComponent<Collider2D>(); // Todo: Set size and type
                     }
 
                 }
