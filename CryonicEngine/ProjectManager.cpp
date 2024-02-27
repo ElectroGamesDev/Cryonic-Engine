@@ -216,7 +216,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
 
     ConsoleLogger::InfoLog("Build Log - Running mingw32-make", false);
 
-    system(("mingw32-make -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1))) + " PLATFORM=PLATFORM_DESKTOP").c_str()); // Todo: Make the number of cores configurable, and default at 75%
+    system(("mingw32-make -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1))) + " PLATFORM=PLATFORM_DESKTOP").c_str()); // Todo: Make the number of cores configurable, and default at 75%. Also make sure its at least 1.
 
     // Resets the current path
     _chdir(originalPath.string().c_str());
