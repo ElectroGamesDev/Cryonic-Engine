@@ -879,12 +879,14 @@ void Editor::RenderCameraView()
 
 int Editor::RenderColorPicker(std::string name, ImVec2 position, ImVec4& selectedColor, ImVec4& previousColor) // Todo: Does this really need to be in the Editor.h? Also Add Undo/Redo
 {
-    // Todo: Change background/window color to be brighter
     // return 0 = do nothing, 1 = update color, 2 = update color and close
     static bool open = true;
     int action = 0;
     ImGui::SetNextWindowSize(ImVec2(250, 250));
     ImGui::SetNextWindowPos(position);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.18f, 0.18f, 0.18f, 1.00f));
+    ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.12f, 0.12f, 0.12f, 1.00f));
+    ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.12f, 0.12f, 0.12f, 1.00f));
     ImGui::Begin(name.c_str(), &open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking);
     if (ImGui::ColorPicker4(("##ColorPicker" + name).c_str(), (float*)&selectedColor, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoLabel, (float*)&previousColor))
         action = 1;
@@ -894,6 +896,7 @@ int Editor::RenderColorPicker(std::string name, ImVec2 position, ImVec4& selecte
         action = 2;
     }
     ImGui::End();
+    ImGui::PopStyleColor(3);
     return action;
 }
 
@@ -1195,7 +1198,7 @@ void Editor::RenderProperties()
                                     }
                                 }
                                 if (colorPopupOpened != nullptr && (*colorPopupOpened)[3].get<std::string>() == name)
-                                    popupPosition = ImVec2(ImGui::GetWindowPos().x - 250, ImGui::GetCursorPosY() + ImGui::GetWindowPos().y);
+                                    popupPosition = ImVec2(ImGui::GetWindowPos().x - 250, ImGui::GetCursorPosY() + ImGui::GetWindowPos().y - 20);
                             }
                             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
                             //ConsoleLogger::ErrorLog("Found Exposed Variable: " + it->dump());
