@@ -63,6 +63,7 @@ bool SceneManager::SaveScene(Scene* scene)
         gameObjectData["size"] = { object->transform.GetScale().x, object->transform.GetScale().y, object->transform.GetScale().z};
         gameObjectData["rotation"] = { object->transform.GetRotation().x, object->transform.GetRotation().y, object->transform.GetRotation().z, object->transform.GetRotation().w };
         gameObjectData["id"] = object->GetId();
+        gameObjectData["active"] = object->IsActive();
 
         //gameObjectData["tint"] = { object->GetTint().Value.x, object->GetTint().Value.y, object->GetTint().Value.z, object->GetTint().Value.w };
         //gameObjectData["z_order"] = object->GetZOrder();
@@ -209,6 +210,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
         gameObject->transform.SetRotation(Quaternion{ gameObjectData["rotation"][0], gameObjectData["rotation"][1], gameObjectData["rotation"][2], gameObjectData["rotation"][3]});
         //gameObject->SetTint(ImVec4(gameObjectData["tint"][0], gameObjectData["tint"][1], gameObjectData["tint"][2], gameObjectData["tint"][3]));
         //gameObject->SetZOrder(gameObjectData["z_order"]);
+        gameObject->SetActive(gameObjectData["active"]);
 
         parentObjects[gameObjectData["id"]] = gameObjectData["parent_id"];
 
