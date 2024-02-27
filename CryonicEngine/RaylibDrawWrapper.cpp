@@ -7,12 +7,12 @@ void DrawRectangleWrapper(float posX, float posY, float sizeX, float sizeY, floa
         {
             posX,
             posY,
-            5.0f * sizeX,
-            5.0f * sizeY
+            sizeX,
+            sizeY
         },
             {
-                5.0f * sizeX / 2,
-                5.0f * sizeY / 2
+                sizeX / 2,
+                sizeY / 2
             },
         rotation,
         { colorR, colorG, colorB, colorA });
