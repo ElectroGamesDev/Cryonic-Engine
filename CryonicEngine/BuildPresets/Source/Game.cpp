@@ -1,15 +1,15 @@
-//#include "raylib.h"
-//#include "raymath.h"
-//#include "rlgl.h"
+#include "Game.h"
 #include <iostream>
 #include "ConsoleLogger.h"
 #include "Scenes/SceneManager.h"
-//#include "imgui_impl_raylib.h"
 #include "Components/Component.h"
 #include "Components/CameraComponent.h"
 #include "ShaderManager.h"
 #include "RaylibModelWrapper.h"
 #include "RaylibWrapper.h"
+#include "CollisionListener.h"
+
+b2World* world = nullptr;
 
 int main(void)
 {
@@ -23,6 +23,11 @@ int main(void)
 	SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
 	
 	ShaderManager::Init();
+
+	CollisionListener collisionListener;
+	b2Vec2 gravity(0.0f, -9.8f);
+	world = new b2World(gravity);
+	world->SetContactListener(&collisionListener);
 	
 	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 	{
@@ -36,6 +41,13 @@ int main(void)
 
     while (!RaylibWrapper::WindowShouldClose())
     {
+		float timeStep = 1.0f / 60.0f; // Todo: Make this configurable in project settings
+		int32 velocityIterations = 8; // Todo: Make this configurable in project settings
+		int32 positionIterations = 3; // Todo: Make this configurable in project settings
+		world->Step(timeStep, velocityIterations, positionIterations);
+
+		// Todo: Draw debug shapes
+
 		if (CameraComponent::main != nullptr)
             ShaderManager::UpdateShaders(CameraComponent::main->gameObject->transform.GetPosition().x, CameraComponent::main->gameObject->transform.GetPosition().y, CameraComponent::main->gameObject->transform.GetPosition().z);
 		
@@ -44,6 +56,8 @@ int main(void)
 		RaylibWrapper::ClearBackground({ 135, 206, 235, 255 });
 		
 		CameraComponent::main->raylibCamera.BeginMode3D();
+		
+		// Update CollisionSystem
 		
 		for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 		{
@@ -65,5 +79,6 @@ int main(void)
     //Cleanup();
 	ShaderManager::Cleanup();
     RaylibWrapper::CloseWindow();
+	delete world;
 	return 0;
 }
