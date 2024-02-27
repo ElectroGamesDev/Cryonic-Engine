@@ -17,7 +17,7 @@ ProjectData ProjectManager::projectData;
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
     // Editor and IconManager needed for gizmos
-    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "resources", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager", "InputSystem", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
+    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "resources", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager", "InputSystem", "CollisionListener", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
      
     if (!std::filesystem::exists(destination))
         std::filesystem::create_directories(destination);
@@ -513,7 +513,7 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
                     for (const auto& data : component.second)
                     {
                         tempCpp << "case " + std::to_string(data.first) + std::string(":\n");
-                        ConsoleLogger::ErrorLog("Exposed Variables Json: " + data.second.dump(4));
+                        //ConsoleLogger::ErrorLog("Exposed Variables Json: " + data.second.dump(4));
                         for (auto variables = data.second[1].begin(); variables != data.second[1].end(); ++variables)
                         {
                             if ((*variables)[0] == "float")
