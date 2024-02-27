@@ -23,6 +23,12 @@ public:
                     "tint",
                     [ 255, 255, 255, 255 ],
                     "Tint"
+                ],
+				[
+                    "int",
+                    "renderOrder",
+                    0,
+                    "Render Order"
                 ]
             ]
         ]
@@ -44,6 +50,7 @@ public:
 	void SetTexturePath(std::filesystem::path path);
 
 	Color tint = { 255, 255, 255, 255 };
+	int renderOrder = 0;
 
 private:
 	Texture2D texture;
