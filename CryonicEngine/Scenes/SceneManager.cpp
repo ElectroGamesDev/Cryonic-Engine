@@ -7,7 +7,7 @@
 //#include "../Editor.h"
 #include <algorithm>
 #include <cctype>
-#include "json.hpp"
+#include "../json.hpp"
 
 #include "../Components/ScriptLoader.h"
 #include "../Components/Component.h"
