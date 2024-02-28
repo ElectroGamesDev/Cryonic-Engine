@@ -17,6 +17,7 @@
 #include "../Components/Lighting.h"
 #include "../Components/SpriteRenderer.h"
 #include "../Components/Collider2D.h"
+#include "../Components/Rigidbody2D.h"
 
 #if defined(EDITOR)
 #include "../ProjectManager.h"
@@ -308,6 +309,16 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.exposedVariables = componentData["exposed_variables"];
 #endif
             }
+            else if (componentData["name"] == "Rigidbody2D")
+            {
+                Rigidbody2D& component = gameObject->AddComponent<Rigidbody2D>();
+                component.SetActive(componentData["active"]);
+                component.id = componentData["id"];
+#if defined(EDITOR)
+                component.exposedVariables = componentData["exposed_variables"];
+#endif
+            }
+            // Todo: make Component of type Component so then I can set the Component variables like SetActive, id, expoedVariables, etc only once and not in each if statement
         }
 
 

@@ -23,6 +23,7 @@
 #include "Components/Lighting.h"
 #include "Components/SpriteRenderer.h"
 #include "Components/Collider2D.h"
+#include "Components/Rigidbody2D.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
 #include "ProjectManager.h"
@@ -31,6 +32,7 @@
 
 RaylibWrapper::Camera Editor::camera = { 0 };
 
+// Todo: Switch these to use DEG2RAD and RAD2DEG from CryonicCore
 const float DEG = 180.0f / 3.14159265358979323846f;
 const float RAD = 3.14159265358979323846f / 180.0f;
 
@@ -806,6 +808,12 @@ void Editor::RenderComponentsWin()
         else if (ImGui::Button("Collider2D", ImVec2(buttonWidth, 0)))
         {
             std::get<GameObject*>(objectInProperties)->AddComponent<Collider2D>();
+            componentsWindowOpen = false;
+            resetComponentsWin = true;
+        }
+        else if (ImGui::Button("Rigidbody2D", ImVec2(buttonWidth, 0)))
+        {
+            std::get<GameObject*>(objectInProperties)->AddComponent<Rigidbody2D>();
             componentsWindowOpen = false;
             resetComponentsWin = true;
         }

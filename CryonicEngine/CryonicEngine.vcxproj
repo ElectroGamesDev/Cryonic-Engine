@@ -149,10 +149,13 @@
     <ClCompile Include="..\includes\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\includes\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\includes\imgui\rlImGui.cpp" />
+    <ClCompile Include="CollisionListener.cpp" />
     <ClCompile Include="Components\CameraComponent.cpp" />
+    <ClCompile Include="Components\Collider2D.cpp" />
     <ClCompile Include="Components\Component.cpp" />
     <ClCompile Include="Components\Lighting.cpp" />
     <ClCompile Include="Components\MeshRenderer.cpp" />
+    <ClCompile Include="Components\Rigidbody2D.cpp" />
     <ClCompile Include="Components\ScriptComponent.cpp" />
     <ClCompile Include="Components\ScriptLoader.cpp" />
     <ClCompile Include="ConsoleLogger.cpp" />
@@ -164,6 +167,7 @@
     <ClCompile Include="IconManager.cpp" />
     <ClCompile Include="Components\SpriteRenderer.cpp" />
     <ClCompile Include="InputSystem.cpp" />
+    <ClCompile Include="Physics2DDebugDraw.cpp" />
     <ClCompile Include="ProjectManager.cpp" />
     <ClCompile Include="RaylibCameraWrapper.cpp" />
     <ClCompile Include="RaylibDrawWrapper.cpp" />
@@ -189,10 +193,13 @@
     <ClInclude Include="..\includes\imgui\rlImGui.h" />
     <ClInclude Include="..\includes\imgui\rlImGuiColors.h" />
     <ClInclude Include="..\includes\json.hpp" />
+    <ClInclude Include="CollisionListener.h" />
     <ClInclude Include="Components\CameraComponent.h" />
+    <ClInclude Include="Components\Collider2D.h" />
     <ClInclude Include="Components\Component.h" />
     <ClInclude Include="Components\Lighting.h" />
     <ClInclude Include="Components\MeshRenderer.h" />
+    <ClInclude Include="Components\Rigidbody2D.h" />
     <ClInclude Include="Components\ScriptComponent.h" />
     <ClInclude Include="Components\ScriptLoader.h" />
     <ClInclude Include="ConsoleLogger.h" />
@@ -204,6 +211,7 @@
     <ClInclude Include="IconManager.h" />
     <ClInclude Include="Components\SpriteRenderer.h" />
     <ClInclude Include="InputSystem.h" />
+    <ClInclude Include="Physics2DDebugDraw.h" />
     <ClInclude Include="ProjectManager.h" />
     <ClInclude Include="RaylibCameraWrapper.h" />
     <ClInclude Include="RaylibDrawWrapper.h" />

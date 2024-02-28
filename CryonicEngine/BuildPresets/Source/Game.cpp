@@ -8,6 +8,7 @@
 #include "RaylibModelWrapper.h"
 #include "RaylibWrapper.h"
 #include "CollisionListener.h"
+#include "Physics2DDebugDraw.h"
 
 b2World* world = nullptr;
 
@@ -15,19 +16,24 @@ int main(void)
 {
 	RaylibWrapper::SetConfigFlags(RaylibWrapper::FLAG_WINDOW_RESIZABLE | RaylibWrapper::FLAG_WINDOW_HIGHDPI | RaylibWrapper::FLAG_MSAA_4X_HINT | RaylibWrapper::FLAG_VSYNC_HINT); // Todo: Make FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT optional
 	RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), ("Game Name Here"));
-	RaylibWrapper::ToggleFullscreen();
+	//RaylibWrapper::ToggleFullscreen();
+	//RaylibWrapper::SetWindowSize(1920, 1080);
 	RaylibWrapper::SetWindowMinSize(100, 100);
 	RaylibWrapper::SetTargetFPS(144); // Todo: Option to set this to montitor refresh rate
+
+	// Must go before scene loading
+	CollisionListener collisionListener;
+	b2Vec2 gravity(0.0f, -9.8f);
+	world = new b2World(gravity);
+	world->SetContactListener(&collisionListener);
+	Physics2DDebugDraw debugDraw;
+	debugDraw.SetFlags(b2Draw::e_shapeBit);
+	world->SetDebugDraw(&debugDraw);
 	
 	SceneManager::LoadScene(std::filesystem::current_path() / "Scenes" / "Default.scene");
 	SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
 	
 	ShaderManager::Init();
-
-	CollisionListener collisionListener;
-	b2Vec2 gravity(0.0f, -9.8f);
-	world = new b2World(gravity);
-	world->SetContactListener(&collisionListener);
 	
 	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 	{
@@ -45,6 +51,8 @@ int main(void)
 		int32 velocityIterations = 8; // Todo: Make this configurable in project settings
 		int32 positionIterations = 3; // Todo: Make this configurable in project settings
 		world->Step(timeStep, velocityIterations, positionIterations);
+
+		collisionListener.ContinueContact();
 
 		// Todo: Draw debug shapes
 
@@ -68,6 +76,8 @@ int main(void)
 				component->Update(RaylibWrapper::GetFrameTime());
 			}
 		}
+
+		world->DebugDraw();
 		
 		RaylibWrapper::EndMode3D();
 		

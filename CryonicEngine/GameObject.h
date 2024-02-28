@@ -109,9 +109,6 @@ public:
 
     struct Transform
     {
-        const float DEG = 180.0f / 3.14159265358979323846f;
-        const float RAD = 3.14159265358979323846f / 180.0f;
-
         Vector3 _position = {0,0,0};
         Quaternion _rotation = Quaternion::Identity();
         Vector3 _scale = { 1,1,1 };
@@ -129,22 +126,22 @@ public:
         /**
         Set the game object's rotation in degrees
         */
-        void SetRotationEuler(Vector3 rotation) { _rotation = EulerToQuaternion((float)rotation.x * RAD, rotation.y * RAD, rotation.z * RAD); }
+        void SetRotationEuler(Vector3 rotation) { _rotation = EulerToQuaternion((float)rotation.x * DEG2RAD, rotation.y * DEG2RAD, rotation.z * DEG2RAD); }
         /**
         Get the game object's rotation in degrees
         @return Vector3 euler of the rotation
         */
-        Vector3 GetRotationEuler() { return QuaternionToEuler(_rotation) * DEG; }
+        Vector3 GetRotationEuler() { return QuaternionToEuler(_rotation) * RAD2DEG; }
 
         /**
         Set the game object's local rotation in degrees
         */
-        void SetLocalRotationEuler(Vector3 rotation) { _rotation = EulerToQuaternion((float)rotation.x * RAD, rotation.y * RAD, rotation.z * RAD); }
+        void SetLocalRotationEuler(Vector3 rotation) { _rotation = EulerToQuaternion((float)rotation.x * DEG2RAD, rotation.y * DEG2RAD, rotation.z * DEG2RAD); }
         /**
         Get the game object's local rotation in degrees
         @return Vector3 euler of the rotation
         */
-        Vector3 GetLocalRotationEuler() { return QuaternionToEuler(_rotation) * DEG; }
+        Vector3 GetLocalRotationEuler() { return QuaternionToEuler(_rotation) * RAD2DEG; }
 
         void SetScale(Vector3 scale) { _scale = scale; }
         Vector3 GetScale() { return _scale; }
