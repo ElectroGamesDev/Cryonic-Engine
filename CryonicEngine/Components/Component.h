@@ -45,10 +45,14 @@ public:
     // Hide In API
     virtual void SetExposedVariables() {};
 
+    virtual void Awake() {};
     virtual void Start() {};
     virtual void Update(float deltaTime) {};
     virtual void EditorUpdate() {};
     virtual void Destroy() {};
+    //virtual void OnCollisionEnter(Collider2D* other);
+    //virtual void OnCollisionExit(Collider2D* other);
+    //virtual void OnCollisionStay(Collider2D* other);
 
     GameObject* gameObject;
 };
