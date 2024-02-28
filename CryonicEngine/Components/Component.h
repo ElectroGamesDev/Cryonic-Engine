@@ -45,7 +45,6 @@ public:
     // Hide In API
     virtual void SetExposedVariables() {};
 
-    virtual void Awake() {};
     virtual void Start() {};
     virtual void Update(float deltaTime) {};
     virtual void EditorUpdate() {};
