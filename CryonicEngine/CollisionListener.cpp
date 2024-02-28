@@ -2,6 +2,7 @@
 #include "Components/Collider2D.h"
 #include "ConsoleLogger.h"
 #include <deque>
+#include <algorithm>
 
 std::deque<b2Contact*> continuedContact; // Todo: A deque might not be the best for this since elements may often be removed
 
