@@ -4,6 +4,10 @@
 
 //void Draw3DBillboard(Camera camera, Texture2D texture, Vector3 position, float size, Color tint);
 
+#define PI 3.14159265358979323846f
+#define DEG2RAD (PI/180.0f)
+#define RAD2DEG (180.0f/PI)
+
 struct Color {
     unsigned char r;
     unsigned char g;
