@@ -24,7 +24,6 @@ void Collider2D::Start()
 		bodyDef.type = b2_staticBody;
 		bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
 		body = world->CreateBody(&bodyDef);
-		ConsoleLogger::InfoLog("No rigidbody found, creating a one"); // Todo: Remove this
 	}
 	else
 	{
