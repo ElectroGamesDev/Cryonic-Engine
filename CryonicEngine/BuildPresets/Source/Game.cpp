@@ -45,14 +45,30 @@ int main(void)
 		}
 	}
 
+	float timeStep = 1.0f / 60.0f; // Todo: Make this configurable in project settings
+	int32 velocityIterations = 8; // Todo: Make this configurable in project settings
+	int32 positionIterations = 3; // Todo: Make this configurable in project settings
+	float timeSinceLastUpdate = 0.0f;
+
     while (!RaylibWrapper::WindowShouldClose())
     {
-		float timeStep = 1.0f / 60.0f; // Todo: Make this configurable in project settings
-		int32 velocityIterations = 8; // Todo: Make this configurable in project settings
-		int32 positionIterations = 3; // Todo: Make this configurable in project settings
-		world->Step(timeStep, velocityIterations, positionIterations);
+		timeSinceLastUpdate += RaylibWrapper::GetFrameTime();
+		while (timeSinceLastUpdate >= timeStep)
+		{
+			world->Step(timeStep, velocityIterations, positionIterations);
+			collisionListener.ContinueContact();
+			timeSinceLastUpdate -= timeStep;
 
-		collisionListener.ContinueContact();
+			for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+			{
+				if (!gameObject->IsActive()) continue;
+				for (Component* component : gameObject->GetComponents())
+				{
+					if (!component->IsActive()) continue;
+					component->FixedUpdate(timeStep);
+				}
+			}
+		}
 
 		// Todo: Draw debug shapes
 
