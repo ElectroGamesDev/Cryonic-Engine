@@ -49,6 +49,7 @@ public:
 
     virtual void Start() {};
     virtual void Update(float deltaTime) {};
+    virtual void FixedUpdate(float fixedDeltaTime) {};
     virtual void EditorUpdate() {};
     virtual void Destroy() {};
     virtual void OnCollisionEnter2D(Collider2D* other) {};
