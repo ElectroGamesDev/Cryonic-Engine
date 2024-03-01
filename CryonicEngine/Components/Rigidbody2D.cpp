@@ -17,10 +17,15 @@ Rigidbody2D::Rigidbody2D(GameObject* obj) : Component(obj) {
             0,
             [
                 [
-                    "int",
+                    "BodyType",
                     "bodyType",
-                    0,
-                    "Body Type"
+                    "Dyanmic",
+                    "BodyType",
+                    [
+                        "Dynamic",
+                        "Kinematic",
+                        "Static"
+                    ]
                 ]
             ]
         ]
@@ -34,9 +39,9 @@ Rigidbody2D::Rigidbody2D(GameObject* obj) : Component(obj) {
 
 	b2BodyDef bodyDef;
     // Todo: Change this to a switch case
-    if (bodyType == 0)
+    if (bodyType == Dynamic)
 	    bodyDef.type = b2_dynamicBody;
-    else if (bodyType == 1)
+    else if (bodyType == Kinematic)
         bodyDef.type = b2_kinematicBody;
     else
         bodyDef.type = b2_staticBody;
@@ -49,7 +54,7 @@ void Rigidbody2D::Update(float deltaTime)
 {
 #if !defined(EDITOR)
     // Todo: Change this to a switch case
-    if (bodyType == 0)
+    if (bodyType == Dynamic)
     {
         if (gameObject->transform.GetPosition() == lastGameObjectPosition)
             gameObject->transform.SetPosition({ body->GetPosition().x, body->GetPosition().y, 0 });
@@ -64,7 +69,7 @@ void Rigidbody2D::Update(float deltaTime)
         lastGameObjectPosition = gameObject->transform.GetPosition();
         lastGameObjectRotation = gameObject->transform.GetRotation();
     }
-    else if (bodyType == 1)
+    else if (bodyType == Kinematic)
     {
         if (gameObject->transform.GetPosition() != lastGameObjectPosition)
             body->SetTransform({ gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y }, body->GetAngle());
@@ -75,7 +80,7 @@ void Rigidbody2D::Update(float deltaTime)
         lastGameObjectPosition = gameObject->transform.GetPosition();
         lastGameObjectRotation = gameObject->transform.GetRotation();
     }
-    else if (bodyType == 2)
+    else if (bodyType == Static)
     {
         gameObject->transform.SetPosition(lastGameObjectPosition);
         gameObject->transform._rotation.y = lastGameObjectRotation.y;
