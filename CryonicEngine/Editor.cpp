@@ -1,6 +1,3 @@
-//#include "raylib.h"
-//#include "raymath.h"
-//#include "rlgl.h"
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -11,7 +8,6 @@
 #include "FontManager.h"
 #include "ConsoleLogger.h"
 #include "Scenes/SceneManager.h"
-//#include <imgui_impl_raylib.h>
 #include <imgui_internal.h>
 #include "IconsFontAwesome6.h"
 #include <fstream>
@@ -27,7 +23,6 @@
 #include "IconManager.h"
 #include "ShaderManager.h"
 #include "ProjectManager.h"
-//#include "RaylibWrapper.h"
 #include "RaylibModelWrapper.h"
 
 RaylibWrapper::Camera Editor::camera = { 0 };
