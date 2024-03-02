@@ -1390,16 +1390,17 @@ void Editor::RenderHierarchy()
     hierarchyObjectClicked = false;
     ImGui::Begin((ICON_FA_SITEMAP + std::string(" Hierarchy")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse);
 
-    ImGui::BeginTable("HierarchyTable", 1);
+    if (ImGui::BeginTable("HierarchyTable", 1))
+    {
+        bool hierarchyRowColor = true;
 
-    bool hierarchyRowColor = true;
+        for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+            if (gameObject->GetParent() == nullptr)
+                hierarchyRowColor = !RenderHierarchyNode(gameObject, hierarchyRowColor);
 
-    for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
-        if (gameObject->GetParent() == nullptr)
-            hierarchyRowColor = !RenderHierarchyNode(gameObject, hierarchyRowColor);
-
-    hierarchyRowColor = false;
-    ImGui::EndTable();
+        hierarchyRowColor = false;
+        ImGui::EndTable();
+    }
 
     if (hierarchyContextMenuOpen || (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
     {
