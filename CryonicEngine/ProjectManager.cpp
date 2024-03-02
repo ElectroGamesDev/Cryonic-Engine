@@ -520,6 +520,13 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
                                 tempCpp << (*variables)[1].get<std::string>() + " = " + (*variables)[2].dump() + "f;\n";
                             else if ((*variables)[0] == "Color")
                                 tempCpp << (*variables)[1].get<std::string>() + " = {" + std::to_string((*variables)[2][0].get<int>()) + "," + std::to_string((*variables)[2][1].get<int>()) + "," + std::to_string((*variables)[2][2].get<int>()) + "," + std::to_string((*variables)[2][3].get<int>()) + "};\n";
+                            else if ((*variables).size() > 3) // Todo: This is a horrible solution for checking if its an enum
+                            {
+                                std::string value = (*variables)[2].dump();
+                                value = value.substr(1);
+                                value = value.substr(0, value.size() - 1);
+                                tempCpp << (*variables)[1].get<std::string>() + " = " + value + ";\n";
+                            }
                             else
                                 tempCpp << (*variables)[1].get<std::string>() + " = " + (*variables)[2].dump() + ";\n";
                         }
