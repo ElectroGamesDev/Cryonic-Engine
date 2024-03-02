@@ -307,7 +307,7 @@ void Editor::UpdateViewport()
     }
 
     // Load new models/textures on drag&drop
-    //if (viewportHovered && RaylibWrapper::IsFileDropped()) // Todo: Re-add this, maybe using ImGui instead
+    //if (viewportHovered && RaylibWrapper::IsFileDropped())
     //{
     //    FilePathList droppedFiles = LoadDroppedFiles();
 
@@ -633,7 +633,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         // Mini Left File Explorer
         int xSize = 300;
         ImGui::GetWindowDrawList()->AddLine(ImVec2(ImGui::GetWindowPos().x + xSize, ImGui::GetWindowPos().y), ImVec2(ImGui::GetWindowPos().x + xSize, ImGui::GetWindowPos().y + ImGui::GetWindowWidth()), IM_COL32(0, 0, 0, 255), 1);
-        ImGui::SetCursorPos(ImVec2(0,25));
+        ImGui::SetCursorPos(ImVec2(0, 25));
         if (ImGui::BeginChild("##FileExplorerTree", ImVec2(xSize, ImGui::GetWindowHeight() - 35))) // Todo: Make this a dockable window or something so it resizes properly and can be resized. Check if I need this -35 (or if 35 is the best number)
         {
             ImGui::BeginTable("FileExplorerTreeTable", 1);
@@ -668,7 +668,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         outFile.close();
                     }
                     else {
-                        
+
                     }
                 }
 
@@ -683,6 +683,36 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 ImGui::EndPopup();
             }
 
+        }
+
+        // Drag and drop files
+        if (ImGui::IsWindowHovered() && RaylibWrapper::IsFileDropped()) 
+        {
+            // Todo: Consider adding a progress bar, especially if there is a lot of files and directories, so then the program doesn't freeze and confuse the user
+            RaylibWrapper::FilePathList droppedFiles = RaylibWrapper::LoadDroppedFiles();
+
+            for (int i = 0; i < (int)droppedFiles.count; i++)
+            {
+                try
+                {
+                    std::filesystem::path path = fileExplorerPath / std::filesystem::path(droppedFiles.paths[i]).filename();
+                    if (std::filesystem::exists(path))
+                    {
+                        // Todo: Popup a window asking if the user would like to replace the file
+                        std::filesystem::remove(path);
+                    }
+                    if (std::filesystem::is_directory(droppedFiles.paths[i]))
+                        std::filesystem::copy(droppedFiles.paths[i], path, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+                    else std::filesystem::copy_file(droppedFiles.paths[i], path);
+                }
+                catch (const std::filesystem::filesystem_error& error)
+                {
+                    // Todo: Popup a window with the error
+                    ConsoleLogger::WarningLog("Failed to copy file. Error: " + std::string(error.what())); // Todo: Remove this log once I add a popup
+                }
+            }
+
+            UnloadDroppedFiles(droppedFiles);
         }
     }
     ImGui::End();
