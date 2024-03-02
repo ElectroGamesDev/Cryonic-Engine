@@ -700,9 +700,9 @@ namespace RaylibWrapper
 
     // Filesystem-related functions
     //void UnloadDirectoryFiles(FilePathList files);
-    //bool IsFileDropped(void);
-    //FilePathList LoadDroppedFiles(void);
-    //void UnloadDroppedFiles(FilePathList files);
+    bool IsFileDropped(void);
+    FilePathList LoadDroppedFiles(void);
+    void UnloadDroppedFiles(FilePathList files);
 
 
     void DrawGrid(int slices, float spacing);

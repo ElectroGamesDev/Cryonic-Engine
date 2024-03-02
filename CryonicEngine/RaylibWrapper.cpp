@@ -579,24 +579,14 @@ namespace RaylibWrapper {
         return ::IsFileDropped();
     }
 
-    //FilePathList LoadDroppedFiles(void) {
-    //    int count = 0;
-    //    char** droppedFiles = ::GetDroppedFiles(&count);
-    //    FilePathList files;
+    FilePathList LoadDroppedFiles(void) {
+        ::FilePathList filePathList = ::LoadDroppedFiles();
+        return { filePathList.capacity, filePathList.count, filePathList.paths };
+    }
 
-    //    for (int i = 0; i < count; ++i) {
-    //        files.push_back(std::string(droppedFiles[i]));
-    //        ::ClearDroppedFiles(); // Clear dropped files paths buffer
-    //    }
-
-    //    return files;
-    //}
-
-    //void UnloadDroppedFiles(FilePathList files) {
-    //    for (auto const& file : files) {
-    //        ::UnloadFile(file.c_str());
-    //    }
-    //}
+    void UnloadDroppedFiles(FilePathList files) {
+        ::UnloadDroppedFiles({ files.capacity, files.count, files.paths });
+    }
 
 
 
