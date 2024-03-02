@@ -682,6 +682,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                 ImGui::EndPopup();
             }
+
         }
     }
     ImGui::End();
@@ -1079,6 +1080,7 @@ void Editor::RenderProperties()
             static ImVec4 previousColor;
             static ImVec2 popupPosition;
             int componentsNum = 0;
+            static Component* componentInContextMenu = nullptr;
             for (Component* component : std::get<GameObject*>(objectInProperties)->GetComponents())
             {
                 componentsNum++;
@@ -1090,9 +1092,17 @@ void Editor::RenderProperties()
                     name = ICON_FA_FILE_CODE + std::string(" ") + dynamic_cast<ScriptComponent*>(component)->GetName();
                 else
                     name = component->iconUnicode + " " + component->name;
+
                 ImGui::SetNextItemWidth(buttonWidth);
+                bool collapsingHeaderExpanded = false;
                 if (ImGui::CollapsingHeader((name + "##" + std::to_string(ImGui::GetCursorPosY())).c_str())) // Todo: Figure out why the width isn't being set on this
                 {
+                    collapsingHeaderExpanded = true;
+                    if (ImGui::IsItemClicked(1))
+                    {
+                        componentInContextMenu = component;
+                        ImGui::OpenPopup("ComponentsContextMenu");
+                    }
                     int windowHeight = 1;
                     if (component->exposedVariables != nullptr)
                         windowHeight = component->exposedVariables[1].size() * 33;
@@ -1241,6 +1251,12 @@ void Editor::RenderProperties()
                     ImGui::PopStyleVar(2);
                     ImGui::PopStyleColor();
                 }
+                bool canOpenMenu = false;
+                if (!collapsingHeaderExpanded && ImGui::IsItemClicked(1))
+                {
+                    componentInContextMenu = component;
+                    ImGui::OpenPopup("ComponentsContextMenu");
+                }
                 int oldYPos = ImGui::GetCursorPosY();
 
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
@@ -1249,12 +1265,12 @@ void Editor::RenderProperties()
                 ImGui::SameLine();
                 ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 50, deleteYPos));
                 ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.16f, 0.17f, 0.18f, 1.00f));
-                ImGui::Checkbox("##ComponentActive", &component->active);
+                ImGui::Checkbox("##ComponentActive", &component->active); // Todo: This isn't detecting clicks
                 ImGui::PopStyleColor();
                 ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 25, deleteYPos));
-                if (ImGui::Button(("X##" + std::to_string(componentsNum)).c_str()))
+                if (ImGui::Button(("X##" + std::to_string(componentsNum)).c_str())) // Todo: This isn't detecting clicks
                 {
-                    //std::get<GameObject*>(objectInProperties)->RemoveComponent<component>(); // Todo: Add this
+                    std::get<GameObject*>(objectInProperties)->RemoveComponent(component);
                 }
                 ImGui::PopStyleColor(2);
                 ImGui::SetCursorPosY(oldYPos);
@@ -1277,6 +1293,17 @@ void Editor::RenderProperties()
                     if (action == 2)
                         colorPopupOpened = nullptr;
                 }
+            }
+
+            if (ImGui::BeginPopupContextItem("ComponentsContextMenu"))
+            {
+                if (ImGui::MenuItem("Delete"))
+                {
+                    std::get<GameObject*>(objectInProperties)->RemoveComponent(componentInContextMenu);
+                    componentInContextMenu = nullptr;
+                }
+
+                ImGui::EndPopup();
             }
         }
         ImGui::EndGroup();
