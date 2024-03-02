@@ -1225,14 +1225,14 @@ void Editor::RenderProperties()
                                 if (colorPopupOpened != nullptr && (*colorPopupOpened)[3].get<std::string>() == name)
                                     popupPosition = ImVec2(ImGui::GetWindowPos().x - 250, ImGui::GetCursorPosY() + ImGui::GetWindowPos().y - 20);
                             }
-                            else if ((*it).size() > 3) // This is probably not a good solution for knowing if its an enum or not. Todo: Resize to fit selected value.
+                            else if ((*it).size() > 4) // This is probably not a good solution for checking if its an enum or not.
                             {
                                 // Todo: The enum values won't be capitalized or have spaces, only the selected enum value will be capitalized with spaces
                                 ImGui::SameLine();
                                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
                                 std::string value = (*it)[2].get<std::string>();
                                 ImGui::SetNextItemWidth(60);
-                                if (ImGui::BeginCombo(("##" + name).c_str(), value.c_str()))
+                                if (ImGui::BeginCombo(("##" + name).c_str(), value.c_str())) // Todo: Resize Combo Box to fit selected value.
                                 {
                                     for (const std::string& enumValue : (*it)[4])
                                     {
