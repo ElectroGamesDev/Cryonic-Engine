@@ -1,17 +1,17 @@
 # Cryonic Engine
 
-Cryonic Engine is a simple & flexible 3D game engine designed to facilitate game development with a focus on simplicity and flexibility.
+Cryonic Engine is a simple & flexible 2D/3D game engine designed to facilitate game development with a focus on simplicity and flexibility.
 
 ## Features
 
 - **Cross-Platform:** Build games for various platforms effortlessly.
-- **3D Rendering:** Powerful 3D rendering capabilities for immersive game experiences.
+- **2D and 3D Rendering:** Powerful rendering capabilities for immersive game experiences in both 2D and 3D.
 - **Simplicity:** Easy-to-understand structure for developers of all levels.
 - **Extensibility:** Designed for easy expansion and customization.
 
 ## Getting Started
 
-To get started with Cryonic Engine, clone this repository and follow the instructions in the [Documentation](link-to-docs) for setup and usage.
+To get started with Cryonic Engine, clone this repository and follow the instructions in the [Documentation](link-to-docs) for setup and usage. Build releases will be coming soon.
 
 ## Screenshots
 
