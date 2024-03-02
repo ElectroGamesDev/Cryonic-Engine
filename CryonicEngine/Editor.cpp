@@ -603,6 +603,11 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     {
                     }
                 }
+                else if (extension != ".asset")
+                {
+                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)))
+                        std::system(("start \"" + entry.path().string() + "\"").c_str());
+                }
                 else
                 {
                     ImGui::PopID();
