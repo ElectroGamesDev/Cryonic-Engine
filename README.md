@@ -19,7 +19,7 @@ To get started with Cryonic Engine, clone this repository and follow the instruc
 
 ## Contributing
 
-Cryonic Engine is open for contributions. Feel free to fork the repository, make enhancements, and sumbit pull requests. If you have any suggestions, bug reports, or feature requests, feel free to open an issue.
+Cryonic Engine is open for contributions. Feel free to fork the repository, make enhancements, and sumbit pull requests. If you have any suggestions, bug reports, or feature requests, feel free to open an [issue](https://github.com/ElectroGamesDev/Cryonic-Engine/issues).
 
 <a href="https://github.com/ElectroGamesDev/Cryonic-Engine/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=ElectroGamesDev/Cryonic-Engine" />
