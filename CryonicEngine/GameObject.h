@@ -7,6 +7,7 @@
 #include "ConsoleLogger.h"
 #include <filesystem>
 #include <memory>
+#include <algorithm>
 
 class Component;
 
