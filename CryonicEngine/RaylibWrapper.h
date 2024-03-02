@@ -699,7 +699,6 @@ namespace RaylibWrapper
     Vector3 QuaternionToEuler(Quaternion q);
 
     // Filesystem-related functions
-    //void UnloadDirectoryFiles(FilePathList files);
     bool IsFileDropped(void);
     FilePathList LoadDroppedFiles(void);
     void UnloadDroppedFiles(FilePathList files);
