@@ -60,24 +60,6 @@
     <ClCompile Include="Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\includes\imgui\imgui_tables.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\includes\imgui\imgui_widgets.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\includes\imgui\rlImGui.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\includes\imgui\imgui.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\includes\imgui\imgui_demo.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\includes\imgui\imgui_draw.cpp">
-      <Filter>Source Files\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="Components\ScriptComponent.cpp">
       <Filter>Source Files\Components</Filter>
     </ClCompile>
@@ -141,6 +123,24 @@
     <ClCompile Include="Components\Rigidbody2D.cpp">
       <Filter>Source Files\Components</Filter>
     </ClCompile>
+    <ClCompile Include="..\includes\imgui\imgui_draw.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\imgui\imgui_tables.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\imgui\imgui_widgets.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\imgui\rlImGui.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\imgui\imgui.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\imgui\imgui_demo.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -172,33 +172,6 @@
     </ClInclude>
     <ClInclude Include="Editor.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\imgui\imgui_internal.h">
-      <Filter>Source Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\imgui\imstb_rectpack.h">
-      <Filter>Source Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\imgui\imstb_textedit.h">
-      <Filter>Source Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\imgui\imstb_truetype.h">
-      <Filter>Source Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\imgui\rlImGui.h">
-      <Filter>Source Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\imgui\rlImGuiColors.h">
-      <Filter>Source Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\imgui\imconfig.h">
-      <Filter>Source Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\imgui\imgui.h">
-      <Filter>Source Files\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\includes\imgui\imgui_impl_raylib.h">
-      <Filter>Source Files\imgui</Filter>
     </ClInclude>
     <ClInclude Include="Components\ScriptComponent.h">
       <Filter>Header Files\Components</Filter>
@@ -236,9 +209,6 @@
     <ClInclude Include="RaylibInputWrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\includes\imgui\IconsFontAwesome6.h">
-      <Filter>Source Files\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="RaylibWrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -268,6 +238,36 @@
     </ClInclude>
     <ClInclude Include="Components\Rigidbody2D.h">
       <Filter>Header Files\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imgui\imgui_impl_raylib.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imgui\imgui_internal.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imgui\imstb_rectpack.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imgui\imstb_textedit.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imgui\imstb_truetype.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imgui\rlImGui.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imgui\rlImGuiColors.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imgui\IconsFontAwesome6.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imgui\imconfig.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imgui\imgui.h">
+      <Filter>Source Files\imgui</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
