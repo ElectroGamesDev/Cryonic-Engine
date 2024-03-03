@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <sstream>
 #include <variant>
+#include <unordered_map>
 #include "Editor.h"
 #include "FontManager.h"
 #include "ConsoleLogger.h"
@@ -12,7 +13,7 @@
 #include "IconsFontAwesome6.h"
 #include <fstream>
 #include "Utilities.h"
-#include <variant>
+#include <any>
 #include "Components/MeshRenderer.h"
 #include "Components/ScriptComponent.h"
 #include "Components/CameraComponent.h"
@@ -69,6 +70,8 @@ bool resetHierarchy = true;
 bool resetCameraView = true;
 
 std::filesystem::path fileExplorerPath;
+enum DragTypes {None, ImageFile};
+std::pair<DragTypes, std::unordered_map<std::string, std::any>> dragData;
 
 //std::unordered_map<std::string, Texture2D*> imageTextures;
 std::vector<RaylibWrapper::Texture2D*> tempTextures;
@@ -497,6 +500,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             ImGui::PopID();
         }
 
+        std::filesystem::path folderHovering; // For file drag and drop
         for (const auto& entry : std::filesystem::directory_iterator(fileExplorerPath))
         {
             ImGui::PushID(entry.path().string().c_str());
@@ -511,14 +515,42 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             ImVec2 pos = ImGui::GetCursorPos();
             if (entry.is_directory())
             {
+                // Need to create custom hover check code since ImGui::IsItemHovered() won't trigger as when dragging a file the ImGui Mouse Position doesn't update
+                //static bool hoveringButton = false;
+                //ImGui::GetWindowDrawList()->AddRectFilled(ImGui::GetCursorScreenPos(), { ImGui::GetCursorScreenPos().x + 40, ImGui::GetCursorScreenPos().y + 38 }, IM_COL32(255,0,0,255));
+                bool hovered = (dragData.first == ImageFile && ImGui::IsMouseHoveringRect(ImGui::GetCursorScreenPos(), { ImGui::GetCursorScreenPos().x + 40, ImGui::GetCursorScreenPos().y + 38 })); // Using this since ImGui::IsItemHovered() won't work. ImGui::IsWindowHovered() also won't work for this. It seems these break when attempting to drag a button
+                if (hovered)
+                {
+                    folderHovering = entry;
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.38f, 0.38f, 0.38f, 1.00f));
+                }
+                //ImVec2 mousePos = { RaylibWrapper::GetMousePosition().x - ImGui::GetWindowPos().x, RaylibWrapper::GetMousePosition().y - ImGui::GetWindowPos().y};
+                //ImVec2 itemPos = ImGui::GetCursorPos();
                 if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
                 {
                     fileExplorerPath = entry.path();
-                    ImGui::PopStyleColor(2);
+                    if (hovered)
+                        ImGui::PopStyleColor(3);
+                    else
+                        ImGui::PopStyleColor(2);
                     ImGui::PopID();
                     ImGui::End();
                     return;
                 }
+                //if (ImGui::IsMouseHoveringRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax())) // Using this since ImGui::IsItemHovered() won't work. ImGui::IsWindowHovered() also won't work for this. It seems these break when attempting to drag a button
+                    //ConsoleLogger::ErrorLog("Hovered");
+                if (hovered)
+                    ImGui::PopStyleColor();
+                //ConsoleLogger::InfoLog("Mouse Pos: " + std::to_string(mousePos.x) + " " + std::to_string(mousePos.y));
+                //ConsoleLogger::InfoLog("Item Pos: " + std::to_string(itemPos.x) + " " + std::to_string(itemPos.y));
+                //if (ImGui::IsWindowHovered() && (mousePos.x >= itemPos.x && mousePos.x <= (itemPos.x + 32) &&
+                //    mousePos.y >= itemPos.y && mousePos.y <= (itemPos.y + 32)))
+                //{
+                //    hoveringButton = true;
+                //    ConsoleLogger::ErrorLog("Hovering");
+                //}
+                //else
+                //    hoveringButton = false;
             }
             else if (entry.is_regular_file())
             {
@@ -539,63 +571,30 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
                     }
                 }
-                else if (extension == ".png" || extension == ".jpg" || extension == ".webp")
+                else if (extension == ".png") // Todo: Add jpg support
                 {
                     tempTextures.push_back(new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(entry.path().string().c_str())));
 
                     if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32)))
                     {
-                        std::string command = "start \"" + entry.path().string() + "\"";
-                        std::system(command.c_str());
+                        //std::string command = "start \"" + entry.path().string() + "\"";
+                        //std::system(command.c_str());
                     }
 
-                    //ImVec2 dropPos = ImGui::GetCursorScreenPos();
-                    //ImVec2 dropSize = ImVec2(100, 100);
-                    //if (ImGui::IsMouseHoveringRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax())) {
-                    //    if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                    //        draggingObject = true;
-                    //        dragData.SetTexture(texture);
-                    //        dragData.SetName(entry.path().stem().string());
-                    //        dragData.SetPath(entry.path().string());
-                    //        objectInProperties = nullptr;
-                    //        selectedObject = nullptr;
-                    //    }
-                    //    else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                    //    {
-                    //        ConsoleLogger::WarningLog("Clicked:" + PathToString(entry.path()));
-                    //        std::string command = "start " + PathToString(entry.path());
-                    //        std::system(command.c_str());
-                    //    }
-                    //}
-                    //if (isDragging && draggingObject) {
-                    //    // Set the next window position, position, and background alpha
-
-                    //    int width, height;
-                    //    SDL_QueryTexture(folderIconTexture, nullptr, nullptr, &width, &height);
-                    //    //ConsoleLogger::InfoLog("Width" + std::to_string(width) + " Height" + std::to_string(height));
-
-                    //    ImGui::SetNextWindowSize(ImVec2(width, height));
-                    //    ImGui::SetNextWindowPos(dragPos);
-                    //    ImGui::SetNextWindowBgAlpha(0.0f);
-
-                    //    // Set the padding and margins for the button and the window
-                    //    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-                    //    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));
-                    //    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                    //    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-
-                    //    // Begin the window and draw the button
-                    //    ImGui::Begin("DragSpriteWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-                    //    ImGui::Image((void*)dragData.GetTexture(), ImGui::GetWindowSize());
-                    //    ImGui::End();
-                    //    ImGui::PopStyleVar(4);
-                    //}
-
-                    //if (draggingObject && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-                    //    draggingObject = false;
-                    //    isDragging = false;
-                    //    ConsoleLogger::InfoLog("Dropped on file explorer");
-                    //}
+                    if (ImGui::IsItemHovered())
+                    {
+                        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5))
+                        {
+                            dragData.first = ImageFile;
+                            dragData.second["Texture"] = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(entry.path().string().c_str()));
+                            dragData.second["Path"] = entry.path();
+                        }
+                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        {
+                            std::string command = "start \"" + entry.path().string() + "\"";
+                            std::system(command.c_str());
+                        }
+                    }
                 }
                 else if (extension == ".obj" || extension == ".gltf" || extension == ".glb" || extension == ".vox" || extension == ".iqm" || extension == ".m3d")
                 {
@@ -628,6 +627,65 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             ImGui::PopID();
         }
         ImGui::PopStyleColor(2);
+
+        // Drag and drop code
+        if (dragData.first == ImageFile)
+        {
+            //ImGui::SetNextWindowSize(ImVec2(32, 32));
+            //ImGui::SetNextWindowPos(ImGui::GetMousePos()); // Todo: Add offset
+            //ImGui::SetNextWindowBgAlpha(0.0f);
+
+            //ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+            //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+
+            //ImGui::Begin("DragWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+            //RaylibWrapper::rlImGuiImageSize(std::any_cast<RaylibWrapper::Texture2D*>(dragData.second["Texture"]), ImGui::GetWindowSize().x, ImGui::GetWindowSize().y);
+            //ImGui::End();
+            //ImGui::PopStyleVar(3);
+
+            static RaylibWrapper::MouseCursor currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+
+            if (viewportHovered)
+                ConsoleLogger::ErrorLog("VIEWPORT HOVERED");
+
+            if (viewportHovered && currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
+            {
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+            }
+            else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED)
+            {
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
+                currentCursor = RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED;
+            }
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+            {
+                if (ImGui::IsWindowHovered())
+                {
+                    if (!folderHovering.empty())
+                    {
+                        std::filesystem::path path = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+                        std::filesystem::rename(path, folderHovering / path.filename());
+                    }
+                }
+                else if (viewportHovered)
+                {
+                    // Todo: Add thiz
+                }
+
+                dragData.first = None;
+                dragData.second.clear();
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+                // Check if in in file explorer and hovering over folder
+            }
+            if (!folderHovering.empty())
+            {
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+            }
+        }
 
 
         // Mini Left File Explorer
