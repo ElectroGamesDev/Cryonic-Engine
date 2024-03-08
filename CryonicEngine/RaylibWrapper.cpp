@@ -393,6 +393,10 @@ namespace RaylibWrapper {
         return ::DrawTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format }, posX, posY, {tint.r, tint.g, tint.b, tint.a});
     }
 
+    void DrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint) {
+        return ::DrawTexturePro({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format }, { source.x, source.y, source.width, source.height }, { dest.x, dest.y, dest.width, dest.height }, {origin.x, origin.y}, rotation, { tint.r, tint.g, tint.b, tint.a });
+    }
+
     // Input-related functions: keyboard
     bool IsKeyPressed(int key) {
         return ::IsKeyPressed(key);

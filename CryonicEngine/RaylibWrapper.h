@@ -633,6 +633,7 @@ namespace RaylibWrapper
 
     // Texture Drawing
     void DrawTexture(Texture2D texture, int posX, int posY, Color tint);
+    void DrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint);
 
     // Input-related functions: keyboard
     bool IsKeyPressed(int key);
