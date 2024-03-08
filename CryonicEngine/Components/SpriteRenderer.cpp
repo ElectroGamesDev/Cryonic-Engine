@@ -1,5 +1,6 @@
 #include "SpriteRenderer.h"
 #include "../RaylibDrawWrapper.h"
+#include "../RaylibWrapper.h"
 
 Texture2D& SpriteRenderer::GetTexture()
 {
@@ -24,24 +25,15 @@ void SpriteRenderer::SetTexturePath(std::filesystem::path path)
 
 void SpriteRenderer::Update(float deltaTime)
 {
-    if ((std::filesystem::exists(texturePath)))
+    // Todo: it may be best to check if its primitive shapes first
+    if (textureSet && (std::filesystem::exists(texturePath)))
     {
-        // Todo: Re-add this
-        //DrawTexturePro(texture,
-        //    {
-        //    0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)
-        //},
-        //    {
-        //    gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y,
-        //        texture.width* gameObject->transform.GetScale().x,
-        //        texture.height* gameObject->transform.GetScale().y
-        //},
-        //        {
-        //        texture.width * gameObject->transform.GetScale().x / 2,
-        //        texture.height * gameObject->transform.GetScale().y / 2
-        //    },
-        //        gameObject->transform.GetRotationEuler().y,
-        //            WHITE);
+        RaylibWrapper::DrawTexturePro({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format },
+            { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) },
+            {  gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, texture.width* gameObject->transform.GetScale().x, texture.height* gameObject->transform.GetScale().y },
+            { texture.width * gameObject->transform.GetScale().x / 2, texture.height * gameObject->transform.GetScale().y / 2 },
+            gameObject->transform.GetRotationEuler().y,
+            { tint.r, tint.g, tint.b, tint.a });
     }
     else if (texturePath == "Square")
     {
@@ -57,7 +49,7 @@ void SpriteRenderer::Update(float deltaTime)
     }
     else
     {
-        // Invalid texture path
+        // Todo: Invalid texture path
     }
 }
 
@@ -73,6 +65,6 @@ void SpriteRenderer::EditorUpdate()
 
 void SpriteRenderer::Destroy()
 {
-    //if (textureSet)
-    //    UnloadTexture(texture);
+    if (textureSet)
+        RaylibWrapper::UnloadTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
 }
