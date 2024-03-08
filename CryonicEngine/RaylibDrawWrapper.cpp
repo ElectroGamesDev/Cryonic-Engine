@@ -10,10 +10,10 @@ void DrawRectangleWrapper(float posX, float posY, float sizeX, float sizeY, floa
             sizeX,
             sizeY
         },
-            {
-                sizeX / 2,
-                sizeY / 2
-            },
+        {
+            sizeX / 2,
+            sizeY / 2
+         },
         rotation,
         { colorR, colorG, colorB, colorA });
 }
@@ -23,7 +23,6 @@ void DrawCircleWrapper(float posX, float posY, float radius, unsigned char color
     DrawCircleV({ posX, posY }, radius, { colorR, colorG, colorB, colorA });
 }
 
-void UnloadTextureWrapper()
-{
-    //UnloadTexture();
-}
+//void DrawTextureWrapper(float posX, float posY, float sizeX, float sizeY, float rotation, unsigned char colorR, unsigned char colorG, unsigned char colorB, unsigned char colorA) // Moved to RaylibWrapper
+//{
+//}
