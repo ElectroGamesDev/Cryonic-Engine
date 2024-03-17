@@ -26,6 +26,7 @@
 #include "ProjectManager.h"
 #include "RaylibModelWrapper.h"
 #include "RaylibDrawWrapper.h"
+#include "imnodes.h"
 
 RaylibWrapper::Camera Editor::camera = { 0 };
 
@@ -62,6 +63,7 @@ GameObject* objectInHierarchyContextMenu = nullptr;
 bool hierarchyObjectClicked = false;
 bool componentsWindowOpen = false;
 bool scriptCreateWinOpen = false;
+bool animationGraphWinOpen = false;
 
 bool resetComponentsWin = true;
 bool resetPropertiesWin = true;
@@ -795,6 +797,10 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                     }
                 }
+                if (ImGui::MenuItem("Create Animation Graph"))
+                {
+                    explorerContextMenuOpen = false;
+                }
 
                 ImGui::Separator();
 
@@ -884,6 +890,52 @@ void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnD
 
         ImGui::TreePop();
     }
+}
+
+void Editor::RenderAnimationGraph()
+{
+    if (!animationGraphWinOpen) return;
+    //ImGui::SetNextWindowSize(ImVec2(180, 180));
+    //ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 180) / 2, (RaylibWrapper::GetScreenHeight() - 180) / 2));
+    static std::vector<std::pair<int, int>> links;
+
+    if (ImGui::Begin((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), &animationGraphWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    {
+        ImNodes::BeginNodeEditor();
+
+        ImNodes::BeginNode(1);
+        ImNodes::BeginNodeTitleBar();
+        ImGui::TextUnformatted("output node");
+        ImNodes::EndNodeTitleBar();
+        ImNodes::BeginOutputAttribute(5);
+        ImGui::Text("output pin");
+        ImNodes::EndOutputAttribute();
+        ImNodes::EndNode();
+
+        ImNodes::BeginNode(2);
+        ImNodes::BeginNodeTitleBar();
+        ImGui::TextUnformatted("Input node");
+        ImNodes::EndNodeTitleBar();
+        ImNodes::BeginInputAttribute(3);
+        ImGui::Text("input pin");
+        ImNodes::EndInputAttribute();
+        ImNodes::EndNode();
+
+        for (int i = 0; i < links.size(); ++i)
+        {
+            const std::pair<int, int> p = links[i];
+            ImNodes::Link(i, p.first, p.second);
+        }
+
+        ImNodes::EndNodeEditor();
+
+        int start_attr, end_attr;
+        if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
+        {
+            links.push_back(std::make_pair(start_attr, end_attr));
+        }
+    }
+    ImGui::End();
 }
 
 void Editor::RenderScriptCreateWin()
@@ -1940,6 +1992,7 @@ void Editor::Render(void)
 
         ImGui::DockBuilderDockWindow((ICON_FA_SITEMAP + std::string(" Hierarchy")).c_str(), dock_id_left);
         ImGui::DockBuilderDockWindow((ICON_FA_CUBES + std::string(" Viewport")).c_str(), dock_main_id);
+        ImGui::DockBuilderDockWindow((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_GEARS + std::string(" Properties")).c_str(), dock_id_right);
         ImGui::DockBuilderDockWindow((ICON_FA_FOLDER_OPEN + std::string(" File Explorer")).c_str(), dock_id_bottom);
         ImGui::DockBuilderDockWindow((ICON_FA_CODE + std::string(" Console")).c_str(), dock_id_bottom);
@@ -1968,6 +2021,7 @@ void Editor::Render(void)
     RenderCameraView();
     RenderComponentsWin();
     RenderScriptCreateWin();
+    RenderAnimationGraph();
     //RenderTopbar();
 
 
@@ -2019,6 +2073,7 @@ void Editor::Render(void)
             if (ImGui::MenuItem("File Explorer", "")) {}
             if (ImGui::MenuItem("Properties", "")) {}
             if (ImGui::MenuItem("Sprite Editor", "")) {}
+            if (ImGui::MenuItem("Animation Graph", "")) { animationGraphWinOpen = true; }
             ImGui::EndMenu();
         }
         ImGui::SetCursorPos(ImVec2(152, 0));
@@ -2234,6 +2289,7 @@ void Editor::Cleanup()
         UnloadRenderTexture(cameraRenderTexture);
 
     RaylibWrapper::ImGui_ImplRaylib_Shutdown();
+    ImNodes::DestroyContext();
     ImGui::DestroyContext();
 }
 
@@ -2247,6 +2303,7 @@ void Editor::Init()
 
     // Setup Dear ImGui context
     ImGui::CreateContext();
+    ImNodes::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls

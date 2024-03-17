@@ -27,6 +27,7 @@ public:
 	void RenderScriptCreateWin();
 	void RenderCameraView();
 	void RenderConsole();
+	void RenderAnimationGraph();
 	void Render();
 
 	void UpdateViewport();
