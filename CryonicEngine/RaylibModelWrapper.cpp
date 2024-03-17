@@ -23,16 +23,16 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
         model = LoadModelFromMesh(GenMeshCube(1, 1, 1));
         break;
     case Sphere:
-        LoadModelFromMesh(GenMeshSphere(1, 1, 1));
+        model = LoadModelFromMesh(GenMeshSphere(1, 1, 1));
         break;
     case Plane:
-        LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1));
+        model = LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1));
         break;
     case Cylinder:
-        LoadModelFromMesh(GenMeshCylinder(1, 1, 1));
+        model = LoadModelFromMesh(GenMeshCylinder(1, 1, 1));
         break;
     case Cone:
-        LoadModelFromMesh(GenMeshCone(1, 1, 1));
+        model = LoadModelFromMesh(GenMeshCone(1, 1, 1));
         break;
     default:
         return false;
