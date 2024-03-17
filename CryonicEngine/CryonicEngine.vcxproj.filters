@@ -28,6 +28,9 @@
     <Filter Include="Header Files\Components">
       <UniqueIdentifier>{def407ee-8eab-4406-ba4d-7f92529ecc89}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\imnodes">
+      <UniqueIdentifier>{a70e54ae-73a7-431c-a768-a3225c67c554}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CryonicEngine.cpp">
@@ -143,6 +146,9 @@
     </ClCompile>
     <ClCompile Include="Components\Skybox.cpp">
       <Filter>Source Files\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\imnodes\imnodes.cpp">
+      <Filter>Source Files\imnodes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -274,6 +280,12 @@
     </ClInclude>
     <ClInclude Include="Components\Skybox.h">
       <Filter>Header Files\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imnodes\imnodes.h">
+      <Filter>Source Files\imnodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\imnodes\imnodes_internal.h">
+      <Filter>Source Files\imnodes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

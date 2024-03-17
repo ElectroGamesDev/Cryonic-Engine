@@ -76,7 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;$(SolutionDir)includes\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -94,7 +94,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;$(SolutionDir)includes\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -112,7 +112,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;$(SolutionDir)includes\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -130,7 +130,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;$(SolutionDir)includes\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -149,6 +149,7 @@
     <ClCompile Include="..\includes\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\includes\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\includes\imgui\rlImGui.cpp" />
+    <ClCompile Include="..\includes\imnodes\imnodes.cpp" />
     <ClCompile Include="CollisionListener.cpp" />
     <ClCompile Include="Components\CameraComponent.cpp" />
     <ClCompile Include="Components\Collider2D.cpp" />
@@ -193,6 +194,8 @@
     <ClInclude Include="..\includes\imgui\imstb_truetype.h" />
     <ClInclude Include="..\includes\imgui\rlImGui.h" />
     <ClInclude Include="..\includes\imgui\rlImGuiColors.h" />
+    <ClInclude Include="..\includes\imnodes\imnodes.h" />
+    <ClInclude Include="..\includes\imnodes\imnodes_internal.h" />
     <ClInclude Include="..\includes\json.hpp" />
     <ClInclude Include="CollisionListener.h" />
     <ClInclude Include="Components\CameraComponent.h" />
