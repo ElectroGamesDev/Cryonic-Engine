@@ -25,6 +25,7 @@
 #include "ShaderManager.h"
 #include "ProjectManager.h"
 #include "RaylibModelWrapper.h"
+#include "RaylibDrawWrapper.h"
 
 RaylibWrapper::Camera Editor::camera = { 0 };
 
@@ -178,9 +179,7 @@ void Editor::RenderViewport()
             toolSelected = Scale;
         ImGui::PopStyleColor(3);
 
-
         viewportHovered = ImGui::IsWindowHovered();
-
 
         if (ImGui::IsWindowHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT)) // Todo: Maybe change to viewportFocused instead of IsWindowFocused
         {
@@ -398,6 +397,40 @@ void Editor::UpdateViewport()
     if (ProjectManager::projectData.is3D)
         RaylibWrapper::DrawGrid(100, 10.0f);
 
+    switch (dragData.first)
+    {
+    case ImageFile:
+        ImVec2 mousePos = ImGui::GetMousePos();
+        viewportHovered = (mousePos.x >= viewportPosition.x && mousePos.x <= viewportPosition.z &&
+            mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w);
+        if (viewportHovered)
+        {
+            RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
+            mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
+            mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
+
+            RaylibWrapper::Vector3 position = RaylibWrapper::GetMouseRay(mousePosition, camera).position;
+            RaylibWrapper::Texture2D texture = std::any_cast<RaylibWrapper::Texture2D>(dragData.second["Texture"]);
+            float centerWidth = texture.width / 2.0f;
+            float centerHeight = texture.height / 2.0f;
+            //DrawRectangleWrapper(position.x, position.y, 20, 20, 0, 255, 255, 255, 255);
+            //RaylibWrapper::DrawTexturePro(texture,
+            //    { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) },
+            //    { position.x - centerWidth, position.y - centerHeight },
+            //    {centerWidth, centerHeight},
+            //    0,
+            //    {255, 255, 255, 255});
+
+            RaylibWrapper::DrawTexturePro(texture,
+                { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) },
+                { position.x, position.y, static_cast<float>(texture.width), static_cast<float>(texture.height)},
+                { static_cast<float>(texture.width) / 2, static_cast<float>(texture.height) / 2 },
+                0,
+                { 255, 255, 255, 255 });
+        }
+        break;
+    }
+
     for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
         if (!gameObject->IsActive()) continue;
@@ -583,10 +616,10 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                     if (ImGui::IsItemHovered())
                     {
-                        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5))
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
                         {
                             dragData.first = ImageFile;
-                            dragData.second["Texture"] = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(entry.path().string().c_str()));
+                            dragData.second["Texture"] = RaylibWrapper::LoadTexture(entry.path().string().c_str());
                             dragData.second["Path"] = entry.path();
                         }
                         else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
@@ -646,13 +679,18 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
             static RaylibWrapper::MouseCursor currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
 
-            if (viewportHovered)
-                ConsoleLogger::ErrorLog("VIEWPORT HOVERED");
+            //viewportHovered = ImGui::IsMouseHoveringRect({viewportPosition.x, viewportPosition.y}, { viewportPosition.z, viewportPosition.w }); // This doesn't work for some reason, neither does IsWindowHovered() in the viewport window
+            ImVec2 mousePos = ImGui::GetMousePos();
+            viewportHovered = (mousePos.x >= viewportPosition.x && mousePos.x <= viewportPosition.z &&
+                mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w); // Todo: This being set 3 times a frame. First in UpdateViewport (if dragging), then RenderViewport, then here.
 
-            if (viewportHovered && currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
+            if (viewportHovered)
             {
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+                if (currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
+                {
+                    RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+                    currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+                }
             }
             else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED)
             {
@@ -663,7 +701,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             {
                 if (ImGui::IsWindowHovered())
                 {
-                    if (!folderHovering.empty())
+                    if (!folderHovering.empty()) // Todo: Add support for dropping files onto folders in the file explorer tree, and the previous folders buttons near the top of the file explorer
                     {
                         std::filesystem::path path = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
                         std::filesystem::rename(path, folderHovering / path.filename());
@@ -671,10 +709,38 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (viewportHovered)
                 {
-                    // Todo: Add thiz
+                    RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
+                    mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
+                    mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
+                    RaylibWrapper::Vector3 position = RaylibWrapper::GetMouseRay(mousePosition, camera).position;
+
+                    std::filesystem::path texturePath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+
+                    GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
+                    gameObject->transform.SetPosition({ position.x, position.y, 0 });
+                    gameObject->transform.SetScale({ 1,1,1 });
+                    gameObject->transform.SetRotation(Quaternion::Identity());
+                    gameObject->SetName(texturePath.stem().string());
+
+                    auto assetsPosition = texturePath.string().find("Assets");
+                    if (assetsPosition != std::string::npos)
+                        texturePath = texturePath.string().substr(assetsPosition + 7);
+
+                    SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
+                    spriteRenderer.SetTexturePath(texturePath);
+                    RaylibWrapper::Texture2D texture = RaylibWrapper::LoadTexture((ProjectManager::projectData.path / "Assets" / spriteRenderer.GetTexturePath()).string().c_str()); // Todo: Don't create a new texture if one is already created for the texture
+                    spriteRenderer.SetTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
+                    gameObject->AddComponent<Collider2D>(); // Todo: Set to convex/texture type
+
+                    for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
+                        component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
+
+                    selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
+                    objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
                 }
 
                 dragData.first = None;
+                RaylibWrapper::UnloadTexture(std::any_cast<RaylibWrapper::Texture2D>(dragData.second["Texture"]));
                 dragData.second.clear();
                 RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
                 currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
@@ -688,7 +754,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         }
 
 
-        // Mini Left File Explorer
+        // File Explorer Tree
         int xSize = 300;
         ImGui::GetWindowDrawList()->AddLine(ImVec2(ImGui::GetWindowPos().x + xSize, ImGui::GetWindowPos().y), ImVec2(ImGui::GetWindowPos().x + xSize, ImGui::GetWindowPos().y + ImGui::GetWindowWidth()), IM_COL32(0, 0, 0, 255), 1);
         ImGui::SetCursorPos(ImVec2(0, 25));

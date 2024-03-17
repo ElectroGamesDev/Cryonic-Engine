@@ -22,6 +22,7 @@
 #if defined(EDITOR)
 #include "../ProjectManager.h"
 #endif
+#include "../RaylibWrapper.h"
 
 using json = nlohmann::json;
 
@@ -96,7 +97,7 @@ bool SceneManager::SaveScene(Scene* scene)
             }
             if (dynamic_cast<SpriteRenderer*>(component))
             {
-                componentData["texture_path"] = dynamic_cast<SpriteRenderer*>(component)->GetTexturePath();
+                componentData["texture_path"] = dynamic_cast<SpriteRenderer*>(component)->GetTexturePath().string();
             }
             else if (dynamic_cast<ScriptComponent*>(component))
             {
@@ -254,16 +255,17 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
 #if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
 #endif
-
-                if (component.GetTexturePath().string() != "Square" || component.GetTexturePath().string() != "Circle")
+                if (component.GetTexturePath().string() != "Square" && component.GetTexturePath().string() != "Circle")
                 {
                     std::filesystem::path path;
                     #if defined(EDITOR)
-                    path = ProjectManager::projectData.path;
+                    path = ProjectManager::projectData.path / "Assets";
                     #else
                     // Todo: set path for built games
+                    ConsoleLogger::ErrorLog("Unknown Texture Path");
                     #endif
-                    //component.SetTexture(LoadTexture((path / component.GetTexturePath()).string().c_str())); // Todo: Re-add this
+                    RaylibWrapper::Texture2D texture = RaylibWrapper::LoadTexture((path / component.GetTexturePath()).string().c_str()); // Todo: Don't create a new texture if one is already created for the texture
+                    component.SetTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
                 }
             }
             else if (componentData["name"] == "ScriptComponent")
