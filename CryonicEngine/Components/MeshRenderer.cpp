@@ -25,6 +25,8 @@ void MeshRenderer::SetModelPath(std::filesystem::path path)
 
 void MeshRenderer::Update(float deltaTime)
 {
+    if (!modelSet)
+        return;
     Vector3 position = gameObject->transform.GetPosition();
     Quaternion rotation = gameObject->transform.GetRotation();
     Vector3 scale = gameObject->transform.GetScale();
