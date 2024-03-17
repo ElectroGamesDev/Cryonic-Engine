@@ -4,10 +4,10 @@
 #include "../CryonicCore.h"
 
 
-class SpriteRenderer : public Component
+class Skybox : public Component
 {
 public:
-	SpriteRenderer(GameObject* obj) : Component(obj)
+	Skybox(GameObject* obj) : Component(obj)
 	{
 		runInEditor = true;
 		name = "Skybox";

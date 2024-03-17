@@ -3,34 +3,34 @@
 #include "../RaylibWrapper.h"
 #include "../ProjectManager.h"
 
-Texture2D& SpriteRenderer::GetTexture()
+Texture2D& Skybox::GetTexture()
 {
     return texture;
 }
 
-void SpriteRenderer::SetTexture(Texture2D texture)
+void Skybox::SetTexture(Texture2D texture)
 {
     this->texture = texture;
     this->textureSet = true;
 }
 
-std::filesystem::path SpriteRenderer::GetTexturePath() const
+std::filesystem::path Skybox::GetTexturePath() const
 {
     return texturePath;
 }
 
-void SpriteRenderer::SetTexturePath(std::filesystem::path path)
+void Skybox::SetTexturePath(std::filesystem::path path)
 {
     this->texturePath = path;
 }
 
-void SpriteRenderer::Update(float deltaTime)
+void Skybox::Update(float deltaTime)
 {
     // Todo: Don't render if its 2D
 }
 
 #if defined(EDITOR)
-void SpriteRenderer::EditorUpdate()
+void Skybox::EditorUpdate()
 {
     color.r = exposedVariables[1][0][2][0].get<int>();
     color.g = exposedVariables[1][0][2][1].get<int>();
@@ -39,7 +39,7 @@ void SpriteRenderer::EditorUpdate()
 }
 #endif
 
-void SpriteRenderer::Destroy()
+void Skybox::Destroy()
 {
     if (textureSet)
         RaylibWrapper::UnloadTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
