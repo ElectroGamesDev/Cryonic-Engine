@@ -2264,9 +2264,9 @@ void Editor::Init()
     InitFonts();
     //InitImages();
     IconManager::Init();
-    InitMisc();
-    InitScenes(); // Must go after InitMisc()
     ShaderManager::Init();
+    InitMisc();
+    InitScenes(); // Must go after InitMisc() and ShaderManager::Init()
 
     SetupViewport();
 
