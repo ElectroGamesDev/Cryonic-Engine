@@ -158,6 +158,7 @@
     <ClCompile Include="Components\Rigidbody2D.cpp" />
     <ClCompile Include="Components\ScriptComponent.cpp" />
     <ClCompile Include="Components\ScriptLoader.cpp" />
+    <ClCompile Include="Components\Skybox.cpp" />
     <ClCompile Include="ConsoleLogger.cpp" />
     <ClCompile Include="CryonicCore.cpp" />
     <ClCompile Include="CryonicEngine.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="Components\Rigidbody2D.h" />
     <ClInclude Include="Components\ScriptComponent.h" />
     <ClInclude Include="Components\ScriptLoader.h" />
+    <ClInclude Include="Components\Skybox.h" />
     <ClInclude Include="ConsoleLogger.h" />
     <ClInclude Include="CryonicAPI.h" />
     <ClInclude Include="CryonicCore.h" />
