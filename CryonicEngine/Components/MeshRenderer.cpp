@@ -36,6 +36,7 @@ void MeshRenderer::Update(float deltaTime)
 
 void MeshRenderer::Destroy()
 {
+    // Todo: Currently Destroy() does work in the editor, but it shouldn't. Will need to move this.
     if (modelSet)
         raylibModel.DeleteInstance();
 }
