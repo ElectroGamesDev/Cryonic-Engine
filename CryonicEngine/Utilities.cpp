@@ -34,20 +34,37 @@ int Utilities::GetNumberOfCores()
 std::filesystem::path Utilities::CreateUniqueFile(std::filesystem::path directory, std::string name, std::string extension)
 {
     std::filesystem::path filePath(directory);
-    filePath /= name + "." + extension;
-
-    int count = 0;
-    while (std::filesystem::exists(filePath))
+    if (extension != "") // If its a file
     {
-        ++count;
-        filePath = std::filesystem::path(directory) / (name + " (" + std::to_string(count) + ")." + extension);
+        filePath /= name + "." + extension;
+
+        int count = 0;
+        while (std::filesystem::exists(filePath))
+        {
+            ++count;
+            filePath = std::filesystem::path(directory) / (name + " (" + std::to_string(count) + ")." + extension);
+        }
+
+        std::ofstream file(filePath);
+        if (file.is_open())
+        {
+            file.close();
+            return filePath;
+        }
     }
-
-    std::ofstream file(filePath);
-    if (file.is_open())
+    else // If its a directory
     {
-        file.close();
-        return filePath;
+        filePath /= name;
+
+        int count = 0;
+        while (std::filesystem::exists(filePath))
+        {
+            ++count;
+            filePath = std::filesystem::path(directory) / (name + " (" + std::to_string(count) + ")");
+        }
+
+        if (std::filesystem::create_directory(filePath))
+            return filePath;
     }
     return "";
 }
