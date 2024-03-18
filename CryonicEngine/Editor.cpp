@@ -93,18 +93,20 @@ enum Tool
 
 RaylibWrapper::RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path modelPath, int textureSize)
 {
+    // Todo: Don't load and unload the models every frame if the file path is the same
+    
     // Load the 3D model
 
     RaylibModel model;
     model.Create(Custom, modelPath.string().c_str(), LitStandard);
 
     // Set a basic camera to view the model
-    RaylibWrapper::Camera camera = { 0 };
-    camera.position = { 0.0f, 0.0f, 6.0f };
-    camera.target = { 0.0f, 0.0f, 0.0f };
-    camera.up = { 0.0f, 1.0f, 0.0f };
-    camera.fovy = 45.0f;
-    camera.projection = RaylibWrapper::CAMERA_PERSPECTIVE;
+    RaylibWrapper::Camera modelCamera = { 0 };
+    modelCamera.position = { 0.0f, 0.0f, 6.0f };
+    modelCamera.target = { 0.0f, 0.0f, 0.0f };
+    modelCamera.up = { 0.0f, 1.0f, 0.0f };
+    modelCamera.fovy = 45.0f;
+    modelCamera.projection = RaylibWrapper::CAMERA_PERSPECTIVE;
 
     // Create a render texture
     //RenderTexture2D target = LoadRenderTexture(textureSize, textureSize);
@@ -117,7 +119,7 @@ RaylibWrapper::RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path
     RaylibWrapper::ClearBackground(RaylibWrapper::Color{ 63, 63, 63, 255 });
 
     // Set camera position and projection for rendering
-    RaylibWrapper::BeginMode3D(camera);
+    RaylibWrapper::BeginMode3D(modelCamera);
 
     // Draw the model
     model.DrawModelWrapper(0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 255, 255, 255, 255);
@@ -463,7 +465,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
     float nextX = 310;
     float nextY = 55;
 
-    if (ImGui::Begin((ICON_FA_FOLDER_OPEN + std::string(" File Explorer")).c_str(), nullptr, windowFlags))
+    if (ImGui::Begin((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str(), nullptr, windowFlags))
     {
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.f, 0.f, 0.f, 0.f));
@@ -631,7 +633,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         }
                     }
                 }
-                else if (extension == ".obj" || extension == ".gltf" || extension == ".glb" || extension == ".vox" || extension == ".iqm" || extension == ".m3d")
+                else if (extension == ".gltf" || extension == ".glb")
                 {
                     if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(32, 32)))
                     {
@@ -1994,7 +1996,7 @@ void Editor::Render(void)
         ImGui::DockBuilderDockWindow((ICON_FA_CUBES + std::string(" Viewport")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_GEARS + std::string(" Properties")).c_str(), dock_id_right);
-        ImGui::DockBuilderDockWindow((ICON_FA_FOLDER_OPEN + std::string(" File Explorer")).c_str(), dock_id_bottom);
+        ImGui::DockBuilderDockWindow((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str(), dock_id_bottom);
         ImGui::DockBuilderDockWindow((ICON_FA_CODE + std::string(" Console")).c_str(), dock_id_bottom);
         ImGui::DockBuilderFinish(dockspaceID);
     }
@@ -2070,7 +2072,7 @@ void Editor::Render(void)
         ImGui::SetCursorPos(ImVec2(85, 0));
         if (ImGui::BeginMenu("Window")) {
             if (ImGui::MenuItem("Hierarchy", "")) {}
-            if (ImGui::MenuItem("File Explorer", "")) {}
+            if (ImGui::MenuItem("Content Browser", "")) {}
             if (ImGui::MenuItem("Properties", "")) {}
             if (ImGui::MenuItem("Sprite Editor", "")) {}
             if (ImGui::MenuItem("Animation Graph", "")) { animationGraphWinOpen = true; }
