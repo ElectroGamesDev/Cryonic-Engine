@@ -73,7 +73,7 @@ bool resetHierarchy = true;
 bool resetCameraView = true;
 
 std::filesystem::path fileExplorerPath;
-enum DragTypes {None, ImageFile};
+enum DragTypes {None, ImageFile, ModelFile, Folder, Other};
 std::pair<DragTypes, std::unordered_map<std::string, std::any>> dragData;
 
 //std::unordered_map<std::string, Texture2D*> imageTextures;
@@ -98,7 +98,7 @@ RaylibWrapper::RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path
     // Load the 3D model
 
     RaylibModel model;
-    model.Create(Custom, modelPath.string().c_str(), LitStandard);
+    model.Create(Custom, modelPath.string().c_str(), LitStandard, ProjectManager::projectData.path);
 
     // Set a basic camera to view the model
     RaylibWrapper::Camera modelCamera = { 0 };
@@ -555,7 +555,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 // Need to create custom hover check code since ImGui::IsItemHovered() won't trigger as when dragging a file the ImGui Mouse Position doesn't update
                 //static bool hoveringButton = false;
                 //ImGui::GetWindowDrawList()->AddRectFilled(ImGui::GetCursorScreenPos(), { ImGui::GetCursorScreenPos().x + 40, ImGui::GetCursorScreenPos().y + 38 }, IM_COL32(255,0,0,255));
-                bool hovered = (dragData.first == ImageFile && ImGui::IsMouseHoveringRect(ImGui::GetCursorScreenPos(), { ImGui::GetCursorScreenPos().x + 40, ImGui::GetCursorScreenPos().y + 38 })); // Using this since ImGui::IsItemHovered() won't work. ImGui::IsWindowHovered() also won't work for this. It seems these break when attempting to drag a button
+                bool hovered = (dragData.first != None && ImGui::IsMouseHoveringRect(ImGui::GetCursorScreenPos(), { ImGui::GetCursorScreenPos().x + 40, ImGui::GetCursorScreenPos().y + 38 })); // Using this since ImGui::IsItemHovered() won't work. ImGui::IsWindowHovered() also won't work for this. It seems these break when attempting to drag a button
                 if (hovered)
                 {
                     folderHovering = entry;
@@ -588,6 +588,16 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 //}
                 //else
                 //    hoveringButton = false;
+
+                if (ImGui::IsItemHovered())
+                {
+                    if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                    {
+                        dragData.first = Folder;
+                        dragData.second["Path"] = entry.path();
+                    }
+                }
+
             }
             else if (entry.is_regular_file())
             {
@@ -599,6 +609,14 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         //std::string command = "code " + entry.path().string(); // VSCode
                         std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
                     }
+                    if (ImGui::IsItemHovered())
+                    {
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        {
+                            dragData.first = Other;
+                            dragData.second["Path"] = entry.path();
+                        }
+                    }
                 }
                 else if (extension == ".h")
                 {
@@ -607,6 +625,14 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         //std::string command = "code " + entry.path().string(); // VSCode
                         std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
                     }
+                    if (ImGui::IsItemHovered())
+                    {
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        {
+                            dragData.first = Other;
+                            dragData.second["Path"] = entry.path();
+                        }
+                    }
                 }
                 else if (extension == ".png") // Todo: Add jpg support
                 {
@@ -614,8 +640,6 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                     if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32)))
                     {
-                        //std::string command = "start \"" + entry.path().string() + "\"";
-                        //std::system(command.c_str());
                     }
 
                     if (ImGui::IsItemHovered())
@@ -627,22 +651,38 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             dragData.second["Path"] = entry.path();
                         }
                         else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                        {
-                            std::string command = "start \"" + entry.path().string() + "\"";
-                            std::system(command.c_str());
-                        }
+                            std::system(("start \"" + entry.path().string() + "\"").c_str());
                     }
                 }
                 else if (extension == ".gltf" || extension == ".glb")
                 {
-                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(32, 32)))
+                    // Todo: This is causing errors if there are game objects with a MeshRenderer
+                    //if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(32, 32)))
+                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)))
                     {
+                    }
+
+                    if (ImGui::IsItemHovered())
+                    {
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        {
+                            dragData.first = ModelFile;
+                            dragData.second["Path"] = entry.path();
+                        }
                     }
                 }
                 else if (extension != ".asset")
                 {
-                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)))
+                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                         std::system(("start \"" + entry.path().string() + "\"").c_str());
+                    if (ImGui::IsItemHovered())
+                    {
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        {
+                            dragData.first = Other;
+                            dragData.second["Path"] = entry.path();
+                        }
+                    }
                 }
                 else
                 {
@@ -666,6 +706,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         ImGui::PopStyleColor(2);
 
         // Drag and drop code
+        // Todo: For ImageFile and ModelFile, add support for dropping into hierarchy
         if (dragData.first == ImageFile)
         {
             //ImGui::SetNextWindowSize(ImVec2(32, 32));
@@ -754,6 +795,123 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             {
                 RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
                 currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+            }
+        }
+        else if (dragData.first == ModelFile)
+        {
+            // Todo: Show the model while placing it down, like with sprites
+            static RaylibWrapper::MouseCursor currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+
+            //viewportHovered = ImGui::IsMouseHoveringRect({viewportPosition.x, viewportPosition.y}, { viewportPosition.z, viewportPosition.w }); // This doesn't work for some reason, neither does IsWindowHovered() in the viewport window
+            ImVec2 mousePos = ImGui::GetMousePos();
+            viewportHovered = (mousePos.x >= viewportPosition.x && mousePos.x <= viewportPosition.z &&
+                mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w); // Todo: This being set 3 times a frame. First in UpdateViewport (if dragging), then RenderViewport, then here.
+
+            if (viewportHovered)
+            {
+                if (currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
+                {
+                    RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+                    currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+                }
+            }
+            else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED)
+            {
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
+                currentCursor = RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED;
+            }
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+            {
+                if (ImGui::IsWindowHovered())
+                {
+                    if (!folderHovering.empty()) // Todo: Add support for dropping files onto folders in the file explorer tree, and the previous folders buttons near the top of the file explorer
+                    {
+                        std::filesystem::path path = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+                        std::filesystem::rename(path, folderHovering / path.filename());
+                    }
+                }
+                else if (viewportHovered)
+                {
+                    RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
+                    mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
+                    mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
+                    RaylibWrapper::Vector3 position = RaylibWrapper::GetMouseRay(mousePosition, camera).position;
+                    
+                    // Todo: Properly set the Z position
+
+                    //ConsoleLogger::ErrorLog("Current Z: " + std::to_string(camera.position.z));
+                    //ConsoleLogger::ErrorLog("Z Ray: " + std::to_string(position.z));
+
+                    //for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+                    //{
+                    //    if (!gameObject->IsActive())
+                    //        continue;
+                    //    MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
+                    //    if (meshRenderer == nullptr)
+                    //        continue;
+
+                    //    for (int i = 0; i < model.mesh.vertexCount; i += 3)
+                    //    {
+                    //        Vector3 v0 = model.transform * model.mesh.vertices[i];
+                    //        Vector3 v1 = model.transform * model.mesh.vertices[i + 1];
+                    //        Vector3 v2 = model.transform * model.mesh.vertices[i + 2];
+                    //        Triangle triangle = { v0, v1, v2 };
+
+                    //        if (CheckCollisionRayTriangle(ray, triangle, &hitPosition))
+                    //        {
+                    //            DrawSphere(hitPosition, 0.1f, GREEN); // Draw a sphere at the intersection point
+                    //            break; // Exit loop if intersection found
+                    //        }
+                    //    }
+                    //}
+
+                    // Todo: Add raycast (that detects every game object, including ones without colliders)
+
+
+                    std::filesystem::path modelPath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+                    auto assetsPosition = modelPath.string().find("Assets");
+                    if (assetsPosition != std::string::npos)
+                        modelPath = modelPath.string().substr(assetsPosition + 7);
+
+                    GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
+                    gameObject->transform.SetPosition({ position.x, position.y, position.z });
+                    gameObject->transform.SetScale({ 1,1,1 });
+                    gameObject->transform.SetRotation(Quaternion::Identity());
+                    gameObject->SetName(modelPath.stem().string());
+
+                    MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
+                    meshRenderer.SetModelPath(modelPath);
+                    meshRenderer.SetModel(ModelType::Custom, modelPath, LitStandard);
+
+                    for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
+                        component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
+
+                    selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
+                    objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
+                }
+
+                dragData.first = None;
+                dragData.second.clear();
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+                // Check if in in file explorer and hovering over folder
+            }
+            if (!folderHovering.empty())
+            {
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+            }
+        }
+        else if (dragData.first == Folder)
+        {
+            // Todo: Add support for dropping folders into folders and make the cursor RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED when not hovering folder
+        }
+        else
+        {
+            // Todo: Make the cursor RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED when not hovering folder
+            if (!folderHovering.empty())
+            {
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
             }
         }
 
