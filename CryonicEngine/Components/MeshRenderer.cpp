@@ -1,4 +1,5 @@
 #include "MeshRenderer.h"
+#include "../ProjectManager.h"
 //#include "rlgl.h"
 //#include "../ShaderManager.h"
 
@@ -10,7 +11,7 @@ RaylibModel& MeshRenderer::GetModel()
 void MeshRenderer::SetModel(ModelType model, std::filesystem::path path, Shaders shader)
 {
     //this->raylibModel = model;
-    this->modelSet = raylibModel.Create(model, path, shader);
+    this->modelSet = raylibModel.Create(model, path, shader, ProjectManager::projectData.path);
 }
 
 std::filesystem::path MeshRenderer::GetModelPath() const
@@ -36,5 +37,5 @@ void MeshRenderer::Update(float deltaTime)
 void MeshRenderer::Destroy()
 {
     if (modelSet)
-        raylibModel.Unload();
+        raylibModel.DeleteInstance();
 }
