@@ -4,12 +4,10 @@
 #include "raymath.h"
 #include "RaylibShaderWrapper.h"
 #include <unordered_map>
+#include "ConsoleLogger.h"
 
 static std::unordered_map<std::filesystem::path, std::pair<Model, int>> models;
 static std::unordered_map<ModelType, std::pair<Model, int>> primitiveModels;
-
-std::pair<Model, int>* model;
-Shaders modelShader;
 
 bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders shader, std::filesystem::path projectPath)
 {

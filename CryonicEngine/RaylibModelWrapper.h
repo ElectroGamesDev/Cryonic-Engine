@@ -2,6 +2,8 @@
 #include "ShaderManager.h"
 #include <filesystem>
 
+class Model;
+
 enum ModelType
 {
 	Custom,
@@ -19,4 +21,8 @@ public:
 	void Unload();
 	void DeleteInstance();
 	void DrawModelWrapper(float posX, float posY, float posZ, float sizeX, float sizeY, float sizeZ, float rotationX, float rotationY, float rotationZ, float rotationW, unsigned char colorR, unsigned char colorG, unsigned char colorB, unsigned char colorA);
+
+private:
+	std::pair<Model, int>* model;
+	Shaders modelShader;
 };
