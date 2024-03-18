@@ -72,6 +72,8 @@ bool resetFileExplorerWin = true;
 bool resetHierarchy = true;
 bool resetCameraView = true;
 
+std::filesystem::path animationGraphModelPath = "";
+
 std::filesystem::path fileExplorerPath;
 enum DragTypes {None, ImageFile, ModelFile, Folder, Other};
 std::pair<DragTypes, std::unordered_map<std::string, std::any>> dragData;
@@ -460,6 +462,15 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
     //    ImGui::SetNextWindowPos(ImVec2(0, 788));
         fileExplorerPath = ProjectManager::projectData.path / "Assets"; // Todo: Make sure Assets path exists, if not then create it.
     }
+
+    static std::filesystem::path renamingFile = "";
+    static char newFileName[256] = "";
+    static bool fileRenameFirstFrame = true;
+
+    // Checks if the directory changed, or if the file is deleted/moved
+    if (!renamingFile.empty() && (fileExplorerPath != renamingFile.parent_path() || !std::filesystem::exists(renamingFile)))
+        renamingFile = "";
+
     ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse;
 
     float nextX = 310;
@@ -542,7 +553,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         {
             ImGui::PushID(entry.path().string().c_str());
             std::string id = entry.path().string().c_str();
-            std::string fileName = entry.path().filename().string();
+            std::string fileName = entry.path().stem().string();
             if (fileName.length() > 7) {
                 fileName = fileName.substr(0, 8);
                 fileName = fileName + "..";
@@ -692,7 +703,29 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             }
             ImGui::SetCursorPosY(ImGui::GetCursorPosY());
             ImGui::SetCursorPosX(nextX - 2);
-            ImGui::Text(fileName.c_str());
+            if (!renamingFile.empty() && renamingFile.filename().string() == entry.path().filename().string())
+            {
+                ImGui::SetKeyboardFocusHere(0);
+                if (ImGui::InputText("##RenameInput", newFileName, sizeof(newFileName), ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    if (newFileName != "" || newFileName == renamingFile.stem())
+                    {
+                        // Todo: If a file already exists with that name and extension, popup a warning asking if they want to replace/overwrite or cancel
+                        std::filesystem::rename(renamingFile, (renamingFile.parent_path() / (newFileName + renamingFile.extension().string())));
+                        fileRenameFirstFrame = true;
+                    }
+                    renamingFile = "";
+                    strcpy_s(newFileName, sizeof(newFileName), "");
+                }
+
+                if (!ImGui::IsItemClicked() && ImGui::IsKeyPressed(ImGuiKey_MouseLeft))
+                {
+                    renamingFile = "";
+                    strcpy_s(newFileName, sizeof(newFileName), "");
+                    fileRenameFirstFrame = true;
+                }
+            }
+            else ImGui::Text(fileName.c_str()); // Todo: Center text
 
             nextX += 60;
 
@@ -935,6 +968,11 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             explorerContextMenuOpen = true;
             if (ImGui::BeginPopupContextWindow())
             {
+                // Todo: Make Rename only fix right click on a file
+                //if (ImGui::MenuItem("Rename", "F2"))
+                //{
+                //    explorerContextMenuOpen = false;
+                //}
                 if (ImGui::MenuItem("Create Script"))
                 {
                     explorerContextMenuOpen = false;
@@ -947,24 +985,41 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Create Material"))
                 {
                     explorerContextMenuOpen = false;
-                    std::ofstream outFile(fileExplorerPath / "NewMaterial.mat");
-                    // Todo: In file explorer, show material as multi-color/rainbow square/sphere 
-                    if (outFile.is_open()) {
-
-                        outFile.close();
+                    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Material", "mat");
+                    if (filePath != "")
+                    {
+                        renamingFile = filePath;
+                        strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
                     }
-                    else {
-
+                    else
+                    {
+                        // Todo: Handle if it wasn't created
                     }
                 }
                 if (ImGui::MenuItem("Create Animation Graph"))
                 {
                     explorerContextMenuOpen = false;
+                    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Animation Graph", "animgraph");
+                    if (filePath != "")
+                    {
+                        renamingFile = filePath;
+                        strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
+                    }
+                    else
+                    {
+                        // Todo: Handle if it wasn't created
+                    }
+                }
+
+                if (ImGui::MenuItem("Create Folder"))
+                {
+                    explorerContextMenuOpen = false;
+                    // Todo: Add this
                 }
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Open Folder In File Explorer"))
+                if (ImGui::MenuItem("Open In File Explorer"))
                 {
                     explorerContextMenuOpen = false;
                     Utilities::OpenPathInExplorer(fileExplorerPath);
@@ -1061,6 +1116,20 @@ void Editor::RenderAnimationGraph()
 
     if (ImGui::Begin((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), &animationGraphWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
+        if (animationGraphModelPath.empty())
+        {
+            // Todo: Fade background and make it so user can't move grid
+            ImNodes::BeginNodeEditor();
+            ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
+            ImVec2 textSize = ImGui::CalcTextSize("No Animation Graph selected. Select or create one in the Content Browser.");
+            ImGui::SetCursorPos(ImVec2((ImGui::GetWindowWidth() - textSize.x) * 0.5f, (ImGui::GetWindowHeight() - textSize.y) * 0.5f));
+            ImGui::Text("No Animation Graph selected. Select or create one in the Content Browser.");
+            ImGui::PopFont();
+            ImNodes::EndNodeEditor();
+            ImGui::End();
+            return;
+        }
+
         ImNodes::BeginNodeEditor();
 
         ImNodes::BeginNode(1);
@@ -1094,8 +1163,8 @@ void Editor::RenderAnimationGraph()
         {
             links.push_back(std::make_pair(start_attr, end_attr));
         }
+
     }
-    ImGui::End();
 }
 
 void Editor::RenderScriptCreateWin()
