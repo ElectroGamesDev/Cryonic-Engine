@@ -72,7 +72,7 @@ bool resetFileExplorerWin = true;
 bool resetHierarchy = true;
 bool resetCameraView = true;
 
-std::filesystem::path animationGraphModelPath = "";
+std::filesystem::path animationGraphPath = "";
 
 std::filesystem::path fileExplorerPath;
 enum DragTypes {None, ImageFile, ModelFile, Folder, Other};
@@ -686,6 +686,18 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 {
                     if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["AnimationGraphIcon"], ImVec2(32, 32)))
                     {
+                        // Todo: If something is already in the Animation Graph window and its not saved, popup asking to save, don't save, or cancel
+                        animationGraphPath = entry.path();
+
+                        if (animationGraphWinOpen) // If the animation graph is open, I need to focus it
+                        {
+                            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
+                            if (window == NULL || window->DockNode == NULL || window->DockNode->TabBar == NULL)
+                                return;
+                            window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+                        }
+                        else
+                            animationGraphWinOpen = true; // This should focus the animation graph window
                     }
 
                     if (ImGui::IsItemHovered())
@@ -1132,7 +1144,7 @@ void Editor::RenderAnimationGraph()
 
     if (ImGui::Begin((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), &animationGraphWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
-        if (animationGraphModelPath.empty())
+        if (animationGraphPath.empty())
         {
             // Todo: Fade background and make it so user can't move grid
             ImNodes::BeginNodeEditor();
@@ -1180,7 +1192,9 @@ void Editor::RenderAnimationGraph()
             links.push_back(std::make_pair(start_attr, end_attr));
         }
 
+        // Todo: When saving, pop up saying the graph file was deleted or moved. Asked to recreate it or delete it
     }
+    ImGui::End();
 }
 
 void Editor::RenderScriptCreateWin()
