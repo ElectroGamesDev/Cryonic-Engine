@@ -150,6 +150,9 @@
     <ClCompile Include="..\includes\imnodes\imnodes.cpp">
       <Filter>Source Files\imnodes</Filter>
     </ClCompile>
+    <ClCompile Include="Components\AnimationPlayer.cpp">
+      <Filter>Source Files\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -286,6 +289,9 @@
     </ClInclude>
     <ClInclude Include="..\includes\imnodes\imnodes_internal.h">
       <Filter>Source Files\imnodes</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\AnimationPlayer.h">
+      <Filter>Header Files\Components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

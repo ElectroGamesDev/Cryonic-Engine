@@ -151,6 +151,7 @@
     <ClCompile Include="..\includes\imgui\rlImGui.cpp" />
     <ClCompile Include="..\includes\imnodes\imnodes.cpp" />
     <ClCompile Include="CollisionListener.cpp" />
+    <ClCompile Include="Components\AnimationPlayer.cpp" />
     <ClCompile Include="Components\CameraComponent.cpp" />
     <ClCompile Include="Components\Collider2D.cpp" />
     <ClCompile Include="Components\Component.cpp" />
@@ -198,6 +199,7 @@
     <ClInclude Include="..\includes\imnodes\imnodes_internal.h" />
     <ClInclude Include="..\includes\json.hpp" />
     <ClInclude Include="CollisionListener.h" />
+    <ClInclude Include="Components\AnimationPlayer.h" />
     <ClInclude Include="Components\CameraComponent.h" />
     <ClInclude Include="Components\Collider2D.h" />
     <ClInclude Include="Components\Component.h" />
