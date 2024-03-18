@@ -1042,7 +1042,16 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Create Folder"))
                 {
                     explorerContextMenuOpen = false;
-                    // Todo: Add this
+                    std::filesystem::path folderPath = Utilities::CreateUniqueFile(fileExplorerPath, "New Folder", "");
+                    if (folderPath != "")
+                    {
+                        renamingFile = folderPath;
+                        strcpy_s(newFileName, sizeof(newFileName), folderPath.stem().string().c_str());
+                    }
+                    else
+                    {
+                        // Todo: Handle if it wasn't created
+                    }
                 }
 
                 ImGui::Separator();
