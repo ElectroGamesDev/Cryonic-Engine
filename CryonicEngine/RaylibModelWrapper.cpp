@@ -21,63 +21,80 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
         }
 
         if (auto it = models.find(path); it != models.end())
+        {
             model = &(it->second);
+            model->second++;
+        }
         else
         {
             models[path] = std::make_pair(LoadModel((projectPath / "Assets" / path).string().c_str()), 1);
             model = &models[path];
-            model->second++;
         }
         break;
     case Cube:
         if (auto it = primitiveModels.find(Cube); it != primitiveModels.end())
+        {
             model = &(it->second);
+            model->second++;
+        }
         else
         {
             primitiveModels[Cube] = std::make_pair(LoadModelFromMesh(GenMeshCube(1, 1, 1)), 1);
             model = &primitiveModels[Cube];
-            model->second++;
         }
+        primitiveModel = true;
         break;
     case Sphere:
         if (auto it = primitiveModels.find(Sphere); it != primitiveModels.end())
+        {
             model = &(it->second);
+            model->second++;
+        }
         else
         {
             primitiveModels[Sphere] = std::make_pair(LoadModelFromMesh(GenMeshSphere(1, 1, 1)), 1);
             model = &primitiveModels[Sphere];
-            model->second++;
         }
+        primitiveModel = true;
         break;
     case Plane:
         if (auto it = primitiveModels.find(Plane); it != primitiveModels.end())
+        {
             model = &(it->second);
+            model->second++;
+        }
         else
         {
             primitiveModels[Plane] = std::make_pair(LoadModelFromMesh(GenMeshPlane(1, 1, 1, 1)), 1);
             model = &primitiveModels[Plane];
-            model->second++;
         }
+        primitiveModel = true;
         break;
     case Cylinder:
         if (auto it = primitiveModels.find(Cylinder); it != primitiveModels.end())
+        {
             model = &(it->second);
+            model->second++;
+        }
         else
         {
             primitiveModels[Cylinder] = std::make_pair(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)), 1);
             model = &primitiveModels[Cylinder];
-            model->second++;
         }
+        primitiveModel = true;
         break;
     case Cone:
         if (auto it = primitiveModels.find(Cone); it != primitiveModels.end())
+        {
             model = &(it->second);
+            model->second++;
+        }
         else
         {
             primitiveModels[Cone] = std::make_pair(LoadModelFromMesh(GenMeshCone(1, 1, 1)), 1);
             model = &primitiveModels[Cone];
-            model->second++;
         }
+        primitiveModel = true;
         break;
     default:
         return false;
@@ -92,7 +109,38 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
 
 void RaylibModel::Unload()
 {
+    if (model == nullptr)
+        return;
     UnloadModel(model->first);
+    if (primitiveModel)
+    {
+        auto it = primitiveModels.begin();
+        while (it != primitiveModels.end())
+        {
+            if (&it->second == model)
+            {
+                it = primitiveModels.erase(it);
+                break;
+            }
+            else
+                ++it;
+        }
+    }
+    else
+    {
+        auto it = models.begin();
+        while (it != models.end())
+        {
+            if (&it->second == model)
+            {
+                it = models.erase(it);
+                break;
+            }
+            else 
+                ++it;
+        }
+    }
+    model = nullptr;
 }
 
 void RaylibModel::DeleteInstance()

@@ -24,5 +24,6 @@ public:
 
 private:
 	std::pair<Model, int>* model;
+	bool primitiveModel = false;
 	Shaders modelShader;
 };
