@@ -705,6 +705,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             ImGui::SetCursorPosX(nextX - 2);
             if (!renamingFile.empty() && renamingFile.filename().string() == entry.path().filename().string())
             {
+                ImGui::SetNextItemWidth(44);
                 ImGui::SetKeyboardFocusHere(0);
                 if (ImGui::InputText("##RenameInput", newFileName, sizeof(newFileName), ImGuiInputTextFlags_EnterReturnsTrue))
                 {
