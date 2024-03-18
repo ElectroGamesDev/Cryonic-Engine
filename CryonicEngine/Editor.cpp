@@ -669,7 +669,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 {
                     // Todo: This is causing errors if there are game objects with a MeshRenderer
                     //if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(32, 32)))
-                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)))
+                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CubeIcon"], ImVec2(32, 32)))
                     {
                     }
 
