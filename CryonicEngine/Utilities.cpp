@@ -31,6 +31,27 @@ int Utilities::GetNumberOfCores()
     return sysInfo.dwNumberOfProcessors;
 }
 
+std::filesystem::path Utilities::CreateUniqueFile(std::filesystem::path directory, std::string name, std::string extension)
+{
+    std::filesystem::path filePath(directory);
+    filePath /= name + "." + extension;
+
+    int count = 0;
+    while (std::filesystem::exists(filePath))
+    {
+        ++count;
+        filePath = std::filesystem::path(directory) / (name + " (" + std::to_string(count) + ")." + extension);
+    }
+
+    std::ofstream file(filePath);
+    if (file.is_open())
+    {
+        file.close();
+        return filePath;
+    }
+    return "";
+}
+
 std::string dataTypes[5] = { "int", "float", "bool", "char", "string" };
 std::vector<std::pair<std::string, std::vector<std::string>>> enums; // Consider changing this to a unordered_set as it has random access
 nlohmann::json Utilities::GetExposedVariables(std::filesystem::path path)
