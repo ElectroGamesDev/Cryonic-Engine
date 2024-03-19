@@ -1295,7 +1295,7 @@ void Editor::RenderAnimationGraph()
 
     if (ImGui::Begin((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), &animationGraphWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
-        bool updated = false;
+        bool update = false;
         if (animationGraphData.is_null())
         {
             // Todo: Fade background and make it so user can't move grid
@@ -1319,6 +1319,8 @@ void Editor::RenderAnimationGraph()
         // Todo: Support external animations (from other model files).
         // Todo: If a model is reimported, make sure to check the animations and make sure the animations index values are correct with the actual index
         // Todo: Make sure it doesn't update when dragging a node, only once its dropped
+        // Todo: Use node titles to let the user know if theres any warnings/errors
+        // Todo: If the user selects any default nodes like Start and switches to a new graph while its still selected, it will move the position of the node in the new graph to where it was in the old graph
 
         for (auto& node : animationGraphData["nodes"])
         {
@@ -1326,7 +1328,14 @@ void Editor::RenderAnimationGraph()
             std::string name = node["name"];
             if (id == -5) // Start node
             {
-                ImNodes::SetNodeGridSpacePos(-5, ImVec2(node["x"], node["y"]));
+                if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImNodes::IsNodeSelected(-5))
+                {
+                    node["x"] = ImNodes::GetNodeGridSpacePos(id).x;
+                    node["y"] = ImNodes::GetNodeGridSpacePos(id).y;
+                    update = true;
+                }
+                if (!ImNodes::IsNodeSelected(id) && !ImGui::IsMouseDown(ImGuiMouseButton_Left))
+                    ImNodes::SetNodeGridSpacePos(-5, ImVec2(node["x"], node["y"]));
                 ImNodes::BeginNode(-5);
                 ImNodes::BeginOutputAttribute(1);
                 ImGui::Text("Start");
@@ -1335,7 +1344,14 @@ void Editor::RenderAnimationGraph()
             }
             else
             {
-                ImNodes::SetNodeGridSpacePos(id, ImVec2(node["x"], node["y"]));
+                if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImNodes::IsNodeSelected(id))
+                {
+                    node["x"] = ImNodes::GetNodeGridSpacePos(id).x;
+                    node["y"] = ImNodes::GetNodeGridSpacePos(id).y;
+                    update = true;
+                }
+                if (!ImNodes::IsNodeSelected(id) && !ImGui::IsMouseDown(ImGuiMouseButton_Left))
+                    ImNodes::SetNodeGridSpacePos(id, ImVec2(node["x"], node["y"]));
                 ImNodes::BeginNode(id);
                 ImNodes::BeginInputAttribute(abs(node["id"].get<int>())); // Using the positive ID for input ID
                 ImNodes::EndInputAttribute();
@@ -1344,10 +1360,9 @@ void Editor::RenderAnimationGraph()
                 ImNodes::EndOutputAttribute();
                 ImNodes::EndNode();
             }
-
         }
 
-        // Todo: Switch this to grab links from animationGraphData
+        // Todo: Switch this to grab links from animationGraphData ---------------------------------------------------------------------------------------------------- TODOOOOOOOOOOOOOOOOOOO
         for (int i = 0; i < links.size(); ++i)
         {
             const std::pair<int, int> p = links[i];
@@ -1359,18 +1374,18 @@ void Editor::RenderAnimationGraph()
         int start_attr, end_attr;
         if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
         {
-            updated = true;
+            update = true;
             links.push_back(std::make_pair(start_attr, end_attr));
         }
 
-        if (updated)
+        if (update)
         {
             std::ofstream file(animationGraphData["path"].get<std::filesystem::path>());
             if (file.is_open())
             {
                 file << std::setw(4) << animationGraphData << std::endl;
                 file.close();
-                updated = false;
+                update = false;
             }
         }
 
