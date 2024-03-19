@@ -199,8 +199,8 @@ void RenderProjectCreateWin() // Todo: Add grayed out button
 
 void InitFonts()
 {
-    FontManager::CreateFonts("Familiar-Pro-Bold", { 15, 18, 20, 25, 30, 40 });
-    FontManager::CreateFont("BoldMarker", 90);
+    FontManager::LoadFonts("Familiar-Pro-Bold", { 15, 18, 20, 25, 30, 40 });
+    FontManager::LoadFont("BoldMarker", 90);
 }
 
 void InitStyle()
