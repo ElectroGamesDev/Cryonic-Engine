@@ -692,6 +692,63 @@ namespace RaylibWrapper {
     }
 
 
+    // Model animations
+    ModelAnimation* LoadModelAnimations(const char* fileName, int* animCount) {
+        ::ModelAnimation* raylibModelAnimations = ::LoadModelAnimations(fileName, animCount);
+
+        ModelAnimation* wrapperModelAnimations = new ModelAnimation();
+
+        wrapperModelAnimations->boneCount = raylibModelAnimations->boneCount;
+        wrapperModelAnimations->frameCount = raylibModelAnimations->frameCount;
+
+        wrapperModelAnimations->bones = new BoneInfo[raylibModelAnimations->boneCount];
+        for (int i = 0; i < raylibModelAnimations->boneCount; ++i)
+        {
+            strcpy(wrapperModelAnimations->bones[i].name, raylibModelAnimations->bones[i].name);
+            wrapperModelAnimations->bones[i].parent = raylibModelAnimations->bones[i].parent;
+        }
+
+        wrapperModelAnimations->framePoses = new Transform * [raylibModelAnimations->frameCount];
+        for (int i = 0; i < raylibModelAnimations->frameCount; ++i)
+        {
+            wrapperModelAnimations->framePoses[i] = new Transform[raylibModelAnimations->boneCount];
+            for (int j = 0; j < raylibModelAnimations->boneCount; ++j)
+            {
+                wrapperModelAnimations->framePoses[i][j].translation = { raylibModelAnimations->framePoses[i][j].translation.x,
+                    raylibModelAnimations->framePoses[i][j].translation.y,
+                    raylibModelAnimations->framePoses[i][j].translation.z };
+                wrapperModelAnimations->framePoses[i][j].rotation = {raylibModelAnimations->framePoses[i][j].rotation.x,
+                    raylibModelAnimations->framePoses[i][j].rotation.y,
+                    raylibModelAnimations->framePoses[i][j].rotation.z,
+                    raylibModelAnimations->framePoses[i][j].rotation.w };
+                wrapperModelAnimations->framePoses[i][j].scale = { raylibModelAnimations->framePoses[i][j].scale.x,
+                    raylibModelAnimations->framePoses[i][j].scale.y,
+                    raylibModelAnimations->framePoses[i][j].scale.z };
+
+            }
+        }
+
+        ::UnloadModelAnimations(raylibModelAnimations, *animCount);
+
+        return wrapperModelAnimations;
+    }
+    //void UpdateModelAnimation(Model model, ModelAnimation anim, int frame) { // Moved to RaylibModelWrapper
+    //}
+    void UnloadModelAnimation(ModelAnimation anim) {
+        for (int i = 0; i < anim.frameCount; i++) RL_FREE(anim.framePoses[i]);
+
+        RL_FREE(anim.bones);
+        RL_FREE(anim.framePoses);
+    }
+    void UnloadModelAnimations(ModelAnimation* animations, int animCount) {
+        for (int i = 0; i < animCount; i++) UnloadModelAnimation(animations[i]);
+        RL_FREE(animations);
+    }
+    //bool IsModelAnimationValid(Model model, ModelAnimation anim) { // Moved to RaylibModelWrapper
+    //    return false;
+    //}
+
+
 
 #if defined(EDITOR)
     // ImGui Raylib

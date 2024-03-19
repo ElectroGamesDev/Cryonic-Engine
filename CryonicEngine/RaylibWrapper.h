@@ -714,6 +714,14 @@ namespace RaylibWrapper
     bool CheckCollisionCircleRec(Vector2 center, float radius, Rectangle rec);
 
 
+    // Model animations loading/unloading functions
+    ModelAnimation* LoadModelAnimations(const char* fileName, int* animCount);            // Load model animations from file
+    //void UpdateModelAnimation(Model model, ModelAnimation anim, int frame);               // Update model animation pose --- Moved to RaylibModelWrapper
+    void UnloadModelAnimation(ModelAnimation anim);                                       // Unload animation data
+    void UnloadModelAnimations(ModelAnimation* animations, int animCount);                // Unload animation array data
+    //bool IsModelAnimationValid(Model model, ModelAnimation anim);                         // Check model animation skeleton match --- Moved to RaylibModelWrapper
+
+
 #if defined(EDITOR)
     // ImGui Raylib
     bool ImGui_ImplRaylib_Init();
