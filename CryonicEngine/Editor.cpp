@@ -998,7 +998,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                             // Todo: This is really slow, even slower than loading and drawing a model in the viewport
 
-                            // Todo: Consider changing this to a switch case since they're faster
+                            // Todo: Popup a window with a progress bar
+
                             if (filePath.extension() == ".gltf")
                                 ret = loader.LoadASCIIFromFile(&model, &err, &warn, filePath.string());
                             else if (filePath.extension() == ".glb")
