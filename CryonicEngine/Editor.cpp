@@ -72,7 +72,7 @@ bool resetFileExplorerWin = true;
 bool resetHierarchy = true;
 bool resetCameraView = true;
 
-std::filesystem::path animationGraphPath = "";
+nlohmann::json animationGraphData = nullptr;
 
 std::filesystem::path fileExplorerPath;
 enum DragTypes {None, ImageFile, ModelFile, Folder, Other};
@@ -684,20 +684,33 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".animgraph")
                 {
-                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["AnimationGraphIcon"], ImVec2(32, 32)))
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["AnimationGraphIcon"], ImVec2(32, 32));
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     {
                         // Todo: If something is already in the Animation Graph window and its not saved, popup asking to save, don't save, or cancel
-                        animationGraphPath = entry.path();
-
-                        if (animationGraphWinOpen) // If the animation graph is open, I need to focus it
+                        
+                        // Todo: Create a AnimationGraph script and put OpenAnimationGraph() in it.
+                        std::ifstream dataFile(entry.path());
+                        if (dataFile.is_open())
                         {
-                            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
-                            if (window == NULL || window->DockNode == NULL || window->DockNode->TabBar == NULL)
-                                return;
-                            window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+                            // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
+                            dataFile >> animationGraphData;
+                            animationGraphData["path"] = entry.path(); // Updating the path incase it changed.
+
+                            if (animationGraphWinOpen) // If the animation graph is open, I need to focus it
+                            {
+                                ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
+                                if (window == NULL || window->DockNode == NULL || window->DockNode->TabBar == NULL)
+                                    return;
+                                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+                            }
+                            else
+                                animationGraphWinOpen = true; // This should focus the animation graph window
                         }
                         else
-                            animationGraphWinOpen = true; // This should focus the animation graph window
+                        {
+                            // Todo: Send error message
+                        }
                     }
 
                     if (ImGui::IsItemHovered())
@@ -1030,6 +1043,33 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Animation Graph", "animgraph");
                     if (filePath != "")
                     {
+                        std::ofstream file(filePath);
+                        if (file.is_open())
+                        {
+                            nlohmann::json jsonData = {
+                                {"version", 1},
+                                {"path", filePath},
+                                {"model_path", ""},
+                                {"nodes", {
+                                    {
+                                        {"id", -5},
+                                        {"name", "Start"},
+                                        {"x", 80},
+                                        {"y", 350}
+                                    }
+                                }}
+                            };
+
+                            file << std::setw(4) << jsonData << std::endl;
+                            file.close();
+                        }
+                        else
+                        {
+                            // Todo: Properly handle if the file couldn't be opened. Maybe retry a few times, then popup with a message and delete the file.
+                            std::filesystem::remove(filePath);
+                        }
+
+
                         renamingFile = filePath;
                         strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
                     }
@@ -1151,9 +1191,12 @@ void Editor::RenderAnimationGraph()
     //ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 180) / 2, (RaylibWrapper::GetScreenHeight() - 180) / 2));
     static std::vector<std::pair<int, int>> links;
 
+    // Todo: Check model to see if it has new animations (or if animations were moved/renamed)
+
     if (ImGui::Begin((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), &animationGraphWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
-        if (animationGraphPath.empty())
+        bool updated = false;
+        if (animationGraphData.is_null())
         {
             // Todo: Fade background and make it so user can't move grid
             ImNodes::BeginNodeEditor();
@@ -1169,23 +1212,37 @@ void Editor::RenderAnimationGraph()
 
         ImNodes::BeginNodeEditor();
 
-        ImNodes::BeginNode(1);
-        ImNodes::BeginNodeTitleBar();
-        ImGui::TextUnformatted("output node");
-        ImNodes::EndNodeTitleBar();
-        ImNodes::BeginOutputAttribute(5);
-        ImGui::Text("output pin");
-        ImNodes::EndOutputAttribute();
-        ImNodes::EndNode();
+        // Todo: Add "Any State" node
+        // Todo: Save user position in grid to load it. (It doesn't seem to be implemented into ImNodes)
+        // Todo: Make all nodes fixed sizes
+        // Todo: Add zooming
 
-        ImNodes::BeginNode(2);
-        ImNodes::BeginNodeTitleBar();
-        ImGui::TextUnformatted("Input node");
-        ImNodes::EndNodeTitleBar();
-        ImNodes::BeginInputAttribute(3);
-        ImGui::Text("input pin");
-        ImNodes::EndInputAttribute();
-        ImNodes::EndNode();
+        for (auto& node : animationGraphData["nodes"])
+        {
+            int id = node["id"];
+            std::string name = node["name"];
+            if (id == -5) // Start node
+            {
+                ImNodes::SetNodeGridSpacePos(-5, ImVec2(node["x"], node["y"]));
+                ImNodes::BeginNode(-5);
+                ImNodes::BeginOutputAttribute(1);
+                ImGui::Text("Start");
+                ImNodes::EndOutputAttribute();
+                ImNodes::EndNode();
+            }
+            else
+            {
+                ImNodes::SetNodeGridSpacePos(-5, ImVec2(node["x"], node["y"]));
+                ImNodes::BeginNode(id);
+                ImNodes::BeginInputAttribute(0);
+                ImNodes::EndInputAttribute();
+                ImNodes::BeginOutputAttribute(1);
+                ImGui::Text(node["name"].get<std::string>().c_str());
+                ImNodes::EndOutputAttribute();
+                ImNodes::EndNode();
+            }
+
+        }
 
         for (int i = 0; i < links.size(); ++i)
         {
@@ -1198,7 +1255,13 @@ void Editor::RenderAnimationGraph()
         int start_attr, end_attr;
         if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
         {
+            updated = true;
             links.push_back(std::make_pair(start_attr, end_attr));
+        }
+
+        if (updated)
+        {
+            // Todo: update data file
         }
 
         // Todo: When saving, pop up saying the graph file was deleted or moved. Asked to recreate it or delete it
