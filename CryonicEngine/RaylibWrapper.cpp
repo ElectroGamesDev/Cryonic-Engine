@@ -693,7 +693,7 @@ namespace RaylibWrapper {
 
 
     // Model animations
-    ModelAnimation* LoadModelAnimations(const char* fileName, int* animCount) {
+    ModelAnimation *LoadModelAnimations(const char* fileName, int* animCount) {
         ::ModelAnimation* raylibModelAnimations = ::LoadModelAnimations(fileName, animCount);
 
         ModelAnimation* wrapperModelAnimations = new ModelAnimation();
