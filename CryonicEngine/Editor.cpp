@@ -27,6 +27,12 @@
 #include "RaylibModelWrapper.h"
 #include "RaylibDrawWrapper.h"
 #include "imnodes.h"
+#include <random>
+
+#define TINYGLTF_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "tiny_gltf.h"
 
 RaylibWrapper::Camera Editor::camera = { 0 };
 
@@ -56,6 +62,7 @@ bool movingObjectZ = false;
 bool cameraSelected = false;
 
 RaylibWrapper::Vector2 lastMousePosition = { 0 };
+bool animationGraphHovered = false;
 
 bool explorerContextMenuOpen = false;
 bool hierarchyContextMenuOpen = false;
@@ -700,9 +707,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             if (animationGraphWinOpen) // If the animation graph is open, I need to focus it
                             {
                                 ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
-                                if (window == NULL || window->DockNode == NULL || window->DockNode->TabBar == NULL)
-                                    return;
-                                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+                                if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                                    window->DockNode->TabBar->NextSelectedTabId = window->TabId;
                             }
                             else
                                 animationGraphWinOpen = true; // This should focus the animation graph window
@@ -717,7 +723,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
                         {
-                            dragData.first = ModelFile;
+                            dragData.first = Other;
                             dragData.second["Path"] = entry.path();
                         }
                     }
@@ -896,7 +902,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             }
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
             {
-                if (ImGui::IsWindowHovered())
+                // Checks if hovering Content Browser
+                ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str());
+                if (ImGui::IsWindowHovered() && window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL && window->DockNode->TabBar->SelectedTabId == window->TabId)
                 {
                     if (!folderHovering.empty()) // Todo: Add support for dropping files onto folders in the file explorer tree, and the previous folders buttons near the top of the file explorer
                     {
@@ -904,66 +912,156 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         std::filesystem::rename(path, folderHovering / path.filename());
                     }
                 }
-                else if (viewportHovered)
+                else
                 {
-                    RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
-                    mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
-                    mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
-                    RaylibWrapper::Vector3 position = RaylibWrapper::GetMouseRay(mousePosition, camera).position;
-                    
-                    // Todo: Properly set the Z position
+                    // Checks if hoveirng viewport
+                    window = ImGui::FindWindowByName((ICON_FA_CUBES + std::string(" Viewport")).c_str());
+                    if (viewportHovered && window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL && window->DockNode->TabBar->SelectedTabId == window->TabId)
+                    {
+                        RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
+                        mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
+                        mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
+                        RaylibWrapper::Vector3 position = RaylibWrapper::GetMouseRay(mousePosition, camera).position;
 
-                    //ConsoleLogger::ErrorLog("Current Z: " + std::to_string(camera.position.z));
-                    //ConsoleLogger::ErrorLog("Z Ray: " + std::to_string(position.z));
+                        // Todo: Properly set the Z position
 
-                    //for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
-                    //{
-                    //    if (!gameObject->IsActive())
-                    //        continue;
-                    //    MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
-                    //    if (meshRenderer == nullptr)
-                    //        continue;
+                        //ConsoleLogger::ErrorLog("Current Z: " + std::to_string(camera.position.z));
+                        //ConsoleLogger::ErrorLog("Z Ray: " + std::to_string(position.z));
 
-                    //    for (int i = 0; i < model.mesh.vertexCount; i += 3)
-                    //    {
-                    //        Vector3 v0 = model.transform * model.mesh.vertices[i];
-                    //        Vector3 v1 = model.transform * model.mesh.vertices[i + 1];
-                    //        Vector3 v2 = model.transform * model.mesh.vertices[i + 2];
-                    //        Triangle triangle = { v0, v1, v2 };
+                        //for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+                        //{
+                        //    if (!gameObject->IsActive())
+                        //        continue;
+                        //    MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
+                        //    if (meshRenderer == nullptr)
+                        //        continue;
 
-                    //        if (CheckCollisionRayTriangle(ray, triangle, &hitPosition))
-                    //        {
-                    //            DrawSphere(hitPosition, 0.1f, GREEN); // Draw a sphere at the intersection point
-                    //            break; // Exit loop if intersection found
-                    //        }
-                    //    }
-                    //}
+                        //    for (int i = 0; i < model.mesh.vertexCount; i += 3)
+                        //    {
+                        //        Vector3 v0 = model.transform * model.mesh.vertices[i];
+                        //        Vector3 v1 = model.transform * model.mesh.vertices[i + 1];
+                        //        Vector3 v2 = model.transform * model.mesh.vertices[i + 2];
+                        //        Triangle triangle = { v0, v1, v2 };
 
-                    // Todo: Add raycast (that detects every game object, including ones without colliders)
+                        //        if (CheckCollisionRayTriangle(ray, triangle, &hitPosition))
+                        //        {
+                        //            DrawSphere(hitPosition, 0.1f, GREEN); // Draw a sphere at the intersection point
+                        //            break; // Exit loop if intersection found
+                        //        }
+                        //    }
+                        //}
+
+                        // Todo: Add raycast (that detects every game object, including ones without colliders)
 
 
-                    std::filesystem::path modelPath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
-                    auto assetsPosition = modelPath.string().find("Assets");
-                    if (assetsPosition != std::string::npos)
-                        modelPath = modelPath.string().substr(assetsPosition + 7);
+                        std::filesystem::path modelPath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+                        auto assetsPosition = modelPath.string().find("Assets");
+                        if (assetsPosition != std::string::npos)
+                            modelPath = modelPath.string().substr(assetsPosition + 7);
 
-                    GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
-                    gameObject->transform.SetPosition({ position.x, position.y, position.z });
-                    gameObject->transform.SetScale({ 1,1,1 });
-                    gameObject->transform.SetRotation(Quaternion::Identity());
-                    gameObject->SetName(modelPath.stem().string());
+                        GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
+                        gameObject->transform.SetPosition({ position.x, position.y, position.z });
+                        gameObject->transform.SetScale({ 1,1,1 });
+                        gameObject->transform.SetRotation(Quaternion::Identity());
+                        gameObject->SetName(modelPath.stem().string());
 
-                    MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
-                    meshRenderer.SetModelPath(modelPath);
-                    meshRenderer.SetModel(ModelType::Custom, modelPath, LitStandard);
+                        MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
+                        meshRenderer.SetModelPath(modelPath);
+                        meshRenderer.SetModel(ModelType::Custom, modelPath, LitStandard);
 
-                    for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
-                        component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
+                        for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
+                            component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
 
-                    selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
-                    objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
+                        selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
+                        objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
+                    }
+                    else
+                    {
+                        // Checks if hovering animation graph
+                        ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
+                        if (animationGraphWinOpen && animationGraphHovered && window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL && window->DockNode->TabBar->SelectedTabId == window->TabId)
+                        {
+                            RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
+                            mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
+                            mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
+                            RaylibWrapper::Vector3 position = RaylibWrapper::GetMouseRay(mousePosition, camera).position;
+
+                            // Todo: Place the nodes at the mouse position
+
+                            bool updatedAnimations = false;
+                            std::filesystem::path filePath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+                            tinygltf::Model model;
+                            tinygltf::TinyGLTF loader;
+                            std::string err;
+                            std::string warn;
+                            bool ret = false;
+
+                            // Todo: This is really slow, even slower than loading and drawing a model in the viewport
+
+                            // Todo: Consider changing this to a switch case since they're faster
+                            if (filePath.extension() == ".gltf")
+                                ret = loader.LoadASCIIFromFile(&model, &err, &warn, filePath.string());
+                            else if (filePath.extension() == ".glb")
+                                ret = loader.LoadBinaryFromFile(&model, &err, &warn, filePath.string());
+
+                            if (!warn.empty())
+                                ConsoleLogger::WarningLog(warn);
+
+                            if (!err.empty())
+                                ConsoleLogger::ErrorLog(err);
+
+                            if (!ret)
+                            {
+                                // Todo: Pop this message up on screen
+                                ConsoleLogger::ErrorLog("Failed to parse GLTF model. Canceling ");
+                            }
+                            else
+                            {
+                                std::random_device rd;
+                                std::mt19937 gen(rd());
+                                std::uniform_int_distribution<int> distribution(999999, 99999999);
+                                for (size_t i = 0; i < model.animations.size(); ++i)
+                                {
+                                    const tinygltf::Animation& animation = model.animations[i];
+
+                                    int id = 0;
+                                    while (id == 0)
+                                    {
+                                        id = distribution(gen);
+                                        for (auto& node : animationGraphData["nodes"])
+                                        {
+                                            if (id == node["id"])
+                                            {
+                                                id = 0;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    nlohmann::json node = {
+                                        {"id", id},
+                                        {"name", animation.name},
+                                        {"index", i},
+                                        {"x", 350 + (i * 30)},
+                                        {"y", 350 + (i * 30)}
+                                    };
+
+                                    animationGraphData["nodes"].push_back(node);
+                                    updatedAnimations = true;
+                                }
+                            }
+                            if (updatedAnimations)
+                            {
+                                std::ofstream file(animationGraphData["path"].get<std::filesystem::path>());
+                                if (file.is_open())
+                                {
+                                    file << std::setw(4) << animationGraphData << std::endl;
+                                    file.close();
+                                }
+                            }
+                        }
+                    }
                 }
-
                 dragData.first = None;
                 dragData.second.clear();
                 RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
@@ -1191,6 +1289,8 @@ void Editor::RenderAnimationGraph()
     //ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 180) / 2, (RaylibWrapper::GetScreenHeight() - 180) / 2));
     static std::vector<std::pair<int, int>> links;
 
+    animationGraphHovered = true;
+
     // Todo: Check model to see if it has new animations (or if animations were moved/renamed)
 
     if (ImGui::Begin((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), &animationGraphWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
@@ -1216,6 +1316,9 @@ void Editor::RenderAnimationGraph()
         // Todo: Save user position in grid to load it. (It doesn't seem to be implemented into ImNodes)
         // Todo: Make all nodes fixed sizes
         // Todo: Add zooming
+        // Todo: Support external animations (from other model files).
+        // Todo: If a model is reimported, make sure to check the animations and make sure the animations index values are correct with the actual index
+        // Todo: Make sure it doesn't update when dragging a node, only once its dropped
 
         for (auto& node : animationGraphData["nodes"])
         {
@@ -1232,11 +1335,11 @@ void Editor::RenderAnimationGraph()
             }
             else
             {
-                ImNodes::SetNodeGridSpacePos(-5, ImVec2(node["x"], node["y"]));
+                ImNodes::SetNodeGridSpacePos(id, ImVec2(node["x"], node["y"]));
                 ImNodes::BeginNode(id);
-                ImNodes::BeginInputAttribute(0);
+                ImNodes::BeginInputAttribute(abs(node["id"].get<int>())); // Using the positive ID for input ID
                 ImNodes::EndInputAttribute();
-                ImNodes::BeginOutputAttribute(1);
+                ImNodes::BeginOutputAttribute(node["id"].get<int>() * -1); // Using the negative ID for output ID
                 ImGui::Text(node["name"].get<std::string>().c_str());
                 ImNodes::EndOutputAttribute();
                 ImNodes::EndNode();
@@ -1244,6 +1347,7 @@ void Editor::RenderAnimationGraph()
 
         }
 
+        // Todo: Switch this to grab links from animationGraphData
         for (int i = 0; i < links.size(); ++i)
         {
             const std::pair<int, int> p = links[i];
@@ -1261,7 +1365,13 @@ void Editor::RenderAnimationGraph()
 
         if (updated)
         {
-            // Todo: update data file
+            std::ofstream file(animationGraphData["path"].get<std::filesystem::path>());
+            if (file.is_open())
+            {
+                file << std::setw(4) << animationGraphData << std::endl;
+                file.close();
+                updated = false;
+            }
         }
 
         // Todo: When saving, pop up saying the graph file was deleted or moved. Asked to recreate it or delete it
@@ -2486,9 +2596,9 @@ void CloseViewport()
 void Editor::InitFonts()
 {
     // First font created is the default folt. This should be Familiar-Pro-Bold 15
-    FontManager::CreateFonts("Familiar-Pro-Bold", { 15, 10, 18, 20, 25, 30 });
-    FontManager::CreateFont("BoldMarker", 90);
-    FontManager::CreateFont("fa-solid-900", 15, true);
+    FontManager::LoadFonts("Familiar-Pro-Bold", { 15, 10, 18, 20, 25, 30 });
+    FontManager::LoadFont("BoldMarker", 90);
+    FontManager::LoadFont("fa-solid-900", 15, true);
 }
 
 void Editor::InitStyle()
