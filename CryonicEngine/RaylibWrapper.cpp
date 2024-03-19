@@ -704,7 +704,7 @@ namespace RaylibWrapper {
         wrapperModelAnimations->bones = new BoneInfo[raylibModelAnimations->boneCount];
         for (int i = 0; i < raylibModelAnimations->boneCount; ++i)
         {
-            strcpy(wrapperModelAnimations->bones[i].name, raylibModelAnimations->bones[i].name);
+            strcpy_s(wrapperModelAnimations->bones[i].name, sizeof(wrapperModelAnimations->bones[i].name), raylibModelAnimations->bones[i].name);
             wrapperModelAnimations->bones[i].parent = raylibModelAnimations->bones[i].parent;
         }
 
