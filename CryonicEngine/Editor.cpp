@@ -1155,7 +1155,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                                         {"x", 80},
                                         {"y", 350}
                                     }
-                                }}
+                                }},
+                                {"links", nlohmann::json::array()}
                             };
 
                             file << std::setw(4) << jsonData << std::endl;
@@ -1362,12 +1363,8 @@ void Editor::RenderAnimationGraph()
             }
         }
 
-        // Todo: Switch this to grab links from animationGraphData ---------------------------------------------------------------------------------------------------- TODOOOOOOOOOOOOOOOOOOO
-        for (int i = 0; i < links.size(); ++i)
-        {
-            const std::pair<int, int> p = links[i];
-            ImNodes::Link(i, p.first, p.second);
-        }
+        for (int i = 0; i < animationGraphData["links"].size(); ++i)
+            ImNodes::Link(i, animationGraphData["links"][i][0], animationGraphData["links"][i][1]);
 
         ImNodes::EndNodeEditor();
 
@@ -1375,7 +1372,7 @@ void Editor::RenderAnimationGraph()
         if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
         {
             update = true;
-            links.push_back(std::make_pair(start_attr, end_attr));
+            animationGraphData["links"].push_back({ start_attr, end_attr });
         }
 
         if (update)
