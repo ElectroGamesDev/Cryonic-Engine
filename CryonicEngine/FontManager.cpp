@@ -20,7 +20,7 @@ void FontManager::InitFontManager()
 	RaylibWrapper::Imgui_ImplRaylib_BuildFontAtlas();
 }
 
-ImFont* FontManager::CreateFont(std::string font, int size, bool iconFont)
+ImFont* FontManager::LoadFont(std::string font, int size, bool iconFont)
 {
 	if (iconFont)
 	{
@@ -47,9 +47,9 @@ ImFont* FontManager::CreateFont(std::string font, int size, bool iconFont)
 	return defaultFont; // Returns the default font since the new font can't be used until the next frame
 }
 
-void FontManager::CreateFonts(std::string font, std::vector<int> sizes)
+void FontManager::LoadFonts(std::string font, std::vector<int> sizes)
 {
-	for (auto& size : sizes) CreateFont(font, size);
+	for (auto& size : sizes) LoadFont(font, size);
 }
 
 ImFont* FontManager::GetFont(std::string font, int size, bool checkIfExists)
@@ -76,7 +76,7 @@ ImFont* FontManager::GetFont(std::string font, int size, bool checkIfExists)
 			return sizeIter->second;
 	}
 
-	return CreateFont(font, size);
+	return LoadFont(font, size);
 }
 
 void FontManager::UpdateFonts()
