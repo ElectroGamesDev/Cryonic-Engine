@@ -153,8 +153,8 @@ struct ImNodeData
 
     ImNodeData(const int node_id)
         : Id(node_id), Origin(0.0f, 0.0f), TitleBarContentRect(),
-          Rect(ImVec2(0.0f, 0.0f), ImVec2(0.0f, 0.0f)), ColorStyle(), LayoutStyle(), PinIndices(),
-          Draggable(true)
+        Rect(ImVec2(0.0f, 0.0f), ImVec2(0.0f, 0.0f)), ColorStyle(), LayoutStyle(), PinIndices(),
+        Draggable(true)
     {
     }
 
@@ -178,8 +178,8 @@ struct ImPinData
 
     ImPinData(const int pin_id)
         : Id(pin_id), ParentNodeIdx(), AttributeRect(), Type(ImNodesAttributeType_None),
-          Shape(ImNodesPinShape_CircleFilled), Pos(), Flags(ImNodesAttributeFlags_None),
-          ColorStyle()
+        Shape(ImNodesPinShape_CircleFilled), Pos(), Flags(ImNodesAttributeFlags_None),
+        ColorStyle()
     {
     }
 };
@@ -284,9 +284,9 @@ struct ImNodesEditorContext
 
     ImNodesEditorContext()
         : Nodes(), Pins(), Links(), Panning(0.f, 0.f), SelectedNodeIndices(), SelectedLinkIndices(),
-          SelectedNodeOffsets(), PrimaryNodeOffset(0.f, 0.f), ClickInteraction(),
-          MiniMapEnabled(false), MiniMapSizeFraction(0.0f), MiniMapNodeHoveringCallback(NULL),
-          MiniMapNodeHoveringCallbackUserData(NULL), MiniMapScaling(0.0f)
+        SelectedNodeOffsets(), PrimaryNodeOffset(0.f, 0.f), ClickInteraction(),
+        MiniMapEnabled(false), MiniMapSizeFraction(0.0f), MiniMapNodeHoveringCallback(NULL),
+        MiniMapNodeHoveringCallbackUserData(NULL), MiniMapScaling(0.0f)
     {
     }
 };
@@ -297,7 +297,7 @@ struct ImNodesContext
     ImNodesEditorContext* EditorCtx;
 
     // Canvas draw list and helper state
-    ImDrawList*   CanvasDrawList;
+    ImDrawList* CanvasDrawList;
     ImGuiStorage  NodeIdxToSubmissionIdx;
     ImVector<int> NodeIdxSubmissionOrder;
     ImVector<int> NodeIndicesOverlappingWithMouse;
@@ -355,146 +355,146 @@ struct ImNodesContext
 
 namespace IMNODES_NAMESPACE
 {
-static inline ImNodesEditorContext& EditorContextGet()
-{
-    // No editor context was set! Did you forget to call ImNodes::CreateContext()?
-    IM_ASSERT(GImNodes->EditorCtx != NULL);
-    return *GImNodes->EditorCtx;
-}
-
-// [SECTION] ObjectPool implementation
-
-template<typename T>
-static inline int ObjectPoolFind(const ImObjectPool<T>& objects, const int id)
-{
-    const int index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
-    return index;
-}
-
-template<typename T>
-static inline void ObjectPoolUpdate(ImObjectPool<T>& objects)
-{
-    for (int i = 0; i < objects.InUse.size(); ++i)
+    static inline ImNodesEditorContext& EditorContextGet()
     {
-        const int id = objects.Pool[i].Id;
-
-        if (!objects.InUse[i] && objects.IdMap.GetInt(id, -1) == i)
-        {
-            objects.IdMap.SetInt(id, -1);
-            objects.FreeList.push_back(i);
-            (objects.Pool.Data + i)->~T();
-        }
+        // No editor context was set! Did you forget to call ImNodes::CreateContext()?
+        IM_ASSERT(GImNodes->EditorCtx != NULL);
+        return *GImNodes->EditorCtx;
     }
-}
 
-template<>
-inline void ObjectPoolUpdate(ImObjectPool<ImNodeData>& nodes)
-{
-    for (int i = 0; i < nodes.InUse.size(); ++i)
+    // [SECTION] ObjectPool implementation
+
+    template<typename T>
+    static inline int ObjectPoolFind(const ImObjectPool<T>& objects, const int id)
     {
-        if (nodes.InUse[i])
-        {
-            nodes.Pool[i].PinIndices.clear();
-        }
-        else
-        {
-            const int id = nodes.Pool[i].Id;
+        const int index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
+        return index;
+    }
 
-            if (nodes.IdMap.GetInt(id, -1) == i)
+    template<typename T>
+    static inline void ObjectPoolUpdate(ImObjectPool<T>& objects)
+    {
+        for (int i = 0; i < objects.InUse.size(); ++i)
+        {
+            const int id = objects.Pool[i].Id;
+
+            if (!objects.InUse[i] && objects.IdMap.GetInt(id, -1) == i)
             {
-                // Remove node idx form depth stack the first time we detect that this idx slot is
-                // unused
-                ImVector<int>&   depth_stack = EditorContextGet().NodeDepthOrder;
-                const int* const elem = depth_stack.find(i);
-                IM_ASSERT(elem != depth_stack.end());
-                depth_stack.erase(elem);
-
-                nodes.IdMap.SetInt(id, -1);
-                nodes.FreeList.push_back(i);
-                (nodes.Pool.Data + i)->~ImNodeData();
+                objects.IdMap.SetInt(id, -1);
+                objects.FreeList.push_back(i);
+                (objects.Pool.Data + i)->~T();
             }
         }
     }
-}
 
-template<typename T>
-static inline void ObjectPoolReset(ImObjectPool<T>& objects)
-{
-    if (!objects.InUse.empty())
+    template<>
+    inline void ObjectPoolUpdate(ImObjectPool<ImNodeData>& nodes)
     {
-        memset(objects.InUse.Data, 0, objects.InUse.size_in_bytes());
-    }
-}
-
-template<typename T>
-static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, const int id)
-{
-    int index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
-
-    // Construct new object
-    if (index == -1)
-    {
-        if (objects.FreeList.empty())
+        for (int i = 0; i < nodes.InUse.size(); ++i)
         {
-            index = objects.Pool.size();
-            IM_ASSERT(objects.Pool.size() == objects.InUse.size());
-            const int new_size = objects.Pool.size() + 1;
-            objects.Pool.resize(new_size);
-            objects.InUse.resize(new_size);
+            if (nodes.InUse[i])
+            {
+                nodes.Pool[i].PinIndices.clear();
+            }
+            else
+            {
+                const int id = nodes.Pool[i].Id;
+
+                if (nodes.IdMap.GetInt(id, -1) == i)
+                {
+                    // Remove node idx form depth stack the first time we detect that this idx slot is
+                    // unused
+                    ImVector<int>& depth_stack = EditorContextGet().NodeDepthOrder;
+                    const int* const elem = depth_stack.find(i);
+                    IM_ASSERT(elem != depth_stack.end());
+                    depth_stack.erase(elem);
+
+                    nodes.IdMap.SetInt(id, -1);
+                    nodes.FreeList.push_back(i);
+                    (nodes.Pool.Data + i)->~ImNodeData();
+                }
+            }
         }
-        else
-        {
-            index = objects.FreeList.back();
-            objects.FreeList.pop_back();
-        }
-        IM_PLACEMENT_NEW(objects.Pool.Data + index) T(id);
-        objects.IdMap.SetInt(static_cast<ImGuiID>(id), index);
     }
 
-    // Flag it as used
-    objects.InUse[index] = true;
-
-    return index;
-}
-
-template<>
-inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, const int node_id)
-{
-    int node_idx = nodes.IdMap.GetInt(static_cast<ImGuiID>(node_id), -1);
-
-    // Construct new node
-    if (node_idx == -1)
+    template<typename T>
+    static inline void ObjectPoolReset(ImObjectPool<T>& objects)
     {
-        if (nodes.FreeList.empty())
+        if (!objects.InUse.empty())
         {
-            node_idx = nodes.Pool.size();
-            IM_ASSERT(nodes.Pool.size() == nodes.InUse.size());
-            const int new_size = nodes.Pool.size() + 1;
-            nodes.Pool.resize(new_size);
-            nodes.InUse.resize(new_size);
+            memset(objects.InUse.Data, 0, objects.InUse.size_in_bytes());
         }
-        else
-        {
-            node_idx = nodes.FreeList.back();
-            nodes.FreeList.pop_back();
-        }
-        IM_PLACEMENT_NEW(nodes.Pool.Data + node_idx) ImNodeData(node_id);
-        nodes.IdMap.SetInt(static_cast<ImGuiID>(node_id), node_idx);
-
-        ImNodesEditorContext& editor = EditorContextGet();
-        editor.NodeDepthOrder.push_back(node_idx);
     }
 
-    // Flag node as used
-    nodes.InUse[node_idx] = true;
+    template<typename T>
+    static inline int ObjectPoolFindOrCreateIndex(ImObjectPool<T>& objects, const int id)
+    {
+        int index = objects.IdMap.GetInt(static_cast<ImGuiID>(id), -1);
 
-    return node_idx;
-}
+        // Construct new object
+        if (index == -1)
+        {
+            if (objects.FreeList.empty())
+            {
+                index = objects.Pool.size();
+                IM_ASSERT(objects.Pool.size() == objects.InUse.size());
+                const int new_size = objects.Pool.size() + 1;
+                objects.Pool.resize(new_size);
+                objects.InUse.resize(new_size);
+            }
+            else
+            {
+                index = objects.FreeList.back();
+                objects.FreeList.pop_back();
+            }
+            IM_PLACEMENT_NEW(objects.Pool.Data + index) T(id);
+            objects.IdMap.SetInt(static_cast<ImGuiID>(id), index);
+        }
 
-template<typename T>
-static inline T& ObjectPoolFindOrCreateObject(ImObjectPool<T>& objects, const int id)
-{
-    const int index = ObjectPoolFindOrCreateIndex(objects, id);
-    return objects.Pool[index];
-}
+        // Flag it as used
+        objects.InUse[index] = true;
+
+        return index;
+    }
+
+    template<>
+    inline int ObjectPoolFindOrCreateIndex(ImObjectPool<ImNodeData>& nodes, const int node_id)
+    {
+        int node_idx = nodes.IdMap.GetInt(static_cast<ImGuiID>(node_id), -1);
+
+        // Construct new node
+        if (node_idx == -1)
+        {
+            if (nodes.FreeList.empty())
+            {
+                node_idx = nodes.Pool.size();
+                IM_ASSERT(nodes.Pool.size() == nodes.InUse.size());
+                const int new_size = nodes.Pool.size() + 1;
+                nodes.Pool.resize(new_size);
+                nodes.InUse.resize(new_size);
+            }
+            else
+            {
+                node_idx = nodes.FreeList.back();
+                nodes.FreeList.pop_back();
+            }
+            IM_PLACEMENT_NEW(nodes.Pool.Data + node_idx) ImNodeData(node_id);
+            nodes.IdMap.SetInt(static_cast<ImGuiID>(node_id), node_idx);
+
+            ImNodesEditorContext& editor = EditorContextGet();
+            editor.NodeDepthOrder.push_back(node_idx);
+        }
+
+        // Flag node as used
+        nodes.InUse[node_idx] = true;
+
+        return node_idx;
+    }
+
+    template<typename T>
+    static inline T& ObjectPoolFindOrCreateObject(ImObjectPool<T>& objects, const int id)
+    {
+        const int index = ObjectPoolFindOrCreateIndex(objects, id);
+        return objects.Pool[index];
+    }
 } // namespace IMNODES_NAMESPACE
