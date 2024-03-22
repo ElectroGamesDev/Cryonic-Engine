@@ -997,6 +997,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             bool ret = false;
 
                             // Todo: This is really slow, even slower than loading and drawing a model in the viewport
+                            //  One solution would be to when models are imported access the data then and save it into a file, but still it would be slower than it should
 
                             // Todo: Popup a window with a progress bar
 
