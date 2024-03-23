@@ -721,6 +721,8 @@ namespace RaylibWrapper
     void UnloadModelAnimations(ModelAnimation* animations, int animCount);                // Unload animation array data
     //bool IsModelAnimationValid(Model model, ModelAnimation anim);                         // Check model animation skeleton match --- Moved to RaylibModelWrapper
 
+    const char* GetWorkingDirectory(void);                      // Get current working directory (uses static string)
+
 
 #if defined(EDITOR)
     // ImGui Raylib

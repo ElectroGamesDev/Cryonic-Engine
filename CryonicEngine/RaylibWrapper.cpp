@@ -749,6 +749,11 @@ namespace RaylibWrapper {
     //}
 
 
+    const char* GetWorkingDirectory(void) {
+        return ::GetWorkingDirectory();
+    }
+
+
 
 #if defined(EDITOR)
     // ImGui Raylib
