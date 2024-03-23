@@ -1,7 +1,6 @@
 #include "Skybox.h"
 #include "../RaylibDrawWrapper.h"
 #include "../RaylibWrapper.h"
-#include "../ProjectManager.h"
 
 Texture2D& Skybox::GetTexture()
 {
