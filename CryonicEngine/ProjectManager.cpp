@@ -17,6 +17,7 @@ ProjectData ProjectManager::projectData;
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
     // Editor and IconManager needed for gizmos
+    // Todo: I think I can remove "reources" from filesToCopy
     std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "resources", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager", "InputSystem", "CollisionListener", "Physics2DDebugDraw", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
      
     if (!std::filesystem::exists(destination))
@@ -38,6 +39,28 @@ void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem:
     }
 }
 
+void ProjectManager::CopyAssetFiles(std::filesystem::path destination)
+{
+    // Todo: Only copy scenes Build Scenes, and only copy resources being used in a build scene.
+    // Todo: Put files in an archive format, and give the option to embed it into the exe. When game is built, generate a random key, encode the archive file with that key, and put the key in the game.cpp before its compiled. Maybe in the Game.cpp, "#define DecryptionKey keyHere" so then just use "DecryptionKey" where its needed, or make a const variable
+
+    if (!std::filesystem::exists(destination))
+        std::filesystem::create_directories(destination);
+
+    for (const auto& file : std::filesystem::directory_iterator(ProjectManager::projectData.path / "Assets"))
+    {
+        if (file.is_directory())
+        {
+            // Todo: Make sure this doesn't copy scripts
+            if (!std::filesystem::exists(destination / file.path().filename()))
+                std::filesystem::create_directory(destination / file.path().filename());
+            std::filesystem::copy(file.path(), destination / file.path().filename(), std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+        }
+        else if (file.path().extension() != ".cpp" && file.path().extension() != ".h")
+            std::filesystem::copy(file.path(), destination);
+    }
+}
+
 int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catch
 {
     projectData.path = projectData.path / projectData.name;
@@ -56,7 +79,10 @@ int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catc
 
     Utilities::HideFile(projectData.path / "api");
 
+    // Todo: __FILE__ won't work on other computers. I should store
     CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), projectData.path / "api");
+    CopyAssetFiles(projectData.path / "Resources" / "Assets");
+    // Todo: copy internal shaders
 
     switch (projectData.templateData._template)
     {
@@ -83,7 +109,7 @@ void ProjectManager::CleanupBuildFolder(std::filesystem::path path)
         for (const auto& file : std::filesystem::directory_iterator(path))
         {
             try {
-                if (file.is_directory() && file.path().filename() != "Scenes")
+                if (file.is_directory() && file.path().filename() != "Scenes" && file.path().filename() != "Resources")
                     std::filesystem::remove_all(file.path());
                 else if (file.path().extension() != ".exe")
                     std::filesystem::remove(file.path());

@@ -39,6 +39,7 @@ public:
     static int CreateProject(ProjectData projectData);
     static void CleanupBuildFolder(std::filesystem::path path);
     static void CopyApiFiles(std::filesystem::path source, std::filesystem::path destination);
+    static void CopyAssetFiles(std::filesystem::path destination);
     //static bool ExtractZip(const char* zip_path, const char* dest_folder);
     static void BuildToWindows(ProjectData projectData);
     static void SaveProject();
