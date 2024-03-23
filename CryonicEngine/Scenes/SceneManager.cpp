@@ -261,8 +261,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                     #if defined(EDITOR)
                     path = ProjectManager::projectData.path / "Assets";
                     #else
-                    // Todo: set path for built games
-                    ConsoleLogger::ErrorLog("Unknown Texture Path");
+                    path = RaylibWrapper::GetWorkingDirectory() / "Resources" / "Assets";
                     #endif
                     RaylibWrapper::Texture2D texture = RaylibWrapper::LoadTexture((path / component.GetTexturePath()).string().c_str()); // Todo: Don't create a new texture if one is already created for the texture
                     component.SetTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
