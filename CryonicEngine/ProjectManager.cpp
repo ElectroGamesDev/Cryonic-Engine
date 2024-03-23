@@ -208,8 +208,10 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
 
         //ExtractZip((buildPath / "BuildPresets.zip").string().c_str(), buildPath.string().c_str());
 
-        std::filesystem::create_directory(buildPath / "Scenes");
-        std::filesystem::copy(projectData.path / "Assets" / "Scenes", buildPath / "Scenes"); // Todo: Instead, copy all of the .scene files from project and put in here
+        // Todo: Copy internal shader files
+
+        //std::filesystem::create_directory(buildPath / "Scenes");
+        //std::filesystem::copy(projectData.path / "Assets" / "Scenes", buildPath / "Scenes");
     }
     catch (const std::filesystem::filesystem_error& e)
     {
