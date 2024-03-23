@@ -26,7 +26,7 @@ void ShaderManager::Init()
     // Todo: Replace glsl330 to GLSL_VERSION. I will need to define the platform though
 #if defined (EDITOR)
     // Todo: This won't work for PC's other than mine
-    RaylibShader::shaders[LitStandard].Load((std::filesystem::path(__FILE__).parent_path() / "resources/shaders/internal/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
+    RaylibShader::shaders[LitStandard].Load((std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
 #else
     RaylibShader::shaders[LitStandard].Load((std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
 #endif
