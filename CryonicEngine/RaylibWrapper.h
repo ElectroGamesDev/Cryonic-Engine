@@ -715,7 +715,7 @@ namespace RaylibWrapper
 
 
     // Model animations loading/unloading functions
-    ModelAnimation *LoadModelAnimations(const char* fileName, int* animCount);            // Load model animations from file
+    //ModelAnimation *LoadModelAnimations(const char *fileName, int *animCount);            // Load model animations from file
     //void UpdateModelAnimation(Model model, ModelAnimation anim, int frame);               // Update model animation pose --- Moved to RaylibModelWrapper
     void UnloadModelAnimation(ModelAnimation anim);                                       // Unload animation data
     void UnloadModelAnimations(ModelAnimation* animations, int animCount);                // Unload animation array data
