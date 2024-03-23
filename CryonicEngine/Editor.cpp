@@ -877,7 +877,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
             }
         }
-        else if (dragData.first == ModelFile)
+        else if (dragData.first == ModelFile && ProjectManager::projectData.is3D)
         {
             // Todo: Show the model while placing it down, like with sprites
             static RaylibWrapper::MouseCursor currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
