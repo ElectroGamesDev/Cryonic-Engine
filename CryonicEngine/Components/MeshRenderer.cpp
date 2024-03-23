@@ -1,5 +1,8 @@
 #include "MeshRenderer.h"
+#include "../RaylibWrapper.h"
+#if defined (EDITOR)
 #include "../ProjectManager.h"
+#endif
 //#include "rlgl.h"
 //#include "../ShaderManager.h"
 
@@ -11,7 +14,11 @@ RaylibModel& MeshRenderer::GetModel()
 void MeshRenderer::SetModel(ModelType model, std::filesystem::path path, Shaders shader)
 {
     //this->raylibModel = model;
+#if defined (EDITOR)
     this->modelSet = raylibModel.Create(model, path, shader, ProjectManager::projectData.path);
+#else
+    this->modelSet = raylibModel.Create(model, path, shader, RaylibWrapper::GetWorkingDirectory());
+#endif
 }
 
 std::filesystem::path MeshRenderer::GetModelPath() const
