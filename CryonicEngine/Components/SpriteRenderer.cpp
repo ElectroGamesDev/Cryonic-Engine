@@ -1,7 +1,6 @@
 #include "SpriteRenderer.h"
 #include "../RaylibDrawWrapper.h"
 #include "../RaylibWrapper.h"
-#include "../ProjectManager.h"
 
 Texture2D& SpriteRenderer::GetTexture()
 {
@@ -26,7 +25,7 @@ void SpriteRenderer::SetTexturePath(std::filesystem::path path)
 
 void SpriteRenderer::Update(float deltaTime)
 {
-    if (textureSet && (std::filesystem::exists(ProjectManager::projectData.path / "Assets" / texturePath)))
+    if (textureSet)
     {
         RaylibWrapper::DrawTexturePro({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format },
             { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) },
