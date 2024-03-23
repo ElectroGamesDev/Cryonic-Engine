@@ -2,6 +2,7 @@
 //#include "Components/CameraComponent.h"
 #include <filesystem>
 #include "RaylibShaderWrapper.h"
+#include "RaylibWrapper.h"
 
 #if defined(PLATFORM_DESKTOP)  // I had to remove PLATFORM_DESKTOP from predefines to stop crash so this code is useless and GLSL_VERSION is always 100 right now.
 #define GLSL_VERSION            330
@@ -22,10 +23,13 @@ void ShaderManager::Init()
 {
     //shaders[LitStandard] = LoadShader(("resources/shaders/glsl" + std::to_string(GLSL_VERSION) + "/lighting.vs").c_str(), ("resources/shaders/glsl" + std::to_string(GLSL_VERSION) + "/lighting.fs").c_str());
 
-    // Using __FILE__ since if I don't, game builds will get the path of the .exe and not ShaderManger.cpp file
     // Todo: Replace glsl330 to GLSL_VERSION. I will need to define the platform though
+#if defined (EDITOR)
+    // Todo: This won't work for PC's other than mine
     RaylibShader::shaders[LitStandard].Load((std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
-
+#else
+    RaylibShader::shaders[LitStandard].Load((std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
+#endif
     //std::string currentDirectory = GetWorkingDirectory();
     //std::string relativePath = "resources/shaders/glsl330/lighting.vs";
 
