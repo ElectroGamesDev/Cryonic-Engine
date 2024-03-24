@@ -113,8 +113,7 @@ void ProjectManager::CleanupBuildFolder(std::filesystem::path path)
                     std::filesystem::remove(file.path());
             }
             catch (const std::exception& e) {
-                if (file.path().filename() != "Scenes")
-                    ConsoleLogger::ErrorLog("Build Log - Error deleting file: " + file.path().string() + " while cleaning up. Error: " + e.what());
+                ConsoleLogger::ErrorLog("Build Log - Error deleting file: " + file.path().string() + " while cleaning up. Error: " + e.what());
                 continue;
             }
         }
@@ -234,7 +233,8 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
     // Copies resource files
     try {
         // Todo: Using __FILE__ won't work on other computers
-        std::filesystem::copy(std::filesystem::path(__FILE__).parent_path() / "resources", buildPath / "Resources", std::filesystem::copy_options::recursive);
+        // Todo: Copy the default GUI font too.
+        std::filesystem::copy(std::filesystem::path(__FILE__).parent_path() / "resources" / "shaders", buildPath / "Resources" / "shaders", std::filesystem::copy_options::recursive);
     }
     catch (const std::exception& e) {
         ConsoleLogger::ErrorLog("Build Log - Failed to copy resource files: " + (std::string)e.what());
