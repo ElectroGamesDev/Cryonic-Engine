@@ -200,6 +200,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
 
     try
     {
+        // Todo: Using __FILE__ won't work on other computers
         std::filesystem::copy(std::filesystem::path(__FILE__).parent_path() / "BuildPresets", buildPath, std::filesystem::copy_options::recursive);
         //std::filesystem::copy_file(std::filesystem::path(__FILE__).parent_path() / "BuildPresets.zip", buildPath / "BuildPresets.zip");
 
@@ -228,6 +229,17 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
     CopyApiFiles(projectData.path / "api", buildPath / "Source");
 
     CopyAssetFiles(buildPath / "Resources" / "Assets");
+
+    // Copies resource files
+    try {
+        // Todo: Using __FILE__ won't work on other computers
+        std::filesystem::copy(std::filesystem::path(__FILE__).parent_path() / "resources", buildPath / "Resources", std::filesystem::copy_options::recursive);
+    }
+    catch (const std::exception& e) {
+        ConsoleLogger::ErrorLog("Build Log - Failed to copy resource files: " + (std::string)e.what());
+        CleanupBuildFolder(buildPath);
+        return;
+    }
 
     if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source"))
         return;
