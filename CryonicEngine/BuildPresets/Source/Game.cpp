@@ -30,7 +30,8 @@ int main(void)
 	debugDraw.SetFlags(b2Draw::e_shapeBit);
 	world->SetDebugDraw(&debugDraw);
 	
-	SceneManager::LoadScene(std::filesystem::current_path() / "Resouces" / "Assets" / "Scenes" / "Default.scene");
+	// Todo: This assumes the default scene path and name
+	SceneManager::LoadScene(std::filesystem::current_path() / "Resources" / "Assets" / "Scenes" / "Default.scene");
 	SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
 	
 	ShaderManager::Init();
