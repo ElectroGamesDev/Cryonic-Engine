@@ -14,7 +14,7 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
     switch (type)
     {
     case Custom:
-        if (!std::filesystem::exists(projectPath / "Assets" / path))
+        if (!std::filesystem::exists(projectPath / path))
         {
             // Todo: Send user error
             return false;
@@ -27,7 +27,7 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
         }
         else
         {
-            models[path] = std::make_pair(LoadModel((projectPath / "Assets" / path).string().c_str()), 1);
+            models[path] = std::make_pair(LoadModel((projectPath/ path).string().c_str()), 1);
             model = &models[path];
         }
         break;
