@@ -16,9 +16,7 @@ ProjectData ProjectManager::projectData;
 
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
-    // Editor and IconManager needed for gizmos
-    // Todo: I think I can remove "reources" from filesToCopy
-    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "resources", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager", "InputSystem", "CollisionListener", "Physics2DDebugDraw", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
+    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager", "InputSystem", "CollisionListener", "Physics2DDebugDraw", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
      
     if (!std::filesystem::exists(destination))
         std::filesystem::create_directories(destination);
@@ -51,7 +49,7 @@ void ProjectManager::CopyAssetFiles(std::filesystem::path destination)
     {
         if (file.is_directory())
         {
-            // Todo: Make sure this doesn't copy scripts
+            // Todo: Make sure this doesn't copy scripts since they're already compiled in the exe
             if (!std::filesystem::exists(destination / file.path().filename()))
                 std::filesystem::create_directory(destination / file.path().filename());
             std::filesystem::copy(file.path(), destination / file.path().filename(), std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
@@ -81,7 +79,6 @@ int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catc
 
     // Todo: __FILE__ won't work on other computers. I should store
     CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), projectData.path / "api");
-    CopyAssetFiles(projectData.path / "Resources" / "Assets");
     // Todo: copy internal shaders
 
     switch (projectData.templateData._template)
@@ -226,8 +223,11 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
     }
     std::filesystem::remove_all(projectData.path / "api");
 
+    // Todo: This won't work on other computers and it can only be used in debugging
     CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), projectData.path / "api");
-    CopyApiFiles(projectData.path / "api", buildPath / "Source"); // Todo: Copy all files
+    CopyApiFiles(projectData.path / "api", buildPath / "Source");
+
+    CopyAssetFiles(buildPath / "Resources" / "Assets");
 
     if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source"))
         return;
