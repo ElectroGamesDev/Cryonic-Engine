@@ -28,7 +28,7 @@ void ShaderManager::Init()
     // Todo: This won't work for PC's other than mine
     RaylibShader::shaders[LitStandard].Load((std::filesystem::path(__FILE__).parent_path() / "Resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
 #else
-    RaylibShader::shaders[LitStandard].Load((std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
+    RaylibShader::shaders[LitStandard].Load((std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
 #endif
     //std::string currentDirectory = GetWorkingDirectory();
     //std::string relativePath = "resources/shaders/glsl330/lighting.vs";
