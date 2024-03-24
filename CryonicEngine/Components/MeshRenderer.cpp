@@ -17,7 +17,7 @@ void MeshRenderer::SetModel(ModelType model, std::filesystem::path path, Shaders
 #if defined (EDITOR)
     this->modelSet = raylibModel.Create(model, path, shader, ProjectManager::projectData.path);
 #else
-    this->modelSet = raylibModel.Create(model, path, shader, RaylibWrapper::GetWorkingDirectory() / "Resources");
+    this->modelSet = raylibModel.Create(model, path, shader, std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources");
 #endif
 }
 
