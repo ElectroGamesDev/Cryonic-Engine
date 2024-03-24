@@ -106,8 +106,9 @@ void ProjectManager::CleanupBuildFolder(std::filesystem::path path)
         for (const auto& file : std::filesystem::directory_iterator(path))
         {
             try {
-                if (file.is_directory() && file.path().filename() != "Scenes" && file.path().filename() != "Resources")
-                    std::filesystem::remove_all(file.path());
+                if (file.is_directory())
+                    if (file.path().filename() != "Scenes" && file.path().filename() != "Resources")
+                        std::filesystem::remove_all(file.path());
                 else if (file.path().extension() != ".exe")
                     std::filesystem::remove(file.path());
             }
