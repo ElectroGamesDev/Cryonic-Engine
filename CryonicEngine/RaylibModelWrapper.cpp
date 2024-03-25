@@ -100,7 +100,6 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
         return false;
     }
 
-    // Todo: I may need to do this when drawing since multiple game objects use the same model
     modelShader = shader;
     for (size_t i = 0; i < model->first.materialCount; ++i)
         model->first.materials[i].shader = RaylibShader::shaders[modelShader].shader;
@@ -171,5 +170,5 @@ void RaylibModel::DrawModelWrapper(float posX, float posY, float posZ, float siz
 
     //EndShaderMode();
 
-    rlPopMatrix();
+    rlPopMatrix();   
 }
