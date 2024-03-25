@@ -34,6 +34,9 @@
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "tiny_gltf.h"
 
+#include "Jolt/Jolt.h"
+JPH_SUPPRESS_WARNINGS
+
 RaylibWrapper::Camera Editor::camera = { 0 };
 
 // Todo: Switch these to use DEG2RAD and RAD2DEG from CryonicCore
