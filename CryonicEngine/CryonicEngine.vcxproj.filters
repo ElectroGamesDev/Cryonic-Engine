@@ -117,7 +117,7 @@
     <ClCompile Include="Components\Collider2D.cpp">
       <Filter>Source Files\Components</Filter>
     </ClCompile>
-    <ClCompile Include="CollisionListener.cpp">
+    <ClCompile Include="CollisionListener2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Physics2DDebugDraw.cpp">
@@ -242,7 +242,7 @@
     <ClInclude Include="Components\Collider2D.h">
       <Filter>Header Files\Components</Filter>
     </ClInclude>
-    <ClInclude Include="CollisionListener.h">
+    <ClInclude Include="CollisionListener2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Physics2DDebugDraw.h">

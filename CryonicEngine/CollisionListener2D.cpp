@@ -1,4 +1,4 @@
-#include "CollisionListener.h"
+#include "CollisionListener2D.h"
 #include "Components/Collider2D.h"
 #include "ConsoleLogger.h"
 #include <deque>
@@ -6,7 +6,7 @@
 
 std::deque<b2Contact*> continuedContact; // Todo: A deque might not be the best for this since elements may often be removed
 
-void CollisionListener::BeginContact(b2Contact* contact)
+void CollisionListener2D::BeginContact(b2Contact* contact)
 {
     Collider2D* colliderA = reinterpret_cast<Collider2D*>(contact->GetFixtureA()->GetUserData().pointer);
     Collider2D* colliderB = reinterpret_cast<Collider2D*>(contact->GetFixtureB()->GetUserData().pointer);
@@ -22,7 +22,7 @@ void CollisionListener::BeginContact(b2Contact* contact)
     continuedContact.push_back(contact);
 }
 
-void CollisionListener::EndContact(b2Contact* contact)
+void CollisionListener2D::EndContact(b2Contact* contact)
 {
     Collider2D* colliderA = reinterpret_cast<Collider2D*>(contact->GetFixtureA()->GetUserData().pointer);
     Collider2D* colliderB = reinterpret_cast<Collider2D*>(contact->GetFixtureB()->GetUserData().pointer);
@@ -41,7 +41,7 @@ void CollisionListener::EndContact(b2Contact* contact)
         continuedContact.erase(it);
 }
 
-void CollisionListener::ContinueContact()
+void CollisionListener2D::ContinueContact()
 {
     for (b2Contact* contact : continuedContact)
     {
