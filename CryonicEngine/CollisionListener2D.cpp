@@ -27,13 +27,14 @@ void CollisionListener2D::EndContact(b2Contact* contact)
     Collider2D* colliderA = reinterpret_cast<Collider2D*>(contact->GetFixtureA()->GetUserData().pointer);
     Collider2D* colliderB = reinterpret_cast<Collider2D*>(contact->GetFixtureB()->GetUserData().pointer);
 
-    if (colliderA && colliderB)
-    {
+    // Checking if they're null separately since they should still callback even if the other collider is now null. Components are responsible for ensuring they're valid
+    if (colliderA)
         for (Component* component : colliderA->gameObject->GetComponents())
             component->OnCollisionExit2D(colliderB);
+
+    if (colliderB)
         for (Component* component : colliderB->gameObject->GetComponents())
             component->OnCollisionExit2D(colliderA);
-    }
 
     auto it = std::find_if(continuedContact.begin(), continuedContact.end(),
         [contact](b2Contact* ptr) { return ptr == contact; });
