@@ -4,6 +4,8 @@ project(Game)
 
 set(CMAKE_C_STANDARD 11)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 add_library(raylib STATIC IMPORTED)
 set_target_properties(raylib PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/Source/libraylib.a")
 
