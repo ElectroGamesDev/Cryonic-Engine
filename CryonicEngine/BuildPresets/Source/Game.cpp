@@ -29,13 +29,14 @@ int main(void)
 	Physics2DDebugDraw debugDraw;
 	debugDraw.SetFlags(b2Draw::e_shapeBit);
 	world->SetDebugDraw(&debugDraw);
+
+	// Shaders must be initiated before scenes/gameobjects
+	ShaderManager::Init();
 	
 	// Todo: This assumes the default scene path and name
 	SceneManager::LoadScene(std::filesystem::current_path() / "Resources" / "Assets" / "Scenes" / "Default.scene");
 	SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
-	
-	ShaderManager::Init();
-	
+		
 	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 	{
 		if (!gameObject->IsActive()) continue;
@@ -71,8 +72,6 @@ int main(void)
 			}
 		}
 
-		// Todo: Draw debug shapes
-
 		if (CameraComponent::main != nullptr)
             ShaderManager::UpdateShaders(CameraComponent::main->gameObject->transform.GetPosition().x, CameraComponent::main->gameObject->transform.GetPosition().y, CameraComponent::main->gameObject->transform.GetPosition().z);
 		
@@ -103,7 +102,6 @@ int main(void)
 
 	// Todo: Run component disabled function
 
-    //Cleanup();
 	ShaderManager::Cleanup();
     RaylibWrapper::CloseWindow();
 	delete world;
