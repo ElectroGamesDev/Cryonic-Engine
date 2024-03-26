@@ -167,6 +167,7 @@
     <ClCompile Include="Components\AnimationPlayer.cpp" />
     <ClCompile Include="Components\CameraComponent.cpp" />
     <ClCompile Include="Components\Collider2D.cpp" />
+    <ClCompile Include="Components\Collider3D.cpp" />
     <ClCompile Include="Components\Component.cpp" />
     <ClCompile Include="Components\Lighting.cpp" />
     <ClCompile Include="Components\MeshRenderer.cpp" />
@@ -219,6 +220,7 @@
     <ClInclude Include="Components\AnimationPlayer.h" />
     <ClInclude Include="Components\CameraComponent.h" />
     <ClInclude Include="Components\Collider2D.h" />
+    <ClInclude Include="Components\Collider3D.h" />
     <ClInclude Include="Components\Component.h" />
     <ClInclude Include="Components\Lighting.h" />
     <ClInclude Include="Components\MeshRenderer.h" />

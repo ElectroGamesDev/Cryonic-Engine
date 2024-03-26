@@ -156,6 +156,9 @@
     <ClCompile Include="CollisionListener3D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Components\Collider3D.cpp">
+      <Filter>Source Files\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -307,6 +310,9 @@
     </ClInclude>
     <ClInclude Include="CollisionListener3D.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Collider3D.h">
+      <Filter>Header Files\Components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
