@@ -50,6 +50,7 @@ Rigidbody2D::Rigidbody2D(GameObject* obj) : Component(obj) {
 
 void Rigidbody2D::Update(float deltaTime)
 {
+    // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive()
 #if !defined(EDITOR)
     // Todo: Change this to a switch case
     if (bodyType == Dynamic)
