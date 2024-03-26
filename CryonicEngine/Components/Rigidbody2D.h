@@ -10,6 +10,7 @@ class Rigidbody2D : public Component {
 public:
     Rigidbody2D(GameObject* obj);
     void Update(float deltaTime) override;
+    void Destroy() override;
 
     enum BodyType
     {

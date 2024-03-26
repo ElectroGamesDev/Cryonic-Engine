@@ -5,9 +5,7 @@
 
 Vector3 lastGameObjectPosition;
 Quaternion lastGameObjectRotation;
-
 #endif
-
 
 Rigidbody2D::Rigidbody2D(GameObject* obj) : Component(obj) {
 	name = "Rigidbody2D";
@@ -85,5 +83,12 @@ void Rigidbody2D::Update(float deltaTime)
         gameObject->transform.SetPosition(lastGameObjectPosition);
         gameObject->transform._rotation.y = lastGameObjectRotation.y;
     }
+#endif
+}
+
+void Rigidbody2D::Destroy()
+{
+#if !defined(EDITOR)
+    world->DestroyBody(body);
 #endif
 }
