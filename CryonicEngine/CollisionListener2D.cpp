@@ -4,7 +4,7 @@
 #include <deque>
 #include <algorithm>
 
-std::deque<b2Contact*> continuedContact; // Todo: An unordered_set or unordered_map may be faster since erasing from a deque is slow, BUT a deque is faster when iterating the container. Ask someone more experienced.
+std::list<b2Contact*> continuedContact;
 
 void CollisionListener2D::BeginContact(b2Contact* contact)
 {
@@ -36,7 +36,7 @@ void CollisionListener2D::EndContact(b2Contact* contact)
         for (Component* component : colliderB->gameObject->GetComponents())
             component->OnCollisionExit2D(colliderA);
 
-    auto it = std::find_if(continuedContact.begin(), continuedContact.end(), [contact](b2Contact* ptr) { return ptr == contact; });
+    auto it = std::find(continuedContact.begin(), continuedContact.end(), contact);
     if (it != continuedContact.end())
         continuedContact.erase(it);
 }
