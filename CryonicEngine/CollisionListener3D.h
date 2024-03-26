@@ -1,6 +1,6 @@
 #pragma once
 
-// Todo: Remove unnecessary includes also, move these includes over to Collider3D.h, remove the Collider3D.h include from CollisionListener3D.cpp, and move it here.
+// Todo: Remove unnecessary includes.
 #include "Jolt/Jolt.h"
 #include "Jolt/RegisterTypes.h"
 #include "Jolt/Core/Factory.h"
