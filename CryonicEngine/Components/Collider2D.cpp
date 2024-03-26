@@ -4,15 +4,17 @@
 #include "../box2d/box2d.h"
 #include "../Game.h"
 
+// Todo: Move shape to Start()
 b2PolygonShape shape;
 b2FixtureDef fixtureDef; 
 b2Body* body;
-// Todo: Move above into Start()??
 #endif
 
 Collider2D::Collider2D(GameObject* obj) : Component(obj) {
 	name = "Collider2D";
 }
+
+// Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive(). Also check if Rigidbody2D is destroyed, if it is then look for a new one, or create one. (Check when its destroyed in the Rigidbody2D Destroy() )
 
 void Collider2D::Start()
 {
@@ -37,5 +39,12 @@ void Collider2D::Start()
 	fixtureDef.shape = &shape;
 	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
 	body->CreateFixture(&fixtureDef);
+#endif
+}
+
+void Collider2D::Destroy()
+{
+#if !defined(EDITOR)
+	body->DestroyFixture(fixtureDef);
 #endif
 }

@@ -6,6 +6,7 @@ class Collider2D : public Component {
 public:
     Collider2D(GameObject* obj);
     void Start() override;
+    void Destroy() override;
 
     // Render gizmos in Update()
 
