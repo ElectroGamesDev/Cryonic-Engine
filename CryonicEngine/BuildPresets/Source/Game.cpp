@@ -7,7 +7,7 @@
 #include "ShaderManager.h"
 #include "RaylibModelWrapper.h"
 #include "RaylibWrapper.h"
-#include "CollisionListener.h"
+#include "CollisionListener2D.h"
 #include "Physics2DDebugDraw.h"
 
 #ifdef 3D
