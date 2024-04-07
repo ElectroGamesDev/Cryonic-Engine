@@ -781,7 +781,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
             nextX += 60;
 
-            if (nextX > 1900)
+            if (nextX > ImGui::GetWindowWidth() - 32)
             {
                 nextX = 310;
                 nextY = nextY + 75;
