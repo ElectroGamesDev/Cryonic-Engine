@@ -1716,25 +1716,22 @@ void Editor::RenderProperties()
             int xRot = static_cast<int>(rot.x);
             ImGui::SetNextItemWidth(width);
             // Todo: Create the bool "rotation" updated and if its updated on X, Y, Z, set it to true, then below check if its true and if it is, update the rotation. This way it reduces duplicate code. DO the same with Position and Scale
-            if (ImGui::InputInt("##ObjectXRotation", &xRot, 0, 0)) {
-                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion((float)xRot* RAD, rot.y* RAD, rot.z* RAD));
-            }
+            if (ImGui::InputInt("##ObjectXRotation", &xRot, 0, 0))
+                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion(static_cast<float>(xRot) * RAD, rot.y * RAD, rot.z * RAD));
             ImGui::SameLine();
             ImGui::Text("Y");
             ImGui::SameLine();
             int yRot = static_cast<int>(rot.y);
             ImGui::SetNextItemWidth(width);
-            if (ImGui::InputInt("##ObjectYRotation", &yRot, 0, 0)) {
-                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion((float)xRot* RAD, rot.y* RAD, rot.z* RAD));
-            }
+            if (ImGui::InputInt("##ObjectYRotation", &yRot, 0, 0))
+                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion(rot.y * RAD, static_cast<float>(yRot) * RAD, rot.z * RAD));
             ImGui::SameLine();
             ImGui::Text("Z");
             ImGui::SameLine();
             int zRot = static_cast<int>(rot.z);
             ImGui::SetNextItemWidth(width);
-            if (ImGui::InputInt("##ObjectZRotation", &zRot, 0, 0)) {
-                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion((float)xRot * RAD, rot.y * RAD, rot.z * RAD));
-            }
+            if (ImGui::InputInt("##ObjectZRotation", &zRot, 0, 0))
+                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion(rot.x * RAD, rot.y * RAD, static_cast<float>(zRot) * RAD));
 
             ImGui::NewLine();
              
