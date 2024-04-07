@@ -1725,7 +1725,7 @@ void Editor::RenderProperties()
             int yRot = static_cast<int>(std::round(rot.y));
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputInt("##ObjectYRotation", &yRot, 0, 0))
-                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion(rot.y * RAD, (float)yRot * RAD, rot.z * RAD));
+                std::get<GameObject*>(objectInProperties)->transform.SetRotation(EulerToQuaternion(rot.x * RAD, (float)yRot * RAD, rot.z * RAD));
             ImGui::SameLine();
             ImGui::Text("Z");
             ImGui::SameLine();
