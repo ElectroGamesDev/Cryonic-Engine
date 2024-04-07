@@ -21,9 +21,9 @@ int main(void)
 {
 	RaylibWrapper::SetConfigFlags(RaylibWrapper::FLAG_WINDOW_RESIZABLE | RaylibWrapper::FLAG_WINDOW_HIGHDPI | RaylibWrapper::FLAG_MSAA_4X_HINT | RaylibWrapper::FLAG_VSYNC_HINT); // Todo: Make FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT optional
 	RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), ("Game Name Here"));
-	//RaylibWrapper::ToggleFullscreen();
-	//RaylibWrapper::SetWindowSize(1920, 1080);
-	RaylibWrapper::SetWindowMinSize(100, 100);
+	//RaylibWrapper::ToggleFullscreen(); // Todo: Make this configurable in the project settings
+	//RaylibWrapper::SetWindowSize(1920, 1080); // Todo: Make this configurable in the project settings
+	RaylibWrapper::SetWindowMinSize(100, 100); // Todo: Make this configurable in the project settings
 	RaylibWrapper::SetTargetFPS(144); // Todo: Option to set this to montitor refresh rate
 
 	// Must go before scene loading
