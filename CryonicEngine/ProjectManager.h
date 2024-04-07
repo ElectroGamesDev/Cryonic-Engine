@@ -25,10 +25,32 @@ struct TemplateData
 
 struct ProjectData
 {
+    // General
     std::string name;
+    std::string version;
+    std::string author;
     std::filesystem::path path;
     TemplateData templateData;
     bool is3D;
+    std::filesystem::path iconPath;
+
+    // Window Settings
+    bool resizableWindow = false;
+    int displayMode = 0; // 0 = borderless window, 1 = fullscreen, 2 = windowed
+    Vector2 minimumResolution = { 100, 100 };
+    Vector2 windowResolution = { 1920, 1080 };
+    int maxFPS = 60;
+    bool runInBackground = false; // Whether the game should run in the background
+    bool vsync = false;
+
+    // Graphics
+    bool antialiasing = false; // Only MSAA 4x is support currently
+    bool highDPI = true;
+
+    // Physics
+    Vector2 physicsTimeStep = {1, 60};
+    int velocityIterations = 8;
+    int positionIterations = 3;
 };
 
 class ProjectManager {
