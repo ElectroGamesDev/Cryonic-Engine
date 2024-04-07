@@ -32,7 +32,7 @@ struct ProjectData
     std::filesystem::path path;
     TemplateData templateData;
     bool is3D;
-    std::filesystem::path iconPath;
+    std::string iconPath;
 
     // Window Settings
     bool resizableWindow = false;
