@@ -10,7 +10,7 @@
 #include "CollisionListener2D.h"
 #include "Physics2DDebugDraw.h"
 
-#ifdef 3D
+#ifdef IS3D
 #include "Jolt/Jolt.h"
 JPH_SUPPRESS_WARNINGS
 #endif
