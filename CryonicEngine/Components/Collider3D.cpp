@@ -1,6 +1,6 @@
 #include "Collider3D.h"
 #include "Rigidbody3D.h"
-//#if !defined(EDITOR)
+#if !defined(EDITOR)
 // Todo: Remove unnecessary includes.
 #include "../Jolt/Jolt.h"
 #include "../Jolt/RegisterTypes.h"
@@ -14,7 +14,8 @@
 #include "../Jolt/Physics/Body/BodyCreationSettings.h"
 #include "../Jolt/Physics/Body/BodyActivationListener.h"
 
-using namespace JPH;
+// Removed to fix "Color" conflictions
+//using namespace JPH;
 
 //#include "../Game.h"
 //
@@ -22,7 +23,7 @@ using namespace JPH;
 //b2FixtureDef fixtureDef; 
 //b2Body* body;
 // Todo: Move above into Start()??
-//#endif
+#endif
 
 Collider3D::Collider3D(GameObject* obj) : Component(obj) {
 	name = "Collider3D";

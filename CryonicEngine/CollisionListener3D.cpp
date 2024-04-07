@@ -1,9 +1,9 @@
 #include "CollisionListener3D.h"
 #include "Components/Collider3D.h"
 
-std::unordered_map<std::pair<BodyID, BodyID>, std::pair<Collider3D*, Collider3D*>> contactMap;
+std::unordered_map<std::pair<JPH::BodyID, JPH::BodyID>, std::pair<Collider3D*, Collider3D*>> contactMap;
 
-void CollisionListener3D::OnContactAdded(const Body& inBody1, const Body& inBody2, const ContactManifold& inManifold, ContactSettings& ioSettings)
+void CollisionListener3D::OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
 {
     Collider3D* colliderA = reinterpret_cast<Collider3D*>(inBody1.GetUserData());
     Collider3D* colliderB = reinterpret_cast<Collider3D*>(inBody2.GetUserData());
@@ -19,7 +19,7 @@ void CollisionListener3D::OnContactAdded(const Body& inBody1, const Body& inBody
     }
 }
 
-void CollisionListener3D::OnContactPersisted(const Body& inBody1, const Body& inBody2, const ContactManifold& inManifold, ContactSettings& ioSettings)
+void CollisionListener3D::OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
 {
     Collider3D* colliderA = reinterpret_cast<Collider3D*>(inBody1.GetUserData());
     Collider3D* colliderB = reinterpret_cast<Collider3D*>(inBody2.GetUserData());
@@ -33,7 +33,7 @@ void CollisionListener3D::OnContactPersisted(const Body& inBody1, const Body& in
     }
 }
 
-void CollisionListener3D::OnContactRemoved(const SubShapeIDPair& inSubShapePair)
+void CollisionListener3D::OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair)
 {
     if (auto it = contactMap.find(std::make_pair(inSubShapePair.GetBody1ID(), inSubShapePair.GetBody2ID())); it != contactMap.end())
     {

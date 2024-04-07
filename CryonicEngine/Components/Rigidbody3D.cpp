@@ -14,12 +14,13 @@
 #include "../Jolt/Physics/Body/BodyActivationListener.h"
 #include "../Game.h"
 
-using namespace JPH;
+// Removed to fix "Color" conflictions
+//using namespace JPH;
 
 Vector3 lastGameObjectPosition;
 Quaternion lastGameObjectRotation;
 
-Body* body;
+JPH::Body* body;
 
 #endif
 
@@ -53,23 +54,23 @@ Rigidbody3D::Rigidbody3D(GameObject* obj) : Component(obj) {
 
     //// Todo: Need to create shape based on the collider3D shape.
 
-    //EMotionType eMotionType;
+    //JPH::EMotionType eMotionType;
     //switch (bodyType)
     //{
     //case Rigidbody3D::Dynamic:
-    //    eMotionType = EMotionType::Dynamic;
+    //    eMotionType = JPH::EMotionType::Dynamic;
     //    break;
     //case Rigidbody3D::Kinematic:
-    //    eMotionType = EMotionType::Kinematic;
+    //    eMotionType = JPH::EMotionType::Kinematic;
     //    break;
     //default:
-    //    eMotionType = EMotionType::Static;
+    //    eMotionType = JPH::EMotionType::Static;
     //    break;
     //}
 
     //// Todo: Jolt only allows 1 shape per body. Either create a rigidbody per collider, or somehow combinee the shapes into a compound shape
 
-    //BodyCreationSettings bodySettings(new BoxShape(), RVec3(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z), Quat::sIdentity(), eMotionType, Layers::NON_MOVING);
+    //JPH::BodyCreationSettings bodySettings(new JPH::BoxShape(), JPH::RVec3(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z), JPH::Quat::sIdentity(), eMotionType, JPH::Layers::NON_MOVING);
     //body = bodyInterface.CreateBody(bodySettings);
     //bodyInterface.AddBody(body->GetID(), EActivation::DontActivate);
 //#endif
@@ -84,12 +85,12 @@ void Rigidbody3D::Update(float deltaTime)
         if (gameObject->transform.GetPosition() == lastGameObjectPosition)
             gameObject->transform.SetPosition({ body->GetPosition().GetX(), body->GetPosition().GetY(), body->GetPosition().GetZ() });
         else
-            body->MoveKinematic(RVec3(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z), body->GetRotation(), 0);
+            body->MoveKinematic(JPH::RVec3(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z), body->GetRotation(), 0);
 
         if (gameObject->transform.GetRotation() == lastGameObjectRotation)
             gameObject->transform.SetRotation({ body->GetRotation().GetX() * RAD2DEG, body->GetRotation().GetY() * RAD2DEG, body->GetRotation().GetZ() * RAD2DEG });
         else
-            body->MoveKinematic(body->GetPosition(), Quat(gameObject->transform.GetRotation().x * DEG2RAD, gameObject->transform.GetRotation().y * DEG2RAD, gameObject->transform.GetRotation().z * DEG2RAD, gameObject->transform.GetRotation().w), 0);
+            body->MoveKinematic(body->GetPosition(), JPH::Quat(gameObject->transform.GetRotation().x * DEG2RAD, gameObject->transform.GetRotation().y * DEG2RAD, gameObject->transform.GetRotation().z * DEG2RAD, gameObject->transform.GetRotation().w), 0);
 
         lastGameObjectPosition = gameObject->transform.GetPosition();
         lastGameObjectRotation = gameObject->transform.GetRotation();
