@@ -445,35 +445,144 @@ ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) /
     json projectDataJson = json::parse(fileStream.str());
 
     ProjectData projectData;
+    bool saveProjectData = false;
 
-    // Todo: Add error catching. If something does not exist, then set it to the default value if there was a change, at the end run SaveProjectData(). This is good for if new project data is added.
+    try {
+        projectData.name = projectDataJson.at("name").get<std::string>();
+    }
+    catch (const std::exception& e) {
+        projectData.name = "Unknown Name";
+        saveProjectData = true;
+    }
 
-    projectData.name = projectDataJson["name"].get<std::string>();
-    projectData.is3D = projectDataJson["is3D"].get<bool>();
-    projectData.author = projectDataJson["author"].get<std::string>();
-    projectData.version = projectDataJson["version"].get<std::string>();
+    try {
+        projectData.is3D = projectDataJson.at("is3D").get<bool>();
+    }
+    catch (const std::exception& e) {
+        projectData.is3D = false;
+        saveProjectData = true;
+    }
 
-    projectData.resizableWindow = projectDataJson["resizableWindow"].get<bool>();
-    projectData.displayMode = projectDataJson["displayMode"].get<int>();
+    try {
+        projectData.author = projectDataJson.at("author").get<std::string>();
+    }
+    catch (const std::exception& e) {
+        projectData.author = "Unknown Author";
+        saveProjectData = true;
+    }
 
-    projectData.minimumResolution.x = projectDataJson["minimumResolution"][0].get<float>();
-    projectData.minimumResolution.y = projectDataJson["minimumResolution"][1].get<float>();
+    try {
+        projectData.version = projectDataJson.at("version").get<std::string>();
+    }
+    catch (const std::exception& e) {
+        projectData.version = "1.0";
+        saveProjectData = true;
+    }
 
-    projectData.windowResolution.x = projectDataJson["windowResolution"][0].get<float>();
-    projectData.windowResolution.y = projectDataJson["windowResolution"][1].get<float>();
+    try {
+        projectData.resizableWindow = projectDataJson.at("resizableWindow").get<bool>();
+    }
+    catch (const std::exception& e) {
+        projectData.resizableWindow = false;
+        saveProjectData = true;
+    }
 
-    projectData.maxFPS = projectDataJson["maxFPS"].get<float>();
-    projectData.runInBackground = projectDataJson["runInBackground"].get<bool>();
-    projectData.vsync = projectDataJson["vsync"].get<bool>();
+    try {
+        projectData.displayMode = projectDataJson.at("displayMode").get<int>();
+    }
+    catch (const std::exception& e) {
+        projectData.displayMode = 0;
+        saveProjectData = true;
+    }
 
-    projectData.antialiasing = projectDataJson["antialiasing"].get<bool>();
-    projectData.highDPI = projectDataJson["highDPI"].get<bool>();
+    try {
+        projectData.minimumResolution.x = projectDataJson.at("minimumResolution")[0].get<float>();
+        projectData.minimumResolution.y = projectDataJson.at("minimumResolution")[1].get<float>();
+    }
+    catch (const std::exception& e) {
+        projectData.minimumResolution = { 100, 100 };
+        saveProjectData = true;
+    }
 
-    projectData.physicsTimeStep.x = projectDataJson["physicsTimeStep"][0].get<float>();
-    projectData.physicsTimeStep.y = projectDataJson["physicsTimeStep"][1].get<float>();
+    try {
+        projectData.windowResolution.x = projectDataJson.at("windowResolution")[0].get<float>();
+        projectData.windowResolution.y = projectDataJson.at("windowResolution")[1].get<float>();
+    }
+    catch (const std::exception& e) {
+        projectData.windowResolution = { 1920, 1080 };
+        saveProjectData = true;
+    }
 
-    projectData.velocityIterations = projectDataJson["velocityIterations"].get<int>();
-    projectData.positionIterations = projectDataJson["positionIterations"].get<int>();
+    try {
+        projectData.maxFPS = projectDataJson.at("maxFPS").get<float>();
+    }
+    catch (const std::exception& e) {
+        projectData.maxFPS = 60;
+        saveProjectData = true;
+    }
+
+    try {
+        projectData.runInBackground = projectDataJson.at("runInBackground").get<bool>();
+    }
+    catch (const std::exception& e) {
+        projectData.runInBackground = false;
+        saveProjectData = true;
+    }
+
+    try {
+        projectData.vsync = projectDataJson.at("vsync").get<bool>();
+    }
+    catch (const std::exception& e) {
+        projectData.vsync = false;
+        saveProjectData = true;
+    }
+
+    try {
+        projectData.antialiasing = projectDataJson.at("antialiasing").get<bool>();
+    }
+    catch (const std::exception& e) {
+        projectData.antialiasing = false;
+        saveProjectData = true;
+    }
+
+    try {
+        projectData.highDPI = projectDataJson.at("highDPI").get<bool>();
+    }
+    catch (const std::exception& e) {
+        projectData.highDPI = true;
+        saveProjectData = true;
+    }
+
+    try {
+        projectData.physicsTimeStep.x = projectDataJson.at("physicsTimeStep")[0].get<float>();
+        projectData.physicsTimeStep.y = projectDataJson.at("physicsTimeStep")[1].get<float>();
+    }
+    catch (const std::exception& e) {
+        projectData.physicsTimeStep = { 1, 60 };
+        saveProjectData = true;
+    }
+
+    try {
+        projectData.velocityIterations = projectDataJson.at("velocityIterations").get<int>();
+    }
+    catch (const std::exception& e) {
+        projectData.velocityIterations = 8;
+        saveProjectData = true;
+    }
+
+    try {
+        projectData.positionIterations = projectDataJson.at("positionIterations").get<int>();
+    }
+    catch (const std::exception& e) {
+        projectData.positionIterations = 3;
+        saveProjectData = true;
+    }
+
+    if (saveProjectData)
+    {
+        projectData.path = projectPath;
+        SaveProjectData(projectData);
+    }
 
     ConsoleLogger::InfoLog("Project data has been loaded");
 
