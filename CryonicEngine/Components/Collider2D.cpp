@@ -45,6 +45,6 @@ void Collider2D::Start()
 void Collider2D::Destroy()
 {
 #if !defined(EDITOR)
-	body->DestroyFixture(fixtureDef);
+	world->DestroyBody(body);
 #endif
 }
