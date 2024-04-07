@@ -451,7 +451,7 @@ ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) /
         projectData.name = projectDataJson.at("name").get<std::string>();
     }
     catch (const std::exception& e) {
-        projectData.name = "Unknown Name";
+        projectData.name = "Unknown";
         saveProjectData = true;
     }
 
@@ -467,7 +467,7 @@ ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) /
         projectData.author = projectDataJson.at("author").get<std::string>();
     }
     catch (const std::exception& e) {
-        projectData.author = "Unknown Author";
+        projectData.author = "Unknown";
         saveProjectData = true;
     }
 
