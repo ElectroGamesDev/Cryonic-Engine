@@ -216,10 +216,37 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
     {
         // Todo: Using __FILE__ won't work on other computers
 
+
+        // Copying presets
         std::filesystem::copy(std::filesystem::path(__FILE__).parent_path() / "BuildPresets", buildPath, std::filesystem::copy_options::recursive);
         std::filesystem::copy(buildPath / (projectData.is3D ? "3D" : "2D"), buildPath, std::filesystem::copy_options::recursive);
         std::filesystem::remove_all(buildPath / "3D");
         std::filesystem::remove_all(buildPath / "2D");
+
+
+        // Changing name of the game in the CMakeList.txt
+        std::ifstream cmakeListsFile(buildPath / "CMakeLists.txt");
+        if (!cmakeListsFile.is_open())
+        {
+            ConsoleLogger::ErrorLog("Build Log - Failed to open the CMakesLists.txt to modify the game's name. Terminating build.", false);
+            return;
+        }
+
+        std::string contents((std::istreambuf_iterator<char>(cmakeListsFile)), std::istreambuf_iterator<char>());
+        cmakeListsFile.close();
+
+        size_t pos = contents.find("project(\"GameName\")");
+        if (pos != std::string::npos)
+            contents.replace(pos, 19, "project(\"" + projectData.name + "\")");
+        else
+        {
+            ConsoleLogger::ErrorLog("Build Log - Failed to set the name of the game. Terminating build.", false);
+            return;
+        }
+
+        std::ofstream(buildPath / "CMakeLists.txt") << contents;
+
+
 
         //std::filesystem::copy_file(std::filesystem::path(__FILE__).parent_path() / "BuildPresets.zip", buildPath / "BuildPresets.zip");
 
@@ -232,7 +259,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
     }
     catch (const std::filesystem::filesystem_error& e)
     {
-        ConsoleLogger::ErrorLog("Build Log - Error copying BuildPresets directory and/or files, terminating build. Error: " + (std::string)e.what(), false);
+        ConsoleLogger::ErrorLog("Build Log - Error copying BuildPresets directory and/or files. Terminating build. Error: " + (std::string)e.what(), false);
         return;
     }
 
