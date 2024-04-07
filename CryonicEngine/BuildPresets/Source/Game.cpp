@@ -20,7 +20,7 @@ b2World* world = nullptr;
 int main(void)
 {
 	RaylibWrapper::SetConfigFlags(RaylibWrapper::FLAG_WINDOW_RESIZABLE | RaylibWrapper::FLAG_WINDOW_HIGHDPI | RaylibWrapper::FLAG_MSAA_4X_HINT | RaylibWrapper::FLAG_VSYNC_HINT); // Todo: Make FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT optional
-	RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), ("Game Name Here"));
+	RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), (NAME));
 	//RaylibWrapper::ToggleFullscreen(); // Todo: Make this configurable in the project settings
 	//RaylibWrapper::SetWindowSize(1920, 1080); // Todo: Make this configurable in the project settings
 	RaylibWrapper::SetWindowMinSize(100, 100); // Todo: Make this configurable in the project settings
