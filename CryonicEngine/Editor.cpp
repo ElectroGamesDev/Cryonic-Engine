@@ -753,9 +753,10 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     continue;
                 }
             }
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY());
-            ImGui::SetCursorPosX(nextX - 2);
             ImGui::PushFont(FontManager::GetFont("Roboto-Bold", 15, false));
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY());
+            ImGui::SetCursorPosX(nextX + (32/2) - (ImGui::CalcTextSize(fileName.c_str()).x / 2) + ImGui::CalcTextSize(" ").x); // ImGui::CalcTextSize(" ").x adds one space so its properly aligned
+            //ImGui::SetCursorPosX(nextX - 2);
             if (!renamingFile.empty() && renamingFile.filename().string() == entry.path().filename().string())
             {
                 ImGui::SetNextItemWidth(44);
