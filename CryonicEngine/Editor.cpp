@@ -686,7 +686,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             dragData.second["Path"] = entry.path();
                         }
                         else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                            std::system(("start \"" + entry.path().string() + "\"").c_str());
+                            std::system(("\"" + entry.path().string() + "\"").c_str());
                     }
 
                     ImVec2 newCursorPos = ImGui::GetCursorPos();
@@ -760,7 +760,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         }
                     }
                     else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                        std::system(("start \"" + entry.path().string() + "\"").c_str());
+                        std::system(("\"" + entry.path().string() + "\"").c_str());
                 }
                 else
                 {
