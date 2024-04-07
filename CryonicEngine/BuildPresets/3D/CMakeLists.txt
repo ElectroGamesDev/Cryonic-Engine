@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(Game)
+project("GameName")
 
 set(CMAKE_C_STANDARD 11)
 
@@ -31,5 +31,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_compile_options(${PROJECT_NAME} PRIVATE -Werror=implicit-function-declaration)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE IS3D)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE NAME="${PROJECT_NAME}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE raylib box2d jolt winmm)
