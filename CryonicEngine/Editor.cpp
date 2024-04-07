@@ -628,11 +628,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 std::string extension = entry.path().extension().string();
                 if (extension == ".cpp")
                 {
-                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CppIcon"], ImVec2(32, 32)))
-                    {
-                        //std::string command = "code " + entry.path().string(); // VSCode
-                        std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
-                    }
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CppIcon"], ImVec2(32, 32));
                     if (ImGui::IsItemHovered())
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
@@ -640,21 +636,27 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             dragData.first = Other;
                             dragData.second["Path"] = entry.path();
                         }
+                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        {
+                            //std::string command = "code " + entry.path().string(); // VSCode
+                            std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
+                        }
                     }
                 }
                 else if (extension == ".h")
                 {
-                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["HeaderIcon"], ImVec2(32, 32)))
-                    {
-                        //std::string command = "code " + entry.path().string(); // VSCode
-                        std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
-                    }
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["HeaderIcon"], ImVec2(32, 32));
                     if (ImGui::IsItemHovered())
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
                         {
                             dragData.first = Other;
                             dragData.second["Path"] = entry.path();
+                        }
+                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        {
+                            //std::string command = "code " + entry.path().string(); // VSCode
+                            std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
                         }
                     }
                 }
@@ -662,9 +664,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 {
                     tempTextures.push_back(new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(entry.path().string().c_str())));
 
-                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32)))
-                    {
-                    }
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32));
 
                     if (ImGui::IsItemHovered())
                     {
@@ -682,9 +682,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 {
                     // Todo: This is causing errors if there are game objects with a MeshRenderer
                     //if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(32, 32)))
-                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CubeIcon"], ImVec2(32, 32)))
-                    {
-                    }
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CubeIcon"], ImVec2(32, 32));
 
                     if (ImGui::IsItemHovered())
                     {
@@ -745,6 +743,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             dragData.second["Path"] = entry.path();
                         }
                     }
+                    else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        std::system(("start \"" + entry.path().string() + "\"").c_str());
                 }
                 else
                 {
