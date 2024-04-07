@@ -10,8 +10,10 @@
 #include "CollisionListener.h"
 #include "Physics2DDebugDraw.h"
 
+#ifdef 3D
 #include "Jolt/Jolt.h"
 JPH_SUPPRESS_WARNINGS
+#endif
 
 b2World* world = nullptr;
 
