@@ -585,17 +585,28 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 //ImVec2 mousePos = { RaylibWrapper::GetMousePosition().x - ImGui::GetWindowPos().x, RaylibWrapper::GetMousePosition().y - ImGui::GetWindowPos().y};
                 //ImVec2 itemPos = ImGui::GetCursorPos();
-                if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
+                RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FolderIcon"], ImVec2(32, 32));
+
+                if (ImGui::IsItemHovered())
                 {
-                    fileExplorerPath = entry.path();
-                    if (hovered)
-                        ImGui::PopStyleColor(3);
-                    else
-                        ImGui::PopStyleColor(2);
-                    ImGui::PopID();
-                    ImGui::End();
-                    return;
+                    if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over a folder, it will select that folder
+                    {
+                        dragData.first = Folder;
+                        dragData.second["Path"] = entry.path();
+                    }
+                    else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                    {
+                        fileExplorerPath = entry.path();
+                        if (hovered)
+                            ImGui::PopStyleColor(3);
+                        else
+                            ImGui::PopStyleColor(2);
+                        ImGui::PopID();
+                        ImGui::End();
+                        return;
+                    }
                 }
+
                 //if (ImGui::IsMouseHoveringRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax())) // Using this since ImGui::IsItemHovered() won't work. ImGui::IsWindowHovered() also won't work for this. It seems these break when attempting to drag a button
                     //ConsoleLogger::ErrorLog("Hovered");
                 if (hovered)
@@ -610,15 +621,6 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 //}
                 //else
                 //    hoveringButton = false;
-
-                if (ImGui::IsItemHovered())
-                {
-                    if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                    {
-                        dragData.first = Folder;
-                        dragData.second["Path"] = entry.path();
-                    }
-                }
 
             }
             else if (entry.is_regular_file())
@@ -1082,14 +1084,76 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         }
         else if (dragData.first == Folder)
         {
-            // Todo: Add support for dropping folders into folders and make the cursor RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED when not hovering folder
-        }
-        else
-        {
-            // Todo: Make the cursor RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED when not hovering folder
-            if (!folderHovering.empty())
+            static RaylibWrapper::MouseCursor currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+
+            ImVec2 mousePos = ImGui::GetMousePos();
+            ImVec2 windowPos = ImGui::GetWindowPos();
+            // Using this since ImGui::IsWindowHovered() doesn't seem to work when dragging
+            bool windowHovered = (mousePos.x >= windowPos.x && mousePos.x <= (windowPos.x + ImGui::GetWindowWidth()) &&
+                mousePos.y >= windowPos.y && mousePos.y <= (windowPos.y + ImGui::GetWindowHeight()));
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str());
+            if (windowHovered && window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL && window->DockNode->TabBar->SelectedTabId == window->TabId)
+            {
+                if (!folderHovering.empty() && folderHovering != std::any_cast<std::filesystem::path>(dragData.second["Path"])) // Todo: Add support for dropping folders onto folders in the file explorer tree, and the previous folders buttons near the top of the file explorer
+                {
+                    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+                    {
+                        try {
+                            std::filesystem::path path = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+                            std::filesystem::rename(path, folderHovering / path.filename());
+                        }
+                        catch (const std::filesystem::filesystem_error& e) {
+                            ConsoleLogger::ErrorLog(std::string("Error moving folder: ") + e.what(), false);
+                        }
+                        catch (const std::bad_any_cast& e) {
+                            ConsoleLogger::ErrorLog(std::string("Error moving folder: ") + e.what());
+                        }
+                        catch (const std::exception& e) {
+                            ConsoleLogger::ErrorLog(std::string("Error moving folder: ") + e.what());
+                        }
+                    }
+                    else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
+                    {
+                        ConsoleLogger::WarningLog("1111");
+                        RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+                        currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+                    }
+                }
+                else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED)
+                {
+                    RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
+                    currentCursor = RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED;
+                }
+            }
+            else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED)
+            {
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
+                currentCursor = RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED;
+            }
+
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
             {
                 RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+
+                dragData.first = None;
+                dragData.second.clear();
+            }
+        }
+        else if (dragData.first != None)
+        {
+            // Todo: This is not optimized and will be setting the cursor each frame
+            if (!folderHovering.empty())
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+            else
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
+
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+            {
+                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+
+                dragData.first = None;
+                dragData.second.clear();
             }
         }
 
