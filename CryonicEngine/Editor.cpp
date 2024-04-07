@@ -754,6 +754,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             }
             ImGui::SetCursorPosY(ImGui::GetCursorPosY());
             ImGui::SetCursorPosX(nextX - 2);
+            ImGui::PushFont(FontManager::GetFont("Roboto-Bold", 15, false));
             if (!renamingFile.empty() && renamingFile.filename().string() == entry.path().filename().string())
             {
                 ImGui::SetNextItemWidth(44);
@@ -778,6 +779,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
             }
             else ImGui::Text(fileName.c_str()); // Todo: Center text
+            ImGui::PopFont();
 
             nextX += 60;
 
@@ -2677,6 +2679,7 @@ void Editor::InitFonts()
     FontManager::LoadFonts("Familiar-Pro-Bold", { 15, 10, 18, 20, 25, 30 });
     FontManager::LoadFont("BoldMarker", 90);
     FontManager::LoadFont("fa-solid-900", 15, true);
+    FontManager::LoadFont("Roboto-Bold", 15);
 }
 
 void Editor::InitStyle()
