@@ -736,8 +736,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension != ".asset")
                 {
-                    if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                        std::system(("start \"" + entry.path().string() + "\"").c_str());
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
                     if (ImGui::IsItemHovered())
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
