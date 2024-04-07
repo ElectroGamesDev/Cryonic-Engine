@@ -347,6 +347,29 @@ void ProjectManager::SaveProjectData(ProjectData projectData) // Todo: Encode Fi
 
     projectDataJson["name"] = projectData.name;
     projectDataJson["is3D"] = projectData.is3D;
+    projectDataJson["author"] = projectData.author;
+    projectDataJson["version"] = projectData.version;
+
+    projectDataJson["resizableWindow"] = projectData.resizableWindow;
+    projectDataJson["displayMode"] = projectData.displayMode;
+    projectDataJson["minimumResolution"] = nlohmann::json::array();
+    projectDataJson["minimumResolution"].push_back(projectData.minimumResolution.x);
+    projectDataJson["minimumResolution"].push_back(projectData.minimumResolution.y);
+    projectDataJson["windowResolution"] = nlohmann::json::array();
+    projectDataJson["windowResolution"].push_back(projectData.windowResolution.x);
+    projectDataJson["windowResolution"].push_back(projectData.windowResolution.y);
+    projectDataJson["maxFPS"] = projectData.maxFPS;
+    projectDataJson["runInBackground"] = projectData.runInBackground;
+    projectDataJson["vsync"] = projectData.vsync;
+
+    projectDataJson["antialiasing"] = projectData.antialiasing;
+    projectDataJson["highDPI"] = projectData.highDPI;
+
+    projectDataJson["physicsTimeStep"] = nlohmann::json::array();
+    projectDataJson["physicsTimeStep"].push_back(projectData.physicsTimeStep.x);
+    projectDataJson["physicsTimeStep"].push_back(projectData.physicsTimeStep.y);
+    projectDataJson["velocityIterations"] = projectData.velocityIterations;
+    projectDataJson["positionIterations"] = projectData.positionIterations;
     
     std::filesystem::path path = (projectData.path / "ProjectSettings.cry");
 
@@ -422,8 +445,35 @@ ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) /
     json projectDataJson = json::parse(fileStream.str());
 
     ProjectData projectData;
-    projectData.name = std::string(projectDataJson["name"]);
-    projectData.is3D = bool(projectDataJson["is3D"]);
+
+    // Todo: Add error catching. If something does not exist, then set it to the default value if there was a change, at the end run SaveProjectData(). This is good for if new project data is added.
+
+    projectData.name = projectDataJson["name"].get<std::string>();
+    projectData.is3D = projectDataJson["is3D"].get<bool>();
+    projectData.author = projectDataJson["author"].get<std::string>();
+    projectData.version = projectDataJson["version"].get<std::string>();
+
+    projectData.resizableWindow = projectDataJson["resizableWindow"].get<bool>();
+    projectData.displayMode = projectDataJson["displayMode"].get<int>();
+
+    projectData.minimumResolution.x = projectDataJson["minimumResolution"][0].get<float>();
+    projectData.minimumResolution.y = projectDataJson["minimumResolution"][1].get<float>();
+
+    projectData.windowResolution.x = projectDataJson["windowResolution"][0].get<float>();
+    projectData.windowResolution.y = projectDataJson["windowResolution"][1].get<float>();
+
+    projectData.maxFPS = projectDataJson["maxFPS"].get<float>();
+    projectData.runInBackground = projectDataJson["runInBackground"].get<bool>();
+    projectData.vsync = projectDataJson["vsync"].get<bool>();
+
+    projectData.antialiasing = projectDataJson["antialiasing"].get<bool>();
+    projectData.highDPI = projectDataJson["highDPI"].get<bool>();
+
+    projectData.physicsTimeStep.x = projectDataJson["physicsTimeStep"][0].get<float>();
+    projectData.physicsTimeStep.y = projectDataJson["physicsTimeStep"][1].get<float>();
+
+    projectData.velocityIterations = projectDataJson["velocityIterations"].get<int>();
+    projectData.positionIterations = projectDataJson["positionIterations"].get<int>();
 
     ConsoleLogger::InfoLog("Project data has been loaded");
 
