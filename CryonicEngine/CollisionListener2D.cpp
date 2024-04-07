@@ -3,6 +3,7 @@
 #include "ConsoleLogger.h"
 #include <deque>
 #include <algorithm>
+#include <list>
 
 std::list<b2Contact*> continuedContact;
 
