@@ -664,8 +664,18 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 else if (extension == ".png") // Todo: Add jpg support
                 {
                     tempTextures.push_back(new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(entry.path().string().c_str())));
+                    float aspectRatio = (float)tempTextures.back()->width / (float)tempTextures.back()->height;
+                    ImVec2 imageSize = ImVec2(0, 0);
+                    imageSize.x = aspectRatio > 1.0f ? 32 : 32 * aspectRatio;
+                    imageSize.y = aspectRatio > 1.0f ? 32 / aspectRatio : 32;
+                    int buttonSize = 32 + ImGui::GetStyle().FramePadding.x * 2;
 
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32));
+                    ImVec2 cursorPos = ImGui::GetCursorPos();
+
+                    //RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32));
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                    ImGui::Button(("##" + id).c_str(), ImVec2(buttonSize, buttonSize));
+                    ImGui::PopStyleColor();
 
                     if (ImGui::IsItemHovered())
                     {
@@ -678,6 +688,11 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                             std::system(("start \"" + entry.path().string() + "\"").c_str());
                     }
+
+                    ImVec2 newCursorPos = ImGui::GetCursorPos();
+                    ImGui::SetCursorPos(ImVec2(cursorPos.x + (buttonSize - imageSize.x) / 2, cursorPos.y + (buttonSize - imageSize.y) / 2)); // Sets the position to the button position and centers it
+                    RaylibWrapper::rlImGuiImageSize(tempTextures.back(), imageSize.x, imageSize.y);
+                    ImGui::SetCursorPos(newCursorPos);
                 }
                 else if (extension == ".gltf" || extension == ".glb")
                 {
