@@ -26,4 +26,6 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Werror=implicit-function-declaration)
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE IS2D)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE raylib box2d winmm)
