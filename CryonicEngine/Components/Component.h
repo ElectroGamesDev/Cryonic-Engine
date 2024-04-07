@@ -8,6 +8,7 @@
 #endif
 
 class Collider2D;
+class Collider3D;
 
 #define Expose
 #define Hide
@@ -55,6 +56,9 @@ public:
     virtual void OnCollisionEnter2D(Collider2D* other) {};
     virtual void OnCollisionExit2D(Collider2D* other) {};
     virtual void OnCollisionStay2D(Collider2D* other) {};
+    virtual void OnCollisionEnter3D(Collider3D* other) {};
+    virtual void OnCollisionExit3D(Collider3D* other) {};
+    virtual void OnCollisionStay3D(Collider3D* other) {};
 
     GameObject* gameObject;
 };
