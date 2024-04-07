@@ -82,7 +82,11 @@ int main(void)
 		
 		RaylibWrapper::BeginDrawing();
 		
+#ifdef IS3D
 		RaylibWrapper::ClearBackground({ 135, 206, 235, 255 });
+#else
+		RaylibWrapper::ClearBackground({ 128, 128, 128, 255 });
+#endif
 		
 		CameraComponent::main->raylibCamera.BeginMode3D();
 		
