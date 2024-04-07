@@ -17,7 +17,10 @@ ProjectData ProjectManager::projectData;
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
     std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager", "InputSystem", "CollisionListener2D", "Physics2DDebugDraw", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
-     
+    
+    if (projectData.is3D)
+        filesToCopy.push_back("CollisionListener3D");
+
     if (!std::filesystem::exists(destination))
         std::filesystem::create_directories(destination);
 
@@ -34,6 +37,15 @@ void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem:
             else
                 std::filesystem::copy(file.path(), destination);
         }
+    }
+
+    // Remove 3D files if its a 2D game
+    if (!projectData.is3D)
+    {
+        std::filesystem::remove(destination / "Components" / "Collider3D.cpp");
+        std::filesystem::remove(destination / "Components" / "Collider3D.h");
+        std::filesystem::remove(destination / "Components" / "Rigidbody3D.cpp");
+        std::filesystem::remove(destination / "Components" / "Rigidbody3D.h");
     }
 }
 
@@ -203,7 +215,12 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
     try
     {
         // Todo: Using __FILE__ won't work on other computers
+
         std::filesystem::copy(std::filesystem::path(__FILE__).parent_path() / "BuildPresets", buildPath, std::filesystem::copy_options::recursive);
+        std::filesystem::copy(buildPath / (projectData.is3D ? "3D" : "2D"), buildPath, std::filesystem::copy_options::recursive);
+        std::filesystem::remove_all(buildPath / "3D");
+        std::filesystem::remove_all(buildPath / "2D");
+
         //std::filesystem::copy_file(std::filesystem::path(__FILE__).parent_path() / "BuildPresets.zip", buildPath / "BuildPresets.zip");
 
         //ExtractZip((buildPath / "BuildPresets.zip").string().c_str(), buildPath.string().c_str());
