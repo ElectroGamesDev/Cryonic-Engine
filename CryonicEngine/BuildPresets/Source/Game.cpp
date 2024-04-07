@@ -27,7 +27,7 @@ int main(void)
 	RaylibWrapper::SetTargetFPS(144); // Todo: Option to set this to montitor refresh rate
 
 	// Must go before scene loading
-	CollisionListener collisionListener;
+	CollisionListener2D collisionListener;
 	b2Vec2 gravity(0.0f, -9.8f);
 	world = new b2World(gravity);
 	world->SetContactListener(&collisionListener);
