@@ -201,6 +201,95 @@ void ProjectManager::CleanupBuildFolder(std::filesystem::path path)
 //    return true;
 //}
 
+bool ProjectManager::SetGameSettings(std::filesystem::path gameFile)
+{
+    // Todo: Add try-catch
+    std::ifstream inputFile(gameFile);
+    std::ofstream outputFile(gameFile.parent_path() / "TempGame.cpp");
+
+    if (!inputFile)
+    {
+        ConsoleLogger::ErrorLog("Build Log - Error opening Game.cpp. Terminating build.", false);
+        return false;
+    }
+    if (!outputFile)
+    {
+        ConsoleLogger::ErrorLog("Build Log - Error creating temporary game.cpp file. Terminating build.", false);
+        return false;
+    }
+
+    std::string line;
+    while (std::getline(inputFile, line))
+    {
+        if (line.find("float timeStep = 1.0f / 60.0f;") != std::string::npos)
+            outputFile << "float timeStep = " + std::to_string(projectData.physicsTimeStep.x) + "f / " + std::to_string(projectData.physicsTimeStep.y) + "f;";
+        else if (line.find("int32 velocityIterations = 8;") != std::string::npos)
+            outputFile << "int32 velocityIterations = " + std::to_string(projectData.velocityIterations) + ";";
+        else if (line.find("int32 positionIterations = 3;") != std::string::npos)
+            outputFile << "int32 positionIterations = " + std::to_string(projectData.positionIterations) + ";";
+        else if (line.find("RaylibWrapper::SetTargetFPS(60);") != std::string::npos)
+            outputFile << "RaylibWrapper::SetTargetFPS(" + std::to_string(projectData.maxFPS) + ");";
+        else if (line.find("RaylibWrapper::SetWindowMinSize(100, 100);") != std::string::npos)
+            outputFile << "RaylibWrapper::SetWindowMinSize(" + std::to_string(projectData.minimumResolution.x) + "," + std::to_string(projectData.minimumResolution.y) + ");";
+        else if (line.find("RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), (NAME));") != std::string::npos)
+            outputFile << "RaylibWrapper::InitWindow(" + std::to_string(projectData.windowResolution.x) + "," + std::to_string(projectData.windowResolution.y) + ", (NAME));";
+        else if (projectData.displayMode == 1 && line.find("//RaylibWrapper::ToggleFullscreen();") != std::string::npos)
+            outputFile << "RaylibWrapper::ToggleFullscreen();";
+        else if (projectData.displayMode == 0 && line.find("//RaylibWrapper::ToggleBorderlessWindowed();") != std::string::npos)
+            outputFile << "RaylibWrapper::ToggleBorderlessWindowed();";
+        else if (line.find("RaylibWrapper::SetConfigFlags(0);") != std::string::npos)
+        {
+            std::string flags = "0";
+            if (projectData.resizableWindow)
+            {
+                if (flags == "0")
+                    flags = "RaylibWrapper::FLAG_WINDOW_RESIZABLE";
+                else
+                    flags += " | RaylibWrapper::FLAG_WINDOW_RESIZABLE";
+            }
+            if (projectData.highDPI)
+            {
+                if (flags == "0")
+                    flags = "RaylibWrapper::FLAG_WINDOW_HIGHDPI";
+                else
+                    flags += " | RaylibWrapper::FLAG_WINDOW_HIGHDPI";
+            }
+            if (projectData.antialiasing)
+            {
+                if (flags == "0")
+                    flags = "RaylibWrapper::FLAG_MSAA_4X_HINT";
+                else
+                    flags += " | RaylibWrapper::FLAG_MSAA_4X_HINT";
+            }
+            if (projectData.vsync)
+            {
+                if (flags == "0")
+                    flags = "RaylibWrapper::FLAG_VSYNC_HINT";
+                else
+                    flags += " | RaylibWrapper::FLAG_VSYNC_HINT";
+            }
+            if (projectData.runInBackground)
+            {
+                if (flags == "0")
+                    flags = "RaylibWrapper::FLAG_WINDOW_ALWAYS_RUN";
+                else
+                    flags += " | RaylibWrapper::FLAG_WINDOW_ALWAYS_RUN";
+            }
+            outputFile << "RaylibWrapper::SetConfigFlags(" + flags + ");";
+        }
+
+        else
+            outputFile << line << '\n';
+    }
+
+    inputFile.close();
+    outputFile.close();
+
+    std::remove(gameFile.string().c_str());
+    std::rename((gameFile.parent_path() / "TempGame.cpp").string().c_str(), gameFile.string().c_str());
+    return true;
+}
+
 void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make a .json format file that contains information like scenes and which scene should be first opened
 {
     // Todo: Change path of models and include models in build
@@ -247,6 +336,9 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
         std::ofstream(buildPath / "CMakeLists.txt") << contents;
 
 
+        // Set values from project settings in Game.cxp
+        if (!SetGameSettings(buildPath / "Source" / "Game.cpp"))
+            return;
 
         //std::filesystem::copy_file(std::filesystem::path(__FILE__).parent_path() / "BuildPresets.zip", buildPath / "BuildPresets.zip");
 

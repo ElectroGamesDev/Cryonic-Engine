@@ -63,6 +63,7 @@ public:
     static void CopyApiFiles(std::filesystem::path source, std::filesystem::path destination);
     static void CopyAssetFiles(std::filesystem::path destination);
     //static bool ExtractZip(const char* zip_path, const char* dest_folder);
+    static bool SetGameSettings(std::filesystem::path gameFile);
     static void BuildToWindows(ProjectData projectData);
     static void SaveProject();
     static ProjectData LoadProject(std::filesystem::path path);
