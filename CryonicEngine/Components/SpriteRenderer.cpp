@@ -39,7 +39,6 @@ void SpriteRenderer::Update(float deltaTime)
         Vector3 position = gameObject->transform.GetPosition();
         Vector3 scale = gameObject->transform.GetScale();
         DrawRectangleWrapper(position.x, position.y, scale.x, scale.y, gameObject->transform.GetRotationEuler().y, tint.r, tint.g, tint.b, tint.a);
-
     }
     else if (texturePath == "Circle")
     {
