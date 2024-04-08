@@ -282,7 +282,7 @@ void Cleanup()
 
 void main()
 {
-    RaylibWrapper::InitWindow(800, 600, ("Cryonic Engine - v0.1-ALPHA"));
+    RaylibWrapper::InitWindow(800, 600, ("Cryonic Engine - v0.1"));
     RaylibWrapper::SetWindowMinSize(800, 600);
     RaylibWrapper::SetTargetFPS(60);
 
