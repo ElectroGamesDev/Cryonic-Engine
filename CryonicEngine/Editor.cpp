@@ -2735,7 +2735,6 @@ void Editor::Render(void)
     {
         ImGui::SetCursorPos(ImVec2(5, 0));
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open Project", "Ctrl+O")) {}
             if (ImGui::MenuItem("Save Project", "Ctrl+S"))
             {
                 ProjectManager::SaveProject();
