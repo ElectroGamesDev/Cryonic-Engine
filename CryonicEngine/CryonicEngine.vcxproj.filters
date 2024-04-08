@@ -320,5 +320,8 @@
     <ClInclude Include="Components\Rigidbody3D.h">
       <Filter>Header Files\Components</Filter>
     </ClInclude>
+    <ClInclude Include="..\includes\imgui\ImGuiNotify.hpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

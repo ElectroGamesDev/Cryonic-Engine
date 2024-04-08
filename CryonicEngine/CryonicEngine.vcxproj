@@ -203,6 +203,7 @@
     <ClInclude Include="..\includes\imgui\IconsFontAwesome6.h" />
     <ClInclude Include="..\includes\imgui\imconfig.h" />
     <ClInclude Include="..\includes\imgui\imgui.h" />
+    <ClInclude Include="..\includes\imgui\ImGuiNotify.hpp" />
     <ClInclude Include="..\includes\imgui\imgui_impl_raylib.h" />
     <ClInclude Include="..\includes\imgui\imgui_internal.h" />
     <ClInclude Include="..\includes\imgui\imstb_rectpack.h" />
