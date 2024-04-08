@@ -334,6 +334,6 @@ struct Vector4 {
 typedef Vector4 Quaternion;
 
 Vector3 RotateVector3ByQuaternion(Vector3 vector, Quaternion quaternion);
-Quaternion EulerToQuaternion(float roll, float pitch, float yaw);
+Quaternion EulerToQuaternion(float pitch, float yaw, float roll);
 //Returns Vector3 in Radians.
 Vector3 QuaternionToEuler(Quaternion quaternion);
