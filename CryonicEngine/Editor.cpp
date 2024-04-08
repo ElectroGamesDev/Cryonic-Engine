@@ -2740,7 +2740,7 @@ void Editor::Render(void)
             {
                 ProjectManager::SaveProject();
                 ImGuiToast toast(ImGuiToastType::Success, 1500, true);
-                toast.setTitle("Project Saved!", "");
+                toast.setTitle("Project Saved", "");
                 toast.setContent("The project has successfully saved.");
                 ImGui::InsertNotification(toast);
             }
@@ -2805,7 +2805,7 @@ void Editor::Render(void)
     {
         ProjectManager::SaveProject();
         ImGuiToast toast(ImGuiToastType::Success, 1500, true);
-        toast.setTitle("Project Saved!", "");
+        toast.setTitle("Project Saved", "");
         toast.setContent("The project has successfully saved.");
         ImGui::InsertNotification(toast);
     }
