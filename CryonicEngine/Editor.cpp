@@ -11,6 +11,7 @@
 #include "Scenes/SceneManager.h"
 #include <imgui_internal.h>
 #include "IconsFontAwesome6.h"
+#include <ImGuiNotify.hpp>
 #include <fstream>
 #include "Utilities.h"
 #include <any>
@@ -2738,6 +2739,10 @@ void Editor::Render(void)
             if (ImGui::MenuItem("Save Project", "Ctrl+S"))
             {
                 ProjectManager::SaveProject();
+                ImGuiToast toast(ImGuiToastType::Success, 1500);
+                toast.setTitle("Project Saved!", "");
+                toast.setContent("The project has successfully saved.");
+                ImGui::InsertNotification(toast);
             }
             if (ImGui::BeginMenu("Build Project"))
             {
@@ -2796,6 +2801,15 @@ void Editor::Render(void)
 
     ImGui::End();
 
+    if (ImGui::IsKeyPressed(ImGuiKey_S) && ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
+    {
+        ProjectManager::SaveProject();
+        ImGuiToast toast(ImGuiToastType::Success, 1500);
+        toast.setTitle("Project Saved!", "");
+        toast.setContent("The project has successfully saved.");
+        ImGui::InsertNotification(toast);
+    }
+
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2(RaylibWrapper::GetScreenWidth(), 30));
     ImGui::SetNextWindowBgAlpha(1.0f);
@@ -2829,6 +2843,17 @@ void Editor::Render(void)
     ImGui::PopStyleColor();
     ImGui::PopStyleColor();
     ImGui::PopStyleVar();
+
+
+    // Notifications
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.10f, 0.10f, 0.10f, 1.00f));
+
+    ImGui::RenderNotifications();
+
+    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor(1);
 }
 
 void Editor::SetupViewport()
