@@ -12,6 +12,7 @@ Vector3 RotateVector3ByQuaternion(Vector3 vector, Quaternion quaternion)
     return result;
 }
 
+// Todo: Make this take in degrees instaed of radios. Will need to update all code using this function
 Quaternion EulerToQuaternion(float pitch, float yaw, float roll)
 {
     Quaternion result = { 0 };
@@ -32,6 +33,7 @@ Quaternion EulerToQuaternion(float pitch, float yaw, float roll)
 }
 
 
+// Todo: Make this return degrees instaed of radios. Will need to update all code using this function
 Vector3 QuaternionToEuler(Quaternion quaternion)
 {
     Vector3 result = { 0 };
