@@ -2739,7 +2739,7 @@ void Editor::Render(void)
             if (ImGui::MenuItem("Save Project", "Ctrl+S"))
             {
                 ProjectManager::SaveProject();
-                ImGuiToast toast(ImGuiToastType::Success, 1500);
+                ImGuiToast toast(ImGuiToastType::Success, 1500, true);
                 toast.setTitle("Project Saved!", "");
                 toast.setContent("The project has successfully saved.");
                 ImGui::InsertNotification(toast);
@@ -2804,7 +2804,7 @@ void Editor::Render(void)
     if (ImGui::IsKeyPressed(ImGuiKey_S) && ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
     {
         ProjectManager::SaveProject();
-        ImGuiToast toast(ImGuiToastType::Success, 1500);
+        ImGuiToast toast(ImGuiToastType::Success, 1500, true);
         toast.setTitle("Project Saved!", "");
         toast.setContent("The project has successfully saved.");
         ImGui::InsertNotification(toast);
