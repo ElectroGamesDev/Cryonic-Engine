@@ -543,6 +543,7 @@ namespace RaylibWrapper
     void SetWindowState(unsigned int flags);
     void ClearWindowState(unsigned int flags);
     void ToggleFullscreen();
+    void ToggleBorderlessWindowed();
     void MaximizeWindow();
     void MinimizeWindow();
     void RestoreWindow();

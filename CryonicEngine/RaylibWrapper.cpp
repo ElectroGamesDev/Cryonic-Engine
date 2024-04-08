@@ -65,6 +65,10 @@ namespace RaylibWrapper {
         ::ToggleFullscreen();
     }
 
+    void ToggleBorderlessWindowed() {
+        ::ToggleBorderlessWindowed();
+    }
+
     void MaximizeWindow() {
         ::MaximizeWindow();
     }
