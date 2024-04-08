@@ -19,12 +19,12 @@ b2World* world = nullptr;
 
 int main(void)
 {
-	RaylibWrapper::SetConfigFlags(RaylibWrapper::FLAG_WINDOW_RESIZABLE | RaylibWrapper::FLAG_WINDOW_HIGHDPI | RaylibWrapper::FLAG_MSAA_4X_HINT | RaylibWrapper::FLAG_VSYNC_HINT); // Todo: Make FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT optional
+	RaylibWrapper::SetConfigFlags(0);
 	RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), (NAME));
-	//RaylibWrapper::ToggleFullscreen(); // Todo: Make this configurable in the project settings
-	//RaylibWrapper::SetWindowSize(1920, 1080); // Todo: Make this configurable in the project settings
-	RaylibWrapper::SetWindowMinSize(100, 100); // Todo: Make this configurable in the project settings
-	RaylibWrapper::SetTargetFPS(144); // Todo: Option to set this to montitor refresh rate
+	//RaylibWrapper::ToggleFullscreen();
+	//RaylibWrapper::ToggleBorderlessWindowed();
+	RaylibWrapper::SetWindowMinSize(100, 100);
+	RaylibWrapper::SetTargetFPS(60);
 
 	// Must go before scene loading
 	CollisionListener2D collisionListener;
@@ -52,9 +52,9 @@ int main(void)
 		}
 	}
 
-	float timeStep = 1.0f / 60.0f; // Todo: Make this configurable in project settings
-	int32 velocityIterations = 8; // Todo: Make this configurable in project settings
-	int32 positionIterations = 3; // Todo: Make this configurable in project settings
+	float timeStep = 1.0f / 60.0f;
+	int32 velocityIterations = 8;
+	int32 positionIterations = 3;
 	float timeSinceLastUpdate = 0.0f;
 
     while (!RaylibWrapper::WindowShouldClose())
