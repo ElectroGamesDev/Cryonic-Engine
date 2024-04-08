@@ -28,6 +28,7 @@ public:
 	void RenderCameraView();
 	void RenderConsole();
 	void RenderAnimationGraph();
+	void RenderProjectSettings();
 	void Render();
 
 	void UpdateViewport();

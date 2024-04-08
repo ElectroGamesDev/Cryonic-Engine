@@ -75,6 +75,7 @@ bool hierarchyObjectClicked = false;
 bool componentsWindowOpen = false;
 bool scriptCreateWinOpen = false;
 bool animationGraphWinOpen = false;
+bool projectSettingsWinOpen = false;
 
 bool resetComponentsWin = true;
 bool resetPropertiesWin = true;
@@ -82,6 +83,7 @@ bool resetViewportWin = true;
 bool resetFileExplorerWin = true;
 bool resetHierarchy = true;
 bool resetCameraView = true;
+bool resetProjectSettings = true;
 
 nlohmann::json animationGraphData = nullptr;
 
@@ -1479,6 +1481,164 @@ void Editor::RenderAnimationGraph()
     ImGui::End();
 }
 
+void Editor::RenderProjectSettings()
+{
+    if (!projectSettingsWinOpen) return;
+    if (resetProjectSettings)
+    {
+        float xSize = RaylibWrapper::GetScreenWidth() * 0.50;
+        float ySize = RaylibWrapper::GetScreenHeight() * 0.75;
+        ImGui::SetNextWindowSize(ImVec2(xSize, ySize));
+        ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - xSize) / 2, (RaylibWrapper::GetScreenHeight() - ySize) / 2));
+        resetProjectSettings = false;
+    }
+    if (ImGui::Begin((ICON_FA_GEARS + std::string(" Project Properties")).c_str(), &projectSettingsWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    {
+        // General
+        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
+        ImGui::Text("General");
+        ImGui::PopFont();
+
+        char nameBuffer[256];
+        char versionBuffer[256];
+        char authorBuffer[256];
+        char iconPathBuffer[256];
+
+        strcpy_s(nameBuffer, ProjectManager::projectData.name.c_str());
+        strcpy_s(versionBuffer, ProjectManager::projectData.version.c_str());
+        strcpy_s(authorBuffer, ProjectManager::projectData.author.c_str());
+        strcpy_s(iconPathBuffer, ProjectManager::projectData.iconPath.c_str());
+
+        ImGui::Text("Name");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(150);
+        if (ImGui::InputText("##Name", nameBuffer, sizeof(nameBuffer)))
+        {
+            ProjectManager::projectData.name = nameBuffer;
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+        }
+
+        ImGui::Text("Author");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(100);
+        if (ImGui::InputText("##Author", authorBuffer, sizeof(authorBuffer)))
+        {
+            ProjectManager::projectData.author = authorBuffer;
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+        }
+
+        ImGui::Text("Version");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(50);
+        if (ImGui::InputText("##Version", versionBuffer, sizeof(versionBuffer)))
+        {
+            ProjectManager::projectData.version = versionBuffer;
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+        }
+
+        ImGui::Text("Icon Path");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(200);
+        if (ImGui::InputText("##IconPath", iconPathBuffer, sizeof(iconPathBuffer))) // Todo: Add drag & drop support and file select dialog
+        {
+            ProjectManager::projectData.iconPath = iconPathBuffer;
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+        }
+
+        ImGui::NewLine();
+
+        // Window Settings
+        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
+        ImGui::Text("Window Settings");
+        ImGui::PopFont();
+
+        ImGui::Text("Display Mode");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(100);
+        const char* displayModes[] = { "Borderless", "Fullscreen", "Windowed" };
+        if (ImGui::Combo("##DisplayMode", &ProjectManager::projectData.displayMode, displayModes, IM_ARRAYSIZE(displayModes)))
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+
+        ImGui::Text("Resolution");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(100);
+        int windowResolutionInt[2] = { static_cast<int>(ProjectManager::projectData.windowResolution.x), static_cast<int>(ProjectManager::projectData.windowResolution.y) };
+        if (ImGui::InputInt2("##WindowResolution", windowResolutionInt))
+            ProjectManager::projectData.windowResolution = { static_cast<float>(windowResolutionInt[0]), static_cast<float>(windowResolutionInt[1]) };
+
+        ImGui::Text("Minimum Resolution");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(100);
+        int minimumResolutionInt[2] = { static_cast<int>(ProjectManager::projectData.minimumResolution.x), static_cast<int>(ProjectManager::projectData.minimumResolution.y) };
+        if (ImGui::InputInt2("##MinimumResolution", minimumResolutionInt))
+            ProjectManager::projectData.minimumResolution = { static_cast<float>(minimumResolutionInt[0]), static_cast<float>(minimumResolutionInt[1]) };
+
+        ImGui::Text("Resizable");
+        ImGui::SameLine();
+        if (ImGui::Checkbox("##ResizableWindow", &ProjectManager::projectData.resizableWindow))
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+
+        ImGui::Text("Max FPS");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(25);
+        if (ImGui::InputInt("##MaxFPS", &ProjectManager::projectData.maxFPS, 0, 0))
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+
+        ImGui::Text("Run In Background");
+        ImGui::SameLine();
+        if (ImGui::Checkbox("##RunInBackground", &ProjectManager::projectData.runInBackground))
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+
+        ImGui::Text("VSync");
+        ImGui::SameLine();
+        if (ImGui::Checkbox("##VSync", &ProjectManager::projectData.vsync))
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+
+        ImGui::NewLine();
+
+        // Graphics
+        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
+        ImGui::Text("Graphics");
+        ImGui::PopFont();
+
+        ImGui::Text("Anti-aliasing");
+        ImGui::SameLine();
+        if (ImGui::Checkbox("##Antialiasing", &ProjectManager::projectData.antialiasing))
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+
+        ImGui::Text("High DPI");
+        ImGui::SameLine();
+        if (ImGui::Checkbox("##HighDPI", &ProjectManager::projectData.highDPI))
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+
+        ImGui::NewLine();
+
+        // Physics
+        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
+        ImGui::Text("Physics");
+        ImGui::PopFont();
+
+        ImGui::Text("Timestep");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(70);
+        if (ImGui::InputFloat2("##PhysicsTimeStep", &ProjectManager::projectData.physicsTimeStep.x, "%.05g"))
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+
+        ImGui::Text("Velocity Iterations");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(25);
+        if (ImGui::InputInt("##VelocityIterations", &ProjectManager::projectData.velocityIterations, 0, 0))
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+
+        ImGui::Text("Position Iterations");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(25);
+        if (ImGui::InputInt("##PositionIterations", &ProjectManager::projectData.positionIterations, 0, 0))
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+    }
+    ImGui::End();
+}
+
 void Editor::RenderScriptCreateWin()
 {
     if (!scriptCreateWinOpen) return;
@@ -2560,6 +2720,7 @@ void Editor::Render(void)
     RenderComponentsWin();
     RenderScriptCreateWin();
     RenderAnimationGraph();
+    RenderProjectSettings();
     //RenderTopbar();
 
 
@@ -2591,18 +2752,31 @@ void Editor::Render(void)
         }
         ImGui::SetCursorPos(ImVec2(43, 0));
         if (ImGui::BeginMenu("Edit")) {
-            if (ImGui::MenuItem("Project Settings", "")) {}
-            if (ImGui::MenuItem("Reload API Files", "")) // Todo: Move this into settings or help
+            if (ImGui::MenuItem("Project Settings", ""))
             {
-                ConsoleLogger::InfoLog("Reloading API Files");
-                if (!std::filesystem::exists(ProjectManager::projectData.path / "api"))
+                if (projectSettingsWinOpen)
                 {
-                    std::filesystem::create_directories(ProjectManager::projectData.path / "api");
-                    Utilities::HideFile(ProjectManager::projectData.path / "api");
+                    ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_GEARS + std::string(" Project Properties")).c_str());
+                    if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                        window->DockNode->TabBar->NextSelectedTabId = window->TabId;
                 }
-                std::filesystem::remove_all(ProjectManager::projectData.path / "api");
-                ProjectManager::CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), ProjectManager::projectData.path / "api");
+                else
+                {
+                    projectSettingsWinOpen = true;
+                    resetProjectSettings = true;
+                }
             }
+            //if (ImGui::MenuItem("Reload API Files", "")) // Todo: Move this into settings or help
+            //{
+            //    ConsoleLogger::InfoLog("Reloading API Files");
+            //    if (!std::filesystem::exists(ProjectManager::projectData.path / "api"))
+            //    {
+            //        std::filesystem::create_directories(ProjectManager::projectData.path / "api");
+            //        Utilities::HideFile(ProjectManager::projectData.path / "api");
+            //    }
+            //    std::filesystem::remove_all(ProjectManager::projectData.path / "api");
+            //    ProjectManager::CopyApiFiles(std::filesystem::path(__FILE__).parent_path(), ProjectManager::projectData.path / "api");
+            //}
             ImGui::EndMenu();
         }
         ImGui::SetCursorPos(ImVec2(85, 0));
