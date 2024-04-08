@@ -108,6 +108,7 @@ private:
 
 	int											dismissTime = NOTIFY_DEFAULT_DISMISS;
 	std::chrono::system_clock::time_point		creationTime = std::chrono::system_clock::now();
+	bool										clickToDismiss = true;
 
 	std::function<void()>						onButtonPress = nullptr; // A lambda variable, which will be executed when button in notification is pressed
 	char 										buttonLabel[NOTIFY_MAX_MSG_LENGTH];
@@ -306,6 +307,11 @@ public:
 		return this->content;
 	};
 
+	inline bool GetClickToDismiss()
+	{
+		return this->clickToDismiss;
+	};
+
 	/**
 	 * @brief Get the elapsed time in milliseconds since the creation of the object.
 	 * 
@@ -400,13 +406,15 @@ public:
 	 * 
 	 * @param type The type of the toast.
 	 * @param dismissTime The time in milliseconds after which the toast should be dismissed. Default is NOTIFY_DEFAULT_DISMISS.
+	 * @param clickToDismiss Removes the X button and makes the whole notification a remove button
 	 */
-	ImGuiToast(ImGuiToastType type, int dismissTime = NOTIFY_DEFAULT_DISMISS)
+	ImGuiToast(ImGuiToastType type, int dismissTime = NOTIFY_DEFAULT_DISMISS, bool clickToDismiss = true)
 	{
 		IM_ASSERT(type < ImGuiToastType::COUNT);
 
 		this->type = type;
 		this->dismissTime = dismissTime;
+		this->clickToDismiss = clickToDismiss;
 
 		this->creationTime = std::chrono::system_clock::now();
 
@@ -419,11 +427,13 @@ public:
 	 * 
 	 * @param type The type of the toast message.
 	 * @param format The format string for the message.
+	 * @param clickToDismiss Removes the X button and makes the whole notification a remove button
 	 * @param ... The variable arguments to be formatted according to the format string.
 	 */
-	ImGuiToast(ImGuiToastType type, const char* format, ...) : ImGuiToast(type)
+	ImGuiToast(ImGuiToastType type, const char* format, bool clickToDismiss = true, ...) : ImGuiToast(type)
 	{
 		NOTIFY_FORMAT(this->setContent, format);
+		this->clickToDismiss = clickToDismiss;
 	}
 
 	/**
@@ -432,11 +442,13 @@ public:
 	 * @param type The type of the toast message.
 	 * @param dismissTime The time in milliseconds before the toast message is dismissed.
 	 * @param format The format string for the content of the toast message.
+	 * @param clickToDismiss Removes the X button and makes the whole notification a remove button
 	 * @param ... The variable arguments to be formatted according to the format string.
 	 */
-	ImGuiToast(ImGuiToastType type, int dismissTime, const char* format, ...) : ImGuiToast(type, dismissTime)
+	ImGuiToast(ImGuiToastType type, int dismissTime, const char* format, bool clickToDismiss = true, ...) : ImGuiToast(type, dismissTime)
 	{
 		NOTIFY_FORMAT(this->setContent, format);
+		this->clickToDismiss = clickToDismiss;
 	}
 
 	/**
@@ -447,12 +459,14 @@ public:
 	 * @param buttonLabel The label for the button.
 	 * @param onButtonPress The lambda function to be executed when the button is pressed.
 	 * @param format The format string for the content of the toast message.
+	 * @param clickToDismiss Removes the X button and makes the whole notification a remove button
 	 * @param ... The variable arguments to be formatted according to the format string.
 	 */
-	ImGuiToast(ImGuiToastType type, int dismissTime, const char* buttonLabel, const std::function<void()>& onButtonPress, const char* format, ...) : ImGuiToast(type, dismissTime)
+	ImGuiToast(ImGuiToastType type, int dismissTime, const char* buttonLabel, const std::function<void()>& onButtonPress, const char* format, bool clickToDismiss = true, ...) : ImGuiToast(type, dismissTime)
 	{
 		NOTIFY_FORMAT(this->setContent, format);
 
+		this->clickToDismiss = clickToDismiss;
 		this->onButtonPress = onButtonPress;
 		this->setButtonLabel(buttonLabel);
 	}
@@ -584,7 +598,7 @@ namespace ImGui
 				}
 
 				// If a dismiss button is enabled
-				if (NOTIFY_USE_DISMISS_BUTTON)
+				if (NOTIFY_USE_DISMISS_BUTTON && !currentToast->GetClickToDismiss())
 				{
 					// If a title or content is set, we want to render the button on the same line
 					if (wasTitleRendered || !NOTIFY_NULL_OR_EMPTY(content))
@@ -609,6 +623,8 @@ namespace ImGui
 						RemoveNotification(i);
 					}
 				}
+				else if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+					RemoveNotification(i);
 
 				// In case ANYTHING was rendered in the top, we want to add a small padding so the text (or icon) looks centered vertically
 				if (wasTitleRendered && !NOTIFY_NULL_OR_EMPTY(content))
