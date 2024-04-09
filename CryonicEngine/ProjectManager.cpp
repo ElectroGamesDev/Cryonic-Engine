@@ -122,7 +122,7 @@ void ProjectManager::CleanupBuildFolder(std::filesystem::path path)
             {
                 if (file.is_directory())
                 {
-                    if (file.path().filename() != "Resources")
+                    if (file.path().filename() != "Resources" && file.path().filename() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
                         std::filesystem::remove_all(file.path());
                 }
                 else if (file.path().extension() != ".exe")
@@ -360,7 +360,7 @@ bool ProjectManager::SetGameSettings(std::filesystem::path gameFile)
 
 bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo: Maybe make a .json format file that contains information like scenes and which scene should be first opened
 {
-    // Todo: Change path of models and include models in build
+    // Backing up and restoring cmake files is completely useless since when cmake files are moved, it breaks incremental builds. Not sure if this is an issue with CMake, or my code.
     SaveProject();
 
     std::filesystem::path path = projectData.path / "Builds" / "Windows";
@@ -374,20 +374,17 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     if (!std::filesystem::exists(buildPath))
         std::filesystem::create_directories(buildPath);
 
-    if (!debug)
-        std::filesystem::remove_all(buildPath);
-    else
-    {
-        // Todo: Removing folders to prevent crash although this shouldn't be handled here.
-        if (std::filesystem::exists(buildPath / "Resources"))
-            std::filesystem::remove_all(buildPath / "Resources");
-        if (std::filesystem::exists(buildPath / "Source"))
-            std::filesystem::remove_all(buildPath / "Source");
-        // Iterating to remove exe's incase the project name changed
-        for (const auto& file : std::filesystem::directory_iterator(buildPath))
-            if (file.path().has_extension() && file.path().extension() == ".exe")
-                std::filesystem::remove(file.path());
-    }
+    // Todo: Removing folders to prevent crash although this shouldn't be handled here.
+    if (std::filesystem::exists(buildPath / "Resources"))
+        std::filesystem::remove_all(buildPath / "Resources");
+    if (std::filesystem::exists(buildPath / "Source"))
+        std::filesystem::remove_all(buildPath / "Source");
+    // Iterating to remove exe's incase the project name changed
+    for (const auto& file : std::filesystem::directory_iterator(buildPath))
+        if (file.path().has_extension() && file.path().extension() == ".exe")
+            std::filesystem::remove(file.path());
+
+    //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
 
     std::string projectName = projectData.name; // Project name with underscores instead of spaces
     std::replace(projectName.begin(), projectName.end(), ' ', '_');
@@ -408,10 +405,13 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         if (!cmakeListsFile.is_open())
         {
             ConsoleLogger::ErrorLog("Build Log - Failed to open the CMakesLists.txt to modify the game's name. Terminating build.", false);
-            if (debug)
-                RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
-            else
-                CleanupBuildFolder(buildPath);
+            try {
+                for (const auto& file : std::filesystem::directory_iterator(buildPath))
+                    if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
+                        std::filesystem::remove_all(file.path());
+            }
+            catch (const std::filesystem::filesystem_error& ex) {}
+            //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
             return false;
         }
 
@@ -423,10 +423,13 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         else
         {
             ConsoleLogger::ErrorLog("Build Log - Failed to set the name of the game. Terminating build.", false);
-            if (debug)
-                RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
-            else
-                CleanupBuildFolder(buildPath);
+            try {
+                for (const auto& file : std::filesystem::directory_iterator(buildPath))
+                    if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
+                        std::filesystem::remove_all(file.path());
+            }
+            catch (const std::filesystem::filesystem_error& ex) {}
+            //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
             return false;
         }
 
@@ -436,10 +439,13 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         // Set values from project settings in Game.cxp
         if (!SetGameSettings(buildPath / "Source" / "Game.cpp"))
         {
-            if (debug)
-                RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
-            else
-                CleanupBuildFolder(buildPath);
+            try {
+                for (const auto& file : std::filesystem::directory_iterator(buildPath))
+                    if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
+                        std::filesystem::remove_all(file.path());
+            }
+            catch (const std::filesystem::filesystem_error& ex) {}
+            //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
             return false;
         }
 
@@ -455,10 +461,13 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     catch (const std::filesystem::filesystem_error& e)
     {
         ConsoleLogger::ErrorLog("Build Log - Error copying BuildPresets directory and/or files. Terminating build. Error: " + (std::string)e.what(), false);
-        if (debug)
-            RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
-        else
-            CleanupBuildFolder(buildPath);
+        try {
+            for (const auto& file : std::filesystem::directory_iterator(buildPath))
+                if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
+                    std::filesystem::remove_all(file.path());
+        }
+        catch (const std::filesystem::filesystem_error& ex) {}
+        //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
         return false;
     }
 
@@ -483,19 +492,25 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     }
     catch (const std::exception& e) {
         ConsoleLogger::ErrorLog("Build Log - Failed to copy resource files: " + (std::string)e.what());
-        if (debug)
-            RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
-        else
-            CleanupBuildFolder(buildPath);
+        try {
+            for (const auto& file : std::filesystem::directory_iterator(buildPath))
+                if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
+                    std::filesystem::remove_all(file.path());
+        }
+        catch (const std::filesystem::filesystem_error& ex) {}
+        //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
         return false;
     }
 
     if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source")) // Todo: This should handle the error messages, not BuildScripts(). BuildScripts() should return an int
     {
-        if (debug)
-            RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
-        else
-            CleanupBuildFolder(buildPath);
+        try {
+            for (const auto& file : std::filesystem::directory_iterator(buildPath))
+                if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
+                    std::filesystem::remove_all(file.path());
+        }
+        catch (const std::filesystem::filesystem_error& ex) {}
+        //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
         return false;
     }
 
@@ -538,26 +553,29 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
             ConsoleLogger::WarningLog("Build Log - The executable failed to be renamed");
     }
 
+    // Backing up CMake Files for incremental builds
+    //BackupCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
+
     // Cleanup
     if (!debug)
     {
         ConsoleLogger::InfoLog("Build Log - Cleaning up", false);
         CleanupBuildFolder(buildPath);
     }
-    else
-        BackupCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
 
     // Move files for Release builds
     if (!debug)
     {
         try
         {
-            std::filesystem::rename(buildPath / std::string(projectName + ".exe"), buildPath / std::string(projectData.name + ".exe"));
             for (const auto& file : std::filesystem::directory_iterator(buildPath))
             {
-                if (std::filesystem::exists(path / file.path().filename()))
-                    std::filesystem::remove_all(path / file.path().filename());
-                std::filesystem::rename(file.path(), path / file.path().filename());
+                if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
+                {
+                    if (std::filesystem::exists(path / file.path().filename()))
+                        std::filesystem::remove_all(path / file.path().filename());
+                    std::filesystem::rename(file.path(), path / file.path().filename());
+                }
             }
         }
         catch (const std::filesystem::filesystem_error& ex)
@@ -567,16 +585,28 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
             else
                 ConsoleLogger::ErrorLog("Build Log - There was an error moving build files to your selectred build folder. Terminating build.");
 
-            std::filesystem::remove_all(buildPath);
+            try {
+                for (const auto& file : std::filesystem::directory_iterator(buildPath))
+                    if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
+                        std::filesystem::remove_all(file.path());
+            }
+            catch (const std::filesystem::filesystem_error& ex) {}
+
             return false;
         }
 
-        std::filesystem::remove_all(buildPath);
+        try {
+            for (const auto& file : std::filesystem::directory_iterator(buildPath))
+                if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
+                    std::filesystem::remove_all(file.path());
+        }
+        catch (const std::filesystem::filesystem_error& ex) {}
     }
 
     ConsoleLogger::InfoLog("Build Log - Build complete", false);
 
-    Utilities::OpenPathInExplorer(buildPath);
+    if (!debug)
+        Utilities::OpenPathInExplorer(path);
 
     return true;
 }
