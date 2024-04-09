@@ -303,8 +303,8 @@ void Editor::RenderViewport()
                 float x = selectedObject->transform.GetPosition().x;
                 float y = selectedObject->transform.GetPosition().y;
                 float z = selectedObject->transform.GetPosition().z;
-                if (movingObjectX) // Todo: Dividing by 15 is a horrible solution. Fix this
-                    x -= deltaMouse.x / 15;
+                if (movingObjectX) // Todo: Dividing by 15 is a horrible solution. Instead I should set it to the mouse position - an offset
+                    x += deltaMouse.x / 15;
                 if (movingObjectY)
                     y -= deltaMouse.y / 15;
                 if (movingObjectZ)
