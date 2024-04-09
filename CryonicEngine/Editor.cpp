@@ -1135,7 +1135,6 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     }
                     else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
                     {
-                        ConsoleLogger::WarningLog("1111");
                         RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
                         currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
                     }
