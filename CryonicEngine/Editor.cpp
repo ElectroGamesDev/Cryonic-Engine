@@ -2743,11 +2743,19 @@ void Editor::Render(void)
                 toast.setContent("The project has successfully saved.");
                 ImGui::InsertNotification(toast);
             }
+            if (ImGui::MenuItem("Play", "Ctrl+P"))
+            {
+                // Todo: Check if changes have been made and it needs to be recompiled
+                if (ProjectManager::BuildToWindows(ProjectManager::projectData, true))
+                    // Todo: This crashes the game instantly
+                    Utilities::OpenPathInExplorer(ProjectManager::projectData.path / "Internal" / "Builds" / "Debug" / std::string(ProjectManager::projectData.name + ".exe"));
+                    //std::system(("\"" + (ProjectManager::projectData.path / "Internal" / "Builds" / "Debug" / std::string(ProjectManager::projectData.name + ".exe")).string() + "\"").c_str());
+            }
             if (ImGui::BeginMenu("Build Project"))
             {
                 if (ImGui::MenuItem("Windows", ""))
                 {
-                    ProjectManager::BuildToWindows(ProjectManager::projectData, true);
+                    ProjectManager::BuildToWindows(ProjectManager::projectData, false);
                 }
                 ImGui::EndMenu();
             }
