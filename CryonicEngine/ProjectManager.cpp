@@ -363,12 +363,13 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     // Todo: Change path of models and include models in build
     SaveProject();
 
+    std::filesystem::path path = projectData.path / "Builds" / "Windows";
     std::filesystem::path buildPath;
 
     if (debug)
         buildPath = projectData.path / "Internal" / "Builds" / "Debug";
     else
-        buildPath = projectData.path / "Builds" / "Windows";
+        buildPath = projectData.path / "Internal" / "Builds" / "Release";
 
     if (!std::filesystem::exists(buildPath))
         std::filesystem::create_directories(buildPath);
@@ -545,6 +546,33 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     }
     else
         BackupCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
+
+    // Move files for Release builds
+    if (!debug)
+    {
+        try
+        {
+            std::filesystem::rename(buildPath / std::string(projectName + ".exe"), buildPath / std::string(projectData.name + ".exe"));
+            for (const auto& file : std::filesystem::directory_iterator(buildPath))
+            {
+                if (std::filesystem::exists(path / file.path().filename()))
+                    std::filesystem::remove_all(path / file.path().filename());
+                std::filesystem::rename(file.path(), path / file.path().filename());
+            }
+        }
+        catch (const std::filesystem::filesystem_error& ex)
+        {
+            if (ConsoleLogger::showDebugMessages)
+                ConsoleLogger::ErrorLog(std::string("Build Log - There was an error moving build files to your selectred build folder. Terminating build. Error: ") + ex.what());
+            else
+                ConsoleLogger::ErrorLog("Build Log - There was an error moving build files to your selectred build folder. Terminating build.");
+
+            std::filesystem::remove_all(buildPath);
+            return false;
+        }
+
+        std::filesystem::remove_all(buildPath);
+    }
 
     ConsoleLogger::InfoLog("Build Log - Build complete", false);
 
