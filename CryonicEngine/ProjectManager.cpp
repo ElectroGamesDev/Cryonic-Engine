@@ -363,7 +363,13 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     // Todo: Change path of models and include models in build
     SaveProject();
 
-    std::filesystem::path buildPath = projectData.path / "Builds" / "Windows";
+    std::filesystem::path buildPath;
+
+    if (debug)
+        buildPath = projectData.path / "Internal" / "Debug";
+    else
+        buildPath = projectData.path / "Builds" / "Windows";
+
     if (!std::filesystem::exists(buildPath))
         std::filesystem::create_directories(buildPath);
 
