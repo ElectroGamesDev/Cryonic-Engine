@@ -318,6 +318,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
         if (!cmakeListsFile.is_open())
         {
             ConsoleLogger::ErrorLog("Build Log - Failed to open the CMakesLists.txt to modify the game's name. Terminating build.", false);
+            CleanupBuildFolder(buildPath);
             return;
         }
 
@@ -330,6 +331,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
         else
         {
             ConsoleLogger::ErrorLog("Build Log - Failed to set the name of the game. Terminating build.", false);
+            CleanupBuildFolder(buildPath);
             return;
         }
 
@@ -338,7 +340,10 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
 
         // Set values from project settings in Game.cxp
         if (!SetGameSettings(buildPath / "Source" / "Game.cpp"))
+        {
+            CleanupBuildFolder(buildPath);
             return;
+        }
 
         //std::filesystem::copy_file(std::filesystem::path(__FILE__).parent_path() / "BuildPresets.zip", buildPath / "BuildPresets.zip");
 
@@ -352,6 +357,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
     catch (const std::filesystem::filesystem_error& e)
     {
         ConsoleLogger::ErrorLog("Build Log - Error copying BuildPresets directory and/or files. Terminating build. Error: " + (std::string)e.what(), false);
+        CleanupBuildFolder(buildPath);
         return;
     }
 
@@ -380,8 +386,11 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
         return;
     }
 
-    if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source"))
+    if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source")) // Todo: This should handle the error messages, not BuildScripts(). BuildScripts() should return an int
+    {
+        CleanupBuildFolder(buildPath);
         return;
+    }
 
     GenerateExposedVariablesFunctions(buildPath / "Source");
 
