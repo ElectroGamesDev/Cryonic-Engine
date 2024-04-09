@@ -2748,7 +2748,7 @@ void Editor::Render(void)
             {
                 if (ImGui::MenuItem("Windows", ""))
                 {
-                    ProjectManager::BuildToWindows(ProjectManager::projectData);
+                    ProjectManager::BuildToWindows(ProjectManager::projectData, true);
                 }
                 ImGui::EndMenu();
             }
