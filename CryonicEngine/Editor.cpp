@@ -2878,7 +2878,7 @@ void Editor::SetupViewport()
         camera.up.y = 1;
         camera.fovy = 45;
         camera.target = { 0.0f, 0.0f, 0.0f };
-        camera.position = {0, 3, -50};
+        camera.position = {0, 3, 50};
     }
 }
 
