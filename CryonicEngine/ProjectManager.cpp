@@ -301,6 +301,9 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
 
     std::filesystem::remove_all(buildPath); // Removes previous build files to prevent crash.
 
+    std::string projectName = projectData.name; // Project name with underscores instead of spaces
+    std::replace(projectName.begin(), projectName.end(), ' ', '_');
+
     try
     {
         // Todo: Using __FILE__ won't work on other computers
@@ -324,10 +327,9 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
 
         std::string contents((std::istreambuf_iterator<char>(cmakeListsFile)), std::istreambuf_iterator<char>());
         cmakeListsFile.close();
-
         size_t pos = contents.find("project(\"GameName\")");
         if (pos != std::string::npos)
-            contents.replace(pos, 19, "project(\"" + projectData.name + "\")");
+            contents.replace(pos, 19, "project(\"" + projectName + "\")");
         else
         {
             ConsoleLogger::ErrorLog("Build Log - Failed to set the name of the game. Terminating build.", false);
@@ -411,6 +413,19 @@ void ProjectManager::BuildToWindows(ProjectData projectData) // Todo: Maybe make
 
     // Renames the .exe to the project name
     //std::filesystem::rename(buildPath / "Game.exe", buildPath / projectData.name + ".exe.); ------------------------ Fix this
+
+    // Rename exe to replace underscores with spaces
+    ConsoleLogger::InfoLog("Build Log - Renaming executable", false);
+    try {
+        std::filesystem::rename(buildPath / std::string(projectName + ".exe"), buildPath / std::string(projectData.name + ".exe"));
+    }
+    catch (const std::filesystem::filesystem_error& ex)
+    {
+        if (ConsoleLogger::showDebugMessages)
+            ConsoleLogger::WarningLog(std::string("Build Log - The executable could not be renamed. Error: ") + ex.what());
+        else
+            ConsoleLogger::WarningLog("Build Log - The executable failed to be renamed");
+    }
 
     // Cleanup
     ConsoleLogger::InfoLog("Build Log - Cleaning up", false);
