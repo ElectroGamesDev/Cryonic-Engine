@@ -20,4 +20,5 @@ public:
     };
 
     static std::string consoleText;
+    static bool showDebugMessages;
 };

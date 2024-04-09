@@ -5,7 +5,7 @@
 #include <windows.h>
 #endif
 
-bool showDebugMessages = true;
+bool ConsoleLogger::showDebugMessages = true;
 std::string ConsoleLogger::consoleText;
 
 void ConsoleLogger::InfoLog(const std::string& message, bool devMessage)
