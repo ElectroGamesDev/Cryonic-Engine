@@ -8,6 +8,10 @@
 #include "rlImGui.h"
 #endif
 
+#ifndef SMOOTH_CIRCLE_ERROR_RATE
+#define SMOOTH_CIRCLE_ERROR_RATE    0.5f      // Circle error rate
+#endif
+
 namespace RaylibWrapper {
     void InitWindow(int width, int height, const char* title) {
         ::InitWindow(width, height, title);
@@ -401,6 +405,265 @@ namespace RaylibWrapper {
     void DrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint) {
         return ::DrawTexturePro({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format }, { source.x, source.y, source.width, source.height }, { dest.x, dest.y, dest.width, dest.height }, {origin.x, origin.y}, rotation, { tint.r, tint.g, tint.b, tint.a });
     }
+
+    // A modified version of DrawTexturePro to flip the quad
+    void DrawTextureProFlipped(Texture2D _texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint) {
+        ::Texture2D texture = { _texture.id, _texture.width, _texture.height, _texture.mipmaps, _texture.format };
+        //::Rectangle source = { _source.x, _source.y, _source.width, _source.height };
+        //::Rectangle dest = { dest.x, dest.y, dest.width, dest.height };
+        //::Vector2 origin = { origin.x, origin.y };
+        //::Color tint = { tint.r, tint.g, tint.b, tint.a };
+        // Check if texture is valid
+        if (texture.id > 0)
+        {
+            float width = (float)texture.width;
+            float height = (float)texture.height;
+
+            bool flipX = false;
+
+            if (source.width < 0) { flipX = true; source.width *= -1; }
+            if (source.height < 0) source.y -= source.height;
+
+            ::Vector2 topLeft = { 0 };
+            ::Vector2 topRight = { 0 };
+            ::Vector2 bottomLeft = { 0 };
+            ::Vector2 bottomRight = { 0 };
+
+            // Only calculate rotation if needed
+            if (rotation == 0.0f)
+            {
+                float x = dest.x - origin.x;
+                float y = dest.y - origin.y;
+                topLeft = { x, y };
+                topRight = { x + dest.width, y };
+                bottomLeft = { x, y + dest.height };
+                bottomRight = { x + dest.width, y + dest.height };
+            }
+            else
+            {
+                float sinRotation = sinf(rotation * DEG2RAD);
+                float cosRotation = cosf(rotation * DEG2RAD);
+                float x = dest.x;
+                float y = dest.y;
+                float dx = -origin.x;
+                float dy = -origin.y;
+
+                topLeft.x = x + dx * cosRotation - dy * sinRotation;
+                topLeft.y = y + dx * sinRotation + dy * cosRotation;
+
+                topRight.x = x + (dx + dest.width) * cosRotation - dy * sinRotation;
+                topRight.y = y + (dx + dest.width) * sinRotation + dy * cosRotation;
+
+                bottomLeft.x = x + dx * cosRotation - (dy + dest.height) * sinRotation;
+                bottomLeft.y = y + dx * sinRotation + (dy + dest.height) * cosRotation;
+
+                bottomRight.x = x + (dx + dest.width) * cosRotation - (dy + dest.height) * sinRotation;
+                bottomRight.y = y + (dx + dest.width) * sinRotation + (dy + dest.height) * cosRotation;
+            }
+
+            ::rlSetTexture(texture.id);
+            ::rlBegin(RL_QUADS);
+
+            ::rlColor4ub(tint.r, tint.g, tint.b, tint.a);
+            ::rlNormal3f(0.0f, 0.0f, 1.0f);                          // Normal vector pointing towards viewer
+
+            // Top-left corner for texture and quad
+            if (flipX) ::rlTexCoord2f((source.x + source.width) / width, source.y / height);
+            else ::rlTexCoord2f(source.x / width, source.y / height);
+            ::rlVertex2f(topLeft.x, topLeft.y);
+
+            // Top-right corner for texture and quad
+            if (flipX) ::rlTexCoord2f(source.x / width, source.y / height);
+            else ::rlTexCoord2f((source.x + source.width) / width, source.y / height);
+            ::rlVertex2f(topRight.x, topRight.y);
+
+            // Bottom-right corner for texture and quad
+            if (flipX) ::rlTexCoord2f(source.x / width, (source.y + source.height) / height);
+            else ::rlTexCoord2f((source.x + source.width) / width, (source.y + source.height) / height);
+            ::rlVertex2f(bottomRight.x, bottomRight.y);
+
+            // Bottom-left corner for texture and quad
+            if (flipX) ::rlTexCoord2f((source.x + source.width) / width, (source.y + source.height) / height);
+            else ::rlTexCoord2f(source.x / width, (source.y + source.height) / height);
+            ::rlVertex2f(bottomLeft.x, bottomLeft.y);
+
+            ::rlEnd();
+            ::rlSetTexture(0);
+        }
+    }
+
+    // A modified version of DrawRectanglePro to flip the quad
+    void DrawRectangleProFlipped(Rectangle rec, Vector2 origin, float rotation, Color color)
+    {
+        ::Vector2 topLeft = { 0 };
+        ::Vector2 topRight = { 0 };
+        ::Vector2 bottomLeft = { 0 };
+        ::Vector2 bottomRight = { 0 };
+
+        // Only calculate rotation if needed
+        if (rotation == 0.0f)
+        {
+            float x = rec.x - origin.x;
+            float y = rec.y - origin.y;
+            topLeft = { x, y };
+            topRight = { x + rec.width, y };
+            bottomLeft = { x, y + rec.height };
+            bottomRight = { x + rec.width, y + rec.height };
+        }
+        else
+        {
+            float sinRotation = sinf(rotation * DEG2RAD);
+            float cosRotation = cosf(rotation * DEG2RAD);
+            float x = rec.x;
+            float y = rec.y;
+            float dx = -origin.x;
+            float dy = -origin.y;
+
+            topLeft.x = x + dx * cosRotation - dy * sinRotation;
+            topLeft.y = y + dx * sinRotation + dy * cosRotation;
+
+            topRight.x = x + (dx + rec.width) * cosRotation - dy * sinRotation;
+            topRight.y = y + (dx + rec.width) * sinRotation + dy * cosRotation;
+
+            bottomLeft.x = x + dx * cosRotation - (dy + rec.height) * sinRotation;
+            bottomLeft.y = y + dx * sinRotation + (dy + rec.height) * cosRotation;
+
+            bottomRight.x = x + (dx + rec.width) * cosRotation - (dy + rec.height) * sinRotation;
+            bottomRight.y = y + (dx + rec.width) * sinRotation + (dy + rec.height) * cosRotation;
+        }
+
+#if defined(SUPPORT_QUADS_DRAW_MODE)
+        ::rlSetTexture(::GetShapesTexture().id);
+        ::Rectangle shapeRect = ::GetShapesTextureRectangle();
+
+        ::rlBegin(RL_QUADS);
+
+        ::rlNormal3f(0.0f, 0.0f, 1.0f);
+        ::rlColor4ub(color.r, color.g, color.b, color.a);
+
+        ::rlTexCoord2f(shapeRect.x / texShapes.width, shapeRect.y / texShapes.height);
+        ::rlVertex2f(topLeft.x, topLeft.y);
+
+        ::rlTexCoord2f(shapeRect.x / texShapes.width, (shapeRect.y + shapeRect.height) / texShapes.height);
+        ::rlVertex2f(bottomLeft.x, bottomLeft.y);
+
+        ::rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width, (shapeRect.y + shapeRect.height) / texShapes.height);
+        ::rlVertex2f(bottomRight.x, bottomRight.y);
+
+        ::rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width, shapeRect.y / texShapes.height);
+        ::rlVertex2f(topRight.x, topRight.y);
+
+        ::rlEnd();
+
+        ::rlSetTexture(0);
+#else
+        ::rlBegin(RL_TRIANGLES);
+
+        ::rlColor4ub(color.r, color.g, color.b, color.a);
+
+        ::rlVertex2f(topLeft.x, topLeft.y);
+        ::rlVertex2f(topRight.x, topRight.y);
+        ::rlVertex2f(bottomLeft.x, bottomLeft.y);
+
+        ::rlVertex2f(bottomLeft.x, bottomLeft.y);
+        ::rlVertex2f(topRight.x, topRight.y);
+        ::rlVertex2f(bottomRight.x, bottomRight.y);
+
+        ::rlEnd();
+#endif
+    }
+
+    // A modified version of DrawCircleSector to flip the quad
+    void DrawCircleSectorFlipped(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color color)
+    {
+        if (radius <= 0.0f) radius = 0.1f;  // Avoid div by zero
+
+        // Function expects (endAngle > startAngle)
+        if (endAngle < startAngle)
+        {
+            // Swap values
+            float tmp = startAngle;
+            startAngle = endAngle;
+            endAngle = tmp;
+        }
+
+        int minSegments = (int)ceilf((endAngle - startAngle) / 90);
+
+        if (segments < minSegments)
+        {
+            // Calculate the maximum angle between segments based on the error rate (usually 0.5f)
+            float th = acosf(2 * powf(1 - SMOOTH_CIRCLE_ERROR_RATE / radius, 2) - 1);
+            segments = (int)((endAngle - startAngle) * ceilf(2 * PI / th) / 360);
+
+            if (segments <= 0) segments = minSegments;
+        }
+
+        float stepLength = (endAngle - startAngle) / (float)segments;
+        float angle = startAngle;
+
+#if defined(SUPPORT_QUADS_DRAW_MODE)
+        ::rlSetTexture(GetShapesTexture().id);
+        ::Rectangle shapeRect = GetShapesTextureRectangle();
+
+        ::rlBegin(RL_QUADS);
+
+        // NOTE: Every QUAD actually represents two segments
+        for (int i = 0; i < segments / 2; i++)
+        {
+            ::rlColor4ub(color.r, color.g, color.b, color.a);
+
+            ::rlTexCoord2f(shapeRect.x / texShapes.width, shapeRect.y / texShapes.height);
+            ::rlVertex2f(center.x, center.y);
+
+            ::rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width, shapeRect.y / texShapes.height);
+            ::rlVertex2f(center.x + cosf(DEG2RAD * (angle + stepLength * 2.0f)) * radius, center.y + sinf(DEG2RAD * (angle + stepLength * 2.0f)) * radius);
+
+            ::rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width, (shapeRect.y + shapeRect.height) / texShapes.height);
+            ::rlVertex2f(center.x + cosf(DEG2RAD * (angle + stepLength)) * radius, center.y + sinf(DEG2RAD * (angle + stepLength)) * radius);
+
+            ::rlTexCoord2f(shapeRect.x / texShapes.width, (shapeRect.y + shapeRect.height) / texShapes.height);
+            ::rlVertex2f(center.x + cosf(DEG2RAD * angle) * radius, center.y + sinf(DEG2RAD * angle) * radius);
+
+            angle += (stepLength * 2.0f);
+        }
+
+        // NOTE: In case number of segments is odd, we add one last piece to the cake
+        if (((unsigned int)segments % 2) == 1)
+        {
+            ::rlColor4ub(color.r, color.g, color.b, color.a);
+
+            ::rlTexCoord2f(shapeRect.x / texShapes.width, shapeRect.y / texShapes.height);
+            ::rlVertex2f(center.x, center.y);
+
+            ::rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width, (shapeRect.y + shapeRect.height) / texShapes.height);
+            ::rlVertex2f(center.x + cosf(DEG2RAD * (angle + stepLength)) * radius, center.y + sinf(DEG2RAD * (angle + stepLength)) * radius);
+
+            ::rlTexCoord2f(shapeRect.x / texShapes.width, (shapeRect.y + shapeRect.height) / texShapes.height);
+            ::rlVertex2f(center.x + cosf(DEG2RAD * angle) * radius, center.y + sinf(DEG2RAD * angle) * radius);
+
+            ::rlTexCoord2f((shapeRect.x + shapeRect.width) / texShapes.width, shapeRect.y / texShapes.height);
+            ::rlVertex2f(center.x, center.y);
+        }
+
+        ::rlEnd();
+
+        ::rlSetTexture(0);
+#else
+        ::rlBegin(RL_TRIANGLES);
+        for (int i = 0; i < segments; i++)
+        {
+            ::rlColor4ub(color.r, color.g, color.b, color.a);
+
+            ::rlVertex2f(center.x, center.y);
+            ::rlVertex2f(center.x + cosf(DEG2RAD * angle) * radius, center.y + sinf(DEG2RAD * angle) * radius);
+            ::rlVertex2f(center.x + cosf(DEG2RAD * (angle + stepLength)) * radius, center.y + sinf(DEG2RAD * (angle + stepLength)) * radius);
+
+            angle += stepLength;
+        }
+        ::rlEnd();
+#endif
+    }
+
 
     // Input-related functions: keyboard
     bool IsKeyPressed(int key) {
