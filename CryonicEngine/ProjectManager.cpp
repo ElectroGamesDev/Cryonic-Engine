@@ -358,7 +358,7 @@ bool ProjectManager::SetGameSettings(std::filesystem::path gameFile)
     return true;
 }
 
-void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo: Maybe make a .json format file that contains information like scenes and which scene should be first opened
+bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo: Maybe make a .json format file that contains information like scenes and which scene should be first opened
 {
     // Todo: Change path of models and include models in build
     SaveProject();
@@ -395,7 +395,6 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     {
         // Todo: Using __FILE__ won't work on other computers
 
-
         // Copying presets
         std::filesystem::copy(std::filesystem::path(__FILE__).parent_path() / "BuildPresets", buildPath, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
         std::filesystem::copy(buildPath / (projectData.is3D ? "3D" : "2D"), buildPath, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
@@ -412,7 +411,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
                 RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
             else
                 CleanupBuildFolder(buildPath);
-            return;
+            return false;
         }
 
         std::string contents((std::istreambuf_iterator<char>(cmakeListsFile)), std::istreambuf_iterator<char>());
@@ -427,7 +426,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
                 RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
             else
                 CleanupBuildFolder(buildPath);
-            return;
+            return false;
         }
 
         std::ofstream(buildPath / "CMakeLists.txt") << contents;
@@ -440,7 +439,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
                 RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
             else
                 CleanupBuildFolder(buildPath);
-            return;
+            return false;
         }
 
         //std::filesystem::copy_file(std::filesystem::path(__FILE__).parent_path() / "BuildPresets.zip", buildPath / "BuildPresets.zip");
@@ -459,7 +458,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
             RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
         else
             CleanupBuildFolder(buildPath);
-        return;
+        return false;
     }
 
     if (!std::filesystem::exists(projectData.path / "api"))
@@ -487,7 +486,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
             RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
         else
             CleanupBuildFolder(buildPath);
-        return;
+        return false;
     }
 
     if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source")) // Todo: This should handle the error messages, not BuildScripts(). BuildScripts() should return an int
@@ -496,7 +495,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
             RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
         else
             CleanupBuildFolder(buildPath);
-        return;
+        return false;
     }
 
     GenerateExposedVariablesFunctions(buildPath / "Source");
@@ -551,7 +550,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
 
     Utilities::OpenPathInExplorer(buildPath);
 
-    // Todo: Open file explorer to build location if not already at lcoation in file explorere
+    return true;
 }
 
 void ProjectManager::SaveProject()

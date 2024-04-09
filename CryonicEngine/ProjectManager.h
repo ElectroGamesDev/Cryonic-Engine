@@ -66,7 +66,7 @@ public:
     static bool SetGameSettings(std::filesystem::path gameFile);
     static void BackupCMakeFiles(std::filesystem::path buildPath, std::filesystem::path backupPath);
     static void RestoreCMakeFiles(std::filesystem::path buildPath, std::filesystem::path backupPath);
-    static void BuildToWindows(ProjectData projectData, bool debug);
+    static bool BuildToWindows(ProjectData projectData, bool debug);
     static void SaveProject();
     static ProjectData LoadProject(std::filesystem::path path);
     
