@@ -25,6 +25,7 @@ void SpriteRenderer::SetTexturePath(std::filesystem::path path)
 
 void SpriteRenderer::Update(float deltaTime)
 {
+    // Todo: I should create an enum to store whether if its a sqaure, circle, etc, if its a shape. It will be faster than comparing strings in an if-else
     if (textureSet)
     {
         RaylibWrapper::DrawTextureProFlipped({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format },
