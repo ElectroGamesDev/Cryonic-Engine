@@ -4,7 +4,12 @@ project("GameName")
 
 set(CMAKE_C_STANDARD 11)
 
-set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Debug)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_C_FLAGS_RELEASE "-O3")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+endif()
 
 add_library(raylib STATIC IMPORTED)
 set_target_properties(raylib PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/Source/libraylib.a")
@@ -35,3 +40,5 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE IS3D)
 target_compile_definitions(${PROJECT_NAME} PRIVATE NAME="${PROJECT_NAME}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE raylib box2d jolt winmm)
+
+target_link_options(${PROJECT_NAME} PRIVATE "-mwindows")
