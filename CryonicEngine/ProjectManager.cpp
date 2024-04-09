@@ -366,7 +366,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     std::filesystem::path buildPath;
 
     if (debug)
-        buildPath = projectData.path / "Internal" / "Debug";
+        buildPath = projectData.path / "Internal" / "Builds" / "Debug";
     else
         buildPath = projectData.path / "Builds" / "Windows";
 
