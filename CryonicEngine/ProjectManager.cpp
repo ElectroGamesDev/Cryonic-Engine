@@ -83,6 +83,7 @@ int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catc
     std::filesystem::create_directory(projectData.path / "api");
     std::filesystem::create_directory(projectData.path / "Settings");
     std::filesystem::create_directory(projectData.path / "Plugins");
+    std::filesystem::create_directory(projectData.path / "Internal");
     std::filesystem::create_directory(projectData.path / "Assets");
     std::filesystem::create_directory(projectData.path / "Assets" / "Scripts");
     std::filesystem::create_directory(projectData.path / "Assets" / "Scenes");
