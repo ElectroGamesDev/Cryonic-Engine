@@ -202,16 +202,16 @@ void ProjectManager::CleanupBuildFolder(std::filesystem::path path)
 //    return true;
 //}
 
-void ProjectManager::BackupCMakeFiles(std::filesystem::path path) // Todo: Add parameters, buildPath and backupPath
+void ProjectManager::BackupCMakeFiles(std::filesystem::path buildPath, std::filesystem::path backupPath)
 {
     try
     {
-        if (std::filesystem::exists(path / "CMakeFilesBackup"))
-            std::filesystem::remove_all(path / "CMakeFilesBackup");
+        if (std::filesystem::exists(backupPath))
+            std::filesystem::remove_all(backupPath);
 
-        std::filesystem::create_directory(path / "CMakeFilesBackup");
+        std::filesystem::create_directory(backupPath);
 
-        for (const auto& file : std::filesystem::directory_iterator(path))
+        for (const auto& file : std::filesystem::directory_iterator(buildPath))
         {
             try
             {
@@ -219,9 +219,9 @@ void ProjectManager::BackupCMakeFiles(std::filesystem::path path) // Todo: Add p
                 if (std::find(cMakeFiles.begin(), cMakeFiles.end(), file.path().filename()) != cMakeFiles.end())
                 {
                     if (std::filesystem::is_directory(file.path()))
-                        std::filesystem::copy(file.path(), path / "CMakeFilesBackup" / file.path().filename());
+                        std::filesystem::copy(file.path(), backupPath / file.path().filename());
                     else
-                        std::filesystem::copy(file.path(), path / "CMakeFilesBackup");
+                        std::filesystem::copy(file.path(), backupPath);
                 }
             }
             catch (const std::exception& e) {
@@ -237,23 +237,23 @@ void ProjectManager::BackupCMakeFiles(std::filesystem::path path) // Todo: Add p
     }
 }
 
-void ProjectManager::RestoreCMakeFiles(std::filesystem::path path) // Todo: Add parameters, buildPath and backupPath
+void ProjectManager::RestoreCMakeFiles(std::filesystem::path buildPath, std::filesystem::path backupPath)
 {
     try
     {
-        if (!std::filesystem::exists(path / "CMakeFilesBackup"))
+        if (!std::filesystem::exists(backupPath))
             return;
 
-        for (const auto& file : std::filesystem::directory_iterator(path / "CMakeFilesBackup"))
+        for (const auto& file : std::filesystem::directory_iterator(backupPath))
         {
             try {
-                if (std::filesystem::exists(path / file.path().filename()))
-                    std::filesystem::remove_all(path / file.path().filename());
+                if (std::filesystem::exists(buildPath / file.path().filename()))
+                    std::filesystem::remove_all(buildPath / file.path().filename());
 
                 if (std::filesystem::is_directory(file.path()))
-                    std::filesystem::copy(file.path(), path / file.path().filename());
+                    std::filesystem::copy(file.path(), buildPath / file.path().filename());
                 else
-                    std::filesystem::copy(file.path(), path);
+                    std::filesystem::copy(file.path(), buildPath);
             }
             catch (const std::exception& e) {
                 ConsoleLogger::ErrorLog("Build Log - Error restoring CMake file: " + file.path().string() + ". Error: " + e.what());
@@ -402,7 +402,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         {
             ConsoleLogger::ErrorLog("Build Log - Failed to open the CMakesLists.txt to modify the game's name. Terminating build.", false);
             if (debug)
-                RestoreCMakeFiles(buildPath);
+                RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
             else
                 CleanupBuildFolder(buildPath);
             return;
@@ -417,7 +417,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         {
             ConsoleLogger::ErrorLog("Build Log - Failed to set the name of the game. Terminating build.", false);
             if (debug)
-                RestoreCMakeFiles(buildPath);
+                RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
             else
                 CleanupBuildFolder(buildPath);
             return;
@@ -430,7 +430,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         if (!SetGameSettings(buildPath / "Source" / "Game.cpp"))
         {
             if (debug)
-                RestoreCMakeFiles(buildPath);
+                RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
             else
                 CleanupBuildFolder(buildPath);
             return;
@@ -449,7 +449,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     {
         ConsoleLogger::ErrorLog("Build Log - Error copying BuildPresets directory and/or files. Terminating build. Error: " + (std::string)e.what(), false);
         if (debug)
-            RestoreCMakeFiles(buildPath);
+            RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
         else
             CleanupBuildFolder(buildPath);
         return;
@@ -477,7 +477,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     catch (const std::exception& e) {
         ConsoleLogger::ErrorLog("Build Log - Failed to copy resource files: " + (std::string)e.what());
         if (debug)
-            RestoreCMakeFiles(buildPath);
+            RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
         else
             CleanupBuildFolder(buildPath);
         return;
@@ -486,7 +486,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source")) // Todo: This should handle the error messages, not BuildScripts(). BuildScripts() should return an int
     {
         if (debug)
-            RestoreCMakeFiles(buildPath);
+            RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
         else
             CleanupBuildFolder(buildPath);
         return;
@@ -538,7 +538,7 @@ void ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         CleanupBuildFolder(buildPath);
     }
     else
-        BackupCMakeFiles(buildPath);
+        BackupCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
 
     ConsoleLogger::InfoLog("Build Log - Build complete", false);
 

@@ -64,8 +64,8 @@ public:
     static void CopyAssetFiles(std::filesystem::path destination);
     //static bool ExtractZip(const char* zip_path, const char* dest_folder);
     static bool SetGameSettings(std::filesystem::path gameFile);
-    static void BackupCMakeFiles(std::filesystem::path path);
-    static void RestoreCMakeFiles(std::filesystem::path path);
+    static void BackupCMakeFiles(std::filesystem::path buildPath, std::filesystem::path backupPath);
+    static void RestoreCMakeFiles(std::filesystem::path buildPath, std::filesystem::path backupPath);
     static void BuildToWindows(ProjectData projectData, bool debug);
     static void SaveProject();
     static ProjectData LoadProject(std::filesystem::path path);
