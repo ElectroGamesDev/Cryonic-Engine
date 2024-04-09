@@ -27,8 +27,8 @@ void SpriteRenderer::Update(float deltaTime)
 {
     if (textureSet)
     {
-        RaylibWrapper::DrawTexturePro({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format },
-            { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) },
+        RaylibWrapper::DrawTextureProFlipped({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format },
+            { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) * -1 },
             { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, texture.width* gameObject->transform.GetScale().x, texture.height* gameObject->transform.GetScale().y },
             { texture.width * gameObject->transform.GetScale().x / 2, texture.height * gameObject->transform.GetScale().y / 2 },
             gameObject->transform.GetRotationEuler().y,
@@ -38,12 +38,20 @@ void SpriteRenderer::Update(float deltaTime)
     {
         Vector3 position = gameObject->transform.GetPosition();
         Vector3 scale = gameObject->transform.GetScale();
-        DrawRectangleWrapper(position.x, position.y, scale.x, scale.y, gameObject->transform.GetRotationEuler().y, tint.r, tint.g, tint.b, tint.a);
+        //DrawRectangleWrapper(position.x, position.y, scale.x, scale.y, gameObject->transform.GetRotationEuler().y, tint.r, tint.g, tint.b, tint.a);
+        RaylibWrapper::DrawRectangleProFlipped({ position.x, position.y, scale.x, scale.y },
+            {
+                scale.x / 2,
+                scale.y / 2
+            },
+            gameObject->transform.GetRotationEuler().y,
+            { tint.r, tint.g, tint.b, tint.a });
     }
     else if (texturePath == "Circle")
     {
         Vector3 position = gameObject->transform.GetPosition();
-        DrawCircleWrapper(position.x, position.y, gameObject->transform.GetScale().x, tint.r, tint.g, tint.b, tint.a);
+        //DrawCircleWrapper(position.x, position.y, gameObject->transform.GetScale().x, tint.r, tint.g, tint.b, tint.a);
+        RaylibWrapper::DrawCircleSectorFlipped({ position.x, position.y }, gameObject->transform.GetScale().x, 0, 360, 36, { tint.r, tint.g, tint.b, tint.a });
     }
     else
     {
