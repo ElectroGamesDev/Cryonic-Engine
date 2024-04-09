@@ -382,11 +382,16 @@ Scene* SceneManager::CreateScene()
 #if defined(EDITOR)
     GameObject* cameraObject = m_scenes.back().AddGameObject();
     if (ProjectManager::projectData.is3D)
+    {
         cameraObject->transform.SetPosition({ 0,0, -25 });
+        cameraObject->transform.SetRotation(Quaternion::Identity());
+    }
     else
-        cameraObject->transform.SetPosition({ 0,0, -50 });
+    {
+        cameraObject->transform.SetPosition({ 0,0, 50 });
+        cameraObject->transform.SetRotationEuler({ 0, 180, 0 });
+    }
     cameraObject->transform.SetScale({ 1,1,1 });
-    cameraObject->transform.SetRotation(Quaternion::Identity());
     cameraObject->SetName("Camera");
     CameraComponent& camera = cameraObject->AddComponent<CameraComponent>();
     camera.gameObject = cameraObject;
