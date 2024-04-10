@@ -2755,7 +2755,20 @@ void Editor::Render(void)
             {
                 if (ImGui::MenuItem("Windows", ""))
                 {
-                    ProjectManager::BuildToWindows(ProjectManager::projectData, false);
+                    if (ProjectManager::BuildToWindows(ProjectManager::projectData, false))
+                    {
+                        ImGuiToast toast(ImGuiToastType::Success, 2500, true);
+                        toast.setTitle("Successfully built", "");
+                        toast.setContent("The project has successfully built.");
+                        ImGui::InsertNotification(toast);
+                    }
+                    else
+                    {
+                        ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+                        toast.setTitle("Build failed", "");
+                        toast.setContent("The project failed to build.");
+                        ImGui::InsertNotification(toast);
+                    }
                 }
                 ImGui::EndMenu();
             }
