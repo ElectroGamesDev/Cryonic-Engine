@@ -2405,7 +2405,14 @@ void Editor::RenderHierarchy()
                 if (objectToCreate == "Empty")
                     gameObject->SetName("GameObject");
                 else if (objectToCreate == "Camera")
+                {
                     gameObject->AddComponent<CameraComponent>();
+                    if (ProjectManager::projectData.is3D)
+                    {
+                        gameObject->transform.SetPosition({ 0,0,500 });
+                        gameObject->transform.SetRotationEuler({ 180, 0, 0 });
+                    }
+                }
                 else if (objectToCreate == "Light")
                     gameObject->AddComponent<Lighting>();
                 else
@@ -2447,7 +2454,7 @@ void Editor::RenderHierarchy()
                 selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
                 objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
 
-                if (selectedObject->GetComponent<CameraComponent>() != nullptr)
+                if (selectedObject->GetComponent<CameraComponent>() != nullptr) // Todo: Should this if-else-if statement be moved up into the "else if (objectToCreate == "Camera")" statement?
                     cameraSelected = true;
                 else if (cameraSelected)
                 {
