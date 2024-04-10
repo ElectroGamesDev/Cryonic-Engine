@@ -2407,7 +2407,7 @@ void Editor::RenderHierarchy()
                 else if (objectToCreate == "Camera")
                 {
                     gameObject->AddComponent<CameraComponent>();
-                    if (ProjectManager::projectData.is3D)
+                    if (!ProjectManager::projectData.is3D)
                     {
                         gameObject->transform.SetPosition({ 0,0,500 });
                         gameObject->transform.SetRotationEuler({ 180, 0, 0 });
