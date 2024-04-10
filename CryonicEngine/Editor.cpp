@@ -441,7 +441,7 @@ void Editor::UpdateViewport()
             //    0,
             //    {255, 255, 255, 255});
 
-            RaylibWrapper::DrawTexturePro(texture,
+            RaylibWrapper::DrawTextureProFlipped(texture,
                 { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) },
                 { position.x, position.y, static_cast<float>(texture.width), static_cast<float>(texture.height)},
                 { static_cast<float>(texture.width) / 2, static_cast<float>(texture.height) / 2 },
