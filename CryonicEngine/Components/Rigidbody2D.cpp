@@ -2,9 +2,6 @@
 #if !defined(EDITOR)
 #include "../box2d/box2d.h"
 #include "../Game.h"
-
-Vector3 lastGameObjectPosition;
-Quaternion lastGameObjectRotation;
 #endif
 
 Rigidbody2D::Rigidbody2D(GameObject* obj) : Component(obj) {
