@@ -1,5 +1,6 @@
 #include "Collider2D.h"
 #include "Rigidbody2D.h"
+#include "SpriteRenderer.h"
 #if !defined(EDITOR)
 #include "../box2d/box2d.h"
 #include "../Game.h"
@@ -34,7 +35,14 @@ void Collider2D::Start()
 		body = rb->body;
 	}
 
-	shape.SetAsBox(gameObject->transform.GetScale().x / 2, gameObject->transform.GetScale().y / 2);
+	// Todo: This needs to be fixed. This is a horrible solution to check if the sprite is a texture or a specific built in shape to apply the right scale to it.
+	SpriteRenderer* spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
+	if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Square")
+		shape.SetAsBox(gameObject->transform.GetScale().x * 3 / 2, gameObject->transform.GetScale().y * 3 / 2);
+	else if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Circle")
+		shape.SetAsBox(gameObject->transform.GetScale().x * 1.5f / 2, gameObject->transform.GetScale().y * 1.5f / 2);
+	else // Assumes its a texture or doesn't have a sprite
+		shape.SetAsBox(gameObject->transform.GetScale().x * 10 / 2, gameObject->transform.GetScale().y * 10 / 2);
 
 	fixtureDef.shape = &shape;
 	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
