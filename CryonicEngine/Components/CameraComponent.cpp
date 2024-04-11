@@ -1,6 +1,7 @@
 #include "CameraComponent.h"
 #include "../CryonicCore.h"
 #if defined(EDITOR)
+#include "../ProjectManager.h"
 //#include "../IconManager.h"
 //#include "../Editor.h"
 #endif
@@ -13,10 +14,17 @@ CameraComponent::CameraComponent(GameObject* obj) : Component(obj)
 	iconUnicode = "\xef\x80\xb0";
 	runInEditor = true;
 
-	//if (ProjectManager::projectData.is3D) // Todo: Re-add this
+#ifdef EDITOR
+	if (ProjectManager::projectData.is3D)
+		raylibCamera.SetProjection(0);
+	else
+		raylibCamera.SetProjection(1);
+#elif IS3D
 	raylibCamera.SetProjection(0);
-	//else
-	//	raylibCamera.SetProjection(1);
+#else
+	raylibCamera.SetProjection(1);
+#endif
+
 	raylibCamera.SetFOVY(45);
 	raylibCamera.SetUpY(1);
 	raylibCamera.SetPosition(0, 0, 0);
