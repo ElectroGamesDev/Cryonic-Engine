@@ -25,10 +25,14 @@ CameraComponent::CameraComponent(GameObject* obj) : Component(obj)
 	raylibCamera.SetProjection(1);
 #endif
 
-	raylibCamera.SetFOVY(45);
+	raylibCamera.SetFOVY(45); // Todo: Make this configurable on the camera, and add a dirty flag to update it when it changes
 	raylibCamera.SetUpY(1);
-	raylibCamera.SetPosition(0, 0, 0);
-	raylibCamera.SetTarget(0, 0,0);
+
+	Vector3 pos = gameObject->transform.GetPosition();
+	raylibCamera.SetPosition(pos.x, pos.y, pos.z);
+
+	Vector3 target = gameObject->transform.GetPosition() + RotateVector3ByQuaternion({ 0,0,1 }, gameObject->transform.GetRotation());
+	raylibCamera.SetTarget(target.x, target.y, target.z);
 
 	// Todo: Near Plane
 	// Todo: Far Planer
