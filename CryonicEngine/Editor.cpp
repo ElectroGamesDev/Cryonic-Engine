@@ -417,6 +417,18 @@ void Editor::UpdateViewport()
     if (ProjectManager::projectData.is3D)
         RaylibWrapper::DrawGrid(100, 10.0f);
 
+    for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+    {
+        if (!gameObject->IsActive()) continue;
+        for (Component* component : gameObject->GetComponents())
+        {
+            if (!component->IsActive()) continue;
+            if (component->runInEditor)
+                component->Update(RaylibWrapper::GetFrameTime());
+            component->EditorUpdate();
+        }
+    }
+
     switch (dragData.first)
     {
     case ImageFile:
@@ -449,18 +461,6 @@ void Editor::UpdateViewport()
                 { 255, 255, 255, 255 });
         }
         break;
-    }
-
-    for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
-    {
-        if (!gameObject->IsActive()) continue;
-        for (Component* component : gameObject->GetComponents())
-        {
-            if (!component->IsActive()) continue;
-            if (component->runInEditor)
-                component->Update(RaylibWrapper::GetFrameTime());
-            component->EditorUpdate();
-        }
     }
 
     RaylibWrapper::EndMode3D();
