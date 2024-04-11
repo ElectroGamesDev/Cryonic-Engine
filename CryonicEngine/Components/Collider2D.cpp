@@ -35,7 +35,7 @@ void Collider2D::Start()
 		body = rb->body;
 	}
 
-	// Todo: This needs to be fixed. This is a horrible solution to check if the sprite is a texture or a specific built in shape to apply the right scale to it.
+	// Todo: This needs to be fixed. This is a horrible solution to check if the sprite is a texture or a specific built in shape to apply the right scale multiplier to it.
 	SpriteRenderer* spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
 	if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Square")
 		shape.SetAsBox(gameObject->transform.GetScale().x * 3 / 2, gameObject->transform.GetScale().y * 3 / 2);
