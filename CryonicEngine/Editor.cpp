@@ -2901,7 +2901,7 @@ void Editor::SetupViewport()
         //camera2D.zoom = 1;
         //camera2D.rotation = 0.0f;
 
-        camera.projection = RaylibWrapper::CAMERA_ORTHOGRAPHIC;
+        camera.projection = RaylibWrapper::CAMERA_PERSPECTIVE; // CAMERA_ORTHOGRAPHIC
         camera.up.y = 1;
         camera.fovy = 45;
         camera.target = { 0.0f, 0.0f, 0.0f };
