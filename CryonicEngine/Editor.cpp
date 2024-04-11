@@ -213,11 +213,11 @@ void Editor::RenderViewport()
 
             else
             {
-                RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
-                RaylibWrapper::Vector2 deltaMouse = RaylibWrapper::Vector2Subtract(mousePosition, lastMousePosition);
+                RaylibWrapper::Vector2 deltaMouse = RaylibWrapper::Vector2Subtract(RaylibWrapper::GetMousePosition(), lastMousePosition);
                 camera.position.x += deltaMouse.x * 0.1f;
-                camera.position.y += deltaMouse.y * 0.1f;
-                camera.target = RaylibWrapper::Vector3Add(camera.position, {0,0,1});
+                camera.position.y -= deltaMouse.y * 0.1f;
+                camera.target.x = camera.position.x;
+                camera.target.y = camera.position.y;
             }
             //    UpdateCamera(&camera, CAMERA_FREE);
             //    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
@@ -442,9 +442,9 @@ void Editor::UpdateViewport()
             //    {255, 255, 255, 255});
 
             RaylibWrapper::DrawTextureProFlipped(texture,
-                { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) },
-                { position.x, position.y, static_cast<float>(texture.width), static_cast<float>(texture.height)},
-                { static_cast<float>(texture.width) / 2, static_cast<float>(texture.height) / 2 },
+                { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) * -1 },
+                { position.x, position.y, static_cast<float>(texture.width) / 10, static_cast<float>(texture.height) / 10},
+                { static_cast<float>(texture.width) / 10 / 2, static_cast<float>(texture.height) / 10 / 2 },
                 0,
                 { 255, 255, 255, 255 });
         }
