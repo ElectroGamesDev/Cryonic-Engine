@@ -56,36 +56,35 @@ void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics
     if (bodyType == Dynamic)
     {
         // Todo: This will update the body's rotation and position when it doesn't need to.
-        if (gameObject->transform.GetPosition() == lastGameObjectPosition)
+        if (gameObject->transform.GetPosition() == lastGameObjectPosition) // Todo: This shouldn't be setting the gameobject's position even when the body hasn't changed
             gameObject->transform.SetPosition({ body->GetPosition().x, body->GetPosition().y, 0 });
         else if (gameObject->transform.GetPosition().x != body->GetTransform().p.x || gameObject->transform.GetPosition().y != body->GetTransform().p.y)
             body->SetTransform({ gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y }, body->GetAngle());
 
-        if (gameObject->transform.GetRotation() == lastGameObjectRotation)
+        if (gameObject->transform.GetRotation() == lastGameObjectRotation) // Todo: This shouldn't be setting the gameobject's rotation even when the body hasn't changed
             gameObject->transform._rotation.y = body->GetAngle() * RAD2DEG;
         else if (DEG2RAD * gameObject->transform.GetRotation().y != body->GetTransform().q.GetAngle())
             body->SetTransform(body->GetPosition(), DEG2RAD * gameObject->transform.GetRotation().y);
-
-        lastGameObjectPosition = gameObject->transform.GetPosition();
-        lastGameObjectRotation = gameObject->transform.GetRotation();
     }
     else if (bodyType == Kinematic)
     {
-        if (gameObject->transform.GetPosition() != lastGameObjectPosition)
+        if (gameObject->transform.GetPosition() != lastGameObjectPosition) // Todo: This shouldn't be setting the gameobject's position even when the body hasn't changed
             body->SetTransform({ gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y }, body->GetAngle());
 
         //if (gameObject->transform.GetRotation() != lastGameObjectRotation)
         if (gameObject->transform.GetRotation() != lastGameObjectRotation || DEG2RAD * gameObject->transform.GetRotation().y != body->GetTransform().q.GetAngle()) // Rotations on kinematic bodies can be changed with physics, I assume collision resolution. This fixes it
             body->SetTransform(body->GetPosition(), DEG2RAD * gameObject->transform.GetRotation().y);
-
-        lastGameObjectPosition = gameObject->transform.GetPosition();
-        lastGameObjectRotation = gameObject->transform.GetRotation();
     }
     else if (bodyType == Static)
     {
-        gameObject->transform.SetPosition(lastGameObjectPosition);
-        gameObject->transform._rotation.y = lastGameObjectRotation.y;
+        if (gameObject->transform.GetPosition() != lastGameObjectPosition)
+            gameObject->transform.SetPosition(lastGameObjectPosition);
+        if (gameObject->transform.GetRotation() != lastGameObjectRotation)
+            gameObject->transform._rotation.y = lastGameObjectRotation.y;
     }
+
+    lastGameObjectPosition = gameObject->transform.GetPosition();
+    lastGameObjectRotation = gameObject->transform.GetRotation();
 #endif
 }
 
