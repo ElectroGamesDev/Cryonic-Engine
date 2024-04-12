@@ -27,5 +27,6 @@ public:
 
     Vector3 lastGameObjectPosition;
     Quaternion lastGameObjectRotation;
+    BodyType oldBodyType;
 #endif
 };
