@@ -27,12 +27,29 @@ public:
     void ApplyImpulse(Vector2 impulse, Vector2 position = { 0,0 });
     void ApplyTorque(float torque);
     void SetType(BodyType bodyType);
+    void SetGravityScale(float gravity);
+    float GetGravityScale();
+    void SetContinuous(bool value);
+    bool IsContinuous();
+    void SetMass(float mass);
+    float GetMass();
+    void SetLinearDamping(float damping);
+    float GetLinearDamping();
+    void SetAngularDamping(float damping);
+    float GetAngularDamping();
 
 	BodyType bodyType = Dynamic;
 
     // Hide in API
 #if !defined(EDITOR)
     b2Body* body = nullptr;
+
+private:
+    float gravityScale = 1.0f;
+    bool continuousDetection = false;
+    float mass = 1.0f;
+    float linearDamping = 0.0f;
+    float angularDamping = 0.0f;
 
     Vector3 lastGameObjectPosition;
     Quaternion lastGameObjectRotation;

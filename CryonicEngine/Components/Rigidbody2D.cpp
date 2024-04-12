@@ -21,6 +21,36 @@ Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
                         "Kinematic",
                         "Static"
                     ]
+                ],
+                [
+                    "float",
+                    "gravityScale",
+                    1.0,
+                    "Gravity Scale"
+                ],
+                [
+                    "float",
+                    "mass",
+                    1.0,
+                    "Mass"
+                ],
+                [
+                    "bool",
+                    "continuousDetection",
+                    false,
+                    "Continuous Detection"
+                ],
+                [
+                    "float",
+                    "linearDamping",
+                    0.0,
+                    "Linear Damping"
+                ],
+                [
+                    "float",
+                    "angularDamping",
+                    0.0,
+                    "Angular Damping"
                 ]
             ]
         ]
@@ -44,6 +74,12 @@ Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
         bodyDef.type = b2_staticBody;
 	bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
 	body = world->CreateBody(&bodyDef);
+
+    SetGravityScale(gravityScale);
+    SetContinuous(continuousDetection);
+    SetLinearDamping(linearDamping);
+    SetAngularDamping(angularDamping);
+    SetMass(mass);
 
     oldBodyType = bodyType;
 #endif
@@ -109,6 +145,89 @@ void Rigidbody2D::SetType(BodyType bodyType)
         body->SetType(b2_kinematicBody);
     else
         body->SetType(b2_staticBody);
+#endif
+}
+
+void Rigidbody2D::SetGravityScale(float gravity)
+{
+#if !defined(EDITOR)
+    body->SetGravityScale(gravity);
+#endif
+}
+
+float Rigidbody2D::GetGravityScale()
+{
+#if !defined(EDITOR)
+    return body->GetGravityScale();
+#else
+    return 0.0f;
+#endif
+}
+
+void Rigidbody2D::SetContinuous(bool value)
+{
+#if !defined(EDITOR)
+    body->SetBullet(value);
+#endif
+}
+
+bool Rigidbody2D::IsContinuous()
+{
+#if !defined(EDITOR)
+    return body->IsBullet();
+#else
+    return false;
+#endif
+}
+
+void Rigidbody2D::SetMass(float mass)
+{
+#if !defined(EDITOR)
+    this->mass = mass;
+    for (b2Fixture* fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext())
+        fixture->SetDensity(mass);
+    body->ResetMassData();
+#endif
+}
+
+float Rigidbody2D::GetMass()
+{
+#if !defined(EDITOR)
+    return mass;
+#else
+    return 0.0f;
+#endif
+}
+
+void Rigidbody2D::SetLinearDamping(float damping)
+{
+#if !defined(EDITOR)
+    body->SetLinearDamping(damping);
+#endif
+}
+
+float Rigidbody2D::GetLinearDamping()
+{
+#if !defined(EDITOR)
+    return GetLinearDamping();
+#else
+    return 0.0f;
+#endif
+}
+
+void Rigidbody2D::SetAngularDamping(float damping)
+{
+#if !defined(EDITOR)
+    body->SetAngularDamping(damping);
+#endif
+}
+
+float Rigidbody2D::GetAngularDamping()
+{
+#if !defined(EDITOR)
+    return GetAngularDamping();
+#else
+    return 0.0f;
 #endif
 }
 
