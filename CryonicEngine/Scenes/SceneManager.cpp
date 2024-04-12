@@ -224,11 +224,10 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             // Temporary solution
             if (componentData["name"] == "MeshRenderer")
             {
-                MeshRenderer& component = gameObject->AddComponent<MeshRenderer>();
+                MeshRenderer& component = gameObject->AddComponent<MeshRenderer>(componentData["id"]);
                 //component.gameObject = &gameObject;
                 component.SetModelPath(componentData["model_path"]);
                 component.SetActive(componentData["active"]);
-                component.id = componentData["id"];
                 #if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
                 #endif
@@ -248,10 +247,9 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "SpriteRenderer")
             {
-                SpriteRenderer& component = gameObject->AddComponent<SpriteRenderer>();
+                SpriteRenderer& component = gameObject->AddComponent<SpriteRenderer>(componentData["id"]);
                 component.SetTexturePath(componentData["texture_path"]);
                 component.SetActive(componentData["active"]);
-                component.id = componentData["id"];
 #if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
 #endif
@@ -270,13 +268,12 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             else if (componentData["name"] == "ScriptComponent")
             {
 #if defined(EDITOR)
-                ScriptComponent& component = gameObject->AddComponent<ScriptComponent>();
+                ScriptComponent& component = gameObject->AddComponent<ScriptComponent>(componentData["id"]);
                 //component.gameObject = &gameObject;
                 component.SetCppPath(componentData["cpp_path"]);
                 component.SetHeaderPath(componentData["header_path"]);
                 component.SetName(component.GetHeaderPath().stem().string());
                 component.SetActive(componentData["active"]);
-                component.id = componentData["id"];
                 component.exposedVariables = componentData["exposed_variables"];
                 //component.name = component.GetName();
 #else
@@ -285,36 +282,32 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "CameraComponent")
             {
-                CameraComponent& component = gameObject->AddComponent<CameraComponent>();
+                CameraComponent& component = gameObject->AddComponent<CameraComponent>(componentData["id"]);
                 component.SetActive(componentData["active"]);
-                component.id = componentData["id"];
                 #if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
                 #endif
             }
             else if (componentData["name"] == "Lighting")
             {
-                Lighting& component = gameObject->AddComponent<Lighting>();
+                Lighting& component = gameObject->AddComponent<Lighting>(componentData["id"]);
                 component.SetActive(componentData["active"]);
-                component.id = componentData["id"];
 #if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
 #endif
             }
             else if (componentData["name"] == "Collider2D")
             {
-                Collider2D& component = gameObject->AddComponent<Collider2D>();
+                Collider2D& component = gameObject->AddComponent<Collider2D>(componentData["id"]);
                 component.SetActive(componentData["active"]);
-                component.id = componentData["id"];
 #if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
 #endif
             }
             else if (componentData["name"] == "Rigidbody2D")
             {
-                Rigidbody2D& component = gameObject->AddComponent<Rigidbody2D>();
+                Rigidbody2D& component = gameObject->AddComponent<Rigidbody2D>(componentData["id"]);
                 component.SetActive(componentData["active"]);
-                component.id = componentData["id"];
 #if defined(EDITOR)
                 component.exposedVariables = componentData["exposed_variables"];
 #endif
@@ -334,6 +327,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
         for (Component* component : gameObject->GetComponents())
         {
             component->SetExposedVariables();
+            // Todo: Call OnAwake() here although the Set Parent should be before this
     }
         #endif
 
