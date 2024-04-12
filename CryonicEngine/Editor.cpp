@@ -2096,9 +2096,9 @@ void Editor::RenderProperties()
                             {
                                 ImGui::SameLine();
                                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
-                                ImGui::SetNextItemWidth(60);
+                                ImGui::SetNextItemWidth(60); 
                                 float value = (*it)[2].get<float>();
-                                ImGui::InputFloat(("##" + name).c_str(), &value);
+                                ImGui::InputFloat(("##" + name).c_str(), &value, 0, 0, "%.10g");
                                 (*it)[2] = value;
                             }
                             else if ((*it)[0] == "int")
