@@ -6,7 +6,7 @@
 class Lighting : public Component
 {
 public:
-	Lighting(GameObject* obj) : Component(obj)
+	Lighting(GameObject* obj, int id) : Component(obj, id)
 	{
 		name = "Lighting";
 		iconUnicode = "\xef\x83\xab";

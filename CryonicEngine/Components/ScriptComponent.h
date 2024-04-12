@@ -6,7 +6,7 @@
 class ScriptComponent : public Component
 {
 public:
-	ScriptComponent(GameObject* obj) : Component(obj)
+	ScriptComponent(GameObject* obj, int id) : Component(obj, id)
 	{
 		name = "ScriptComponent";
 	}

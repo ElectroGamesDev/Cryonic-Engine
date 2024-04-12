@@ -4,7 +4,7 @@
 
 class Collider3D : public Component {
 public:
-    Collider3D(GameObject* obj);
+    Collider3D(GameObject* obj, int id);
     void Start() override;
     void Destroy() override;
 

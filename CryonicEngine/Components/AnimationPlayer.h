@@ -5,7 +5,7 @@
 class AnimationPlayer : public Component
 {
 public:
-	AnimationPlayer(GameObject* obj) : Component(obj)
+	AnimationPlayer(GameObject* obj, int id) : Component(obj, id)
 	{
 		name = "AnimationPlayer";
 		iconUnicode = "\xef\x9c\x8c";

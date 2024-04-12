@@ -11,7 +11,7 @@ b2FixtureDef fixtureDef;
 b2Body* body;
 #endif
 
-Collider2D::Collider2D(GameObject* obj) : Component(obj) {
+Collider2D::Collider2D(GameObject* obj, int id) : Component(obj, id) {
 	name = "Collider2D";
 }
 

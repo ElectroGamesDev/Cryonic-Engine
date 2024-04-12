@@ -8,7 +8,7 @@
 
 CameraComponent* CameraComponent::main = nullptr;
 
-CameraComponent::CameraComponent(GameObject* obj) : Component(obj)
+CameraComponent::CameraComponent(GameObject* obj, int id) : Component(obj, id)
 {
 	name = "CameraComponent";
 	iconUnicode = "\xef\x80\xb0";

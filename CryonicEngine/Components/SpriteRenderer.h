@@ -7,7 +7,7 @@
 class SpriteRenderer : public Component
 {
 public:
-	SpriteRenderer(GameObject* obj) : Component(obj)
+	SpriteRenderer(GameObject* obj, int id) : Component(obj, id)
 	{
 		runInEditor = true;
 		name = "SpriteRenderer";

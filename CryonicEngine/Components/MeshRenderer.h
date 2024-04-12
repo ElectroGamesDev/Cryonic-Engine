@@ -6,7 +6,7 @@
 class MeshRenderer : public Component
 {
 public:
-	MeshRenderer(GameObject* obj) : Component(obj)
+	MeshRenderer(GameObject* obj, int id) : Component(obj, id)
 	{
 		runInEditor = true;
 		name = "MeshRenderer";

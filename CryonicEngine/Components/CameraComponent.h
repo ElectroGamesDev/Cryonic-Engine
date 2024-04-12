@@ -7,7 +7,7 @@
 class CameraComponent : public Component
 {
 public:
-	CameraComponent(GameObject* obj);
+	CameraComponent(GameObject* obj, int id);
 	void Start() override;
 	void Update(float deltaTime) override;
 #ifdef EDITOR

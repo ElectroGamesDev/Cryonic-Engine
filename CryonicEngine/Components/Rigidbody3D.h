@@ -8,7 +8,7 @@
 
 class Rigidbody3D : public Component {
 public:
-    Rigidbody3D(GameObject* obj);
+    Rigidbody3D(GameObject* obj, int id);
     void Update(float deltaTime) override;
     void Destroy() override;
 

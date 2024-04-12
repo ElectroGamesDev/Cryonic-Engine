@@ -25,7 +25,7 @@
 // Todo: Move above into Start()??
 #endif
 
-Collider3D::Collider3D(GameObject* obj) : Component(obj) {
+Collider3D::Collider3D(GameObject* obj, int id) : Component(obj, id) {
 	name = "Collider3D";
 }
 

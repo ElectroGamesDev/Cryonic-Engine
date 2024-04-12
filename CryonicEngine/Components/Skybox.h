@@ -7,7 +7,7 @@
 class Skybox : public Component
 {
 public:
-	Skybox(GameObject* obj) : Component(obj)
+	Skybox(GameObject* obj, int id) : Component(obj, id)
 	{
 		runInEditor = true;
 		name = "Skybox";

@@ -24,7 +24,7 @@ JPH::Body* body;
 
 #endif
 
-Rigidbody3D::Rigidbody3D(GameObject* obj) : Component(obj) {
+Rigidbody3D::Rigidbody3D(GameObject* obj, int id) : Component(obj, id) {
 	name = "Rigidbody3D";
 #if defined(EDITOR)
     std::string variables = R"(
