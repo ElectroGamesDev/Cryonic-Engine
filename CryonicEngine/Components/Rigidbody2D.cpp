@@ -28,7 +28,7 @@ Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
     exposedVariables = nlohmann::json::parse(variables);
 
 #else
-    SetExposedVariables();
+    SetExposedVariables(); // SetExposedVariables() is currently called on all components after the constructor. This should fix the issue.
 
     lastGameObjectPosition = gameObject->transform.GetPosition();
     lastGameObjectRotation = gameObject->transform.GetRotation();
@@ -37,15 +37,9 @@ Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
     // Todo: Change this to a switch case
     // The exposed variables don't get set until after the cosntructor since the component doesn't have it's ID yet so bodyType is always Dynamic here
     if (bodyType == Dynamic)
-    {
         bodyDef.type = b2_dynamicBody;
-        //ConsoleLogger::ErrorLog("Dynamic");
-    }
     else if (bodyType == Kinematic)
-    {
         bodyDef.type = b2_kinematicBody;
-        //ConsoleLogger::WarningLog("Kinematic");
-    }
     else
         bodyDef.type = b2_staticBody;
 	bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
@@ -60,7 +54,6 @@ void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics
     // Todo: Change this to a switch case
     if (bodyType == Dynamic)
     {
-        //ConsoleLogger::ErrorLog("Dynamic 222222222");
         // Todo: This will update the body's rotation and position when it doesn't need to.
         if (gameObject->transform.GetPosition() == lastGameObjectPosition) // Todo: This shouldn't be setting the gameobject's position even when the body hasn't changed
             gameObject->transform.SetPosition({ body->GetPosition().x, body->GetPosition().y, 0 });
@@ -74,12 +67,11 @@ void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics
     }
     else if (bodyType == Kinematic)
     {
-        //ConsoleLogger::WarningLog("Kinematic 11111");
         if (gameObject->transform.GetPosition() != lastGameObjectPosition) // Todo: This shouldn't be setting the gameobject's position even when the body hasn't changed
             body->SetTransform({ gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y }, body->GetAngle());
 
-        //if (gameObject->transform.GetRotation() != lastGameObjectRotation)
-        if (gameObject->transform.GetRotation() != lastGameObjectRotation || DEG2RAD * gameObject->transform.GetRotation().y != body->GetTransform().q.GetAngle()) // Rotations on kinematic bodies can be changed with physics, I assume collision resolution. This fixes it
+        //if (gameObject->transform.GetRotation() != lastGameObjectRotation || DEG2RAD * gameObject->transform.GetRotation().y != body->GetTransform().q.GetAngle())
+        if (gameObject->transform.GetRotation() != lastGameObjectRotation)
             body->SetTransform(body->GetPosition(), DEG2RAD * gameObject->transform.GetRotation().y);
 
         //if (gameObject->transform.GetPosition() == lastGameObjectPosition) // Todo: This shouldn't be setting the gameobject's position even when the body hasn't changed
