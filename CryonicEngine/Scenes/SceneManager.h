@@ -7,7 +7,7 @@ public:
     SceneManager(); 
     static Scene* GetActiveScene();
     static void SetActiveScene(Scene* scene);
-    static std::vector<Scene>* GetScenes();
+    static std::deque<Scene>* GetScenes();
     static bool SaveScene(Scene* scene);
     static bool LoadScene(std::filesystem::path filePath); // Todo: Should this return the scene?
     static void UnloadScene(Scene* scene);
@@ -17,6 +17,6 @@ public:
     static void BackupScene(Scene* scene);
 
 private:
-    static std::vector<Scene> m_scenes;
+    static std::deque<Scene> m_scenes;
     static Scene* m_activeScene;
 };
