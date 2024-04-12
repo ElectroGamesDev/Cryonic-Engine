@@ -134,7 +134,7 @@ void Rigidbody2D::ApplyTorque(float torque)
 #endif
 }
 
-void Rigidbody2D::SetType(BodyType bodyType)
+void Rigidbody2D::SetBodyType(BodyType bodyType)
 {
 #if !defined(EDITOR)
     this->bodyType = bodyType;
@@ -146,6 +146,11 @@ void Rigidbody2D::SetType(BodyType bodyType)
     else
         body->SetType(b2_staticBody);
 #endif
+}
+
+BodyType Rigidbody2D::GetBodyType()
+{
+    return bodyType;
 }
 
 void Rigidbody2D::SetGravityScale(float gravity)

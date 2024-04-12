@@ -5,19 +5,18 @@
 #include "../box2d/box2d.h"
 #endif
 
+enum BodyType
+{
+    Dynamic,
+    Kinematic,
+    Static
+};
 
 class Rigidbody2D : public Component {
 public:
     Rigidbody2D(GameObject* obj, int id);
     void Update(float deltaTime) override;
     void Destroy() override;
-
-    enum BodyType
-    {
-        Dynamic,
-        Kinematic,
-        Static
-    };
 
     void SetPosition(Vector2 position);
     void MovePosition(Vector2 displacement);
@@ -26,7 +25,8 @@ public:
     void ApplyImpulse(Vector2 impulse);
     void ApplyImpulse(Vector2 impulse, Vector2 position = { 0,0 });
     void ApplyTorque(float torque);
-    void SetType(BodyType bodyType);
+    void SetBodyType(BodyType bodyType);
+    BodyType GetBodyType();
     void SetGravityScale(float gravity);
     float GetGravityScale();
     void SetContinuous(bool value);
