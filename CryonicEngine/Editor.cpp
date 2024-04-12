@@ -3021,6 +3021,7 @@ void Editor::InitScenes()
             if (file.is_regular_file() && file.path().extension() == ".scene" && SceneManager::LoadScene(file.path()))
             {
                 selectedScenePath = file.path();
+                break;
             }
         }
     }
