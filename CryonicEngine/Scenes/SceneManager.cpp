@@ -228,8 +228,24 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 //component.gameObject = &gameObject;
                 component.SetModelPath(componentData["model_path"]);
                 component.SetActive(componentData["active"]);
+                // Sets exposed variables, and updates them if needed
                 #if defined(EDITOR)
-                component.exposedVariables = componentData["exposed_variables"];
+                if (component.exposedVariables == nullptr)
+                    component.exposedVariables = componentData["exposed_variables"];
+                else if (!componentData["exposed_variables"].is_null())
+                {
+                    for (auto jsonExposedVariable = componentData["exposed_variables"][1].begin(); jsonExposedVariable != componentData["exposed_variables"][1].end(); ++jsonExposedVariable)
+                    {
+                        for (auto exposedVariable = component.exposedVariables[1].begin(); exposedVariable != component.exposedVariables[1].end(); ++exposedVariable)
+                        {
+                            if ((*jsonExposedVariable)[0] == (*exposedVariable)[0] && (*jsonExposedVariable)[1] == (*exposedVariable)[1])
+                            {
+                                (*exposedVariable)[2] = (*jsonExposedVariable)[2];
+                                break;
+                            }
+                        }
+                    }
+                }
                 #endif
 
                 if (component.GetModelPath().string() == "Cube")
@@ -250,8 +266,24 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 SpriteRenderer& component = gameObject->AddComponent<SpriteRenderer>(componentData["id"]);
                 component.SetTexturePath(componentData["texture_path"]);
                 component.SetActive(componentData["active"]);
+                // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
-                component.exposedVariables = componentData["exposed_variables"];
+                if (component.exposedVariables == nullptr)
+                    component.exposedVariables = componentData["exposed_variables"];
+                else if (!componentData["exposed_variables"].is_null())
+                {
+                    for (auto jsonExposedVariable = componentData["exposed_variables"][1].begin(); jsonExposedVariable != componentData["exposed_variables"][1].end(); ++jsonExposedVariable)
+                    {
+                        for (auto exposedVariable = component.exposedVariables[1].begin(); exposedVariable != component.exposedVariables[1].end(); ++exposedVariable)
+                        {
+                            if ((*jsonExposedVariable)[0] == (*exposedVariable)[0] && (*jsonExposedVariable)[1] == (*exposedVariable)[1])
+                            {
+                                (*exposedVariable)[2] = (*jsonExposedVariable)[2];
+                                break;
+                            }
+                        }
+                    }
+                }
 #endif
                 if (component.GetTexturePath().string() != "Square" && component.GetTexturePath().string() != "Circle")
                 {
@@ -284,32 +316,96 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             {
                 CameraComponent& component = gameObject->AddComponent<CameraComponent>(componentData["id"]);
                 component.SetActive(componentData["active"]);
-                #if defined(EDITOR)
-                component.exposedVariables = componentData["exposed_variables"];
-                #endif
+                // Sets exposed variables, and updates them if needed
+#if defined(EDITOR)
+                if (component.exposedVariables == nullptr)
+                    component.exposedVariables = componentData["exposed_variables"];
+                else if (!componentData["exposed_variables"].is_null())
+                {
+                    for (auto jsonExposedVariable = componentData["exposed_variables"][1].begin(); jsonExposedVariable != componentData["exposed_variables"][1].end(); ++jsonExposedVariable)
+                    {
+                        for (auto exposedVariable = component.exposedVariables[1].begin(); exposedVariable != component.exposedVariables[1].end(); ++exposedVariable)
+                        {
+                            if ((*jsonExposedVariable)[0] == (*exposedVariable)[0] && (*jsonExposedVariable)[1] == (*exposedVariable)[1])
+                            {
+                                (*exposedVariable)[2] = (*jsonExposedVariable)[2];
+                                break;
+                            }
+                        }
+                    }
+                }
+#endif
             }
             else if (componentData["name"] == "Lighting")
             {
                 Lighting& component = gameObject->AddComponent<Lighting>(componentData["id"]);
                 component.SetActive(componentData["active"]);
+                // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
-                component.exposedVariables = componentData["exposed_variables"];
+                if (component.exposedVariables == nullptr)
+                    component.exposedVariables = componentData["exposed_variables"];
+                else if (!componentData["exposed_variables"].is_null())
+                {
+                    for (auto jsonExposedVariable = componentData["exposed_variables"][1].begin(); jsonExposedVariable != componentData["exposed_variables"][1].end(); ++jsonExposedVariable)
+                    {
+                        for (auto exposedVariable = component.exposedVariables[1].begin(); exposedVariable != component.exposedVariables[1].end(); ++exposedVariable)
+                        {
+                            if ((*jsonExposedVariable)[0] == (*exposedVariable)[0] && (*jsonExposedVariable)[1] == (*exposedVariable)[1])
+                            {
+                                (*exposedVariable)[2] = (*jsonExposedVariable)[2];
+                                break;
+                            }
+                        }
+                    }
+                }
 #endif
             }
             else if (componentData["name"] == "Collider2D")
             {
                 Collider2D& component = gameObject->AddComponent<Collider2D>(componentData["id"]);
                 component.SetActive(componentData["active"]);
+                // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
-                component.exposedVariables = componentData["exposed_variables"];
+                if (component.exposedVariables == nullptr)
+                    component.exposedVariables = componentData["exposed_variables"];
+                else if (!componentData["exposed_variables"].is_null())
+                {
+                    for (auto jsonExposedVariable = componentData["exposed_variables"][1].begin(); jsonExposedVariable != componentData["exposed_variables"][1].end(); ++jsonExposedVariable)
+                    {
+                        for (auto exposedVariable = component.exposedVariables[1].begin(); exposedVariable != component.exposedVariables[1].end(); ++exposedVariable)
+                        {
+                            if ((*jsonExposedVariable)[0] == (*exposedVariable)[0] && (*jsonExposedVariable)[1] == (*exposedVariable)[1])
+                            {
+                                (*exposedVariable)[2] = (*jsonExposedVariable)[2];
+                                break;
+                            }
+                        }
+                    }
+                }
 #endif
             }
             else if (componentData["name"] == "Rigidbody2D")
             {
                 Rigidbody2D& component = gameObject->AddComponent<Rigidbody2D>(componentData["id"]);
                 component.SetActive(componentData["active"]);
+                // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
-                component.exposedVariables = componentData["exposed_variables"];
+                if (component.exposedVariables == nullptr)
+                    component.exposedVariables = componentData["exposed_variables"];
+                else if (!componentData["exposed_variables"].is_null())
+                {
+                    for (auto jsonExposedVariable = componentData["exposed_variables"][1].begin(); jsonExposedVariable != componentData["exposed_variables"][1].end(); ++jsonExposedVariable)
+                    {
+                        for (auto exposedVariable = component.exposedVariables[1].begin(); exposedVariable != component.exposedVariables[1].end(); ++exposedVariable)
+                        {
+                            if ((*jsonExposedVariable)[0] == (*exposedVariable)[0] && (*jsonExposedVariable)[1] == (*exposedVariable)[1])
+                            {
+                                (*exposedVariable)[2] = (*jsonExposedVariable)[2];
+                                break;
+                            }
+                        }
+                    }
+                }
 #endif
             }
             // Todo: make Component of type Component so then I can set the Component variables like SetActive, id, expoedVariables, etc only once and not in each if statement
