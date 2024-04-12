@@ -17,7 +17,7 @@ Collider2D::Collider2D(GameObject* obj, int id) : Component(obj, id) {
 
 // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive(). Also check if Rigidbody2D is destroyed, if it is then look for a new one, or create one. (Check when its destroyed in the Rigidbody2D Destroy() )
 
-void Collider2D::Start()
+void Collider2D::Start() // Todo: Move to Awake()
 {
 #if !defined(EDITOR)
 	Rigidbody2D* rb = gameObject->GetComponent<Rigidbody2D>();
@@ -27,10 +27,14 @@ void Collider2D::Start()
 		bodyDef.type = b2_staticBody;
 		bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
 		body = world->CreateBody(&bodyDef);
+
+		// Setting the density and friction in case a Rigidbody2D is added to the game object
+		fixtureDef.density = 1.0f;
+		fixtureDef.friction = 0.3f;
 	}
 	else
 	{
-		fixtureDef.density = 1.0f;
+		fixtureDef.density = rb->GetMass();
 		fixtureDef.friction = 0.3f;
 		body = rb->body;
 	}
