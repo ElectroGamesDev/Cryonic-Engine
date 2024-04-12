@@ -19,6 +19,15 @@ public:
         Static
     };
 
+    void SetPosition(Vector2 position);
+    void MovePosition(Vector2 displacement);
+    void ApplyForce(Vector2 force);
+    void ApplyForce(Vector2 force, Vector2 position = {0,0});
+    void ApplyImpulse(Vector2 impulse);
+    void ApplyImpulse(Vector2 impulse, Vector2 position = { 0,0 });
+    void ApplyTorque(float torque);
+    void SetType(BodyType bodyType);
+
 	BodyType bodyType = Dynamic;
 
     // Hide in API

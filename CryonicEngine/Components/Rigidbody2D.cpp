@@ -49,19 +49,75 @@ Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
 #endif
 }
 
+void Rigidbody2D::SetPosition(Vector2 position)
+{
+#if !defined(EDITOR)
+    body->SetTransform({ position.x, position.y }, body->GetAngle());
+#endif
+}
+
+void Rigidbody2D::MovePosition(Vector2 displacement)
+{
+#if !defined(EDITOR)
+    body->SetTransform({ body->GetTransform().p.x + displacement.x, body->GetTransform().p.y + displacement.y}, body->GetAngle());
+#endif
+}
+
+void Rigidbody2D::ApplyForce(Vector2 force)
+{
+#if !defined(EDITOR)
+    body->ApplyForce({ force.x, force.y }, { 0, 0 }, true);
+#endif
+}
+
+void Rigidbody2D::ApplyForce(Vector2 force, Vector2 position)
+{
+#if !defined(EDITOR)
+    body->ApplyForce({force.x, force.y}, { position.x, position.y }, true);
+#endif
+}
+
+void Rigidbody2D::ApplyImpulse(Vector2 impulse)
+{
+#if !defined(EDITOR)
+    body->ApplyLinearImpulse({ impulse.x, impulse.y }, { 0, 0 }, true);
+#endif
+}
+
+void Rigidbody2D::ApplyImpulse(Vector2 impulse, Vector2 position)
+{
+#if !defined(EDITOR)
+    body->ApplyLinearImpulse({ impulse.x, impulse.y }, { position.x, position.y }, true);
+#endif
+}
+
+void Rigidbody2D::ApplyTorque(float torque)
+{
+#if !defined(EDITOR)
+    body->ApplyTorque(torque, true);
+#endif
+}
+
+void Rigidbody2D::SetType(BodyType bodyType)
+{
+#if !defined(EDITOR)
+    this->bodyType = bodyType;
+
+    if (bodyType == Dynamic)
+        body->SetType(b2_dynamicBody);
+    else if (bodyType == Kinematic)
+        body->SetType(b2_kinematicBody);
+    else
+        body->SetType(b2_staticBody);
+#endif
+}
+
 void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics Update?
 {
     // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive()
 #if !defined(EDITOR)
     if (bodyType != oldBodyType)
-    {
-        if (bodyType == Dynamic)
-            body->SetType(b2_dynamicBody);
-        else if (bodyType == Kinematic)
-            body->SetType(b2_kinematicBody);
-        else
-            body->SetType(b2_staticBody);
-    }
+        SetType(bodyType);
 
     // Todo: Change this to a switch case
     if (bodyType == Dynamic)
