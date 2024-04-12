@@ -382,7 +382,7 @@ Scene* SceneManager::CreateScene()
     }
     else
     {
-        cameraObject->transform.SetPosition({ 0,0, 500 });
+        cameraObject->transform.SetPosition({ 0,0,0 });
         cameraObject->transform.SetRotationEuler({ 180, 0, 0 });
     }
     cameraObject->transform.SetScale({ 1,1,1 });

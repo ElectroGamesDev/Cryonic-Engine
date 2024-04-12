@@ -2409,7 +2409,7 @@ void Editor::RenderHierarchy()
                     gameObject->AddComponent<CameraComponent>();
                     if (!ProjectManager::projectData.is3D)
                     {
-                        gameObject->transform.SetPosition({ 0,0,500 });
+                        gameObject->transform.SetPosition({ 0,0,0 });
                         gameObject->transform.SetRotationEuler({ 180, 0, 0 });
                     }
                 }
