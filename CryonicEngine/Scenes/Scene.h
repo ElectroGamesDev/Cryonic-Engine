@@ -18,6 +18,10 @@ public:
     std::deque<GameObject*>& GetGameObjects();
     GameObject* GetGameObject(const std::string& name); 
 
+    bool operator==(const Scene& other) const {
+        return m_Path == other.m_Path;
+    }
+
 private:
     std::filesystem::path m_Path;
     std::deque<GameObject*> m_GameObjects;
