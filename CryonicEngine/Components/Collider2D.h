@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Component.h"
+#if !defined(EDITOR)
+#include "../box2d/box2d.h"
+#endif
 
 enum Shape
 {

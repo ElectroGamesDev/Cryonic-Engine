@@ -2,7 +2,6 @@
 #include "Rigidbody2D.h"
 #include "SpriteRenderer.h"
 #if !defined(EDITOR)
-#include "../box2d/box2d.h"
 #include "../Game.h"
 #endif
 
