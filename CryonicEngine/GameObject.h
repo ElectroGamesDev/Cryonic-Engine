@@ -61,13 +61,22 @@ public:
 
     template <typename T>
     T& AddComponent() {
-        T* newComponent = new T(this);
+        T* newComponent = new T(this, -1);
         static_cast<Component*>(newComponent)->gameObject = this; // Todo: This may cause a crash if its not a component
         //Component* componentPtr = static_cast<Component*>(newComponent);
         //if (componentPtr)
         //    componentPtr->gameObject = this;
         //else
         //    return nullptr;
+        components.push_back(newComponent);
+        return *newComponent;
+    }
+
+    // Hide in API
+    template <typename T>
+    T& AddComponent(int id) {
+        T* newComponent = new T(this, id);
+        static_cast<Component*>(newComponent)->gameObject = this; // Todo: This may cause a crash if its not a component
         components.push_back(newComponent);
         return *newComponent;
     }
