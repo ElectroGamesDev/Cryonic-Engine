@@ -16,7 +16,7 @@ class Collider3D;
 class Component
 {
 public:
-    Component(GameObject* obj);
+    Component(GameObject* obj, int id = -1);
     virtual ~Component() {};
     template<typename T>
     T& GetComponent()

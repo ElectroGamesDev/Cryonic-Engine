@@ -1,17 +1,20 @@
 #include "Component.h"
 #include "../ConsoleLogger.h"
 
-Component::Component(GameObject* obj)
-    : gameObject(obj)
+Component::Component(GameObject* obj, int id)
+    : gameObject(obj), id(id)
 {
-    static bool seeded = false;
-    if (!seeded)
+    if (id == -1)
     {
-        srand(static_cast<unsigned int>(time(0)));
-        seeded = true;
-    }
+        static bool seeded = false;
+        if (!seeded)
+        {
+            srand(static_cast<unsigned int>(time(0)));
+            seeded = true;
+        }
 
-    id = 100000 + rand() % 900000; // Todo: Make sure this is actually unique
+        this->id = 100000 + rand() % 900000; // Todo: Make sure this is actually unique
+    }
 }
 
 //Component::~Component()
