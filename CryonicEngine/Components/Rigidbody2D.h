@@ -14,10 +14,6 @@ enum BodyType
 
 class Rigidbody2D : public Component {
 public:
-    Rigidbody2D(GameObject* obj, int id);
-    void Update(float deltaTime) override;
-    void Destroy() override;
-
     void SetPosition(Vector2 position);
     void MovePosition(Vector2 displacement);
     void ApplyForce(Vector2 force);
@@ -39,6 +35,10 @@ public:
     float GetAngularDamping();
 
 	BodyType bodyType = Dynamic;
+
+    Rigidbody2D(GameObject* obj, int id);
+    void Update(float deltaTime) override;
+    void Destroy() override;
 
     // Hide in API
 #if !defined(EDITOR)
