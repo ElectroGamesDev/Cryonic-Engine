@@ -201,7 +201,7 @@ void Editor::RenderViewport()
 
         viewportHovered = ImGui::IsWindowHovered();
 
-        if (ImGui::IsWindowHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT)) // Todo: Maybe change to viewportFocused instead of IsWindowFocused
+        if (ImGui::IsWindowHovered() && (RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT) || !ProjectManager::projectData.is3D && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_MIDDLE))) // Todo: Maybe change to viewportFocused instead of IsWindowFocused
         {
             //    // Todo: Add SHIFT to speed up by x2, and scroll weel to change speed
             //rmbDown = true;
