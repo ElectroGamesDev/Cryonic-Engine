@@ -2135,7 +2135,7 @@ void Editor::RenderProperties()
                                 ImGui::SameLine();
                                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
                                 std::string value = (*it)[2].get<std::string>();
-                                ImGui::SetNextItemWidth(60);
+                                ImGui::SetNextItemWidth(ImGui::CalcTextSize(value.c_str()).x + ImGui::GetStyle().FramePadding.x * 2.0f + 20);
                                 if (ImGui::BeginCombo(("##" + name).c_str(), value.c_str())) // Todo: Resize Combo Box to fit selected value.
                                 {
                                     for (const std::string& enumValue : (*it)[4])
