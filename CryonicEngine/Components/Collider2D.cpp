@@ -4,15 +4,37 @@
 #if !defined(EDITOR)
 #include "../box2d/box2d.h"
 #include "../Game.h"
-
-// Todo: Move shape to Start()
-b2PolygonShape shape;
-b2FixtureDef fixtureDef; 
-b2Body* body;
 #endif
 
 Collider2D::Collider2D(GameObject* obj, int id) : Component(obj, id) {
 	name = "Collider2D";
+
+#if defined(EDITOR)
+    std::string variables = R"(
+        [
+            0,
+            [
+                [
+                    "Shape",
+                    "shape",
+                    "Square",
+                    "Shape",
+                    [
+                        "Square",
+                        "Circle"
+                    ]
+                ],
+                [
+                    "bool",
+                    "trigger",
+                    false,
+                    "Trigger"
+                ]
+            ]
+        ]
+    )";
+    exposedVariables = nlohmann::json::parse(variables);
+#endif
 }
 
 // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive(). Also check if Rigidbody2D is destroyed, if it is then look for a new one, or create one. (Check when its destroyed in the Rigidbody2D Destroy() )
@@ -41,6 +63,7 @@ void Collider2D::Start() // Todo: Move to Awake()
 
 	// Todo: This needs to be fixed. This is a horrible solution to check if the sprite is a texture or a specific built in shape to apply the right scale multiplier to it.
 	SpriteRenderer* spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
+	b2PolygonShape shape;
 	if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Square")
 		shape.SetAsBox(gameObject->transform.GetScale().x * 3 / 2, gameObject->transform.GetScale().y * 3 / 2);
 	else if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Circle")
@@ -50,7 +73,9 @@ void Collider2D::Start() // Todo: Move to Awake()
 
 	fixtureDef.shape = &shape;
 	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
-	body->CreateFixture(&fixtureDef);
+	fixture = body->CreateFixture(&fixtureDef);
+
+	SetTrigger(trigger);
 #endif
 }
 
@@ -58,5 +83,26 @@ void Collider2D::Destroy()
 {
 #if !defined(EDITOR)
 	world->DestroyBody(body);
+#endif
+}
+
+Shape Collider2D::GetShape()
+{
+	return shape;
+}
+
+void Collider2D::SetTrigger(bool value)
+{
+#if !defined(EDITOR)
+	fixture->SetSensor(value);
+#endif
+}
+
+bool Collider2D::IsTrigger()
+{
+#if !defined(EDITOR)
+	return fixture->IsSensor();
+#else
+	return false;
 #endif
 }
