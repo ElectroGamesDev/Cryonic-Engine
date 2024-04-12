@@ -44,6 +44,8 @@ Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
         bodyDef.type = b2_staticBody;
 	bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
 	body = world->CreateBody(&bodyDef);
+
+    oldBodyType = bodyType;
 #endif
 }
 
@@ -51,6 +53,16 @@ void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics
 {
     // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive()
 #if !defined(EDITOR)
+    if (bodyType != oldBodyType)
+    {
+        if (bodyType == Dynamic)
+            body->SetType(b2_dynamicBody);
+        else if (bodyType == Kinematic)
+            body->SetType(b2_kinematicBody);
+        else
+            body->SetType(b2_staticBody);
+    }
+
     // Todo: Change this to a switch case
     if (bodyType == Dynamic)
     {
@@ -94,6 +106,8 @@ void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics
 
     lastGameObjectPosition = gameObject->transform.GetPosition();
     lastGameObjectRotation = gameObject->transform.GetRotation();
+
+    oldBodyType = bodyType;
 #endif
 }
 
