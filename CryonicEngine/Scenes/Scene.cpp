@@ -42,6 +42,9 @@ GameObject* Scene::AddGameObject(int id)
 
 void Scene::RemoveGameObject(GameObject* gameObject)
 {
+    for (GameObject* child : gameObject->GetChildren())
+        RemoveGameObject(child);
+
     for (Component* component : gameObject->GetComponents())
         gameObject->RemoveComponent(component);
 
