@@ -82,20 +82,7 @@ public:
     }
 
     template<typename T>
-    bool RemoveComponent()
-    {
-        for (auto it = components.begin(); it != components.end(); ++it)
-        {
-            T* comp = dynamic_cast<T*>(*it);
-            if (comp != nullptr)
-            {
-                delete comp;
-                components.erase(it);
-                return true;
-            }
-        }
-        return false;
-    }
+    bool RemoveComponent();
 
     bool RemoveComponent(Component* component);
 

@@ -3,6 +3,7 @@
 #include "ConsoleLogger.h"
 #include <cstdlib>
 #include <ctime>
+#include "Components/Component.h"
 
 GameObject::GameObject(int id)
 {
@@ -138,6 +139,38 @@ int GameObject::GetId() const
 //    return nullptr;
 //}
 
+template<typename T>
+bool GameObject::RemoveComponent()
+{
+    for (auto it = components.begin(); it != components.end(); ++it)
+    {
+        T* component = dynamic_cast<T*>(*it);
+        if (component != nullptr)
+        {
+            component->Destroy();
+            delete component;
+            components.erase(it);
+            return true;
+        }
+    }
+    return false;
+}
+
+template bool GameObject::RemoveComponent<Component>();
+
+
+bool GameObject::RemoveComponent(Component* component)
+{
+    auto it = std::find(components.begin(), components.end(), component);
+    if (it != components.end())
+    {
+        component->Destroy();
+        delete* it;
+        components.erase(it);
+        return true;
+    }
+    return false;
+}
 
 std::vector<Component*> GameObject::GetComponents()
 {
