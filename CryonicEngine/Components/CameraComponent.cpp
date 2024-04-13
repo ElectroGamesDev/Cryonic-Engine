@@ -45,12 +45,21 @@ void CameraComponent::Start()
 
 void CameraComponent::Update(float deltaTime)
 {
+	if (main == nullptr)
+		main = this;
+
 	Vector3 pos = gameObject->transform.GetPosition();
 	raylibCamera.SetPosition(pos.x, pos.y, pos.z);
 
 	Vector3 target = gameObject->transform.GetPosition() + RotateVector3ByQuaternion({ 0,0,1 }, gameObject->transform.GetRotation());
 	raylibCamera.SetTarget(target.x, target.y, target.z);
     //camera.target = Vector3Add(gameObject->transform.GetPosition(), Vector3RotateByQuaternion({0,0,1}, gameObject->transform.GetRotation()));
+}
+
+void CameraComponent::Destroy()
+{
+	if (main == this)
+		main = nullptr;
 }
 
 #if defined(EDITOR)
