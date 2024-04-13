@@ -510,14 +510,14 @@ void SceneManager::CreateScene(std::filesystem::path path)
     camera.gameObject = cameraObject;
 #endif
 
-    for (GameObject* gameObject : scene.GetGameObjects())
-        scene.RemoveGameObject(gameObject);
-
     if (!std::filesystem::exists(path.parent_path()))
         std::filesystem::create_directories(path.parent_path());
         std::filesystem::create_directories(path.parent_path());
 
     SaveScene(&scene);
+
+    for (GameObject* gameObject : scene.GetGameObjects())
+        scene.RemoveGameObject(gameObject);
 }
 
 void SceneManager::ResetScene(Scene* scene)
