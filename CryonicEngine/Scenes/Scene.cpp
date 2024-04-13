@@ -42,10 +42,13 @@ GameObject* Scene::AddGameObject(int id)
 
 void Scene::RemoveGameObject(GameObject* gameObject)
 {
+    for (Component* component : gameObject->GetComponents())
+        gameObject->RemoveComponent(component);
+
     auto it = std::find_if(m_GameObjects.begin(), m_GameObjects.end(),
         [gameObject](const GameObject* go) { return go->GetId() == gameObject->GetId(); });
     if (it != m_GameObjects.end()) {
-        //delete *it; // Uncomment if needed (depends on ownership semantics)
+        delete *it;
         m_GameObjects.erase(it);
     }
 }
