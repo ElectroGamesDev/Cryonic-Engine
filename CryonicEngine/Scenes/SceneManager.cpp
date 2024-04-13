@@ -134,6 +134,9 @@ bool SceneManager::SaveScene(Scene* scene)
         return !std::isprint(static_cast<unsigned char>(c));
         }), formattedPath.end());
 
+    if (!std::filesystem::exists(scene->GetPath().parent_path()))
+        std::filesystem::create_directories(scene->GetPath().parent_path());
+
     std::ofstream file(formattedPath);
     file << std::setw(4) << sceneData << std::endl;
     file.close();
@@ -483,13 +486,14 @@ void SceneManager::AddScene(Scene scene) {
     m_scenes.push_back(scene);
 }
 
-Scene* SceneManager::CreateScene()
+void SceneManager::CreateScene(std::filesystem::path path)
 {
     Scene scene;
     //AddScene(scene);
+    scene.SetPath(path);
 
 #if defined(EDITOR)
-    GameObject* cameraObject = m_scenes.back().AddGameObject();
+    GameObject* cameraObject = scene.AddGameObject();
     if (ProjectManager::projectData.is3D)
     {
         cameraObject->transform.SetPosition({ 0,0, -25 });
@@ -506,7 +510,14 @@ Scene* SceneManager::CreateScene()
     camera.gameObject = cameraObject;
 #endif
 
-    return &m_scenes.back();
+    for (GameObject* gameObject : scene.GetGameObjects())
+        scene.RemoveGameObject(gameObject);
+
+    if (!std::filesystem::exists(path.parent_path()))
+        std::filesystem::create_directories(path.parent_path());
+        std::filesystem::create_directories(path.parent_path());
+
+    SaveScene(&scene);
 }
 
 void SceneManager::ResetScene(Scene* scene)
