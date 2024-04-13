@@ -97,19 +97,7 @@ public:
         return false;
     }
 
-    bool RemoveComponent(Component* component)
-    {
-        auto it = std::find(components.begin(), components.end(), component);
-        if (it != components.end())
-        {
-            component->Destroy();
-            delete* it;
-            components.erase(it);
-            return true;
-        }
-        return false;
-    }
-
+    bool RemoveComponent(Component* component);
 
     template<typename T>
     T* GetComponent()
