@@ -1225,6 +1225,21 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     explorerContextMenuOpen = false;
                     scriptCreateWinOpen = true;
                 }
+                if (ImGui::MenuItem("Create Scene"))
+                {
+                    explorerContextMenuOpen = false;
+                    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "New Scene", "scene");
+                    SceneManager::CreateScene(filePath);
+                    if (filePath != "")
+                    {
+                        renamingFile = filePath;
+                        strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
+                    }
+                    else
+                    {
+                        // Todo: Handle if it wasn't created
+                    }
+                }
                 if (ImGui::MenuItem("Create Sprite"))
                 {
                     explorerContextMenuOpen = false;
@@ -1232,7 +1247,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Create Material"))
                 {
                     explorerContextMenuOpen = false;
-                    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Material", "mat");
+                    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "New Material", "mat");
                     if (filePath != "")
                     {
                         renamingFile = filePath;
@@ -3011,7 +3026,6 @@ void Editor::InitMisc()
 
 void Editor::InitScenes()
 {
-    // Loads all scenes in /Assets/Scenes
     std::filesystem::path scenesPath = ProjectManager::projectData.path / "Assets" / "Scenes";
     std::filesystem::path selectedScenePath;
     if (std::filesystem::exists(scenesPath))
@@ -3029,13 +3043,19 @@ void Editor::InitScenes()
     // No scenes found, create a new one
     if (selectedScenePath.empty())
     {
-        std::filesystem::create_directories(scenesPath);
-        SceneManager::SetActiveScene(SceneManager::CreateScene());
-        SceneManager::GetActiveScene()->SetPath(scenesPath / "Default.scene");
-        SceneManager::SaveScene(SceneManager::GetActiveScene()); // Creates Default.scene
+        if (std::filesystem::exists(ProjectManager::projectData.path / "Assets" / "Scenes" / "Default.scene"))
+            SceneManager::LoadScene(ProjectManager::projectData.path / "Assets" / "Scenes" / "Default.scene");
+        else
+        {
+            std::filesystem::create_directories(scenesPath);
+            SceneManager::CreateScene(scenesPath / "Default.scene");
+            SceneManager::LoadScene(scenesPath / "Default.scene");
+            //SceneManager::SetActiveScene(); // LoadScene sets the scene to active
+            //SceneManager::SaveScene(SceneManager::GetActiveScene()); // Creates Default.scene. It should not create a scene file automatically
+
+        }
     }
-    // Sets the last scene in the vector active
-    else SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
+    //else SceneManager::SetActiveScene(&SceneManager::GetScenes()->back()); // The scene is already getting set to active in the LoadScene() above
 }
 
 void Editor::Cleanup()
