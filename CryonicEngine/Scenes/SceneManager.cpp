@@ -486,7 +486,7 @@ void SceneManager::AddScene(Scene scene) {
 Scene* SceneManager::CreateScene()
 {
     Scene scene;
-    AddScene(scene);
+    //AddScene(scene);
 
 #if defined(EDITOR)
     GameObject* cameraObject = m_scenes.back().AddGameObject();
