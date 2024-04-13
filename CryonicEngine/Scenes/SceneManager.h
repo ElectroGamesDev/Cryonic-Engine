@@ -12,7 +12,7 @@ public:
     static bool LoadScene(std::filesystem::path filePath); // Todo: Should this return the scene?
     static void UnloadScene(Scene* scene);
     static void AddScene(Scene scene);
-    static Scene* CreateScene();
+    static void CreateScene(std::filesystem::path path);
     static void ResetScene(Scene* scene);
     static void BackupScene(Scene* scene);
 
