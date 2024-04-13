@@ -84,13 +84,13 @@ public:
     template<typename T>
     bool RemoveComponent()
     {
-        for (size_t i = 0; i < components.size(); ++i)
+        for (auto it = components.begin(); it != components.end(); ++it)
         {
-            T* comp = dynamic_cast<T*>(components[i]);
+            T* comp = dynamic_cast<T*>(*it);
             if (comp != nullptr)
             {
                 delete comp;
-                components.erase(components.begin() + i);
+                components.erase(it);
                 return true;
             }
         }
