@@ -26,7 +26,7 @@
 
 using json = nlohmann::json;
 
-std::vector<Scene> SceneManager::m_scenes;
+std::deque<Scene> SceneManager::m_scenes;
 Scene* SceneManager::m_activeScene;
 
 SceneManager::SceneManager() {
@@ -38,10 +38,16 @@ Scene* SceneManager::GetActiveScene() {
 }
 
 void SceneManager::SetActiveScene(Scene* scene) {
+    if (m_activeScene != nullptr)
+    {
+        if (scene->GetPath() == m_activeScene->GetPath())
+            return;
+        UnloadScene(m_activeScene); // Todo: Maybe this should be moved to LoadScene()
+    }
     m_activeScene = scene;
 }
 
-std::vector<Scene>* SceneManager::GetScenes() {
+std::deque<Scene>* SceneManager::GetScenes() {
     return &m_scenes; 
 }
 
@@ -175,6 +181,8 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
     std::string filePathString = filePath.string();
     filePathString.erase(std::remove_if(filePathString.begin(), filePathString.end(),
         [](char c) { return !std::isprint(c); }), filePathString.end());
+
+    // Todo: Check if the scene is already loaded
 
     // Load file into string
     std::ifstream file(filePathString);
@@ -438,6 +446,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
     }
 
 
+    // Todo: I'm not sure if this is needed. I should check if the scene is already loaded above.
     bool sceneFound = false;
     for (Scene& scenes : m_scenes)
         if (scenes.GetPath() == scene.GetPath())
@@ -458,6 +467,16 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
     ConsoleLogger::InfoLog("The scene \"" + filePath.stem().string() + "\" has been loaded");
 
     return true;
+}
+
+void SceneManager::UnloadScene(Scene* scene)
+{
+    for (GameObject* gameObject : m_activeScene->GetGameObjects())
+        scene->RemoveGameObject(gameObject);
+
+    auto it = std::find_if(m_scenes.begin(), m_scenes.end(), [scene](const Scene& s) { return *scene == s; });
+    if (it != m_scenes.end())
+        m_scenes.erase(it);
 }
 
 void SceneManager::AddScene(Scene scene) {
