@@ -102,6 +102,7 @@ public:
         auto it = std::find(components.begin(), components.end(), component);
         if (it != components.end())
         {
+            component->Destroy();
             delete* it;
             components.erase(it);
             return true;
