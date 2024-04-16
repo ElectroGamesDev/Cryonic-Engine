@@ -9,6 +9,7 @@
 #include "Utilities.h"
 #include "Components/ScriptLoader.h"
 #include "json.hpp"
+#include <vector>
 
 using json = nlohmann::json;
 
@@ -941,56 +942,83 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
         }
 
         
-        bool foundPublic = false;
         std::string line;
-        while (std::getline(headerFile, line))
-        {
-            if (line.find("public:") != std::string::npos)
-            {
-                foundPublic = true;
-                break;
-            }
-        }
+        //bool foundPublic = false;
+        //while (std::getline(headerFile, line))
+        //{
+        //    if (line.find("public:") != std::string::npos)
+        //    {
+        //        foundPublic = true;
+        //        break;
+        //    }
+        //}
 
         headerFile.clear();
         headerFile.seekg(0, std::ios::beg);
 
         line = "";
         bool placedFunction = false;
-        // Todo: Find a better way to check if this is internal, like using full paths instead of file names. Same with tempCpp below
+        //std::ofstream tempHeader;
+        //if (internal)
+        //    tempHeader.open(path / "Components" / (component.first.stem().string() + ".temp"));
+        //else
+        //    tempHeader.open(path / (component.first.stem().string() + ".temp"));
+
+        // Reads the header file and puts all of the lines into a vector
+        std::vector<std::string> lines;
+        while (std::getline(headerFile, line))
+        {
+            // This code places it at the top of the class which caused scope issues when there were custom exposed variables like enums or other custom clases
+            //if (foundPublic)
+            //{
+            //    if (!placedFunction && line.find("public:") != std::string::npos) // Todo: Should probably remove whitespaces incase someone wrote it like this, "public :". Same with abvoe when looking for public
+            //    {
+            //        tempHeader << line << std::endl;
+            //        tempHeader << "void SetExposedVariables() override;\n";
+            //        placedFunction = true;
+            //    }
+            //    else
+            //        tempHeader << line << std::endl;
+            //}
+            //else // Todo: If the file does not include the public specifier, it is assumed to be private. This means none of the functions can be called on it and therefore the component does nothing. Should it be removed? If this ire moved, then theres no point to check if public exists before the actual loop.
+            //{
+            //    if (!placedFunction && line.find("{") != std::string::npos)
+            //    {
+            //        tempHeader << line << std::endl;
+            //        tempHeader << "public:\nvoid SetExposedVariables() override;\nprivate:\n";
+            //        placedFunction = true;
+            //    }
+            //    else
+            //        tempHeader << line << std::endl;
+            //}
+
+            lines.push_back(line);
+        }
+
+        headerFile.close();
+
         std::ofstream tempHeader;
+        // Todo: Find a better way to check if this is internal, like using full paths instead of file names. Same with tempCpp below
         if (internal)
             tempHeader.open(path / "Components" / (component.first.stem().string() + ".temp"));
         else
             tempHeader.open(path / (component.first.stem().string() + ".temp"));
-        //std::ofstream tempHeader(path / (component.first.stem().string() + ".temp"));
-        while (std::getline(headerFile, line))
+
+        // Iterates the lines in reverse to find "};" and add SetExposedVariables() right before it
+        for (auto it = lines.rbegin(); it != lines.rend(); ++it)
         {
-            if (foundPublic)
+            if (size_t pos = it->find("};"); pos != std::string::npos)
             {
-                if (!placedFunction && line.find("public:") != std::string::npos) // Todo: Should probably remove whitespaces incase someone wrote it like this, "public :"
-                {
-                    tempHeader << line << std::endl;
-                    tempHeader << "void SetExposedVariables() override;\n";
-                    placedFunction = true;
-                }
-                else
-                    tempHeader << line << std::endl;
-            }
-            else
-            {
-                if (!placedFunction && line.find("{") != std::string::npos)
-                {
-                    tempHeader << line << std::endl;
-                    tempHeader << "public:\nvoid SetExposedVariables() override;\nprivate:\n";
-                    placedFunction = true;
-                }
-                else
-                    tempHeader << line << std::endl;
+                it->replace(pos, 2, "public:\nvoid SetExposedVariables() override;\n};");
+                placedFunction = true;
+                break;
             }
         }
 
-        headerFile.close();
+        // Writes the lines from the vector into the tempHeader file
+        for (const auto& l : lines)
+            tempHeader << l << std::endl;
+
         tempHeader.close();
 
         // Todo: Find a better way to check if this is internal, like using full paths instead of file names
@@ -1008,7 +1036,7 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
         if (!placedFunction)
         {
             // Todo: Failed to find a place to put the SetExposedVariables() function
-            ConsoleLogger::ErrorLog("Failed to find a place to put SetExposedVariables() in " + (path / component.first.filename()).string()); // Todo: Remove this warning
+            ConsoleLogger::ErrorLog("Failed to find a place to put SetExposedVariables() in " + (path / component.first.filename()).string()); // Todo: Maek this warning for dev mode, and make a better message like failed to set exposed variables for x file
             continue;
         }
 
