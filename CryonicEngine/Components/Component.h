@@ -18,11 +18,6 @@ class Component
 public:
     Component(GameObject* obj, int id = -1);
     virtual ~Component() {};
-    template<typename T>
-    T& GetComponent()
-    {
-        return gameObject->GetComponent<T>();
-    }
     GameObject* GetGameObject()
     {
         return gameObject;
