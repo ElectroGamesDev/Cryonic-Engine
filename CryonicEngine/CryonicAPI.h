@@ -11,3 +11,4 @@
 #include "Components/Lighting.h"
 #include "Components/SpriteRenderer.h"
 #include "Components/Collider2D.h"
+#include "Components/Rigidbody2D.h"
