@@ -95,6 +95,7 @@ void Rigidbody2D::SetPosition(Vector2 position)
 void Rigidbody2D::MovePosition(Vector2 displacement)
 {
 #if !defined(EDITOR)
+    body->SetAwake(true);
     body->SetTransform({ body->GetTransform().p.x + displacement.x, body->GetTransform().p.y + displacement.y}, body->GetAngle());
 #endif
 }
@@ -250,12 +251,18 @@ void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics
         if (gameObject->transform.GetPosition() == lastGameObjectPosition) // Todo: This shouldn't be setting the gameobject's position even when the body hasn't changed
             gameObject->transform.SetPosition({ body->GetPosition().x, body->GetPosition().y, 0 });
         else if (gameObject->transform.GetPosition().x != body->GetTransform().p.x || gameObject->transform.GetPosition().y != body->GetTransform().p.y)
+        {
+            body->SetAwake(true);
             body->SetTransform({ gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y }, body->GetAngle());
+        }
 
         if (gameObject->transform.GetRotation() == lastGameObjectRotation) // Todo: This shouldn't be setting the gameobject's rotation even when the body hasn't changed
             gameObject->transform.SetRotationEuler({ 0, body->GetAngle() * RAD2DEG, 0 });
         else if (DEG2RAD * gameObject->transform.GetRotation().y != body->GetTransform().q.GetAngle())
+        {
+            body->SetAwake(true);
             body->SetTransform(body->GetPosition(), DEG2RAD * gameObject->transform.GetRotationEuler().y);
+        }
     }
     else if (bodyType == Kinematic)
     {
