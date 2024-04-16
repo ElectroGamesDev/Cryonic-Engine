@@ -15,7 +15,9 @@ enum BodyType
 class Rigidbody2D : public Component {
 public:
     void SetPosition(Vector2 position);
+    void SetPosition(int x, int y);
     void MovePosition(Vector2 displacement);
+    void MovePosition(int x, int y);
     void ApplyForce(Vector2 force);
     void ApplyForce(Vector2 force, Vector2 position = {0,0});
     void ApplyImpulse(Vector2 impulse);

@@ -92,12 +92,22 @@ void Rigidbody2D::SetPosition(Vector2 position)
 #endif
 }
 
+void Rigidbody2D::SetPosition(int x, int y)
+{
+    SetPosition({x, y});
+}
+
 void Rigidbody2D::MovePosition(Vector2 displacement)
 {
 #if !defined(EDITOR)
     body->SetAwake(true);
     body->SetTransform({ body->GetTransform().p.x + displacement.x, body->GetTransform().p.y + displacement.y}, body->GetAngle());
 #endif
+}
+
+void Rigidbody2D::MovePosition(int x, int y)
+{
+    MovePosition({ x, y });
 }
 
 void Rigidbody2D::ApplyForce(Vector2 force)
