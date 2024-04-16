@@ -28,6 +28,6 @@ private:
 #if !defined(EDITOR)
     b2FixtureDef fixtureDef;
     b2Body* body;
-    b2Fixture fixture;
+    b2Fixture* fixture;
 #endif
 };
