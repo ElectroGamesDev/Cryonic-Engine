@@ -362,7 +362,7 @@ bool ProjectManager::SetGameSettings(std::filesystem::path gameFile)
 bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo: Maybe make a .json format file that contains information like scenes and which scene should be first opened
 {
     // Backing up and restoring cmake files is completely useless since when cmake files are moved, it breaks incremental builds. Not sure if this is an issue with CMake, or my code.
-    SaveProject();
+    SceneManager::SaveScene(SceneManager::GetActiveScene());
 
     std::filesystem::path path = projectData.path / "Builds" / "Windows";
     std::filesystem::path buildPath;
