@@ -241,7 +241,7 @@ void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics
     // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive()
 #if !defined(EDITOR)
     if (bodyType != oldBodyType)
-        SetType(bodyType);
+        SetBodyType(bodyType);
 
     // Todo: Change this to a switch case
     if (bodyType == Dynamic)
