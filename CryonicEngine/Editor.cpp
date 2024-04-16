@@ -764,7 +764,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && SceneManager::GetActiveScene()->GetPath() != entry.path())
                         {
                             // Todo: Popup save window if the scene isn't saved
-                            ProjectManager::SaveProject();
+                            SceneManager::SaveScene(SceneManager::GetActiveScene());
                             SceneManager::LoadScene(entry.path());
                         }
                     }
@@ -2777,7 +2777,7 @@ void Editor::Render(void)
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Save Project", "Ctrl+S"))
             {
-                ProjectManager::SaveProject();
+                SceneManager::SaveScene(SceneManager::GetActiveScene());
                 ImGuiToast toast(ImGuiToastType::Success, 1500, true);
                 toast.setTitle("Project Saved", "");
                 toast.setContent("The project has successfully saved.");
@@ -2863,7 +2863,7 @@ void Editor::Render(void)
 
     if (ImGui::IsKeyPressed(ImGuiKey_S) && ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
     {
-        ProjectManager::SaveProject();
+        SceneManager::SaveScene(SceneManager::GetActiveScene());
         ImGuiToast toast(ImGuiToastType::Success, 1500, true);
         toast.setTitle("Project Saved", "");
         toast.setContent("The project has successfully saved.");
