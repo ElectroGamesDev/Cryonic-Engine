@@ -108,11 +108,6 @@ public:
 
     struct Transform
     {
-        Vector3 _position = {0,0,0};
-        Quaternion _rotation = Quaternion::Identity();
-        Vector3 _scale = { 1,1,1 };
-
-
         void SetPosition(Vector3 position) { _position = position; }
         void SetPosition(Vector2 position) { SetPosition({position.x, position.y, _position.z}); }
         void SetPosition(float x, float y, float z) { SetPosition({ x, y, z }); }
@@ -197,6 +192,11 @@ public:
         bool operator!=(const Transform& other) const {
             return !(*this == other);
         }
+
+    private:
+        Vector3 _position = { 0,0,0 };
+        Quaternion _rotation = Quaternion::Identity();
+        Vector3 _scale = { 1,1,1 };
     }; Transform transform;
 
 private:
