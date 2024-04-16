@@ -114,9 +114,11 @@ public:
 
 
         void SetPosition(Vector3 position) { _position = position; }
+        void SetPosition(float x, float y, float z) { SetPosition({ x, y, z }); }
         Vector3 GetPosition() { return _position; }
 
         void SetLocalPosition(Vector3 position) { _position = position; }
+        void SetLocalPosition(float x, float y, float z) { SetLocalPosition({ x, y, z }); }
         Vector3 GetLocalPosition() { return _position; }
 
         void SetRotation(Quaternion rotation) { _rotation = rotation; }
@@ -126,6 +128,10 @@ public:
         Set the game object's rotation in degrees
         */
         void SetRotationEuler(Vector3 rotation) { _rotation = EulerToQuaternion((float)rotation.x * DEG2RAD, rotation.y * DEG2RAD, rotation.z * DEG2RAD); }
+        /**
+        Set the game object's rotation in degrees
+        */
+        void SetRotationEuler(float x, float y, float z) { SetRotationEuler({ x, y, z }); }
         /**
         Get the game object's rotation in degrees
         @return Vector3 euler of the rotation
@@ -137,6 +143,10 @@ public:
         */
         void SetLocalRotationEuler(Vector3 rotation) { _rotation = EulerToQuaternion((float)rotation.x * DEG2RAD, rotation.y * DEG2RAD, rotation.z * DEG2RAD); }
         /**
+        Set the game object's local rotation in degrees
+        */
+        void SetLocalRotationEuler(float x, float y, float z) { SetLocalRotationEuler({ x, y, z }); }
+        /**
         Get the game object's local rotation in degrees
         @return Vector3 euler of the rotation
         */
@@ -144,8 +154,10 @@ public:
 
         void SetScale(Vector3 scale) { _scale = scale; }
         Vector3 GetScale() { return _scale; }
+        void SetScale(float x, float y, float z) { SetScale({ x, y, z }); }
 
         void SetLocalScale(Vector3 scale) { _scale = scale; }
+        void SetLocalScale(float x, float y, float z) { SetLocalScale({ x, y, z }); }
         Vector3 GetLocalScale() { return _scale; }
 
         Transform& operator=(const Transform& other) {
