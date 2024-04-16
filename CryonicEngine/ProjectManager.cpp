@@ -612,16 +612,6 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     return true;
 }
 
-void ProjectManager::SaveProject()
-{
-    ConsoleLogger::InfoLog("Saving project");
-    for (Scene& scene : *SceneManager::GetScenes())
-    {
-        SceneManager::SaveScene(&scene);
-    }
-    ConsoleLogger::InfoLog("Project saved");
-}
-
 ProjectData ProjectManager::LoadProject(std::filesystem::path path)
 {
     ProjectData projectData = LoadProjectData(path);
