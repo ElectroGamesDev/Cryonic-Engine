@@ -101,8 +101,7 @@ void Rigidbody2D::SetPosition(float x, float y)
 void Rigidbody2D::MovePosition(Vector2 displacement)
 {
 #if !defined(EDITOR)
-    body->SetAwake(true);
-    body->SetTransform({ body->GetTransform().p.x + displacement.x, body->GetTransform().p.y + displacement.y}, body->GetAngle());
+    SetPosition({ body->GetTransform().p.x + displacement.x, body->GetTransform().p.y + displacement.y });
 #endif
 }
 
