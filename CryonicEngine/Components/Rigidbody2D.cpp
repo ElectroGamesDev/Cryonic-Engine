@@ -88,6 +88,7 @@ Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
 void Rigidbody2D::SetPosition(Vector2 position)
 {
 #if !defined(EDITOR)
+    body->SetAwake(true);
     body->SetTransform({ position.x, position.y }, body->GetAngle());
 #endif
 }
