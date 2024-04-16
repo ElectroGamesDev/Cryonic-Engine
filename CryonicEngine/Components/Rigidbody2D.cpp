@@ -92,7 +92,7 @@ void Rigidbody2D::SetPosition(Vector2 position)
 #endif
 }
 
-void Rigidbody2D::SetPosition(int x, int y)
+void Rigidbody2D::SetPosition(float x, float y)
 {
     SetPosition({x, y});
 }
@@ -105,7 +105,7 @@ void Rigidbody2D::MovePosition(Vector2 displacement)
 #endif
 }
 
-void Rigidbody2D::MovePosition(int x, int y)
+void Rigidbody2D::MovePosition(float x, float y)
 {
     MovePosition({ x, y });
 }
