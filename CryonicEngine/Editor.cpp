@@ -2306,6 +2306,16 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor)
 
             for (GameObject* child : gameObject->GetChildren())
                 normalColor = RenderHierarchyNode(child, normalColor);
+
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                // Todo: If 3D, rotate the camera and set proper distance depending on the mesh's size
+                // Todo: For 2D and if its a sprite, set proper distance so entire sprite fits on screen
+                // Todo: Lerp camera position to target
+                camera.position = { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, camera.position.z };
+                camera.target.x = camera.position.x;
+                camera.target.y = camera.position.y;
+            }
         }
 
         ImGui::TreePop();
