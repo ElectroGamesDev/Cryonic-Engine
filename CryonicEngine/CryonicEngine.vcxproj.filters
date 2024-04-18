@@ -200,9 +200,6 @@
     <ClInclude Include="Components\ScriptComponent.h">
       <Filter>Header Files\Components</Filter>
     </ClInclude>
-    <ClInclude Include="CryonicAPI.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Components\MeshRenderer.h">
       <Filter>Header Files\Components</Filter>
     </ClInclude>
@@ -327,6 +324,9 @@
       <Filter>Source Files\imgui</Filter>
     </ClInclude>
     <ClInclude Include="EventSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CryonicAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
