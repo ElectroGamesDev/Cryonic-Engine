@@ -10,7 +10,7 @@ public:
     using EventHandler = std::function<void(void*)>;
 
     static void Subscribe(const std::string& eventName, EventHandler handler);
-    static void Notify(const std::string& eventName, void* eventData);
+    static void Invoke(const std::string& eventName, void* eventData);
 
 private:
     static std::unordered_map<std::string, std::vector<EventHandler>> eventHandlers;
