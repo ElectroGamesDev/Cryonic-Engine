@@ -180,6 +180,7 @@
     <ClCompile Include="CryonicCore.cpp" />
     <ClCompile Include="CryonicEngine.cpp" />
     <ClCompile Include="Editor.cpp" />
+    <ClCompile Include="EventSystem.cpp" />
     <ClCompile Include="FontManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="IconManager.cpp" />
@@ -235,6 +236,7 @@
     <ClInclude Include="CryonicAPI.h" />
     <ClInclude Include="CryonicCore.h" />
     <ClInclude Include="Editor.h" />
+    <ClInclude Include="EventSystem.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="IconManager.h" />
