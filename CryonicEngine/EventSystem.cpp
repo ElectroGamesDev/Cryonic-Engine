@@ -1,14 +1,10 @@
 #include "EventSystem.h"
 
-namespace EventSystem {
-    std::unordered_map<std::string, std::vector<EventHandler>> eventHandlers;
+void EventSystem::Subscribe(const std::string& eventName, EventHandler handler) {
+    eventHandlers[eventName].push_back(handler);
+}
 
-    void Subscribe(const std::string& eventName, EventHandler handler) {
-        eventHandlers[eventName].push_back(handler);
-    }
-
-    void Invoke(const std::string& eventName, void* eventData) {
-        for (auto& handler : eventHandlers[eventName])
-            handler(eventData);
-    }
+void EventSystem::Notify(const std::string& eventName, void* eventData) {
+    for (auto& handler : eventHandlers[eventName])
+        handler(eventData);
 }

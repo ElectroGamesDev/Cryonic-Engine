@@ -5,11 +5,13 @@
 #include <unordered_map>
 #include <vector>
 
-namespace EventSystem {
+class EventSystem {
+public:
     using EventHandler = std::function<void(void*)>;
 
-    extern std::unordered_map<std::string, std::vector<EventHandler>> eventHandlers;
+    static void Subscribe(const std::string& eventName, EventHandler handler);
+    static void Notify(const std::string& eventName, void* eventData);
 
-    void Subscribe(const std::string& eventName, EventHandler handler);
-    void Invoke(const std::string& eventName, void* eventData);
-}
+private:
+    static std::unordered_map<std::string, std::vector<EventHandler>> eventHandlers;
+};
