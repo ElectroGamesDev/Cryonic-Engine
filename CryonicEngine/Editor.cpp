@@ -2494,7 +2494,7 @@ void Editor::RenderHierarchy()
                         SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
                         spriteRenderer.SetTexturePath(objectToCreate);
 
-                        gameObject->AddComponent<Collider2D>(); // Todo: Set size and type
+                        //gameObject->AddComponent<Collider2D>(); // Todo: Set size and type
                     }
 
                 }
