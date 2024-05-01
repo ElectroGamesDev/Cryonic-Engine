@@ -2812,8 +2812,9 @@ void Editor::Render(void)
             {
                 // Todo: Check if changes have been made and it needs to be recompiled
                 if (ProjectManager::BuildToWindows(ProjectManager::projectData, true))
-                    // Todo: This crashes the game instantly
+                    // Todo: This crashes the game instantly and needs to be fixed
                     Utilities::OpenPathInExplorer(ProjectManager::projectData.path / "Internal" / "Builds" / "Debug" / std::string(ProjectManager::projectData.name + ".exe"));
+
                     //std::system(("\"" + (ProjectManager::projectData.path / "Internal" / "Builds" / "Debug" / std::string(ProjectManager::projectData.name + ".exe")).string() + "\"").c_str());
             }
             if (ImGui::BeginMenu("Build Project"))
