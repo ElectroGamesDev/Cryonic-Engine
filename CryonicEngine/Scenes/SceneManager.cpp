@@ -275,7 +275,6 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             else if (componentData["name"] == "SpriteRenderer")
             {
                 SpriteRenderer& component = gameObject->AddComponent<SpriteRenderer>(componentData["id"]);
-                component.SetTexturePath(componentData["texture_path"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -296,7 +295,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                     }
                 }
 #endif
-                if (component.GetTexturePath().string() != "Square" && component.GetTexturePath().string() != "Circle")
+                if (componentData["texture_path"] != "Square" && componentData["texture_path"] != "Circle")
                 {
                     std::filesystem::path path;
                     #if defined(EDITOR)
@@ -304,9 +303,10 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                     #else
                     path = std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets";
                     #endif
-                    RaylibWrapper::Texture2D texture = RaylibWrapper::LoadTexture((path / component.GetTexturePath()).string().c_str()); // Todo: Don't create a new texture if one is already created for the texture
-                    component.SetTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
+                    component.SetTexture(path / componentData["texture_path"]);
                 }
+                else
+                    component.SetTexture(componentData["texture_path"]);
             }
             else if (componentData["name"] == "ScriptComponent")
             {

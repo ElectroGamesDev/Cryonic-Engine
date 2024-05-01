@@ -898,9 +898,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         texturePath = texturePath.string().substr(assetsPosition + 7);
 
                     SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
-                    spriteRenderer.SetTexturePath(texturePath);
-                    RaylibWrapper::Texture2D texture = RaylibWrapper::LoadTexture((ProjectManager::projectData.path / "Assets" / spriteRenderer.GetTexturePath()).string().c_str()); // Todo: Don't create a new texture if one is already created for the texture
-                    spriteRenderer.SetTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
+                    spriteRenderer.SetTexture(ProjectManager::projectData.path / "Assets" / texturePath);
                     gameObject->AddComponent<Collider2D>(); // Todo: Set to convex/texture type
 
                     for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
@@ -2492,7 +2490,7 @@ void Editor::RenderHierarchy()
                     else
                     {
                         SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
-                        spriteRenderer.SetTexturePath(objectToCreate);
+                        spriteRenderer.SetTexture(objectToCreate);
 
                         //gameObject->AddComponent<Collider2D>(); // Todo: Set size and type
                     }
