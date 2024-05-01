@@ -11,6 +11,7 @@ static std::unordered_map<ModelType, std::pair<Model, int>> primitiveModels;
 
 bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders shader, std::filesystem::path projectPath)
 {
+    // Todo: Don't create new meshes for primitives
     switch (type)
     {
     case Custom:
