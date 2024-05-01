@@ -1,6 +1,7 @@
 #include "Collider2D.h"
 #include "Rigidbody2D.h"
 #include "SpriteRenderer.h"
+#include "../EventSystem.h"
 #if !defined(EDITOR)
 #include "../Game.h"
 #endif
@@ -34,6 +35,11 @@ Collider2D::Collider2D(GameObject* obj, int id) : Component(obj, id) {
     )";
     exposedVariables = nlohmann::json::parse(variables);
 #endif
+}
+
+void Test(GameObject* go)
+{
+	ConsoleLogger::ErrorLog("Object selected: " + go->GetName());
 }
 
 // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive(). Also check if Rigidbody2D is destroyed, if it is then look for a new one, or create one. (Check when its destroyed in the Rigidbody2D Destroy() )
@@ -75,7 +81,26 @@ void Collider2D::Start() // Todo: Move to Awake()
 	fixture = body->CreateFixture(&fixtureDef);
 
 	SetTrigger(trigger);
+
+
+	// Subscribes to the ObjectSelected and ObjectDeselected editor events
+
 #endif
+	//EventSystem::Subscribe("ObjectSelected", Test);
+	// Todo: Move this to the above if defined, and handle if the object is selected, deslected, changed, moved, or if this object moves.
+	//EventSystem::Subscribe("ObjectSelected", [](GameObject* gameObject) {
+	//	ConsoleLogger::InfoLog("Object selected: " + gameObject->GetName());
+	//	});
+
+	//EventSystem::Subscribe("ObjectMoved", [](GameObject* gameObject) {
+	//	});
+
+	//EventSystem::Subscribe("ObjectDeselected", [](GameObject* gameObject) {
+	//	ConsoleLogger::InfoLog("Object deselected: " + gameObject->GetName());
+	//	});
+
+	//EventSystem::Subscribe("ObjectSelected", [](GameObject* gameObject) {});
+
 }
 
 void Collider2D::Destroy()

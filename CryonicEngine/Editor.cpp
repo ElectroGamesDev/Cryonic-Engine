@@ -30,6 +30,7 @@
 #include "imnodes.h"
 #include <random>
 #include <cmath>
+#include "EventSystem.h"
 
 #define TINYGLTF_IMPLEMENTATION
 //#define STB_IMAGE_IMPLEMENTATION
@@ -904,9 +905,12 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                     for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
                         component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
-
+                    
+                    //if (selectedObject != nullptr)
+                        //EventSystem::Invoke("ObjectDeselected", selectedObject);
                     selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
                     objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
+                    //EventSystem::Invoke("ObjectSelected", selectedObject);
                 }
 
                 dragData.first = None;
@@ -1017,8 +1021,11 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
                             component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
 
+                        //if (selectedObject != nullptr)
+                            //EventSystem::Invoke("ObjectDeselected", selectedObject);
                         selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
                         objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
+                        //EventSystem::Invoke("ObjectSelected", selectedObject);
                     }
                     else
                     {
@@ -2289,8 +2296,11 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor)
             if (ImGui::IsItemClicked())
             {
                 hierarchyObjectClicked = true;
+                //if (selectedObject != nullptr)
+                    //EventSystem::Invoke("ObjectDeselected", selectedObject);
                 objectInProperties = gameObject;
                 selectedObject = gameObject;
+                //EventSystem::Invoke("ObjectSelected", selectedObject);
 
                 if (selectedObject->GetComponent<CameraComponent>() != nullptr)
                     cameraSelected = true;
@@ -2430,7 +2440,10 @@ void Editor::RenderHierarchy()
                 if (std::holds_alternative<GameObject*>(objectInProperties) && std::get<GameObject*>(objectInProperties)->GetId() == objectInHierarchyContextMenu->GetId())
                     objectInProperties = std::monostate{};
                 if (selectedObject != nullptr && objectInHierarchyContextMenu->GetId() == selectedObject->GetId())
+                {
+                    //EventSystem::Invoke("ObjectDeselected", nullptr);
                     selectedObject = nullptr;
+                }
 
                 SceneManager::GetActiveScene()->RemoveGameObject(objectInHierarchyContextMenu);
                 objectInHierarchyContextMenu = nullptr;
@@ -2494,8 +2507,11 @@ void Editor::RenderHierarchy()
                 if (objectInHierarchyContextMenu != nullptr)
                     SceneManager::GetActiveScene()->GetGameObjects().back()->SetParent(objectInHierarchyContextMenu);
 
+                //if (selectedObject != nullptr)
+                    //EventSystem::Invoke("ObjectDeselected", selectedObject);
                 selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
                 objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
+                //EventSystem::Invoke("ObjectSelected", selectedObject);
 
                 if (selectedObject->GetComponent<CameraComponent>() != nullptr) // Todo: Should this if-else-if statement be moved up into the "else if (objectToCreate == "Camera")" statement?
                     cameraSelected = true;
@@ -2518,6 +2534,7 @@ void Editor::RenderHierarchy()
     {
         if (selectedObject)
         {
+            //EventSystem::Invoke("ObjectDeselected", selectedObject);
             selectedObject = nullptr;
             cameraSelected = false;
             resetCameraView = true;
