@@ -2,15 +2,43 @@
 #include "../RaylibDrawWrapper.h"
 #include "../RaylibWrapper.h"
 
-Texture2D& SpriteRenderer::GetTexture()
-{
-    return texture;
-}
+std::unordered_map<std::filesystem::path, std::pair<Texture2D, int>> SpriteRenderer::textures;
 
-void SpriteRenderer::SetTexture(Texture2D texture)
+//Texture2D& SpriteRenderer::GetTexture()
+//{
+//    return texture.first;
+//}
+
+void SpriteRenderer::SetTexture(std::filesystem::path path)
 {
-    this->texture = texture;
-    this->textureSet = true;
+    if (texture != nullptr)
+    {
+        if (path == texturePath)
+            return;
+        Destroy();
+    }
+
+    if (path == "Square" || path == "Circle")
+    {
+        texturePath = path;
+        return;
+    }
+
+    // Todo: Check to make sure the texture file exists, if it doesn't then replace it with some kind of NULL txture
+
+    if (auto it = textures.find(path); it != textures.end())
+    {
+        texture = &(it->second);
+        texture->second++;
+    }
+    else
+    {
+        RaylibWrapper::Texture2D tempTexture = RaylibWrapper::LoadTexture(path.string().c_str());
+        textures[path] = std::make_pair(Texture2D{ tempTexture.id, tempTexture.width, tempTexture.height, tempTexture.mipmaps, tempTexture.format }, 1);
+        texture = &textures[path];
+    }
+
+    texturePath = path;
 }
 
 std::filesystem::path SpriteRenderer::GetTexturePath() const
@@ -18,20 +46,15 @@ std::filesystem::path SpriteRenderer::GetTexturePath() const
     return texturePath;
 }
 
-void SpriteRenderer::SetTexturePath(std::filesystem::path path)
-{
-    this->texturePath = path;
-}
-
 void SpriteRenderer::Update(float deltaTime)
 {
     // Todo: I should create an enum to store whether if its a sqaure, circle, etc, if its a shape. It will be faster than comparing strings in an if-else
-    if (textureSet)
+    if (texture != nullptr)
     {
-        RaylibWrapper::DrawTextureProFlipped({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format },
-            { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) * -1 },
-            { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, texture.width * gameObject->transform.GetScale().x / 10, texture.height* gameObject->transform.GetScale().y / 10 },
-            { texture.width * gameObject->transform.GetScale().x / 10 / 2, texture.height * gameObject->transform.GetScale().y / 10 / 2 },
+        RaylibWrapper::DrawTextureProFlipped({ texture->first.id, texture->first.width, texture->first.height, texture->first.mipmaps, texture->first.format },
+            { 0, 0, static_cast<float>(texture->first.width), static_cast<float>(texture->first.height) * -1 },
+            { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, texture->first.width * gameObject->transform.GetScale().x / 10, texture->first.height* gameObject->transform.GetScale().y / 10 },
+            { texture->first.width * gameObject->transform.GetScale().x / 10 / 2, texture->first.height * gameObject->transform.GetScale().y / 10 / 2 },
             gameObject->transform.GetRotationEuler().y,
             { tint.r, tint.g, tint.b, tint.a });
     }
@@ -72,6 +95,24 @@ void SpriteRenderer::EditorUpdate()
 
 void SpriteRenderer::Destroy()
 {
-    if (textureSet)
-        RaylibWrapper::UnloadTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
+    if (texture == nullptr)
+        return;
+
+    texture->second--;
+    if (texture->second <= 0)
+    {
+        RaylibWrapper::UnloadTexture({ texture->first.id, texture->first.width, texture->first.height, texture->first.mipmaps, texture->first.format });
+        auto it = textures.begin();
+        while (it != textures.end())
+        {
+            if (&it->second == texture)
+            {
+                it = textures.erase(it);
+                break;
+            }
+            else
+                ++it;
+        }
+    }
+    texture = nullptr;
 }
