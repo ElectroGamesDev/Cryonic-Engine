@@ -2,6 +2,7 @@
 
 #include "Component.h"
 #include "../CryonicCore.h"
+#include <unordered_map>
 
 
 class SpriteRenderer : public Component
@@ -44,16 +45,16 @@ public:
 #endif
 	void Destroy() override;
 
-	Texture2D& GetTexture();
-	void SetTexture(Texture2D texture);
+	//Texture2D& GetTexture();
+	void SetTexture(std::filesystem::path path);
 	std::filesystem::path GetTexturePath() const;
-	void SetTexturePath(std::filesystem::path path);
 
 	Color tint = { 255, 255, 255, 255 };
 	int renderOrder = 0;
 
+	static std::unordered_map<std::filesystem::path, std::pair<Texture2D, int>> textures;
+
 private:
-	Texture2D texture;
-	bool textureSet = false;
+	std::pair<Texture2D, int>* texture = nullptr;
 	std::filesystem::path texturePath;
 };
