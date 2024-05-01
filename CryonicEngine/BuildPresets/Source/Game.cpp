@@ -102,7 +102,7 @@ int main(void)
 			}
 		}
 
-		world->DebugDraw();
+		//world->DebugDraw();
 		
 		RaylibWrapper::EndMode3D();
 		
