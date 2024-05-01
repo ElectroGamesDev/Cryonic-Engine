@@ -298,7 +298,7 @@ void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics
         if (gameObject->transform.GetPosition() != lastGameObjectPosition)
             gameObject->transform.SetPosition(lastGameObjectPosition);
         if (gameObject->transform.GetRotation() != lastGameObjectRotation)
-            gameObject->transform._rotation.y = lastGameObjectRotation.y;
+            gameObject->transform.SetRotation(lastGameObjectRotation);
     }
 
     lastGameObjectPosition = gameObject->transform.GetPosition();
