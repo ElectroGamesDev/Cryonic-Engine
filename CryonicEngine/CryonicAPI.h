@@ -5,6 +5,7 @@
 #include "Scenes/SceneManager.h"
 #include "InputSystem.h"
 #include "EventSystem.h"
+#include "AnimationGraph.h"
 
 #include "Components/Component.h"
 #include "Components/AnimationPlayer.h"
