@@ -21,7 +21,9 @@ public:
                     "animationGraph",
                     "nullptr",
                     "Animation Graph",
-                    "Extensions": [".animgraph"]
+                    {
+                        "Extensions": [".animgraph"]
+                    }
                 ]
             ]
         ]
