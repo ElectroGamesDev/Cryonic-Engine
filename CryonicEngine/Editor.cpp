@@ -1519,8 +1519,6 @@ std::string RenderFileSelector(int id, std::string type, std::vector<std::string
     ImGui::PopStyleVar(3);
     ImGui::PopStyleColor(3);
 
-    // Todo: Make sure to clear searchBuffer
-
     if (!open)
     {
         oldId = -9999;
