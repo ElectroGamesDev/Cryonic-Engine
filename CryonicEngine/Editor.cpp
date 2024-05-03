@@ -1095,7 +1095,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                                         {"name", animation.name},
                                         {"index", i},
                                         {"x", 350 + (i * 30)},
-                                        {"y", 350 + (i * 30)}
+                                        {"y", 350 + (i * 30)},
+                                        {"loop", true},
+                                        {"speed", 1.0f}
                                     };
 
                                     animationGraphData["nodes"].push_back(node);
@@ -1263,6 +1265,41 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         // Todo: Handle if it wasn't created
                     }
                 }
+                //if (ImGui::MenuItem("Create Animation"))
+                //{
+                //    explorerContextMenuOpen = false;
+                //    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "New Animation", "anim");
+                //    if (filePath != "")
+                //    {
+                //        std::ofstream file(filePath);
+                //        if (file.is_open())
+                //        {
+                //            nlohmann::json jsonData = {
+                //                {"version", 1},
+                //                {"path", filePath},
+                //                {"loop", true},
+                //                {"speed", 1.0f},
+                //                {"sprites", {}}
+                //            };
+
+                //            file << std::setw(4) << jsonData << std::endl;
+                //            file.close();
+                //        }
+                //        else
+                //        {
+                //            // Todo: Properly handle if the file couldn't be opened. Maybe retry a few times, then popup with a message and delete the file.
+                //            std::filesystem::remove(filePath);
+                //        }
+
+
+                //        renamingFile = filePath;
+                //        strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
+                //    }
+                //    else
+                //    {
+                //        // Todo: Handle if it wasn't created
+                //    }
+                //}
                 if (ImGui::MenuItem("Create Animation Graph"))
                 {
                     explorerContextMenuOpen = false;
@@ -1281,7 +1318,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                                         {"id", -5},
                                         {"name", "Start"},
                                         {"x", 80},
-                                        {"y", 350}
+                                        {"y", 350},
+                                        {"loop", false},
+                                        {"speed", 0.0f}
                                     }
                                 }},
                                 {"links", nlohmann::json::array()}
@@ -1411,24 +1450,108 @@ void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnD
     }
 }
 
+std::string RenderFileSelector(int id, std::string type, std::vector<std::string> extensions, ImVec2 position)
+{
+    static bool open = true;
+    static char searchBuffer[256];
+    // Using oldId to identify if the same thing is being set as previously so it will know if it needs to reset some values
+    static int oldId = -9999;
+    if (id != oldId)
+    {
+        open = true;
+        memset(searchBuffer, '\0', sizeof(searchBuffer));
+        ImGui::SetNextWindowScroll({0,0});
+    }
+    std::string selectedFile = "";
+    ImGui::SetNextWindowSize(ImVec2(200, 250));
+    ImGui::SetNextWindowPos(position);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.18f, 0.18f, 0.18f, 1.00f));
+    ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.12f, 0.12f, 0.12f, 1.00f));
+    ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.12f, 0.12f, 0.12f, 1.00f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 6.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+    ImGui::Begin((" Select " + type).c_str(), &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking);
+
+    ImGui::SetCursorPos({ 10, 20 });
+    ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 23);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
+    ImGui::InputTextWithHint("##FileSearch", "Search...", searchBuffer, sizeof(searchBuffer));
+    ImGui::PopStyleVar();
+
+    ImGui::SetCursorPos({0, 40});
+    ImGui::BeginTable("##FileSelectorTable", 1);
+
+    // Todo: It may not be best to iterate the files each frame. Maybe store them in a static and only update them when the window is opened
+    // Todo: Order the files in alphabetical order
+    // Todo: Make a gap between the bottom of the table and bottom of the window since the nodes make it so the bottom left of the window isn't rounded
+
+    try
+    {
+        for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
+        {
+            if (std::filesystem::is_regular_file(file) && std::find(extensions.begin(), extensions.end(), file.path().extension().string()) != extensions.end() && (searchBuffer[0] == '\0' || file.path().stem().string().find(searchBuffer) != std::string::npos))
+            {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                if (ImGui::TreeNodeEx((" " + file.path().stem().string()).c_str(), ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_FramePadding))
+                {
+                    if (ImGui::IsItemClicked())
+                        selectedFile = std::filesystem::relative(file.path(), ProjectManager::projectData.path / "Assets").string();
+
+                    ImGui::TreePop();
+                }
+            }
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        ConsoleLogger::ErrorLog("Failed to iterate project files to find " + type + " files", true);
+        memset(searchBuffer, '\0', sizeof(searchBuffer));
+        selectedFile = "NULL";
+        oldId = -9999;
+        ImGui::SetScrollY(0);
+    }
+
+    ImGui::EndTable();
+
+    ImGui::End();
+    ImGui::PopStyleVar(3);
+    ImGui::PopStyleColor(3);
+
+    // Todo: Make sure to clear searchBuffer
+
+    if (!open)
+    {
+        oldId = -9999;
+        open = true;
+        selectedFile = "NULL";
+        memset(searchBuffer, '\0', sizeof(searchBuffer));
+        ImGui::SetScrollY(0);
+    }
+
+    oldId = id;
+    return selectedFile;
+}
+
 void Editor::RenderAnimationGraph()
 {
     if (!animationGraphWinOpen) return;
     //ImGui::SetNextWindowSize(ImVec2(180, 180));
     //ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 180) / 2, (RaylibWrapper::GetScreenHeight() - 180) / 2));
-    static std::vector<std::pair<int, int>> links;
 
     animationGraphHovered = true;
+    static nlohmann::json* selectedNode = nullptr;
 
     // Todo: Check model to see if it has new animations (or if animations were moved/renamed)
 
     if (ImGui::Begin((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), &animationGraphWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         bool update = false;
+        ImNodes::BeginNodeEditor();
         if (animationGraphData.is_null())
         {
             // Todo: Fade background and make it so user can't move grid
-            ImNodes::BeginNodeEditor();
             ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
             ImVec2 textSize = ImGui::CalcTextSize("No Animation Graph selected. Select or create one in the Content Browser.");
             ImGui::SetCursorPos(ImVec2((ImGui::GetWindowWidth() - textSize.x) * 0.5f, (ImGui::GetWindowHeight() - textSize.y) * 0.5f));
@@ -1436,10 +1559,9 @@ void Editor::RenderAnimationGraph()
             ImGui::PopFont();
             ImNodes::EndNodeEditor();
             ImGui::End();
+            selectedNode = nullptr;
             return;
         }
-
-        ImNodes::BeginNodeEditor();
 
         // Todo: Add "Any State" node
         // Todo: Save user position in grid to load it. (It doesn't seem to be implemented into ImNodes)
@@ -1494,7 +1616,217 @@ void Editor::RenderAnimationGraph()
         for (int i = 0; i < animationGraphData["links"].size(); ++i)
             ImNodes::Link(i, animationGraphData["links"][i][0], animationGraphData["links"][i][1]);
 
+        static int selectNode = 0;
+        int previousSelectNode = selectNode;
+        static bool openAddSpriteWin = false;
+        if (selectedNode == nullptr)
+            openAddSpriteWin = false;
+
+        if (!animationGraphData.is_null())
+        {
+            if (selectedNode == nullptr || (*selectedNode)["id"] == -5) // Checks if selectedNode is null, or if the selected node is the Start node
+            {
+                ImGui::SetCursorPos({ ImGui::GetWindowWidth() - 130, 10 });
+                if (ImGui::Button("Create Animation", { 120, 30 }))
+                {
+                    // Todo: Place the node in the center of the current position rather than this hardcoded solution
+
+                    std::random_device rd;
+                    std::mt19937 gen(rd());
+                    std::uniform_int_distribution<int> distribution(999999, 99999999);
+
+                    int id = 0;
+                    while (id == 0)
+                    {
+                        id = distribution(gen);
+                        for (auto& node : animationGraphData["nodes"])
+                        {
+                            if (id == node["id"])
+                            {
+                                id = 0;
+                                break;
+                            }
+                        }
+                    }
+
+                    nlohmann::json node = {
+                        {"id", id},
+                        {"name", "New Animation"}, // Todo: It may be best to add numbers at the end of the name if there are others with this name
+                        {"index", 0}, // Todo: Not sure why node's have the index element, see if they are needed
+                        {"x", 350},
+                        {"y", 350},
+                        {"loop", true},
+                        {"speed", 1.0f},
+                        {"sprites", {}}
+                    };
+                    animationGraphData["nodes"].push_back(node);
+                    
+                    selectNode = id;
+                    update = true;
+                }
+            }
+            else
+            {
+                ImGui::SetCursorPos({ImGui::GetWindowWidth() - 160, 10});
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.13f, 0.14f, 0.15f, 1.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.0f);
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
+
+                float height = 90;
+                if (selectedNode->contains("sprites"))
+                {
+                    height = 170 + (*selectedNode)["sprites"].size() * 100;
+                    if (height > ImGui::GetWindowHeight() - 20)
+                        height = ImGui::GetWindowHeight() - 20;
+                }
+
+                ImGui::BeginChild("##Animation Graph Properties", {150, height });
+
+                char nameBuffer[256];
+                strcpy_s(nameBuffer, (*selectedNode)["name"].get<std::string>().c_str());
+                ImGui::SetCursorPos({10, 10});
+                ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 20);
+                if (ImGui::InputText("##AnimationName", nameBuffer, sizeof(nameBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    std::string temp = nameBuffer;
+                    temp.erase(std::remove_if(temp.begin(), temp.end(), ::isspace), temp.end());
+                    if (!temp.empty())
+                    {
+                        // Todo: Consider checking if an animation with the name already exists and if it does then add a number to the end of it
+                        (*selectedNode)["name"] = nameBuffer;
+                        update = true;
+                    }
+                }
+
+                ImGui::SetCursorPos({ 10, 40 });
+                ImGui::Text("Loop");
+                bool loop = (*selectedNode)["loop"].get<bool>();
+                ImGui::SetCursorPos({ 60, 40 });
+                if (ImGui::Checkbox("##AnimationLoop", &loop))
+                {
+                    (*selectedNode)["loop"] = loop;
+                    update = true;
+                }
+
+                ImGui::SetCursorPos({ 10, 70 });
+                ImGui::Text("Speed");
+                float speed = (*selectedNode)["speed"].get<float>();
+                ImGui::SetNextItemWidth(40);
+                ImGui::SetCursorPos({ 60, 70 });
+                if (ImGui::InputFloat("##AnimationSpeed", &speed, 0, 0, "%.05g"))
+                {
+                    (*selectedNode)["speed"] = speed;
+                    update = true;
+                }
+                if (selectedNode->contains("sprites"))
+                {
+                    // Todo: Add support to re-order sprites.
+                    // Todo: Preview button and preview at the bottom. When preview button is clicked, it will expand the window even more to fit it if needed.
+                    // When hovering over sprite add X button top right to remove the sprite
+
+                    ImGui::GetWindowDrawList()->AddLine(ImVec2(ImGui::GetWindowPos().x + 10, ImGui::GetWindowPos().y + 100), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowWidth() - 10, ImGui::GetWindowPos().y + 100), IM_COL32(25, 25, 25, 255), 2);
+
+                    ImGui::SetCursorPos({ 50, 105 });
+                    ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 15, false));
+                    ImGui::Text("Sprites");
+                    ImGui::PopFont();
+
+                    ImGui::SetCursorPos({ 10, 123 });
+                    ImGui::BeginChild("#AnimationSprites", { ImGui::GetWindowWidth() - 10, ImGui::GetWindowHeight() - 133 });
+
+                    float nextY = 10;
+                    for (auto& sprite : (*selectedNode)["sprites"])
+                    {
+                        // Todo: Check if path exists, if it doesn't then try to find the file by filename + extension in other folders. If it can't find it, then remove it or set it to a NULL/"File Not Found" image
+                        tempTextures.push_back(new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture((ProjectManager::projectData.path / "Assets" / sprite.get<std::string>()).string().c_str())));
+                        float aspectRatio = (float)tempTextures.back()->width / (float)tempTextures.back()->height;
+                        ImVec2 imageSize = ImVec2(0, 0);
+                        imageSize.x = aspectRatio > 1.0f ? 90 : 90 * aspectRatio;
+                        imageSize.y = aspectRatio > 1.0f ? 90 / aspectRatio : 90;
+                        int buttonSize = 90 + ImGui::GetStyle().FramePadding.x * 2;
+
+                        ImGui::SetCursorPos({17, nextY});
+                        ImVec2 cursorPos = ImGui::GetCursorPos();
+
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.17f, 0.17f, 0.17f, 1.0f));
+                        ImGui::Button(("##" + sprite.get<std::string>()).c_str(), ImVec2(buttonSize, buttonSize));
+                        ImGui::PopStyleColor();
+
+                        //if (ImGui::IsItemHovered())
+                        //{
+                        //    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        //    {
+
+                        //    }
+                        //}
+
+                        ImGui::SetCursorPos(ImVec2(cursorPos.x + (buttonSize - imageSize.x) / 2, cursorPos.y + (buttonSize - imageSize.y) / 2)); // Sets the position to the button position and centers it
+                        RaylibWrapper::rlImGuiImageSize(tempTextures.back(), imageSize.x, imageSize.y);
+                        nextY += 100;
+                    }
+
+                    // Todo: Iterate the sprites, create a background of a lighter grey, then add the sprite inside of it (look at content browser for aspect ratio)
+
+                    ImGui::SetCursorPos({ 15, ImGui::GetWindowHeight() - 20});
+                    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+                    if (ImGui::Button("Add Sprite", {100, 20}))
+                    {
+                        // Todo: Open a menu to select an PNG/JPG. This menu should be a global menu (kind of like color picker) with a paramter taking in an extension to search for within the project. Sort alphebetically.
+                        //    Make sure to add a search bar at the top that auto updates and searches without needing to click enter. It should also take in a parameter for type. Like Extension is ".PNG" and type is "Sprite"
+                        openAddSpriteWin = true;
+                    }
+
+                    ImGui::EndChild();
+
+                    // Todo:Check if the position + height > window and if it is, then move it up
+                    if (openAddSpriteWin)
+                    {
+                        std::string selectedFile = RenderFileSelector((*selectedNode)["id"], "Sprite", { ".png", ".jpeg", ".jpg" }, { cursorPos.x - 235, cursorPos.y - 40 });
+                        if (selectedFile == "NULL")
+                            openAddSpriteWin = false;
+                        else if (!selectedFile.empty())
+                        {
+                            openAddSpriteWin = false;
+                            (*selectedNode)["sprites"].push_back(selectedFile);
+                        }
+                    }
+                }
+
+                ImGui::EndChild();
+                ImGui::PopStyleVar(2);
+                ImGui::PopStyleColor();
+            }
+        }
+
         ImNodes::EndNodeEditor();
+
+        // This uses previousSelectNode to make it wait until the next iteration to select the node incase the node isn't created yet (Like when clicking "Create Animation")
+        if (selectNode != 0 && previousSelectNode == selectNode) // Todo: It may be good to check if the node actually exists since this waits an iteration and by that time something could happen and delete the node. Maybe make SelectNode() return true or false since it checks if the node exists. if it doesnt exist, set selectNode to 0
+        {
+            ImNodes::SelectNode(selectNode);
+            selectNode = 0;
+        }
+
+        if (ImNodes::NumSelectedNodes() > 0)
+        {
+            std::vector<int> selectedNodes;
+            selectedNodes.resize(ImNodes::NumSelectedNodes());
+            ImNodes::GetSelectedNodes(selectedNodes.data());
+            if (selectedNode == nullptr || (*selectedNode)["id"] != selectedNodes.back())
+            {
+                openAddSpriteWin = false;
+                for (auto& node : animationGraphData["nodes"])
+                {
+                    if (node["id"] == selectedNodes.back())
+                    {
+                        selectedNode = &node;
+                        break;
+                    }
+                }
+            }
+        }
+        else
+            selectedNode = nullptr;
 
         int start_attr, end_attr;
         if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
