@@ -22,6 +22,7 @@
 #include "Components/SpriteRenderer.h"
 #include "Components/Collider2D.h"
 #include "Components/Rigidbody2D.h"
+#include "Components/AnimationPlayer.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
 #include "ProjectManager.h"
@@ -2092,6 +2093,12 @@ void Editor::RenderComponentsWin()
         else if (ImGui::Button("Rigidbody2D", ImVec2(buttonWidth, 0)))
         {
             std::get<GameObject*>(objectInProperties)->AddComponent<Rigidbody2D>();
+            componentsWindowOpen = false;
+            resetComponentsWin = true;
+        }
+        else if (ImGui::Button("Animation Player", ImVec2(buttonWidth, 0)))
+        {
+            std::get<GameObject*>(objectInProperties)->AddComponent<AnimationPlayer>();
             componentsWindowOpen = false;
             resetComponentsWin = true;
         }
