@@ -1562,6 +1562,7 @@ void Editor::RenderAnimationGraph()
         }
 
         // Todo: Add "Any State" node
+        // Todo: Ability to create multiple "Any State" nodes to cleanup the graph. Make it so ALL any state nodes can be removed including the last one
         // Todo: Save user position in grid to load it. (It doesn't seem to be implemented into ImNodes)
         // Todo: Make all nodes fixed sizes
         // Todo: Add zooming
@@ -1721,6 +1722,7 @@ void Editor::RenderAnimationGraph()
                     // Todo: Add support to re-order sprites.
                     // Todo: Preview button and preview at the bottom. When preview button is clicked, it will expand the window even more to fit it if needed.
                     // When hovering over sprite add X button top right to remove the sprite
+                    // Todo: Add sprite drag and drop support
 
                     ImGui::GetWindowDrawList()->AddLine(ImVec2(ImGui::GetWindowPos().x + 10, ImGui::GetWindowPos().y + 100), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowWidth() - 10, ImGui::GetWindowPos().y + 100), IM_COL32(25, 25, 25, 255), 2);
 
@@ -2418,6 +2420,7 @@ void Editor::RenderProperties()
                     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.16f, 0.17f, 0.18f, 1.00f));
                     if (component->exposedVariables != nullptr) // Todo: Add Threading
                     {
+                        // Todo: Add vectors, list, and array
                         //ConsoleLogger::InfoLog(component->exposedVariables.dump(4));
                         for (auto it = component->exposedVariables[1].begin(); it != component->exposedVariables[1].end(); ++it)
                         {
@@ -2497,7 +2500,36 @@ void Editor::RenderProperties()
                                 if (colorPopupOpened != nullptr && (*colorPopupOpened)[3].get<std::string>() == name)
                                     popupPosition = ImVec2(ImGui::GetWindowPos().x - 250, ImGui::GetCursorPosY() + ImGui::GetWindowPos().y - 20);
                             }
-                            else if ((*it).size() > 4) // This is probably not a good solution for checking if its an enum or not.
+                            else if ((*it).contains("Extensions"))
+                            {
+                                static bool openSelector = false;
+                                // Todo: If the user deselects or closes the component, it will hide the menu, but once it is reopened, or another one with Extensions, it will open the menu. Maybe right here right after the bool, run RenderFIleSelector() with a special parameter to check if the old ID != new ID and if it doesnt equal, then return "NULL" and it will know it shouldn't be open
+                                ImGui::SameLine();
+                                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                std::string selectedFile = "Click to Select";
+                                if (!(*it)["Extensions"].is_null() && (*it)["Extensions"].get<std::string>() != "nullptr")
+                                    selectedFile = std::filesystem::path((*it)["Extensions"].get<std::string>()).stem().string();
+                                if (ImGui::Button(selectedFile.c_str(), { ImGui::GetWindowWidth() - 10, 40 }))
+                                    openSelector = true;
+
+                                if (openSelector)
+                                {
+                                    // Adds the extensions to the extensions vector so it can be passed into RenderFileSelector()
+                                    std::vector<std::string> extensions;
+                                    for (const auto& extension : (*it)["Extensions"])
+                                        extensions.push_back(extension);
+
+                                    std::string selectedFile = RenderFileSelector(componentsNum, name, extensions, { ImGui::GetCursorScreenPos().x - 100, ImGui::GetCursorScreenPos().y - 40});
+                                    if (selectedFile == "NULL")
+                                        openSelector = false;
+                                    else if (!selectedFile.empty())
+                                    {
+                                        (*it)[2] = selectedFile;
+                                        openSelector = false;
+                                    }
+                                }
+                            }
+                            else if ((*it).size() > 4) // This is probably not a good solution for checking if its an enum or not. Maybe give the array a key
                             {
                                 // Todo: The enum values won't be capitalized or have spaces, only the selected enum value will be capitalized with spaces
                                 ImGui::SameLine();
