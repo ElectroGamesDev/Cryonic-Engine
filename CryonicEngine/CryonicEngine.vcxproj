@@ -218,6 +218,7 @@
     <ClInclude Include="..\includes\stb_image.h" />
     <ClInclude Include="..\includes\stb_image_write.h" />
     <ClInclude Include="..\includes\tiny_gltf.h" />
+    <ClInclude Include="AnimationGraph.h" />
     <ClInclude Include="CollisionListener2D.h" />
     <ClInclude Include="CollisionListener3D.h" />
     <ClInclude Include="Components\AnimationPlayer.h" />

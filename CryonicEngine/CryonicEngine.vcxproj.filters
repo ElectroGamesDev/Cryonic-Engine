@@ -329,5 +329,8 @@
     <ClInclude Include="CryonicAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AnimationGraph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
