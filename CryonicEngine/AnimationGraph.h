@@ -3,6 +3,7 @@
 class AnimationGraph
 {
 public:
-	// Hide in API
+	// Todo: Functions to get sprites, speeds, looping, etc.
+private:
 	std::string path = "";
 };
