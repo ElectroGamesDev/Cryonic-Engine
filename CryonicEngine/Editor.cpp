@@ -1491,16 +1491,25 @@ std::string RenderFileSelector(int id, std::string type, std::vector<std::string
     {
         for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
         {
-            if (std::filesystem::is_regular_file(file) && std::find(extensions.begin(), extensions.end(), file.path().extension().string()) != extensions.end() && (searchBuffer[0] == '\0' || file.path().stem().string().find(searchBuffer) != std::string::npos))
+            if (std::filesystem::is_regular_file(file) && std::find(extensions.begin(), extensions.end(), file.path().extension().string()) != extensions.end())
             {
-                ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(0);
-                if (ImGui::TreeNodeEx((" " + file.path().stem().string()).c_str(), ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_FramePadding))
+                // This converts the search and file name to lower case so its case insensitive
+                std::string search = searchBuffer;
+                std::string fileName = file.path().stem().string();
+                std::transform(search.begin(), search.end(), search.begin(), ::tolower);
+                std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
+                ConsoleLogger::ErrorLog("Search: " + search);
+                if (searchBuffer[0] == '\0' || fileName.find(search) != std::string::npos)
                 {
-                    if (ImGui::IsItemClicked())
-                        selectedFile = std::filesystem::relative(file.path(), ProjectManager::projectData.path / "Assets").string();
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    if (ImGui::TreeNodeEx((" " + file.path().stem().string()).c_str(), ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_FramePadding))
+                    {
+                        if (ImGui::IsItemClicked())
+                            selectedFile = std::filesystem::relative(file.path(), ProjectManager::projectData.path / "Assets").string();
 
-                    ImGui::TreePop();
+                        ImGui::TreePop();
+                    }
                 }
             }
         }
