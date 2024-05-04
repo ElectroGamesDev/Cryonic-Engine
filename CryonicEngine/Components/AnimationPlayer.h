@@ -32,11 +32,14 @@ public:
 #endif
 	}
 
-	void Start() override {};
+	void Start() override;
 	void Update(float deltaTime) override;
-	void Destroy() override;
+    void Destroy() override;
 
-    AnimationGraph* animationGraph = nullptr;
+    void SetAnimationGraph(AnimationGraph* animationGraph);
+    AnimationGraph* GetAnimationGraph();
 
 private:
+    AnimationGraph* animationGraph = nullptr;
+    bool ownsGraph = false;
 };
