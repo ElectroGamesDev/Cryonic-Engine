@@ -329,8 +329,5 @@
     <ClInclude Include="AnimationGraph.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Components\AnimationGraph.h">
-      <Filter>Header Files\Components</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
