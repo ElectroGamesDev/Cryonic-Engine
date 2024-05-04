@@ -1480,7 +1480,7 @@ std::string RenderFileSelector(int id, std::string type, std::vector<std::string
     ImGui::InputTextWithHint("##FileSearch", "Search...", searchBuffer, sizeof(searchBuffer));
     ImGui::PopStyleVar();
 
-    ImGui::SetCursorPos({0, 40});
+    ImGui::SetCursorPos({0, 45});
     ImGui::BeginTable("##FileSelectorTable", 1);
 
     // Todo: It may not be best to iterate the files each frame. Maybe store them in a static and only update them when the window is opened
