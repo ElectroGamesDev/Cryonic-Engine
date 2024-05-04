@@ -2507,23 +2507,26 @@ void Editor::RenderProperties()
                                 if (colorPopupOpened != nullptr && (*colorPopupOpened)[3].get<std::string>() == name)
                                     popupPosition = ImVec2(ImGui::GetWindowPos().x - 250, ImGui::GetCursorPosY() + ImGui::GetWindowPos().y - 20);
                             }
-                            else if ((*it).contains("Extensions"))
+                            else if ((*it).size() > 4 && (*it)[4].contains("Extensions"))
                             {
                                 static bool openSelector = false;
                                 // Todo: If the user deselects or closes the component, it will hide the menu, but once it is reopened, or another one with Extensions, it will open the menu. Maybe right here right after the bool, run RenderFIleSelector() with a special parameter to check if the old ID != new ID and if it doesnt equal, then return "NULL" and it will know it shouldn't be open
                                 ImGui::SameLine();
                                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
-                                std::string selectedFile = "Click to Select";
-                                if (!(*it)["Extensions"].is_null() && (*it)["Extensions"].get<std::string>() != "nullptr")
-                                    selectedFile = std::filesystem::path((*it)["Extensions"].get<std::string>()).stem().string();
-                                if (ImGui::Button(selectedFile.c_str(), { ImGui::GetWindowWidth() - 10, 40 }))
+                                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.17f, 0.18f, 1.00f));
+                                std::string selectedFile = "None Selected";
+                                if (!(*it)[2].is_null() && (*it)[2].get<std::string>() != "nullptr")
+                                    selectedFile = std::filesystem::path((*it)[2].get<std::string>()).stem().string();
+                                if (ImGui::Button(selectedFile.c_str(), { ImGui::GetWindowWidth() - 130, 20 }))
                                     openSelector = true;
+
+                                ImGui::PopStyleColor();
 
                                 if (openSelector)
                                 {
                                     // Adds the extensions to the extensions vector so it can be passed into RenderFileSelector()
                                     std::vector<std::string> extensions;
-                                    for (const auto& extension : (*it)["Extensions"])
+                                    for (const auto& extension : (*it)[4]["Extensions"])
                                         extensions.push_back(extension);
 
                                     std::string selectedFile = RenderFileSelector(componentsNum, name, extensions, { ImGui::GetCursorScreenPos().x - 100, ImGui::GetCursorScreenPos().y - 40});
