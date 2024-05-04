@@ -299,9 +299,6 @@
     <ClInclude Include="..\includes\imnodes\imnodes_internal.h">
       <Filter>Source Files\imnodes</Filter>
     </ClInclude>
-    <ClInclude Include="Components\AnimationPlayer.h">
-      <Filter>Header Files\Components</Filter>
-    </ClInclude>
     <ClInclude Include="..\includes\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -331,6 +328,9 @@
     </ClInclude>
     <ClInclude Include="AnimationGraph.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\AnimationGraph.h">
+      <Filter>Header Files\Components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
