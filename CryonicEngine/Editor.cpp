@@ -1451,7 +1451,7 @@ void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnD
     }
 }
 
-std::string RenderFileSelector(int id, std::string type, std::vector<std::string> extensions, ImVec2 position)
+std::string RenderFileSelector(int id, std::string type, std::string selectedPath, std::vector<std::string> extensions, ImVec2 position)
 {
     static bool open = true;
     static char searchBuffer[256];
@@ -1472,6 +1472,7 @@ std::string RenderFileSelector(int id, std::string type, std::vector<std::string
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 6.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+
     ImGui::Begin((" Select " + type).c_str(), &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking);
 
     ImGui::SetCursorPos({ 10, 20 });
@@ -1498,12 +1499,16 @@ std::string RenderFileSelector(int id, std::string type, std::vector<std::string
                 std::string fileName = file.path().stem().string();
                 std::transform(search.begin(), search.end(), search.begin(), ::tolower);
                 std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
-                ConsoleLogger::ErrorLog("Search: " + search);
                 if (searchBuffer[0] == '\0' || fileName.find(search) != std::string::npos)
                 {
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
-                    if (ImGui::TreeNodeEx((" " + file.path().stem().string()).c_str(), ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_FramePadding))
+                    // Using ImGuiTreeNodeFlags_Framed flag adds a frame and aligns it to the left, but then selected flag doesn't work. I would need to set the node color if I want to make it so they have a frame or aligned to the left
+                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding;
+                    // Checks to see if the file path contains the selectedPath and if it does, then select it
+                    if (!selectedPath.empty() && file.path().string().find(selectedPath) != std::string::npos)
+                        flags |= ImGuiTreeNodeFlags_Selected;
+                    if (ImGui::TreeNodeEx((file.path().stem().string()).c_str(), flags))
                     {
                         if (ImGui::IsItemClicked())
                             selectedFile = std::filesystem::relative(file.path(), ProjectManager::projectData.path / "Assets").string();
@@ -1791,7 +1796,7 @@ void Editor::RenderAnimationGraph()
                     // Todo:Check if the position + height > window and if it is, then move it up
                     if (openAddSpriteWin)
                     {
-                        std::string selectedFile = RenderFileSelector((*selectedNode)["id"], "Sprite", { ".png", ".jpeg", ".jpg" }, { cursorPos.x - 235, cursorPos.y - 40 });
+                        std::string selectedFile = RenderFileSelector((*selectedNode)["id"], "Sprite", "", { ".png", ".jpeg", ".jpg" }, {cursorPos.x - 235, cursorPos.y - 40});
                         if (selectedFile == "NULL")
                             openAddSpriteWin = false;
                         else if (!selectedFile.empty())
@@ -2538,7 +2543,8 @@ void Editor::RenderProperties()
                                     for (const auto& extension : (*it)[4]["Extensions"])
                                         extensions.push_back(extension);
 
-                                    std::string selectedFile = RenderFileSelector(componentsNum, name, extensions, { ImGui::GetCursorScreenPos().x - 100, ImGui::GetCursorScreenPos().y - 40});
+                                    std::string currentlySelected = ((*it)[2] == "nullptr") ? "" : (*it)[2];
+                                    std::string selectedFile = RenderFileSelector(componentsNum, name, currentlySelected, extensions, {ImGui::GetCursorScreenPos().x - 100, ImGui::GetCursorScreenPos().y - 40});
                                     if (selectedFile == "NULL")
                                         openSelector = false;
                                     else if (!selectedFile.empty())
