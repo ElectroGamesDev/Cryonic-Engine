@@ -11,6 +11,29 @@
 class AnimationGraph
 {
 public:
+	enum ConditionType
+	{
+		less,
+		Equal,
+		Greater,
+	};
+	struct Condition
+	{
+		std::string parameter;
+		ConditionType conditionType;
+		std::variant<bool, int, float> value;
+	};
+	struct Transition
+	{
+		Animation* to = nullptr;
+		std::vector<Condition> conditions;
+	};
+	struct AnimationState
+	{
+		Animation animation;
+		std::vector<Transition> transitions;
+	};
+
 	AnimationGraph(std::string path)
 	{
 		std::ifstream file(std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets" / path); // Todo: Should I just use Filesystem GetWorkingPath? GetWorkingPath isn't even the best solution here
@@ -53,28 +76,11 @@ public:
 		return animations;
 	}
 
-	enum ConditionType
+	// Hide in API
+	std::vector<AnimationState>* GetAnimationStates()
 	{
-		less,
-		Equal,
-		Greater,
-	};
-	struct Condition
-	{
-		std::string parameter;
-		ConditionType conditionType;
-		std::variant<bool, int, float> value;
-	};
-	struct Transition
-	{
-		Animation* to = nullptr;
-		std::vector<Condition> conditions;
-	};
-	struct AnimationState
-	{
-		Animation animation;
-		std::vector<Transition> transitions;
-	};
+		return &animationStates;
+	}
 
 private:
 	std::vector<AnimationState> animationStates;
