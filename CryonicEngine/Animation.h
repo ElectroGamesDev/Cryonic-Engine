@@ -41,6 +41,7 @@ public:
 		return sprites;
 	}
 
+	// Hide in API
 	int id;
 	std::string name;
 	bool loop;
