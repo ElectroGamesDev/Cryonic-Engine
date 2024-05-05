@@ -29,6 +29,7 @@ public:
 		for (const auto& node : jsonData["nodes"])
 		{
 			Animation animation;
+			animation.id = node["name"].get<std::string>()
 			animation.name = node["name"].get<std::string>();
 			animation.loop = node["loop"].get<bool>();
 			animation.speed = node["speed"].get<float>();
