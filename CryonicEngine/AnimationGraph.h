@@ -47,11 +47,29 @@ public:
 
 	void SetActiveAnimation(std::string animation)
 	{
+		if (animation == "Start" || animation == "Any")
+			return;
 
+		for (AnimationState& animationState : animationStates)
+		{
+			if (animationState.animation.GetName() == animation)
+			{
+				activeAnimationState = &animationState;
+				break;
+			}
+		}
 	}
+
 	void SetActiveAnimation(Animation* animation)
 	{
-
+		for (AnimationState& animationState : animationStates)
+		{
+			if (animationState.animation.GetId() == animation->GetId())
+			{
+				activeAnimationState = &animationState;
+				break;
+			}
+		}
 	}
 
 	Animation* GetActiveAnimation()
@@ -66,8 +84,6 @@ public:
 			animations.push_back(&animationState.animation);
 		return animations;
 	}
-
-	// Todo: Currently for each AnimationPlayer, its creating a new copy of the animations data. It should instead use references if its already been created.
 
 private:
 	enum ConditionType
