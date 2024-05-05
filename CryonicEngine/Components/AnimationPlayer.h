@@ -43,5 +43,6 @@ public:
 
 private:
     AnimationGraph* animationGraph = nullptr;
+    AnimationGraph::AnimationState* activeAnimationState = nullptr;
     bool ownsGraph = false;
 };
