@@ -17,6 +17,8 @@ void AnimationPlayer::Destroy()
 
 void AnimationPlayer::SetAnimationGraph(AnimationGraph* animationGraph)
 {
+	if (this->animationGraph != nullptr && ownsGraph)
+		delete this->animationGraph;
 	ownsGraph = false;
 	this->animationGraph = animationGraph;
 }
