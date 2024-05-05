@@ -45,38 +45,6 @@ public:
 		}
 	}
 
-	void SetActiveAnimation(std::string animation)
-	{
-		if (animation == "Start" || animation == "Any")
-			return;
-
-		for (AnimationState& animationState : animationStates)
-		{
-			if (animationState.animation.GetName() == animation)
-			{
-				activeAnimationState = &animationState;
-				break;
-			}
-		}
-	}
-
-	void SetActiveAnimation(Animation* animation)
-	{
-		for (AnimationState& animationState : animationStates)
-		{
-			if (animationState.animation.GetId() == animation->GetId())
-			{
-				activeAnimationState = &animationState;
-				break;
-			}
-		}
-	}
-
-	Animation* GetActiveAnimation()
-	{
-		return &activeAnimationState->animation;
-	}
-
 	std::vector<Animation*> GetAnimations()
 	{
 		std::vector<Animation*> animations;
@@ -110,5 +78,4 @@ public:
 
 private:
 	std::vector<AnimationState> animationStates;
-	AnimationGraph::AnimationState* activeAnimationState = nullptr;
 };
