@@ -85,7 +85,6 @@ public:
 		return animations;
 	}
 
-private:
 	enum ConditionType
 	{
 		less,
@@ -109,6 +108,7 @@ private:
 		std::vector<Transition> transitions;
 	};
 
+private:
 	std::vector<AnimationState> animationStates;
-	AnimationState* activeAnimationState = nullptr;
+	AnimationGraph::AnimationState* activeAnimationState = nullptr;
 };
