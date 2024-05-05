@@ -41,6 +41,12 @@ public:
     void SetAnimationGraph(AnimationGraph* animationGraph);
     AnimationGraph* GetAnimationGraph();
 
+    void SetActiveAnimation(std::string animation);
+
+    void SetActiveAnimation(Animation* animation);
+
+    Animation* GetActiveAnimation();
+
 private:
     AnimationGraph* animationGraph = nullptr;
     AnimationGraph::AnimationState* activeAnimationState = nullptr;
