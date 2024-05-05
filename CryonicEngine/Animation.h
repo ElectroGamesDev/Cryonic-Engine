@@ -6,6 +6,11 @@
 class Animation
 {
 public:
+	int GetId()
+	{
+		return id;
+	}
+
 	std::string GetName()
 	{
 		return name;
@@ -36,6 +41,7 @@ public:
 		return sprites;
 	}
 
+	int id;
 	std::string name;
 	bool loop;
 	float speed;
