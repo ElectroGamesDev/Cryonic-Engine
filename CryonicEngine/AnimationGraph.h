@@ -1,12 +1,12 @@
 #pragma once
 
-#include <any>
 #include <fstream>
 #include <filesystem>
 #include "RaylibWrapper.h"
 #include "ConsoleLogger.h"
 #include "json.hpp"
 #include "Animation.h"
+#include <variant>
 
 class AnimationGraph
 {
@@ -28,17 +28,20 @@ public:
 
 		for (const auto& node : jsonData["nodes"])
 		{
-			Animation animation;
-			animation.id = node["name"].get<std::string>()
-			animation.name = node["name"].get<std::string>();
-			animation.loop = node["loop"].get<bool>();
-			animation.speed = node["speed"].get<float>();
+			AnimationState animationState;
+			animationState.animation.id = node["id"].get<int>();
+			animationState.animation.name = node["name"].get<std::string>();
+			animationState.animation.loop = node["loop"].get<bool>();
+			animationState.animation.speed = node["speed"].get<float>();
 			if (node.contains("sprites") && !node["sprites"].is_null() && !node["sprites"].empty())
 			{
 				for (const auto& sprite : node["sprites"])
-					animation.sprites.push_back(sprite);
+					animationState.animation.sprites.push_back(sprite);
 			}
-			animations.push_back(animation);
+
+			// Todo: Set transitions here
+
+			animationStates.push_back(animationState);
 		}
 	}
 
@@ -53,16 +56,43 @@ public:
 
 	Animation* GetActiveAnimation()
 	{
-
+		return &activeAnimationState->animation;
 	}
 
-	std::vector<Animation>& GetAnimations()
+	std::vector<Animation*> GetAnimations()
 	{
+		std::vector<Animation*> animations;
+		for (AnimationState& animationState : animationStates)
+			animations.push_back(&animationState.animation);
 		return animations;
 	}
 
 	// Todo: Currently for each AnimationPlayer, its creating a new copy of the animations data. It should instead use references if its already been created.
 
 private:
-	std::vector<Animation> animations;
+	enum ConditionType
+	{
+		less,
+		Equal,
+		Greater,
+	};
+	struct Condition
+	{
+		std::string parameter;
+		ConditionType conditionType;
+		std::variant<bool, int, float> value;
+	};
+	struct Transition
+	{
+		Animation* to = nullptr;
+		std::vector<Condition> conditions;
+	};
+	struct AnimationState
+	{
+		Animation animation;
+		std::vector<Transition> transitions;
+	};
+
+	std::vector<AnimationState> animationStates;
+	AnimationState* activeAnimationState = nullptr;
 };
