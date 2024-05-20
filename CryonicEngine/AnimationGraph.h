@@ -68,19 +68,32 @@ public:
 			// Todo: Set transitions here
 
 			animationStates.push_back(animationState);
+		}
 
-			// Checks to see if its the start animation. Todo: This needs to be redone when transitions are added
-			if (startAnimationState == nullptr)
+		// Finds the start animation and sets it to startAnimationState. This must be done here so the startAnimationState pointer doesn't invalidate when animationStates resizes
+		int startAnimationId = 0;
+		for (const auto& link : jsonData["links"])
+		{
+			// Checks if its the start animation
+			// Abs() is probably not needed here since the input id should always be positive, unlike the output id
+			if (link[0] == -5)
 			{
-				for (const auto& link : jsonData["links"])
-				{
-					if ((link[0] == -5 && link[1] == animationState.animation.id) || (link[0] == animationState.animation.id || link[1] == -5)) // Checks if its the start animation
-					{
-						startAnimationState = &animationStates.back();
-						break;
-					}
-				}
+				startAnimationId = std::abs(link[1].get<int>());
+				break;
 			}
+			else if (link[1] == -5)
+			{
+				startAnimationId = std::abs(link[0].get<int>());
+				break;
+			}
+		}
+		for (AnimationState& animationState : animationStates)
+		{
+			if (startAnimationState != nullptr)
+				break;
+
+			if (animationState.animation.id == startAnimationId)
+				startAnimationState = &animationState;
 		}
 	}
 
