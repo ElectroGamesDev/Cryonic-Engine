@@ -65,7 +65,25 @@ public:
 			// Todo: Set transitions here
 
 			animationStates.push_back(animationState);
+
+			// Checks to see if its the start animation. Todo: This needs to be redone when transitions are added
+			if (startAnimationState == nullptr)
+			{
+				for (const auto& link : jsonData["links"])
+				{
+					if ((link[0] == -5 && link[1] == animationState.animation.id) || (link[0] == animationState.animation.id || link[1] == -5)) // Checks if its the start animation
+					{
+						startAnimationState = &animationStates.back();
+						break;
+					}
+				}
+			}
 		}
+	}
+
+	AnimationState* GetStartAnimationState()
+	{
+		return startAnimationState;
 	}
 
 	std::vector<Animation*> GetAnimations()
@@ -84,4 +102,5 @@ public:
 
 private:
 	std::vector<AnimationState> animationStates;
+	AnimationState* startAnimationState = nullptr;
 };
