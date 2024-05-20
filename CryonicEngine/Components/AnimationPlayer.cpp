@@ -2,11 +2,62 @@
 
 void AnimationPlayer::Start()
 {
+	spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
 }
 
 
 void AnimationPlayer::Update(float deltaTime)
 {
+	if (animationGraph == nullptr || activeAnimationState == nullptr)
+		return;
+
+	if (spriteRenderer == nullptr)
+	{
+		spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
+
+		// Checks to see if the spriteRenderer is still nullptr after attempting to set it, then sends a warning if it previously existed but no longer does
+		// If no spriteRenderer exists, its adding unnecessary overhead as its trying to find a new spriteRenderer each frame
+		if (spriteRenderer == nullptr)
+		{
+			if (previouslyExisted)
+			{
+				previouslyExisted = false;
+				ConsoleLogger::WarningLog("Animation Player - Game object \"" + gameObject->GetName() + "\" does not have a Sprite Renderer. Add one or remove/disable the Animation Player.", false);
+			}
+			return;
+		}
+	}
+
+	previouslyExisted = true;
+	if (spriteRenderer->IsActive())
+	{
+		if (timeElapsed >= activeAnimationState->animation.GetSpeed())
+		{
+			if (activeAnimationState->animation.IsLooped())
+			{
+				timeElapsed = 0;
+				// Set animation back to the first one.
+			}
+			else
+			{
+				// Todo: Transition to another animation if there is another, or wait until a transition is available, or until looped is enabled, or until the active animation is changed
+				return;
+			}
+		}
+
+		// Using a variable so its easier to debug SetTexture if there is a syntax issue
+		std::filesystem::path path = "";
+#if !defined(EDITOR)
+		path = std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets";
+#endif
+		int index = static_cast<int>(timeElapsed / (activeAnimationState->animation.GetSpeed() / activeAnimationState->animation.GetSprites().size()));
+		if (index != previousSprite)
+		{
+			spriteRenderer->SetTexture(path / activeAnimationState->animation.GetSprites()[index]);
+			previousSprite = index;
+		}
+		timeElapsed += deltaTime;
+	}
 }
 
 void AnimationPlayer::Destroy()
@@ -23,6 +74,8 @@ void AnimationPlayer::SetAnimationGraph(AnimationGraph* animationGraph)
 	this->animationGraph = animationGraph;
 
 	activeAnimationState = animationGraph->GetStartAnimationState();
+	timeElapsed = 0.0f;
+	previousSprite = -1;
 }
 
 AnimationGraph* AnimationPlayer::GetAnimationGraph()
@@ -46,6 +99,9 @@ void AnimationPlayer::SetActiveAnimation(std::string animation)
 			break;
 		}
 	}
+
+	timeElapsed = 0.0f;
+	previousSprite = -1;
 }
 
 void AnimationPlayer::SetActiveAnimation(Animation* animation)
@@ -61,6 +117,9 @@ void AnimationPlayer::SetActiveAnimation(Animation* animation)
 			break;
 		}
 	}
+
+	timeElapsed = 0.0f;
+	previousSprite = -1;
 }
 
 Animation* AnimationPlayer::GetActiveAnimation()
