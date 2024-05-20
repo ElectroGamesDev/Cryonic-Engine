@@ -1488,6 +1488,19 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
     // Todo: Order the files in alphabetical order
     // Todo: Make a gap between the bottom of the table and bottom of the window since the nodes make it so the bottom left of the window isn't rounded
 
+    // "None" node
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding;
+    if (!selectedPath.empty())
+        flags |= ImGuiTreeNodeFlags_Selected;
+    if (ImGui::TreeNodeEx("None", flags))
+    {
+        if (ImGui::IsItemClicked())
+            selectedFile = "None";
+        ImGui::TreePop();
+    }
+
     try
     {
         for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
@@ -1632,9 +1645,9 @@ void Editor::RenderAnimationGraph()
 
         static int selectNode = 0;
         int previousSelectNode = selectNode;
-        static bool openAddSpriteWin = false;
+        static int openAddSpriteWin = -1; // -2 = Don't open, -1 = open for a new sprite, any else opens to change the sprite at the index (openAddSpriteWin holds the index)
         if (selectedNode == nullptr)
-            openAddSpriteWin = false;
+            openAddSpriteWin = -2;
 
         if (!animationGraphData.is_null())
         {
@@ -1749,7 +1762,10 @@ void Editor::RenderAnimationGraph()
                     ImGui::SetCursorPos({ 10, 123 });
                     ImGui::BeginChild("#AnimationSprites", { ImGui::GetWindowWidth() - 10, ImGui::GetWindowHeight() - 133 });
 
+                    static ImVec2 spriteWinPos;
+
                     float nextY = 10;
+                    int index = 0;
                     for (auto& sprite : (*selectedNode)["sprites"])
                     {
                         // Todo: Check if path exists, if it doesn't then try to find the file by filename + extension in other folders. If it can't find it, then remove it or set it to a NULL/"File Not Found" image
@@ -1763,8 +1779,13 @@ void Editor::RenderAnimationGraph()
                         ImGui::SetCursorPos({17, nextY});
                         ImVec2 cursorPos = ImGui::GetCursorPos();
 
+                        ImVec2 tempPos = ImGui::GetCursorScreenPos();
                         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.17f, 0.17f, 0.17f, 1.0f));
-                        ImGui::Button(("##" + sprite.get<std::string>()).c_str(), ImVec2(buttonSize, buttonSize));
+                        if (ImGui::Button(("##" + sprite.get<std::string>()).c_str(), ImVec2(buttonSize, buttonSize)))
+                        {
+                            openAddSpriteWin = index;
+                            spriteWinPos = tempPos;
+                        }
                         ImGui::PopStyleColor();
 
                         //if (ImGui::IsItemHovered())
@@ -1778,31 +1799,42 @@ void Editor::RenderAnimationGraph()
                         ImGui::SetCursorPos(ImVec2(cursorPos.x + (buttonSize - imageSize.x) / 2, cursorPos.y + (buttonSize - imageSize.y) / 2)); // Sets the position to the button position and centers it
                         RaylibWrapper::rlImGuiImageSize(tempTextures.back(), imageSize.x, imageSize.y);
                         nextY += 100;
+                        index++;
                     }
 
                     // Todo: Iterate the sprites, create a background of a lighter grey, then add the sprite inside of it (look at content browser for aspect ratio)
 
                     ImGui::SetCursorPos({ 15, ImGui::GetWindowHeight() - 20});
-                    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-                    if (ImGui::Button("Add Sprite", {100, 20}))
+                    ImVec2 tempPos = ImGui::GetCursorScreenPos();
+                    if (ImGui::Button("Add Sprite", { 100, 20 }))
                     {
-                        // Todo: Open a menu to select an PNG/JPG. This menu should be a global menu (kind of like color picker) with a paramter taking in an extension to search for within the project. Sort alphebetically.
-                        //    Make sure to add a search bar at the top that auto updates and searches without needing to click enter. It should also take in a parameter for type. Like Extension is ".PNG" and type is "Sprite"
-                        openAddSpriteWin = true;
+                        openAddSpriteWin = -1;
+                        spriteWinPos = tempPos;
                     }
 
                     ImGui::EndChild();
 
-                    // Todo:Check if the position + height > window and if it is, then move it up
-                    if (openAddSpriteWin)
+                    // Todo: Check if the position + height > window and if it is, then move it up
+                    // Checks if the Sprite File Selector window is open
+                    if (openAddSpriteWin != -2)
                     {
-                        std::string selectedFile = RenderFileSelector((*selectedNode)["id"], "Sprite", "", { ".png", ".jpeg", ".jpg" }, {cursorPos.x - 235, cursorPos.y - 40});
-                        if (selectedFile == "NULL")
-                            openAddSpriteWin = false;
+                        std::string selectedFile = RenderFileSelector((*selectedNode)["id"], "Sprite", "", { ".png", ".jpeg", ".jpg" }, { spriteWinPos.x - 235, spriteWinPos.y - 40});
+                        // If NULL was returned, or if None was returned and its adding a new sprite, then close the window with no changes
+                        if (selectedFile == "NULL" || (openAddSpriteWin == -1 && selectedFile == "None"))
+                            openAddSpriteWin = -2;
                         else if (!selectedFile.empty())
                         {
-                            openAddSpriteWin = false;
-                            (*selectedNode)["sprites"].push_back(selectedFile);
+                            // If its replacing a sprite instead of adding a new one, either remove it, or replace it
+                            if (openAddSpriteWin != -1)
+                            {
+                                if (selectedFile == "None")
+                                    (*selectedNode)["sprites"].erase((*selectedNode)["sprites"].begin() + openAddSpriteWin);
+                                else
+                                    (*selectedNode)["sprites"][openAddSpriteWin] = selectedFile;
+                            }
+                            else
+                                (*selectedNode)["sprites"].push_back(selectedFile);
+                            openAddSpriteWin = -2;
                         }
                     }
                 }
@@ -1829,7 +1861,7 @@ void Editor::RenderAnimationGraph()
             ImNodes::GetSelectedNodes(selectedNodes.data());
             if (selectedNode == nullptr || (*selectedNode)["id"] != selectedNodes.back())
             {
-                openAddSpriteWin = false;
+                openAddSpriteWin = -2;
                 for (auto& node : animationGraphData["nodes"])
                 {
                     if (node["id"] == selectedNodes.back())
