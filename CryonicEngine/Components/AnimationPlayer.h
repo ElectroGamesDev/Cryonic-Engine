@@ -50,5 +50,5 @@ public:
 private:
     AnimationGraph* animationGraph = nullptr;
     AnimationGraph::AnimationState* activeAnimationState = nullptr;
-    bool ownsGraph = false;
+    bool ownsGraph = false; // Currently when animations graphs are set as an exposed variables, they are created with a pointer. If its created by AnimationPlayer, this will be true so it knows to destroy it.
 };
