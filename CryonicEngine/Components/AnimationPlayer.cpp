@@ -21,6 +21,8 @@ void AnimationPlayer::SetAnimationGraph(AnimationGraph* animationGraph)
 		delete this->animationGraph;
 	ownsGraph = false;
 	this->animationGraph = animationGraph;
+
+	activeAnimationState = animationGraph->GetStartAnimationState();
 }
 
 AnimationGraph* AnimationPlayer::GetAnimationGraph()
