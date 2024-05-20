@@ -1788,7 +1788,7 @@ void Editor::RenderAnimationGraph()
 
                         ImVec2 tempPos = ImGui::GetCursorScreenPos();
                         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.17f, 0.17f, 0.17f, 1.0f));
-                        if (ImGui::Button(("##" + sprite.get<std::string>()).c_str(), ImVec2(buttonSize, buttonSize)))
+                        if (ImGui::Button(("##" + std::to_string(index)).c_str(), ImVec2(buttonSize, buttonSize)))
                         {
                             openAddSpriteWin = index;
                             spriteWinPos = tempPos;
