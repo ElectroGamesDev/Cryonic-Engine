@@ -2119,6 +2119,7 @@ void Editor::RenderComponentsWin()
     {
         ImGui::SetNextWindowSize(ImVec2(300, 400));
         ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 300) / 2, (RaylibWrapper::GetScreenHeight() - 400) / 2));
+        ImGui::SetNextWindowScroll({0,0});
         resetComponentsWin = false;
     }
     if (ImGui::Begin("Add Component", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NoCollapse))
