@@ -36,9 +36,9 @@ public:
 		return speed;
 	}
 
-	std::vector<std::string>& GetSprites()
+	const std::vector<std::string>* GetSprites()
 	{
-		return sprites;
+		return &sprites;
 	}
 
 	// Hide in API
