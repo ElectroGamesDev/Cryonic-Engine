@@ -81,6 +81,12 @@ public:
 		}
 	}
 
+	Animation* GetStartAnimation()
+	{
+		return &startAnimationState->animation;
+	}
+
+	// Hide in API
 	AnimationState* GetStartAnimationState()
 	{
 		return startAnimationState;
