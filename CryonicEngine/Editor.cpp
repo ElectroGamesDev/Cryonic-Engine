@@ -1524,7 +1524,13 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
                     if (ImGui::TreeNodeEx((file.path().stem().string()).c_str(), flags))
                     {
                         if (ImGui::IsItemClicked())
+                        {
+                            oldId = -9999;
+                            selectedFile = "NULL";
+                            memset(searchBuffer, '\0', sizeof(searchBuffer));
+                            ImGui::SetScrollY(0.0f);
                             selectedFile = std::filesystem::relative(file.path(), ProjectManager::projectData.path / "Assets").string();
+                        }
 
                         ImGui::TreePop();
                     }
@@ -1538,7 +1544,7 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
         memset(searchBuffer, '\0', sizeof(searchBuffer));
         selectedFile = "NULL";
         oldId = -9999;
-        ImGui::SetScrollY(0);
+        ImGui::SetScrollY(0.0f);
     }
 
     ImGui::EndTable();
@@ -1553,7 +1559,8 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
         open = true;
         selectedFile = "NULL";
         memset(searchBuffer, '\0', sizeof(searchBuffer));
-        ImGui::SetScrollY(0);
+        // Setting the scroll here does not work.
+        ImGui::SetScrollY(0.0f);
     }
 
     oldId = id;
@@ -1815,10 +1822,11 @@ void Editor::RenderAnimationGraph()
                     ImGui::EndChild();
 
                     // Todo: Check if the position + height > window and if it is, then move it up
+                    // Todo: Consider using a random number as the RenderFileSelector ID so it fixes the issue with the scroll not always being at the top.
                     // Checks if the Sprite File Selector window is open
                     if (openAddSpriteWin != -2)
                     {
-                        std::string selectedFile = RenderFileSelector((*selectedNode)["id"], "Sprite", "", { ".png", ".jpeg", ".jpg" }, { spriteWinPos.x - 235, spriteWinPos.y - 40});
+                        std::string selectedFile = RenderFileSelector((*selectedNode)["id"] + openAddSpriteWin, "Sprite", "", { ".png", ".jpeg", ".jpg" }, { spriteWinPos.x - 235, spriteWinPos.y - 40});
                         // If NULL was returned, or if None was returned and its adding a new sprite, then close the window with no changes
                         if (selectedFile == "NULL" || (openAddSpriteWin == -1 && selectedFile == "None"))
                             openAddSpriteWin = -2;
