@@ -43,7 +43,7 @@ public:
 
     void SetActiveAnimation(std::string animation);
 
-    void SetActiveAnimation(Animation* animation);
+    void SetActiveAnimation(Animation* animation); // Todo: VisualStudio hints/autocomplete makes this the default SetActiveAnimation. The string paramter function should be the default
 
     Animation* GetActiveAnimation();
 
