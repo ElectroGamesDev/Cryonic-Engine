@@ -1811,7 +1811,10 @@ void Editor::RenderAnimationGraph()
 
                     // Todo: Iterate the sprites, create a background of a lighter grey, then add the sprite inside of it (look at content browser for aspect ratio)
 
-                    ImGui::SetCursorPos({ 15, ImGui::GetWindowHeight() - 20});
+                    if (ImGui::GetCursorPosY() > ImGui::GetWindowHeight())
+                        ImGui::SetCursorPos({ 15, nextY });
+                    else
+                        ImGui::SetCursorPos({ 15, ImGui::GetWindowHeight() - 20});
                     ImVec2 tempPos = ImGui::GetCursorScreenPos();
                     if (ImGui::Button("Add Sprite", { 100, 20 }))
                     {
