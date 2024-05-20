@@ -1602,7 +1602,7 @@ void Editor::RenderAnimationGraph()
                 if (!ImNodes::IsNodeSelected(id) && !ImGui::IsMouseDown(ImGuiMouseButton_Left))
                     ImNodes::SetNodeGridSpacePos(-5, ImVec2(node["x"], node["y"]));
                 ImNodes::BeginNode(-5);
-                ImNodes::BeginOutputAttribute(1);
+                ImNodes::BeginOutputAttribute(-5);
                 ImGui::Text("Start");
                 ImNodes::EndOutputAttribute();
                 ImNodes::EndNode();
