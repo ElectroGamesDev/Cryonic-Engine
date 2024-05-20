@@ -59,7 +59,7 @@ public:
 			if (node.contains("sprites") && !node["sprites"].is_null() && !node["sprites"].empty())
 			{
 				for (const auto& sprite : node["sprites"])
-					animationState.animation.sprites.push_back(sprite);
+					animationState.animation.sprites.push_back(sprite.get<std::string>());
 			}
 
 			// Todo: Set transitions here
