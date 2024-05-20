@@ -8,6 +8,7 @@
 
 Collider2D::Collider2D(GameObject* obj, int id) : Component(obj, id) {
 	name = "Collider2D";
+	iconUnicode = "\xef\x89\x8d";
 
 #if defined(EDITOR)
     std::string variables = R"(
