@@ -51,6 +51,9 @@ public:
 
 		for (const auto& node : jsonData["nodes"])
 		{
+			if (node["id"].get<int>() == -5) // Todo: Also check for Any nodes
+				continue;
+
 			AnimationState animationState;
 			animationState.animation.id = node["id"].get<int>();
 			animationState.animation.name = node["name"].get<std::string>();
