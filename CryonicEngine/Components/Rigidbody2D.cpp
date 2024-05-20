@@ -6,6 +6,7 @@
 
 Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
 	name = "Rigidbody2D";
+    iconUnicode = "\xee\x96\x9d";
 #if defined(EDITOR)
     std::string variables = R"(
         [
