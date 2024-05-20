@@ -3,6 +3,13 @@
 void AnimationPlayer::Start()
 {
 	spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
+
+	// Todo: Move to Awake()/Constructor but after exposed variables are set. Having in Start could cause issues if user's change the animationGraph via a script
+	if (animationGraph != nullptr)
+	{
+		SetAnimationGraph(animationGraph);
+		ownsGraph = true;
+	}
 }
 
 
@@ -50,10 +57,10 @@ void AnimationPlayer::Update(float deltaTime)
 #if !defined(EDITOR)
 		path = std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets";
 #endif
-		int index = static_cast<int>(timeElapsed / (activeAnimationState->animation.GetSpeed() / activeAnimationState->animation.GetSprites().size()));
+		int index = static_cast<int>(timeElapsed / (activeAnimationState->animation.GetSpeed() / activeAnimationState->animation.GetSprites()->size()));
 		if (index != previousSprite)
 		{
-			spriteRenderer->SetTexture(path / activeAnimationState->animation.GetSprites()[index]);
+			spriteRenderer->SetTexture(path / (*activeAnimationState->animation.GetSprites())[index]);
 			previousSprite = index;
 		}
 		timeElapsed += deltaTime;
