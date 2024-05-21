@@ -1073,9 +1073,9 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
                             else if ((*variables)[0] == "Color")
                                 tempCpp << (*variables)[1].get<std::string>() + " = {" + std::to_string((*variables)[2][0].get<int>()) + "," + std::to_string((*variables)[2][1].get<int>()) + "," + std::to_string((*variables)[2][2].get<int>()) + "," + std::to_string((*variables)[2][3].get<int>()) + "};\n";
                             else if ((*variables)[0] == "Vector2")
-                                tempCpp << (*variables)[1].get<std::string>() + " = {" + std::to_string((*variables)[2][0].get<int>()) + "," + std::to_string((*variables)[2][1].get<int>()) + "}f;\n";
+                                tempCpp << (*variables)[1].get<std::string>() + " = {" + std::to_string((*variables)[2][0].get<float>()) + "f," + std::to_string((*variables)[2][1].get<float>()) + "f};\n";
                             else if ((*variables)[0] == "Vector3")
-                                tempCpp << (*variables)[1].get<std::string>() + " = {" + std::to_string((*variables)[2][0].get<int>()) + "," + std::to_string((*variables)[2][1].get<int>()) + "," + std::to_string((*variables)[2][2].get<int>()) + "}f;\n";
+                                tempCpp << (*variables)[1].get<std::string>() + " = {" + std::to_string((*variables)[2][0].get<float>()) + "f," + std::to_string((*variables)[2][1].get<float>()) + "f," + std::to_string((*variables)[2][2].get<float>()) + "f};\n";
                             else if ((*variables).size() > 4 && (*variables)[4].contains("Extensions"))
                                 tempCpp << (*variables)[1].get<std::string>() + " = new " + (*variables)[0].get<std::string>() + "(" + (*variables)[2].dump() + ");\n";
                             else if ((*variables).size() > 4) // Todo: This is a horrible solution for checking if its an enum
