@@ -42,7 +42,7 @@ private:
 
 
 #if !defined(EDITOR)
-    b2PolygonShape Getb2Shape(b2PolygonShape& shape);
+    void Createb2Fixture();
 
     b2FixtureDef fixtureDef;
     b2Body* body;
