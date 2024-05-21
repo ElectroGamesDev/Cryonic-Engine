@@ -174,3 +174,23 @@ bool Collider2D::IsTrigger()
 	return false;
 #endif
 }
+
+void Collider2D::SetOffset(Vector2 offset)
+{
+	this->offset = offset;
+}
+
+Vector2 Collider2D::GetOffset()
+{
+	return offset;
+}
+
+void Collider2D::SetSize(Vector2 size)
+{
+	this->size = size;
+}
+
+Vector2 Collider2D::GetSize()
+{
+	return size;
+}

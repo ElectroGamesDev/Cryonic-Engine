@@ -21,6 +21,10 @@ public:
     Shape GetShape();
     void SetTrigger(bool value);
     bool IsTrigger();
+    void SetOffset(Vector2 offset);
+    Vector2 GetOffset();
+    void SetSize(Vector2 size);
+    Vector2 GetSize();
 
 private:
     Shape shape;
