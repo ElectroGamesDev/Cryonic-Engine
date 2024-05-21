@@ -113,38 +113,65 @@ void Collider2D::Start() // Todo: Move to Awake()
 
 }
 
+void Collider2D::Highlight(Color color, bool highlightChildren)
+{
+	// Must go inside this if defined to prevent compiler error
+#if defined(EDITOR)
+	offset.x = exposedVariables[1][2][2][0].get<float>();
+	offset.y = exposedVariables[1][2][2][1].get<float>();
+	size.x = exposedVariables[1][3][2][0].get<float>();
+	size.y = exposedVariables[1][3][2][1].get<float>();
+
+	//ConsoleLogger::WarningLog("Highlighting " + gameObject->GetName());
+
+	Vector3 position = gameObject->transform.GetPosition();
+	Vector3 scale = gameObject->transform.GetScale();
+
+	// Getting type from exposedVariables since shape variable isn't up-to-date with exposed variable
+	std::string type = exposedVariables[1][0][2].get<std::string>();
+
+	if (type == "Square")
+	{
+		RaylibWrapper::DrawRectangleOutline({ position.x + offset.x, position.y + offset.y, scale.x * 3 * size.x, scale.y * 3 * size.y },
+			{ scale.y * 3 * size.x / 2, scale.y * 3 * size.y / 2 },
+			gameObject->transform.GetRotationEuler().y,
+			0.1f,
+			{ color.r, color.g, color.b, color.a });
+	}
+	else if (type == "Circle")
+	{
+		// Todo: This is not a good solution
+		for (int i = 0; i < 7; i++)
+			RaylibWrapper::DrawCircleLinesV({ position.x + offset.x, position.y + offset.y }, scale.x * 1.5f * size.x + 0.01f * i, { color.r, color.g, color.b, color.a });
+	}
+
+	// Highlights child objects
+	if (!highlightChildren)
+		return;
+	
+	for (GameObject* child : gameObject->GetChildren())
+	{
+		// Using a bool so it only highlights children once
+		bool colliderFound = false;
+		for (Component* component : child->GetComponents())
+		{
+			Collider2D* collider = dynamic_cast<Collider2D*>(component);
+			if (collider)
+			{
+				//ConsoleLogger::WarningLog("Highlighting child: " + collider->gameObject->GetName());
+				collider->Highlight({ 24, 201, 24, 200 }, !colliderFound);
+				colliderFound = true;
+			}
+		}
+	}
+#endif
+}
+
 void Collider2D::EditorUpdate()
 {
 	// Todo: Replace this solution with Events. Another possible solution would be to have another EditorUpdate() with a selectedGameObject parameter, but this is still a bad solution.
 	if (std::holds_alternative<GameObject*>(Editor::objectInProperties) && std::get<GameObject*>(Editor::objectInProperties) == gameObject)
-	{
-		offset.x = exposedVariables[1][2][2][0].get<float>();
-		offset.y = exposedVariables[1][2][2][1].get<float>();
-		size.x = exposedVariables[1][3][2][0].get<float>();
-		size.y = exposedVariables[1][3][2][1].get<float>();
-
-		// Todo: Check if square or circle
-		Vector3 position = gameObject->transform.GetPosition();
-		Vector3 scale = gameObject->transform.GetScale();
-
-		// Getting type from exposedVariables since shape variable isn't up-to-date with exposed variable
-		std::string type = exposedVariables[1][0][2].get<std::string>();
-
-		if (type == "Square")
-		{
-			RaylibWrapper::DrawRectangleOutline({ position.x + offset.x, position.y + offset.y, scale.x * 3 * size.x, scale.y * 3 * size.y },
-				{ scale.y * 3 * size.x / 2, scale.y * 3 * size.y / 2 },
-				gameObject->transform.GetRotationEuler().y,
-				0.1f,
-				{ 0, 255, 0, 200 });
-		}
-		else if (type == "Circle")
-		{
-			// Todo: This is not a good solution
-			for (int i = 0; i < 7; i++)
-				RaylibWrapper::DrawCircleLinesV({ position.x + offset.x, position.y + offset.y }, scale.x * 1.5f * size.x + 0.01f * i, { 0, 255, 0, 200 });
-		}
-	}
+		Highlight({ 0, 255, 0, 200 }, true);
 }
 
 void Collider2D::Destroy()

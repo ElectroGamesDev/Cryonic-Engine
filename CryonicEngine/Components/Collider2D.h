@@ -18,6 +18,10 @@ public:
     {
         return new Collider2D(gameObject, -1);
     }
+
+    // Hide in API
+    void Highlight(Color color, bool highlightChildren);
+
     void Start() override;
     void EditorUpdate() override;
     void Destroy() override;
