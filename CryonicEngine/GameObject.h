@@ -81,6 +81,13 @@ public:
         return *newComponent;
     }
 
+    // Hide in API
+    void AddClonedComponent(Component* component) {
+        components.push_back(component->Clone());
+        components.back()->exposedVariables = component->exposedVariables;
+        components.back()->gameObject = this;
+    }
+
     template<typename T>
     bool RemoveComponent();
 
