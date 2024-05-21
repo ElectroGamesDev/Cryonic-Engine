@@ -12,6 +12,10 @@ public:
 		iconUnicode = "\xef\x83\xab";
 		runInEditor = true;
 	}
+	Lighting* Clone() override
+	{
+		return new Lighting(gameObject, -1);
+	}
 	//void Start() override;
 	void Update(float deltaTime) override;
 #ifdef EDITOR

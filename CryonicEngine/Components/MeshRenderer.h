@@ -12,6 +12,10 @@ public:
 		name = "MeshRenderer";
 		iconUnicode = "\xef\x86\xb2";
 	}
+	MeshRenderer* Clone() override
+	{
+		return new MeshRenderer(gameObject, -1);
+	}
 	/// Hide everything in this in the API
 	void Start() override {};
 	void Update(float deltaTime) override;

@@ -14,6 +14,10 @@ enum BodyType
 
 class Rigidbody2D : public Component {
 public:
+    Rigidbody2D* Clone() override
+    {
+        return new Rigidbody2D(gameObject, -1);
+    }
     void SetPosition(Vector2 position);
     void SetPosition(float x, float y);
     void MovePosition(Vector2 displacement);

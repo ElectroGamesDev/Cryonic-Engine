@@ -30,6 +30,10 @@ public:
 		exposedVariables = nlohmann::json::parse(variables);
 #endif
 	}
+	Skybox* Clone() override
+	{
+		return new Skybox(gameObject, -1);
+	}
 	// Hide everything from API
 	void Start() override {};
 	void Update(float deltaTime) override;

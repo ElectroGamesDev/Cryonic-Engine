@@ -42,6 +42,8 @@ public:
 
     // Hide In API
     virtual void SetExposedVariables() {};
+    // Hide In API
+    virtual Component* Clone() {};
 
     virtual void Start() {};
     virtual void Update(float deltaTime) {};

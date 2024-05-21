@@ -14,6 +14,10 @@ enum Shape
 class Collider2D : public Component {
 public:
     Collider2D(GameObject* obj, int id);
+    Collider2D* Clone() override
+    {
+        return new Collider2D(gameObject, -1);
+    }
     void Start() override;
     void EditorUpdate() override;
     void Destroy() override;

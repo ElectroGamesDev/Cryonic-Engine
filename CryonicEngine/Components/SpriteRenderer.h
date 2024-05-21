@@ -37,6 +37,10 @@ public:
 		exposedVariables = nlohmann::json::parse(variables);
 #endif
 	}
+	SpriteRenderer* Clone() override
+	{
+		return new SpriteRenderer(gameObject, -1);
+	}
 	// Hide everything from API
 	void Start() override {};
 	void Update(float deltaTime) override;

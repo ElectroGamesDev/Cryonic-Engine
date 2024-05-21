@@ -8,6 +8,10 @@ class CameraComponent : public Component
 {
 public:
 	CameraComponent(GameObject* obj, int id);
+	CameraComponent* Clone() override
+	{
+		return new CameraComponent(gameObject, -1);
+	}
 	void Start() override;
 	void Update(float deltaTime) override;
 	void Destroy() override;

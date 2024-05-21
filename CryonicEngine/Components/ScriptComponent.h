@@ -10,6 +10,10 @@ public:
 	{
 		name = "ScriptComponent";
 	}
+	ScriptComponent* Clone() override
+	{
+		return new ScriptComponent(gameObject, -1);
+	}
 	void Start() override;
 	void Update(float deltaTime) override;
 	void Destroy() override;
