@@ -2,6 +2,7 @@
 
 #include "GameObject.h"
 #include "RaylibWrapper.h"
+#include <variant>
 
 class Editor
 {
@@ -38,4 +39,6 @@ public:
 
 	static RaylibWrapper::Camera camera;
 	static RaylibWrapper::Camera2D camera2D;
+
+	static std::variant<std::monostate, GameObject*> objectInProperties;
 };

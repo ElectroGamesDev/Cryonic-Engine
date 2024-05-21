@@ -61,7 +61,7 @@ RaylibWrapper::Texture2D GridTexture = { 0 };
 bool viewportOpened = true;
 Vector4 viewportPosition;
 
-std::variant<std::monostate, GameObject*> objectInProperties = std::monostate{}; // Make a struct or something that holds a Path and ifstream String. Not specific to material so prefabs and stuff can use
+std::variant<std::monostate, GameObject*> Editor::objectInProperties = std::monostate{}; // Make a struct or something that holds a Path and ifstream String. Not specific to material so prefabs and stuff can use
 GameObject* selectedObject = nullptr;
 bool movingObjectX = false;
 bool movingObjectY = false;
