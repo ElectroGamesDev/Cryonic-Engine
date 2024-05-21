@@ -2565,6 +2565,49 @@ void Editor::RenderProperties()
                                 if (colorPopupOpened != nullptr && (*colorPopupOpened)[3].get<std::string>() == name)
                                     popupPosition = ImVec2(ImGui::GetWindowPos().x - 250, ImGui::GetCursorPosY() + ImGui::GetWindowPos().y - 20);
                             }
+                            else if ((*it)[0] == "Vector2")
+                            {
+                                width = (ImGui::GetWindowWidth() - 65) / 2;
+                                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                ImGui::Text("X");
+                                ImGui::SameLine();
+                                float x = (*it)[2][0].get<float>();
+                                ImGui::SetNextItemWidth(width);
+                                ImGui::InputFloat(("##X" + name).c_str(), &x, 0, 0, "%.10g");
+                                (*it)[2][0] = x;
+                                ImGui::SameLine();
+                                ImGui::Text("Y");
+                                ImGui::SameLine();
+                                float y = (*it)[2][1].get<float>();
+                                ImGui::SetNextItemWidth(width);
+                                ImGui::InputFloat(("##Y" + name).c_str(), &y, 0, 0, "%.10g");
+                                (*it)[2][1] = y;
+                            }
+                            else if ((*it)[0] == "Vector3")
+                            {
+                                width = (ImGui::GetWindowWidth() - 65) / 3;
+                                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                ImGui::Text("X");
+                                ImGui::SameLine();
+                                float x = (*it)[2][0].get<float>();
+                                ImGui::SetNextItemWidth(width);
+                                ImGui::InputFloat(("##X" + name).c_str(), &x, 0, 0, "%.10g");
+                                (*it)[2][0] = x;
+                                ImGui::SameLine();
+                                ImGui::Text("Y");
+                                ImGui::SameLine();
+                                float y = (*it)[2][1].get<float>();
+                                ImGui::SetNextItemWidth(width);
+                                ImGui::InputFloat(("##Y" + name).c_str(), &y, 0, 0, "%.10g");
+                                (*it)[2][1] = x;
+                                ImGui::SameLine();
+                                ImGui::Text("Z");
+                                ImGui::SameLine();
+                                float z = (*it)[2][2].get<float>();
+                                ImGui::SetNextItemWidth(width);
+                                ImGui::InputFloat(("##Z" + name).c_str(), &z, 0, 0, "%.10g");
+                                (*it)[2][2] = x;
+                            }
                             else if ((*it).size() > 4 && (*it)[4].contains("Extensions"))
                             {
                                 static bool openSelector = false;
