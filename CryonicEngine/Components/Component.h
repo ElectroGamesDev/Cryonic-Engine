@@ -43,7 +43,7 @@ public:
     // Hide In API
     virtual void SetExposedVariables() {};
     // Hide In API
-    virtual Component* Clone() {};
+    virtual Component* Clone() { return nullptr; };
 
     virtual void Start() {};
     virtual void Update(float deltaTime) {};
