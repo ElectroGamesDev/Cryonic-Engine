@@ -54,19 +54,40 @@ Collider2D::Collider2D(GameObject* obj, int id) : Component(obj, id) {
 
 // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive(). Also check if Rigidbody2D is destroyed, if it is then look for a new one, or create one. (Check when its destroyed in the Rigidbody2D Destroy() )
 
+
 #if !defined(EDITOR)
-b2PolygonShape Collider2D::Getb2Shape(b2PolygonShape& shape)
+void Collider2D::Createb2Fixture()
 {
 	// Todo: This needs to be fixed. This is a horrible solution to check if the sprite is a texture or a specific built in shape to apply the right scale multiplier to it.
-	SpriteRenderer* spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
-	if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Square")
-		shape.SetAsBox(gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, b2Vec2(offset.x, offset.y), 0.0f);
-	else if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Circle")
-		shape.SetAsBox(gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().x * 3 * size.y / 2, b2Vec2(offset.x, offset.y), 0.0f);
-	else // Assumes its a texture or doesn't have a sprite
-		shape.SetAsBox(gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, b2Vec2(offset.x, offset.y), 0.0f);
+	//SpriteRenderer* spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
+	//if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Square")
+	//	shape.SetAsBox(gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, b2Vec2(offset.x, offset.y), 0.0f);
+	//else if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Circle")
+	//	shape.SetAsBox(gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, b2Vec2(offset.x, offset.y), 0.0f);
+	//else // Assumes its a texture or doesn't have a sprite
+	//	shape.SetAsBox(gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, b2Vec2(offset.x, offset.y), 0.0f);
 
-	return shape;
+	switch (shape)
+	{
+		default:
+		case Square:
+		{
+			b2PolygonShape polygon;
+			polygon.SetAsBox(gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, b2Vec2(offset.x, offset.y), 0.0f);
+			fixtureDef.shape = &polygon;
+			fixture = body->CreateFixture(&fixtureDef);
+			break;
+		}
+		case Circle:
+		{
+			b2CircleShape circle;
+			circle.m_p.Set(offset.x, offset.y);
+			circle.m_radius = gameObject->transform.GetScale().x * 1.5f * size.x;
+			fixtureDef.shape = &circle;
+			fixture = body->CreateFixture(&fixtureDef);
+			break;
+		}
+	}
 }
 #endif
 
@@ -92,11 +113,9 @@ void Collider2D::Start() // Todo: Move to Awake()
 		body = rb->body;
 	}
 
-	b2PolygonShape shape;
-	Getb2Shape(shape);
-	fixtureDef.shape = &shape;
 	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
-	fixture = body->CreateFixture(&fixtureDef);
+	Createb2Fixture();
+	//fixture = body->CreateFixture(&fixtureDef);
 
 	SetTrigger(trigger);
 
@@ -218,10 +237,7 @@ void Collider2D::SetOffset(Vector2 offset)
 	this->offset = offset;
 #if !defined(EDITOR)
 	body->DestroyFixture(fixture);
-	b2PolygonShape shape;
-	Getb2Shape(shape);
-	fixtureDef.shape = &shape;
-	fixture = body->CreateFixture(&fixtureDef);
+	Createb2Fixture();
 #endif
 }
 
@@ -235,10 +251,7 @@ void Collider2D::SetSize(Vector2 size)
 	this->size = size;
 #if !defined(EDITOR)
 	body->DestroyFixture(fixture);
-	b2PolygonShape shape;
-	Getb2Shape(shape);
-	fixtureDef.shape = &shape;
-	fixture = body->CreateFixture(&fixtureDef);
+	Createb2Fixture();
 #endif
 }
 
