@@ -25,6 +25,8 @@ public:
 private:
     Shape shape;
     bool trigger;
+    Vector2 offset;
+    Vector2 size = {0, 0};
 
 #if !defined(EDITOR)
     b2FixtureDef fixtureDef;

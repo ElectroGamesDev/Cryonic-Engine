@@ -32,6 +32,18 @@ Collider2D::Collider2D(GameObject* obj, int id) : Component(obj, id) {
                     "trigger",
                     false,
                     "Trigger"
+                ],
+                [
+                    "Vector2",
+                    "offset",
+                    [0,0],
+                    "Offset"
+                ],
+				[
+                    "Vector2",
+                    "size",
+                    [1,1],
+                    "Size"
                 ]
             ]
         ]
@@ -106,6 +118,11 @@ void Collider2D::EditorUpdate()
 	// Todo: Replace this solution with Events. Another possible solution would be to have another EditorUpdate() with a selectedGameObject parameter, but this is still a bad solution.
 	if (std::holds_alternative<GameObject*>(Editor::objectInProperties) && std::get<GameObject*>(Editor::objectInProperties) == gameObject)
 	{
+		offset.x = exposedVariables[1][2][2][0].get<float>();
+		offset.y = exposedVariables[1][2][2][1].get<float>();
+		size.x = exposedVariables[1][3][2][0].get<float>();
+		size.y = exposedVariables[1][3][2][1].get<float>();
+
 		// Todo: Check if square or circle
 		Vector3 position = gameObject->transform.GetPosition();
 		Vector3 scale = gameObject->transform.GetScale();
@@ -115,8 +132,8 @@ void Collider2D::EditorUpdate()
 
 		if (type == "Square")
 		{
-			RaylibWrapper::DrawRectangleOutline({ position.x, position.y, scale.x * 3, scale.y * 3 },
-				{ scale.y * 3 / 2, scale.y * 3 / 2 },
+			RaylibWrapper::DrawRectangleOutline({ position.x + offset.x, position.y + offset.y, scale.x * 3 * size.x, scale.y * 3 * size.y },
+				{ scale.y * 3 * size.x / 2, scale.y * 3 * size.y / 2 },
 				gameObject->transform.GetRotationEuler().y,
 				0.1f,
 				{ 0, 255, 0, 200 });
@@ -125,7 +142,7 @@ void Collider2D::EditorUpdate()
 		{
 			// Todo: This is not a good solution
 			for (int i = 0; i < 7; i++)
-				RaylibWrapper::DrawCircleLinesV({ position.x, position.y }, scale.x * 1.5f + 0.01f * i, { 0, 255, 0, 200 });
+				RaylibWrapper::DrawCircleLinesV({ position.x + offset.x, position.y + offset.y }, scale.x * 1.5f * size.x + 0.01f * i, { 0, 255, 0, 200 });
 		}
 	}
 }
