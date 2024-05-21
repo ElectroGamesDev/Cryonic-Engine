@@ -40,7 +40,10 @@ private:
     Vector2 offset;
     Vector2 size = {1, 1};
 
+
 #if !defined(EDITOR)
+    b2PolygonShape Getb2Shape(b2PolygonShape& shape);
+
     b2FixtureDef fixtureDef;
     b2Body* body;
     b2Fixture* fixture;
