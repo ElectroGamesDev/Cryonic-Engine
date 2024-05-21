@@ -2757,7 +2757,7 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor)
 
     if (gameObject->GetChildren().size() <= 0)
         flags |= ImGuiTreeNodeFlags_Leaf;
-    else flags |= ImGuiTreeNodeFlags_OpenOnArrow;
+    else flags |= ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
     //std::string icon = ICON_FA_CUBE;
     //if (gameObject->GetComponent<CameraComponent>()) // Todo: Not sure if this is a good idea to check if it has teh Camera component every frame.
