@@ -2804,6 +2804,41 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor)
 
         ImGui::TreePop();
     }
+    // For some reason if the game object has children and its not expanded, the if statment above doesn't return true.
+    else if (gameObject->GetChildren().size() > 0)
+    {
+        if (ImGui::IsItemClicked())
+        {
+            hierarchyObjectClicked = true;
+            //if (selectedObject != nullptr)
+                //EventSystem::Invoke("ObjectDeselected", selectedObject);
+            objectInProperties = gameObject;
+            selectedObject = gameObject;
+            //EventSystem::Invoke("ObjectSelected", selectedObject);
+
+            if (selectedObject->GetComponent<CameraComponent>() != nullptr)
+                cameraSelected = true;
+            else if (cameraSelected)
+            {
+                cameraSelected = false;
+                resetCameraView = true;
+            }
+        }
+        else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+            objectInHierarchyContextMenu = gameObject;
+
+        // Unlike above, I am not rendering children since the node must be closed for this code to run
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+        {
+            // Todo: If 3D, rotate the camera and set proper distance depending on the mesh's size
+            // Todo: For 2D and if its a sprite, set proper distance so entire sprite fits on screen
+            // Todo: Lerp camera position to target
+            camera.position = { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, camera.position.z };
+            camera.target.x = camera.position.x;
+            camera.target.y = camera.position.y;
+        }
+    }
 
     return normalColor; // Todo: If has child and child is open, return the lowest color rather than this node's color
 }
