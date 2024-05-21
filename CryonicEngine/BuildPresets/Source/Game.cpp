@@ -31,9 +31,9 @@ int main(void)
 	b2Vec2 gravity(0.0f, -9.8f);
 	world = new b2World(gravity);
 	world->SetContactListener(&collisionListener);
-	Physics2DDebugDraw debugDraw;
-	debugDraw.SetFlags(b2Draw::e_shapeBit);
-	world->SetDebugDraw(&debugDraw);
+	//Physics2DDebugDraw debugDraw;
+	//debugDraw.SetFlags(b2Draw::e_shapeBit);
+	//world->SetDebugDraw(&debugDraw);
 
 	// Shaders must be initiated before scenes/gameobjects
 	ShaderManager::Init();
