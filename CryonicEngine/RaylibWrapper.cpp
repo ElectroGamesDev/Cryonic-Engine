@@ -573,6 +573,25 @@ namespace RaylibWrapper {
 #endif
     }
 
+    void DrawRectangleOutline(Rectangle rec, Vector2 origin, float rotation, float lineThick, Color color)
+    {
+        if ((lineThick > rec.width) || (lineThick > rec.height))
+        {
+            if (rec.width > rec.height) lineThick = rec.height / 2;
+            else if (rec.width < rec.height) lineThick = rec.width / 2;
+        }
+
+        Rectangle top = { rec.x, rec.y, rec.width, lineThick };
+        Rectangle bottom = { rec.x, rec.y - lineThick + rec.height, rec.width, lineThick };
+        Rectangle left = { rec.x, rec.y + lineThick, lineThick, rec.height - lineThick * 2.0f };
+        Rectangle right = { rec.x - lineThick + rec.width, rec.y + lineThick, lineThick, rec.height - lineThick * 2.0f };
+
+        DrawRectangleProFlipped(top, origin, rotation, { color.r, color.g, color.b, color.a });
+        DrawRectangleProFlipped(bottom, origin, rotation, { color.r, color.g, color.b, color.a });
+        DrawRectangleProFlipped(left, origin, rotation, { color.r, color.g, color.b, color.a });
+        DrawRectangleProFlipped(right, origin, rotation, { color.r, color.g, color.b, color.a });
+    }
+
     // A modified version of DrawCircleSector to flip the quad
     void DrawCircleSectorFlipped(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color color)
     {
@@ -662,6 +681,20 @@ namespace RaylibWrapper {
         }
         ::rlEnd();
 #endif
+    }
+
+    void DrawCircleLinesV(Vector2 center, float radius, Color color)
+    {
+        rlBegin(RL_LINES);
+        rlColor4ub(color.r, color.g, color.b, color.a);
+
+        // NOTE: Circle outline is drawn pixel by pixel every degree (0 to 360)
+        for (int i = 0; i < 360; i += 10)
+        {
+            rlVertex2f(center.x + cosf(DEG2RAD * i) * radius, center.y + sinf(DEG2RAD * i) * radius);
+            rlVertex2f(center.x + cosf(DEG2RAD * (i + 10)) * radius, center.y + sinf(DEG2RAD * (i + 10)) * radius);
+        }
+        rlEnd();
     }
 
 

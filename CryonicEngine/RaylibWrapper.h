@@ -639,6 +639,9 @@ namespace RaylibWrapper
     void DrawTextureProFlipped(Texture2D _texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint);
     // A modified version of DrawRectanglePro to flip the quad
     void DrawRectangleProFlipped(Rectangle rec, Vector2 origin, float rotation, Color color);
+    // A modified version of DrawRectangleLinesEx
+    void DrawRectangleOutline(Rectangle rec, Vector2 origin, float rotation, float lineThick, Color color);
+    void DrawCircleLinesV(Vector2 center, float radius, Color color);
     // A modified version of DrawCircleSector to flip the quad
     void DrawCircleSectorFlipped(Vector2 center, float radius, float startAngle, float endAngle, int segments, Color color);
 
