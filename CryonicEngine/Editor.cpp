@@ -2567,8 +2567,9 @@ void Editor::RenderProperties()
                             }
                             else if ((*it)[0] == "Vector2")
                             {
-                                width = (ImGui::GetWindowWidth() - 65) / 2;
-                                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                width = (ImGui::GetWindowWidth() - (65 + ImGui::CalcTextSize(name.c_str()).x)) / 2;
+                                //ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                ImGui::SameLine();
                                 ImGui::Text("X");
                                 ImGui::SameLine();
                                 float x = (*it)[2][0].get<float>();
@@ -2585,8 +2586,9 @@ void Editor::RenderProperties()
                             }
                             else if ((*it)[0] == "Vector3")
                             {
-                                width = (ImGui::GetWindowWidth() - 65) / 3;
-                                ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                width = (ImGui::GetWindowWidth() - (65 + ImGui::CalcTextSize(name.c_str()).x)) / 2;
+                                //ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+                                ImGui::SameLine();
                                 ImGui::Text("X");
                                 ImGui::SameLine();
                                 float x = (*it)[2][0].get<float>();
