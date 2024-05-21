@@ -15,6 +15,7 @@ class Collider2D : public Component {
 public:
     Collider2D(GameObject* obj, int id);
     void Start() override;
+    void EditorUpdate() override;
     void Destroy() override;
 
     Shape GetShape();

@@ -101,6 +101,35 @@ void Collider2D::Start() // Todo: Move to Awake()
 
 }
 
+void Collider2D::EditorUpdate()
+{
+	// Todo: Replace this solution with Events. Another possible solution would be to have another EditorUpdate() with a selectedGameObject parameter, but this is still a bad solution.
+	if (std::holds_alternative<GameObject*>(Editor::objectInProperties) && std::get<GameObject*>(Editor::objectInProperties) == gameObject)
+	{
+		// Todo: Check if square or circle
+		Vector3 position = gameObject->transform.GetPosition();
+		Vector3 scale = gameObject->transform.GetScale();
+
+		// Getting type from exposedVariables since shape variable isn't up-to-date with exposed variable
+		std::string type = exposedVariables[1][0][2].get<std::string>();
+
+		if (type == "Square")
+		{
+			RaylibWrapper::DrawRectangleOutline({ position.x, position.y, scale.x * 3, scale.y * 3 },
+				{ scale.y * 3 / 2, scale.y * 3 / 2 },
+				gameObject->transform.GetRotationEuler().y,
+				0.1f,
+				{ 0, 255, 0, 200 });
+		}
+		else if (type == "Circle")
+		{
+			// Todo: This is not a good solution
+			for (int i = 0; i < 7; i++)
+				RaylibWrapper::DrawCircleLinesV({ position.x, position.y }, scale.x * 1.5f + 0.01f * i, { 0, 255, 0, 200 });
+		}
+	}
+}
+
 void Collider2D::Destroy()
 {
 #if !defined(EDITOR)
