@@ -169,9 +169,12 @@ void Collider2D::Highlight(Color color, bool highlightChildren)
 
 void Collider2D::EditorUpdate()
 {
+	// Must be inside the if defined since the game compiled version doesn't include Varient
+#if defined(EDITOR)
 	// Todo: Replace this solution with Events. Another possible solution would be to have another EditorUpdate() with a selectedGameObject parameter, but this is still a bad solution.
 	if (std::holds_alternative<GameObject*>(Editor::objectInProperties) && std::get<GameObject*>(Editor::objectInProperties) == gameObject)
 		Highlight({ 0, 255, 0, 200 }, true);
+#endif
 }
 
 void Collider2D::Destroy()
