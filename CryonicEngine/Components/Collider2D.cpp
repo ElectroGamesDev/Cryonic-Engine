@@ -80,11 +80,11 @@ void Collider2D::Start() // Todo: Move to Awake()
 	SpriteRenderer* spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
 	b2PolygonShape shape;
 	if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Square")
-		shape.SetAsBox(gameObject->transform.GetScale().x * 3 / 2, gameObject->transform.GetScale().y * 3 / 2);
+		shape.SetAsBox(gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, b2Vec2(offset.x, offset.y), 0.0f);
 	else if (spriteRenderer != nullptr && spriteRenderer->GetTexturePath() == "Circle")
-		shape.SetAsBox(gameObject->transform.GetScale().x * 1.5f / 2, gameObject->transform.GetScale().x * 1.5f / 2);
+		shape.SetAsBox(gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().x * 3 * size.y / 2, b2Vec2(offset.x, offset.y), 0.0f);
 	else // Assumes its a texture or doesn't have a sprite
-		shape.SetAsBox(gameObject->transform.GetScale().x * 10 / 2, gameObject->transform.GetScale().y * 10 / 2);
+		shape.SetAsBox(gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, b2Vec2(offset.x, offset.y), 0.0f);
 
 	fixtureDef.shape = &shape;
 	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
