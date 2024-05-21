@@ -38,7 +38,7 @@ private:
     Shape shape;
     bool trigger;
     Vector2 offset;
-    Vector2 size = {0, 0};
+    Vector2 size = {1, 1};
 
 #if !defined(EDITOR)
     b2FixtureDef fixtureDef;
