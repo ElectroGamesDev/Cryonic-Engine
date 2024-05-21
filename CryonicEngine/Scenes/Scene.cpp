@@ -4,6 +4,8 @@
 #include "../Components/SpriteRenderer.h"
 #if defined(EDITOR)
 #include "../ProjectManager.h"
+#else
+#include "../RaylibWrapper.h"
 #endif
 
 Scene::Scene(const std::filesystem::path& path, std::deque<GameObject*> gameObjects)
