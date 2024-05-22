@@ -165,6 +165,7 @@
     <ClCompile Include="CollisionListener2D.cpp" />
     <ClCompile Include="CollisionListener3D.cpp" />
     <ClCompile Include="Components\AnimationPlayer.cpp" />
+    <ClCompile Include="Components\AudioPlayer.cpp" />
     <ClCompile Include="Components\CameraComponent.cpp" />
     <ClCompile Include="Components\Collider2D.cpp" />
     <ClCompile Include="Components\Collider3D.cpp" />
@@ -223,6 +224,7 @@
     <ClInclude Include="CollisionListener2D.h" />
     <ClInclude Include="CollisionListener3D.h" />
     <ClInclude Include="Components\AnimationPlayer.h" />
+    <ClInclude Include="Components\AudioPlayer.h" />
     <ClInclude Include="Components\CameraComponent.h" />
     <ClInclude Include="Components\Collider2D.h" />
     <ClInclude Include="Components\Collider3D.h" />
