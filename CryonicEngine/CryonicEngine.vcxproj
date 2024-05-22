@@ -222,6 +222,7 @@
     <ClInclude Include="AnimationGraph.h" />
     <ClInclude Include="CollisionListener2D.h" />
     <ClInclude Include="CollisionListener3D.h" />
+    <ClInclude Include="Components\AnimationPlayer.h" />
     <ClInclude Include="Components\CameraComponent.h" />
     <ClInclude Include="Components\Collider2D.h" />
     <ClInclude Include="Components\Collider3D.h" />
