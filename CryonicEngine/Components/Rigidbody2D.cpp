@@ -114,28 +114,28 @@ void Rigidbody2D::MovePosition(float x, float y)
 void Rigidbody2D::ApplyForce(Vector2 force)
 {
 #if !defined(EDITOR)
-    body->ApplyForce({ force.x, force.y }, { 0, 0 }, true);
+    body->ApplyForce({ force.x, force.y }, body->GetWorldCenter(), true);
 #endif
 }
 
 void Rigidbody2D::ApplyForce(Vector2 force, Vector2 position)
 {
 #if !defined(EDITOR)
-    body->ApplyForce({force.x, force.y}, { position.x, position.y }, true);
+    body->ApplyForce({force.x, force.y}, { body->GetWorldCenter().x + position.x, body->GetWorldCenter().y + position.y }, true);
 #endif
 }
 
 void Rigidbody2D::ApplyImpulse(Vector2 impulse)
 {
 #if !defined(EDITOR)
-    body->ApplyLinearImpulse({ impulse.x, impulse.y }, { 0, 0 }, true);
+    body->ApplyLinearImpulse({ impulse.x, impulse.y }, body->GetWorldCenter(), true);
 #endif
 }
 
 void Rigidbody2D::ApplyImpulse(Vector2 impulse, Vector2 position)
 {
 #if !defined(EDITOR)
-    body->ApplyLinearImpulse({ impulse.x, impulse.y }, { position.x, position.y }, true);
+    body->ApplyLinearImpulse({ impulse.x, impulse.y }, { body->GetWorldCenter().x + position.x, body->GetWorldCenter().y + position.y }, true);
 #endif
 }
 
