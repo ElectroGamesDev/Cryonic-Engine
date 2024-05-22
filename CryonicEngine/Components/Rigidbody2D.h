@@ -23,9 +23,9 @@ public:
     void MovePosition(Vector2 displacement);
     void MovePosition(float x, float y);
     void ApplyForce(Vector2 force);
-    void ApplyForce(Vector2 force, Vector2 position = {0,0});
+    void ApplyForce(Vector2 force, Vector2 position);
     void ApplyImpulse(Vector2 impulse);
-    void ApplyImpulse(Vector2 impulse, Vector2 position = { 0,0 });
+    void ApplyImpulse(Vector2 impulse, Vector2 position);
     void ApplyTorque(float torque);
     void SetBodyType(BodyType bodyType);
     BodyType GetBodyType();
