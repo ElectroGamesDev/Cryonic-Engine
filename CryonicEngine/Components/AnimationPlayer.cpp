@@ -73,16 +73,6 @@ void AnimationPlayer::Destroy()
 		delete animationGraph;
 }
 
-void AnimationPlayer::Play()
-{
-	Unpause();
-}
-
-void AnimationPlayer::Stop()
-{
-	Pause();
-}
-
 void AnimationPlayer::Pause()
 {
 	paused = true;

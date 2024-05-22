@@ -39,8 +39,6 @@ public:
 	void Update(float deltaTime) override;
     void Destroy() override;
 
-    void Play();
-    void Stop();
     void Pause();
     void Unpause();
     bool IsPaused();
