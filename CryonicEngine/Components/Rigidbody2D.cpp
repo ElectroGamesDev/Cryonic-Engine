@@ -226,7 +226,7 @@ void Rigidbody2D::SetLinearDamping(float damping)
 float Rigidbody2D::GetLinearDamping()
 {
 #if !defined(EDITOR)
-    return GetLinearDamping();
+    return body->GetLinearDamping();
 #else
     return 0.0f;
 #endif
@@ -242,7 +242,7 @@ void Rigidbody2D::SetAngularDamping(float damping)
 float Rigidbody2D::GetAngularDamping()
 {
 #if !defined(EDITOR)
-    return GetAngularDamping();
+    return body->GetAngularDamping();
 #else
     return 0.0f;
 #endif
