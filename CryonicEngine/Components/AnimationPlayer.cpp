@@ -15,7 +15,7 @@ void AnimationPlayer::Start()
 
 void AnimationPlayer::Update(float deltaTime)
 {
-	if (animationGraph == nullptr || activeAnimationState == nullptr)
+	if (paused || animationGraph == nullptr || activeAnimationState == nullptr)
 		return;
 
 	if (spriteRenderer == nullptr)
@@ -71,6 +71,31 @@ void AnimationPlayer::Destroy()
 {
 	if (animationGraph != nullptr && ownsGraph)
 		delete animationGraph;
+}
+
+void AnimationPlayer::Play()
+{
+	Unpause();
+}
+
+void AnimationPlayer::Stop()
+{
+	Pause();
+}
+
+void AnimationPlayer::Pause()
+{
+	paused = true;
+}
+
+void AnimationPlayer::Unpause()
+{
+	paused = false;
+}
+
+bool AnimationPlayer::IsPaused()
+{
+	return paused;
 }
 
 void AnimationPlayer::SetAnimationGraph(AnimationGraph* animationGraph)
