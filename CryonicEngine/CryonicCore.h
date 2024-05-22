@@ -131,6 +131,11 @@ struct Vector2
     bool operator!=(const Vector2& other) const {
         return !(*this == other);
     }
+
+    static Vector2 Up() { return { 0.0f, 1.0f }; }
+    static Vector2 Down() { return { 0.0f, -1.0f }; }
+    static Vector2 Left() { return { -1.0f, 0.0f }; }
+    static Vector2 Right() { return { 1.0f, 0.0f }; }
 };
 
 
@@ -226,6 +231,13 @@ struct Vector3
     bool operator!=(const Vector3& other) const {
         return !(*this == other);
     }
+
+    static Vector3 Forward() { return { 0.0f, 0.0f, 1.0f }; }
+    static Vector3 Backward() { return { 0.0f, 0.0f, -1.0f }; }
+    static Vector3 Up() { return { 0.0f, 1.0f, 0.0f }; }
+    static Vector3 Down() { return { 0.0f, -1.0f, 0.0f }; }
+    static Vector3 Right() { return { 1.0f, 0.0f, 0.0f }; }
+    static Vector3 Left() { return { -1.0f, 0.0f, 0.0f }; }
 };
 
 struct Vector4 {
