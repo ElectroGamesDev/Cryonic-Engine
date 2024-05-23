@@ -60,7 +60,7 @@ RaylibWrapper::Texture2D GridTexture = { 0 };
 bool viewportOpened = true;
 Vector4 viewportPosition;
 
-std::variant<std::monostate, GameObject*> Editor::objectInProperties = std::monostate{}; // Make a struct or something that holds a Path and ifstream String. Not specific to material so prefabs and stuff can use
+std::variant<std::monostate, GameObject*, DataFile> Editor::objectInProperties = std::monostate{}; // Make a struct or something that holds a Path and ifstream String. Not specific to material so prefabs and stuff can use
 GameObject* selectedObject = nullptr;
 bool movingObjectX = false;
 bool movingObjectY = false;
@@ -698,6 +698,35 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     RaylibWrapper::rlImGuiImageSize(tempTextures.back(), imageSize.x, imageSize.y);
                     ImGui::SetCursorPos(newCursorPos);
                 }
+                else if (extension == ".mp3" || extension == ".wav" || extension == ".ogg" || extension == ".flac" || extension == ".qoa" || extension == ".xm" || extension == ".mod")
+                {
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    if (ImGui::IsItemHovered())
+                    {
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        {
+                            dragData.first = Other;
+                            dragData.second["Path"] = entry.path();
+                        }
+                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        {
+                            // Puts the data into objectInProperties so it is displayed in the properties window
+                            if (!std::holds_alternative<DataFile>(objectInProperties) || std::filesystem::path(std::get<DataFile>(objectInProperties).path) != (entry.path().string() + ".data"))
+                            {
+                                if (!std::filesystem::exists(entry.path().string() + ".data"))
+                                    Utilities::CreateDataFile(entry.path());
+
+                                DataFile dataFile;
+                                dataFile.path = entry.path().string() + ".data";
+
+                                std::ifstream jsonFile(entry.path().string() + ".data");
+                                dataFile.json = nlohmann::json::parse(jsonFile);
+
+                                objectInProperties = dataFile;
+                            }
+                        }
+                    }
+                }
                 else if (extension == ".gltf" || extension == ".glb")
                 {
                     // Todo: This is causing errors if there are game objects with a MeshRenderer
@@ -770,7 +799,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         }
                     }
                 }
-                else if (extension != ".asset")
+                else if (extension != ".data")
                 {
                     RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
                     if (ImGui::IsItemHovered())
@@ -1354,23 +1383,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
             for (int i = 0; i < (int)droppedFiles.count; i++)
             {
-                try
-                {
-                    std::filesystem::path path = fileExplorerPath / std::filesystem::path(droppedFiles.paths[i]).filename();
-                    if (std::filesystem::exists(path))
-                    {
-                        // Todo: Popup a window asking if the user would like to replace the file
-                        std::filesystem::remove(path);
-                    }
-                    if (std::filesystem::is_directory(droppedFiles.paths[i]))
-                        std::filesystem::copy(droppedFiles.paths[i], path, std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
-                    else std::filesystem::copy_file(droppedFiles.paths[i], path);
-                }
-                catch (const std::filesystem::filesystem_error& error)
-                {
-                    // Todo: Popup a window with the error
-                    ConsoleLogger::WarningLog("Failed to copy file. Error: " + std::string(error.what())); // Todo: Remove this log once I add a popup
-                }
+                Utilities::ImportFile(droppedFiles.paths[i], fileExplorerPath / std::filesystem::path(droppedFiles.paths[i]).filename());
+                // Todo: Popup a window with the error. ImportFile() returns a bool, but this won't work if a file within a folder fails. Maybe have it return a vector of strings holding the errors? Or handle this within the ImportFile()
             }
 
             UnloadDroppedFiles(droppedFiles);
