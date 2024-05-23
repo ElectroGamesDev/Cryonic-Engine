@@ -418,6 +418,40 @@ bool Utilities::CreateDataFile(std::filesystem::path path)
     return false;
 }
 
+bool Utilities::ImportFile(std::filesystem::path filePath, std::filesystem::path importPath)
+{
+    try
+    {
+        if (std::filesystem::is_directory(filePath))
+        {
+            if (!std::filesystem::exists(importPath))
+                std::filesystem::create_directories(importPath);
+
+            for (const auto& entry : std::filesystem::directory_iterator(filePath))
+                ImportFile(entry.path(), importPath / entry.path().filename());
+        }
+        else
+        {
+            if (std::filesystem::exists(importPath))
+            {
+                // Todo: Popup a window asking if the user would like to replace the file
+                std::filesystem::remove(importPath);
+            }
+            std::filesystem::copy_file(filePath, importPath);
+
+            if (!std::filesystem::exists(importPath.string() + ".data"))
+                Utilities::CreateDataFile(importPath.string());
+        }
+    }
+    catch (const std::filesystem::filesystem_error& error)
+    {
+        ConsoleLogger::WarningLog("Failed to import file. Error: " + std::string(error.what()));
+        return false;
+    }
+
+    return true;
+}
+
 std::string Utilities::SelectFolderDialog(const std::filesystem::path& projectPath)
 {
     HINSTANCE hInstance = GetModuleHandle(NULL);

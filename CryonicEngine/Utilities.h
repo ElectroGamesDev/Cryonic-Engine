@@ -14,4 +14,5 @@ namespace Utilities
     nlohmann::json GetExposedVariables(std::filesystem::path path);
     std::vector<std::string> GetGltfAnimationNames(std::filesystem::path path);
     bool CreateDataFile(std::filesystem::path path);
+    bool ImportFile(std::filesystem::path filePath, std::filesystem::path importPath);
 };
