@@ -373,6 +373,51 @@ std::vector<std::string> Utilities::GetGltfAnimationNames(std::filesystem::path 
     }
 }
 
+bool Utilities::CreateDataFile(std::filesystem::path path)
+{
+    std::filesystem::path newPath = path.parent_path() / (path.filename().string() + ".data");
+    if (!std::filesystem::exists(path) || !path.has_extension() || std::filesystem::exists(newPath))
+        return false;
+
+    std::ofstream file(newPath);
+    if (file.is_open())
+    {
+        if (path.extension() == ".mp3" || path.extension() == ".wav" || path.extension() == ".ogg" || path.extension() == ".flac" || path.extension() == ".qoa" || path.extension() == ".xm" || path.extension() == ".mod")
+        {
+            bool loadInMemory = false;
+            try
+            {
+                // If the audio file is less than 1MB, set it to load in memory on default
+                if (std::filesystem::file_size(path) < 1048576)
+                    loadInMemory = true;
+            }
+            catch (std::filesystem::filesystem_error& error)
+            {
+                ConsoleLogger::WarningLog("Failed to check the size of the audio file \"" + path.stem().string() + "\" when creating the data file. Error: " + error.what(), true);
+            }
+            nlohmann::json jsonData = {
+                {"version", 1.0f},
+                {"loadInMemory", loadInMemory}
+            };
+            file << std::setw(4) << jsonData << std::endl;
+        }
+        else
+        {
+            file.close();
+            std::filesystem::remove(newPath);
+            return false;
+        }
+
+        file.close();
+
+        return true;
+    }
+    else if (std::filesystem::exists(newPath))
+        std::filesystem::remove(newPath);
+
+    return false;
+}
+
 std::string Utilities::SelectFolderDialog(const std::filesystem::path& projectPath)
 {
     HINSTANCE hInstance = GetModuleHandle(NULL);
