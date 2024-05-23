@@ -2,7 +2,14 @@
 
 #include "GameObject.h"
 #include "RaylibWrapper.h"
+#include <json.hpp>
 #include <variant>
+
+struct DataFile
+{
+	std::string path;
+	nlohmann::json json;
+};
 
 class Editor
 {
@@ -40,5 +47,5 @@ public:
 	static RaylibWrapper::Camera camera;
 	static RaylibWrapper::Camera2D camera2D;
 
-	static std::variant<std::monostate, GameObject*> objectInProperties;
+	static std::variant<std::monostate, GameObject*, DataFile> objectInProperties;
 };
