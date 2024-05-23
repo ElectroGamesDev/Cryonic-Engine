@@ -733,11 +733,52 @@ namespace RaylibWrapper
 
     const char* GetWorkingDirectory(void);                      // Get current working directory (uses static string)
 
+
+    // Audio
+    
+    // Wave/Sound loading/unloading functions
     void InitAudioDevice(void);                                     // Initialize audio device and context
     void CloseAudioDevice(void);                                    // Close the audio device and context
     bool IsAudioDeviceReady(void);                                  // Check if audio device has been initialized successfully
     void SetMasterVolume(float volume);                             // Set master volume (listener)
     float GetMasterVolume(void);                                    // Get master volume (listener)
+
+    Wave LoadWave(const char* fileName);                            // Load wave data from file
+    bool IsWaveReady(Wave wave);                                    // Checks if wave data is ready
+    Sound LoadSound(const char* fileName);                          // Load sound from file
+    Sound LoadSoundFromWave(Wave wave);                             // Load sound from wave data
+    bool IsSoundReady(Sound sound);                                 // Checks if a sound is ready
+    void UpdateSound(Sound sound, const void* data, int sampleCount); // Update sound buffer with new data
+    void UnloadWave(Wave wave);                                     // Unload wave data
+    void UnloadSound(Sound sound);                                  // Unload sound
+
+    // Wave/Sound management functions
+    void PlaySound(Sound sound);                                    // Play a sound
+    void StopSound(Sound sound);                                    // Stop playing a sound
+    void PauseSound(Sound sound);                                   // Pause a sound
+    void ResumeSound(Sound sound);                                  // Resume a paused sound
+    bool IsSoundPlaying(Sound sound);                               // Check if a sound is currently playing
+    void SetSoundVolume(Sound sound, float volume);                 // Set volume for a sound (1.0 is max level)
+    void SetSoundPitch(Sound sound, float pitch);                   // Set pitch for a sound (1.0 is base level)
+    void SetSoundPan(Sound sound, float pan);                       // Set pan for a sound (0.5 is center)
+
+    // Music management functions
+    Music LoadMusicStream(const char* fileName);                    // Load music stream from file
+    Music LoadMusicStreamFromMemory(const char* fileType, const unsigned char* data, int dataSize); // Load music stream from data
+    bool IsMusicReady(Music music);                                 // Checks if a music stream is ready
+    void UnloadMusicStream(Music music);                            // Unload music stream
+    void PlayMusicStream(Music music);                              // Start music playing
+    bool IsMusicStreamPlaying(Music music);                         // Check if music is playing
+    void UpdateMusicStream(Music music);                            // Updates buffers for music streaming
+    void StopMusicStream(Music music);                              // Stop music playing
+    void PauseMusicStream(Music music);                             // Pause music playing
+    void ResumeMusicStream(Music music);                            // Resume playing paused music
+    void SetMusicVolume(Music music, float volume);                 // Set volume for music (1.0 is max level)
+    void SetMusicPitch(Music music, float pitch);                   // Set pitch for a music (1.0 is base level)
+    void SetMusicPan(Music music, float pan);                       // Set pan for a music (0.5 is center)
+    float GetMusicTimeLength(Music music);                          // Get music time length (in seconds)
+    float GetMusicTimePlayed(Music music);                          // Get current music time played (in seconds)
+
 
 #if defined(EDITOR)
     // ImGui Raylib
