@@ -3603,6 +3603,8 @@ void Editor::Cleanup()
     if (cameraSelected)
         UnloadRenderTexture(cameraRenderTexture);
 
+    RaylibWrapper::CloseAudioDevice();
+
     RaylibWrapper::ImGui_ImplRaylib_Shutdown();
     ImNodes::DestroyContext();
     ImGui::DestroyContext();
@@ -3615,6 +3617,8 @@ void Editor::Init()
     RaylibWrapper::MaximizeWindow();
     RaylibWrapper::SetWindowMinSize(100, 100);
     RaylibWrapper::SetTargetFPS(144); // Todo: Set target FPS to monitor refresh rate and handle editor being moved across monitors or just take the higher refresh rate
+
+    RaylibWrapper::InitAudioDevice();
 
     // Setup Dear ImGui context
     ImGui::CreateContext();
