@@ -25,6 +25,8 @@ int main(void)
 	//RaylibWrapper::ToggleBorderlessWindowed();
 	RaylibWrapper::SetWindowMinSize(100, 100);
 	RaylibWrapper::SetTargetFPS(60);
+	
+	RaylibWrapper::InitAudioDevice();
 
 	// Must go before scene loading
 	CollisionListener2D collisionListener;
@@ -110,6 +112,8 @@ int main(void)
     }
 
 	// Todo: Run component disabled function
+
+	RaylibWrapper::CloseAudioDevice();
 
 	ShaderManager::Cleanup();
     RaylibWrapper::CloseWindow();
