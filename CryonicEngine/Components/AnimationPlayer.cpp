@@ -29,7 +29,7 @@ void AnimationPlayer::Update(float deltaTime)
 			if (previouslyExisted)
 			{
 				previouslyExisted = false;
-				ConsoleLogger::WarningLog("Animation Player - Game object \"" + gameObject->GetName() + "\" does not have a Sprite Renderer. Add one or remove/disable the Animation Player.", false);
+				ConsoleLogger::WarningLog(gameObject->GetName() + ":Animation Player - Game object does not have a Sprite Renderer. Add one or remove/disable the Animation Player.", false);
 			}
 			return;
 		}
