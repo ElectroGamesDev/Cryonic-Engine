@@ -14,7 +14,7 @@ public:
     AudioPlayer(GameObject* obj, int id) : Component(obj, id)
 	{
 		name = "AudioPlayer";
-		iconUnicode = "\xef\x9c\x8c";
+		iconUnicode = "\xef\x80\xa8";
 
 #if defined(EDITOR)
         std::string variables = R"(
