@@ -1054,6 +1054,25 @@ namespace RaylibWrapper {
         return ::GetWorkingDirectory();
     }
 
+    void InitAudioDevice(void) {
+        ::InitAudioDevice();
+    }
+
+    void CloseAudioDevice(void) {
+        ::CloseAudioDevice();
+    }
+
+    bool IsAudioDeviceReady(void) {
+        return ::IsAudioDeviceReady();
+    }
+
+    void SetMasterVolume(float volume) {
+        ::SetMasterVolume(volume);
+    }
+
+    float GetMasterVolume(void) {
+        return ::GetMasterVolume();
+    }
 
 
 #if defined(EDITOR)

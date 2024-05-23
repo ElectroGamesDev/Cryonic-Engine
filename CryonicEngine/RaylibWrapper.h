@@ -733,6 +733,11 @@ namespace RaylibWrapper
 
     const char* GetWorkingDirectory(void);                      // Get current working directory (uses static string)
 
+    void InitAudioDevice(void);                                     // Initialize audio device and context
+    void CloseAudioDevice(void);                                    // Close the audio device and context
+    bool IsAudioDeviceReady(void);                                  // Check if audio device has been initialized successfully
+    void SetMasterVolume(float volume);                             // Set master volume (listener)
+    float GetMasterVolume(void);                                    // Get master volume (listener)
 
 #if defined(EDITOR)
     // ImGui Raylib
