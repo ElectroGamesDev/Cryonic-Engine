@@ -111,7 +111,15 @@ int main(void)
 		RaylibWrapper::EndDrawing();
     }
 
-	// Todo: Run component disabled function
+	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+	{
+		if (!gameObject->IsActive()) continue;
+		for (Component* component : gameObject->GetComponents())
+		{
+			if (!component->IsActive()) continue;
+			component->Destroy();
+		}
+	}
 
 	RaylibWrapper::CloseAudioDevice();
 
