@@ -564,6 +564,12 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         }
 
         std::filesystem::path folderHovering; // For file drag and drop
+        if (!std::filesystem::exists(fileExplorerPath))
+        {
+            if (!std::filesystem::exists(ProjectManager::projectData.path / "Assets"))
+                std::filesystem::create_directories(ProjectManager::projectData.path / "Assets");
+            fileExplorerPath = ProjectManager::projectData.path / "Assets";
+        }
         for (const auto& entry : std::filesystem::directory_iterator(fileExplorerPath))
         {
             ImGui::PushID(entry.path().string().c_str());
@@ -1396,6 +1402,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnDefault)
 {
     bool hasChildren = false;
+    if (!std::filesystem::exists(path)) // This is important as it prevents a crash if the file is deleted from an external application like File Explorer
+        return;
     for (const auto& entry : std::filesystem::directory_iterator(path))
     {
         if (entry.is_directory())
