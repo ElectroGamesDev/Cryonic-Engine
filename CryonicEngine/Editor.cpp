@@ -23,7 +23,7 @@
 #include "Components/Collider2D.h"
 #include "Components/Rigidbody2D.h"
 #include "Components/AnimationPlayer.h"
-#include "Components/AudioPlayer.h"
+//#include "Components/AudioPlayer.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
 #include "ProjectManager.h"
@@ -34,10 +34,8 @@
 #include <cmath>
 #include "EventSystem.h"
 
-#define TINYGLTF_IMPLEMENTATION
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "tiny_gltf.h"
 
 #include "Jolt/Jolt.h"
 JPH_SUPPRESS_WARNINGS
@@ -1041,71 +1039,44 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             // Todo: Place the nodes at the mouse position
 
                             bool updatedAnimations = false;
-                            std::filesystem::path filePath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
-                            tinygltf::Model model;
-                            tinygltf::TinyGLTF loader;
-                            std::string err;
-                            std::string warn;
-                            bool ret = false;
 
-                            // Todo: This is really slow, even slower than loading and drawing a model in the viewport
-                            //  One solution would be to when models are imported access the data then and save it into a file, but still it would be slower than it should
-
+                            int index = 0;
+                            std::random_device rd;
+                            std::mt19937 gen(rd());
+                            std::uniform_int_distribution<int> distribution(999999, 99999999);
                             // Todo: Popup a window with a progress bar
-
-                            if (filePath.extension() == ".gltf")
-                                ret = loader.LoadASCIIFromFile(&model, &err, &warn, filePath.string());
-                            else if (filePath.extension() == ".glb")
-                                ret = loader.LoadBinaryFromFile(&model, &err, &warn, filePath.string());
-
-                            if (!warn.empty())
-                                ConsoleLogger::WarningLog(warn);
-
-                            if (!err.empty())
-                                ConsoleLogger::ErrorLog(err);
-
-                            if (!ret)
+                            // Todo: This function is really slow to get animations
+                            for (std::string& animationName : Utilities::GetGltfAnimationNames(std::any_cast<std::filesystem::path>(dragData.second["Path"])))
                             {
-                                // Todo: Pop this message up on screen
-                                ConsoleLogger::ErrorLog("Failed to parse GLTF model. Canceling ");
-                            }
-                            else
-                            {
-                                std::random_device rd;
-                                std::mt19937 gen(rd());
-                                std::uniform_int_distribution<int> distribution(999999, 99999999);
-                                for (size_t i = 0; i < model.animations.size(); ++i)
+                                int id = 0;
+                                while (id == 0)
                                 {
-                                    const tinygltf::Animation& animation = model.animations[i];
-
-                                    int id = 0;
-                                    while (id == 0)
+                                    id = distribution(gen);
+                                    for (auto& node : animationGraphData["nodes"])
                                     {
-                                        id = distribution(gen);
-                                        for (auto& node : animationGraphData["nodes"])
+                                        if (id == node["id"])
                                         {
-                                            if (id == node["id"])
-                                            {
-                                                id = 0;
-                                                break;
-                                            }
+                                            id = 0;
+                                            break;
                                         }
                                     }
-
-                                    nlohmann::json node = {
-                                        {"id", id},
-                                        {"name", animation.name},
-                                        {"index", i},
-                                        {"x", 350 + (i * 30)},
-                                        {"y", 350 + (i * 30)},
-                                        {"loop", true},
-                                        {"speed", 1.0f}
-                                    };
-
-                                    animationGraphData["nodes"].push_back(node);
-                                    updatedAnimations = true;
                                 }
+
+                                nlohmann::json node = {
+                                    {"id", id},
+                                    {"name", animationName},
+                                    {"index", index},
+                                    {"x", 350 + (index * 30)},
+                                    {"y", 350 + (index * 30)},
+                                    {"loop", true},
+                                    {"speed", 1.0f}
+                                };
+
+                                animationGraphData["nodes"].push_back(node);
+                                updatedAnimations = true;
+                                index++;
                             }
+
                             if (updatedAnimations)
                             {
                                 std::ofstream file(animationGraphData["path"].get<std::filesystem::path>());
@@ -2161,12 +2132,12 @@ void Editor::RenderComponentsWin()
             componentsWindowOpen = false;
             resetComponentsWin = true;
         }
-        else if (ImGui::Button("Audio Player", ImVec2(buttonWidth, 0)))
-        {
-            std::get<GameObject*>(objectInProperties)->AddComponent<AudioPlayer>();
-            componentsWindowOpen = false;
-            resetComponentsWin = true;
-        }
+        //else if (ImGui::Button("Audio Player", ImVec2(buttonWidth, 0)))
+        //{
+        //    std::get<GameObject*>(objectInProperties)->AddComponent<AudioPlayer>();
+        //    componentsWindowOpen = false;
+        //    resetComponentsWin = true;
+        //}
         ImGui::Separator();
         // External Components
         for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
