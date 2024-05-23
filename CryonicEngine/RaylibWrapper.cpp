@@ -1075,6 +1075,165 @@ namespace RaylibWrapper {
     }
 
 
+    //Wave LoadWave(const char* fileName)
+    //{
+    //    ::Wave wave = ::LoadWave(fileName);
+    //    return { wave.frameCount, wave.sampleRate, wave.sampleSize, wave.channels, wave.data };
+    //}
+
+    //bool IsWaveReady(Wave wave)
+    //{
+    //    return ::IsWaveReady({ wave.frameCount, wave.sampleRate, wave.sampleSize, wave.channels, wave.data });
+    //}
+
+    //Sound LoadSound(const char* fileName)
+    //{
+    //    ::Sound sound = ::LoadSound(fileName);
+    //    return { { sound.stream.buffer, sound.stream.processor, sound.stream.sampleRate, sound.stream.sampleSize, sound.stream.channels }, sound.frameCount };
+    //}
+
+
+    //Sound LoadSoundFromWave(Wave wave)
+    //{
+    //    return ::LoadSoundFromWave({ wave.frameCount, wave.sampleRate, wave.sampleSize, wave.channels, wave.data });
+    //}
+
+    //bool IsSoundReady(Sound sound)
+    //{
+    //    return ::IsSoundReady(sound);
+    //}
+
+    //void UpdateSound(Sound sound, const void* data, int sampleCount)
+    //{
+    //    ::UpdateSound(sound, data, sampleCount);
+    //}
+
+    //void UnloadWave(Wave wave)
+    //{
+    //    ::UnloadWave(wave);
+    //}
+
+    //void UnloadSound(Sound sound)
+    //{
+    //    ::UnloadSound(sound);
+    //}
+
+    //void PlaySound(Sound sound)
+    //{
+    //    ::PlaySound(sound);
+    //}
+
+    //void StopSound(Sound sound)
+    //{
+    //    ::StopSound(sound);
+    //}
+
+    //void PauseSound(Sound sound)
+    //{
+    //    ::PauseSound(sound);
+    //}
+
+    //void ResumeSound(Sound sound)
+    //{
+    //    ::ResumeSound(sound);
+    //}
+
+    //bool IsSoundPlaying(Sound sound)
+    //{
+    //    return ::IsSoundPlaying(sound);
+    //}
+
+    //void SetSoundVolume(Sound sound, float volume)
+    //{
+    //    ::SetSoundVolume(sound, volume);
+    //}
+
+    //void SetSoundPitch(Sound sound, float pitch)
+    //{
+    //    ::SetSoundPitch(sound, pitch);
+    //}
+
+    //void SetSoundPan(Sound sound, float pan)
+    //{
+    //    ::SetSoundPan(sound, pan);
+    //}
+
+    //Music LoadMusicStream(const char* fileName)
+    //{
+    //    return ::LoadMusicStream(fileName);
+    //}
+
+    //Music LoadMusicStreamFromMemory(const char* fileType, const unsigned char* data, int dataSize)
+    //{
+    //    return ::LoadMusicStreamFromMemory(fileType, data, dataSize);
+    //}
+
+    //bool IsMusicReady(Music music)
+    //{
+    //    return ::IsMusicReady(music);
+    //}
+
+    //void UnloadMusicStream(Music music)
+    //{
+    //    ::UnloadMusicStream(music);
+    //}
+
+    //void PlayMusicStream(Music music)
+    //{
+    //    ::PlayMusicStream(music);
+    //}
+
+    //bool IsMusicStreamPlaying(Music music)
+    //{
+    //    return ::IsMusicStreamPlaying(music);
+    //}
+
+    //void UpdateMusicStream(Music music)
+    //{
+    //    ::UpdateMusicStream(music);
+    //}
+
+    //void StopMusicStream(Music music)
+    //{
+    //    ::StopMusicStream(music);
+    //}
+
+    //void PauseMusicStream(Music music)
+    //{
+    //    ::PauseMusicStream(music);
+    //}
+
+    //void ResumeMusicStream(Music music)
+    //{
+    //    ::ResumeMusicStream(music);
+    //}
+
+    //void SetMusicVolume(Music music, float volume)
+    //{
+    //    ::SetMusicVolume(music, volume);
+    //}
+
+    //void SetMusicPitch(Music music, float pitch)
+    //{
+    //    ::SetMusicPitch(music, pitch);
+    //}
+
+    //void SetMusicPan(Music music, float pan)
+    //{
+    //    ::SetMusicPan(music, pan);
+    //}
+
+    //float GetMusicTimeLength(Music music)
+    //{
+    //    return ::GetMusicTimeLength(music);
+    //}
+
+    //float GetMusicTimePlayed(Music music)
+    //{
+    //    return ::GetMusicTimePlayed(music);
+    //}
+
+
 #if defined(EDITOR)
     // ImGui Raylib
     bool ImGui_ImplRaylib_Init() {
