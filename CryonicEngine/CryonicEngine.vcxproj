@@ -162,6 +162,7 @@
     <ClCompile Include="..\includes\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\includes\imgui\rlImGui.cpp" />
     <ClCompile Include="..\includes\imnodes\imnodes.cpp" />
+    <ClCompile Include="AudioClip.cpp" />
     <ClCompile Include="CollisionListener2D.cpp" />
     <ClCompile Include="CollisionListener3D.cpp" />
     <ClCompile Include="Components\AnimationPlayer.cpp" />
@@ -221,6 +222,7 @@
     <ClInclude Include="..\includes\tiny_gltf.h" />
     <ClInclude Include="Animation.h" />
     <ClInclude Include="AnimationGraph.h" />
+    <ClInclude Include="AudioClip.h" />
     <ClInclude Include="CollisionListener2D.h" />
     <ClInclude Include="CollisionListener3D.h" />
     <ClInclude Include="Components\AnimationPlayer.h" />
