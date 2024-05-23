@@ -2,6 +2,8 @@
 
 void AudioPlayer::Start()
 {
+	if (playOnStart && audioClip != nullptr)
+		Play();
 }
 
 void AudioPlayer::Update(float deltaTime)

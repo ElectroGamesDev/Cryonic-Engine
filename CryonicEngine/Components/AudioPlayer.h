@@ -34,6 +34,18 @@ public:
                         "loop",
                         false,
                         "Loop"
+                    ],
+                    [
+                        "bool",
+                        "playOnStart",
+                        false,
+                        "Play On Start"
+                    ],
+                    [
+                        "bool",
+                        "loop",
+                        false,
+                        "Loop"
                     ]
                 ]
             ]
@@ -72,5 +84,5 @@ private:
     AudioClip* audioClip = nullptr;
     bool loop = false;
     bool paused = false;
-    // StartOnAwake bool (make sure actually starts). Also if it truies starting on awake with no audioClip, don't call Play() so it wont send warning
+    bool playOnStart = false;
 };
