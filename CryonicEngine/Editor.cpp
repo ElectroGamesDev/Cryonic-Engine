@@ -809,9 +809,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             dragData.first = Other;
                             dragData.second["Path"] = entry.path();
                         }
+                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                            std::system(("\"" + entry.path().string() + "\"").c_str());
                     }
-                    else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                        std::system(("\"" + entry.path().string() + "\"").c_str());
                 }
                 else
                 {
