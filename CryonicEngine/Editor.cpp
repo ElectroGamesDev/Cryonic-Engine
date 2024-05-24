@@ -23,7 +23,7 @@
 #include "Components/Collider2D.h"
 #include "Components/Rigidbody2D.h"
 #include "Components/AnimationPlayer.h"
-//#include "Components/AudioPlayer.h"
+#include "Components/AudioPlayer.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
 #include "ProjectManager.h"
@@ -2156,12 +2156,12 @@ void Editor::RenderComponentsWin()
             componentsWindowOpen = false;
             resetComponentsWin = true;
         }
-        //else if (ImGui::Button("Audio Player", ImVec2(buttonWidth, 0)))
-        //{
-        //    std::get<GameObject*>(objectInProperties)->AddComponent<AudioPlayer>();
-        //    componentsWindowOpen = false;
-        //    resetComponentsWin = true;
-        //}
+        else if (ImGui::Button("Audio Player", ImVec2(buttonWidth, 0)))
+        {
+            std::get<GameObject*>(objectInProperties)->AddComponent<AudioPlayer>();
+            componentsWindowOpen = false;
+            resetComponentsWin = true;
+        }
         ImGui::Separator();
         // External Components
         for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
