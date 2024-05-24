@@ -3044,14 +3044,14 @@ void Editor::RenderHierarchy()
 
             std::string objectToCreate = "";
 
+            if (ImGui::MenuItem("Create Empty"))
+            {
+                hierarchyContextMenuOpen = false;
+                objectToCreate = "Empty";
+            }
+
             if (ProjectManager::projectData.is3D)
             {
-                if (ImGui::MenuItem("Create Empty"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Empty";
-                }
-
                 if (ImGui::MenuItem("Create Cube"))
                 {
                     hierarchyContextMenuOpen = false;
