@@ -37,12 +37,6 @@ public:
                         "playOnStart",
                         false,
                         "Play On Start"
-                    ],
-                    [
-                        "bool",
-                        "loop",
-                        false,
-                        "Loop"
                     ]
                 ]
             ]
