@@ -3,10 +3,7 @@
 #include "Component.h"
 #include "../AudioClip.h"
 #include <vector>
-namespace Raylib
-{
-#include "raylib.h"
-}
+
 
 class AudioPlayer : public Component
 {

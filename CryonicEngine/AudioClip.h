@@ -6,6 +6,11 @@
 #include "RaylibWrapper.h"
 #include "ConsoleLogger.h"
 #include "json.hpp"
+// This is used by AudioPlayer. It's in here since AudioPlayer.h couldn't include it without it using the wrong include path for game builds.
+namespace Raylib
+{
+#include "raylib.h"
+}
 
 class AudioClip
 {
