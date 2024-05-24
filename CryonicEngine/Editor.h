@@ -5,10 +5,18 @@
 #include <json.hpp>
 #include <variant>
 
+enum class DataFileTypes
+{
+	Sprite,
+	Sound,
+	Other
+};
+
 struct DataFile
 {
 	std::string path;
 	nlohmann::json json;
+	DataFileTypes type;
 };
 
 class Editor
