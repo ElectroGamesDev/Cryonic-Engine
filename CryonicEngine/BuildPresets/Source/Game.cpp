@@ -113,10 +113,8 @@ int main(void)
 
 	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 	{
-		if (!gameObject->IsActive()) continue;
 		for (Component* component : gameObject->GetComponents())
 		{
-			if (!component->IsActive()) continue;
 			component->Destroy();
 		}
 	}
