@@ -2100,6 +2100,8 @@ void Editor::RenderScriptCreateWin()
         if (!canCreate) ImGui::BeginDisabled();
         if (ImGui::Button("Create", ImVec2(163, 0)))
         {
+            scriptCreateWinOpen = false;
+
             if (std::filesystem::exists(fileExplorerPath / (name + ".h")) || std::filesystem::exists(fileExplorerPath / (name + ".cpp")))
             {
                 // Todo: Popup saying script with this name already exists in this location
@@ -2109,7 +2111,70 @@ void Editor::RenderScriptCreateWin()
             std::filesystem::path miscPath = std::filesystem::path(__FILE__).parent_path() / "resources" / "misc";
             std::filesystem::copy_file(miscPath / "ScriptPreset.h", fileExplorerPath / (name + ".h"));
             std::filesystem::copy_file(miscPath / "ScriptPreset.cpp", fileExplorerPath / (name + ".cpp"));
-            scriptCreateWinOpen = false;
+
+            // Replace "ScriptPreset" with the script name in the .cpp and .h
+
+            // .cpp
+            std::ifstream inputCpp(fileExplorerPath / (name + ".cpp"));
+            if (!inputCpp.is_open())
+            {
+                ConsoleLogger::WarningLog("Failed to open and modify " + name + ".cpp. You will need to manually change \"ScriptPreset\" to " + name + " within the script.", false);
+                ImGui::End();
+                return;
+            }
+            std::stringstream buffer;
+            buffer << inputCpp.rdbuf();
+            std::string fileContent = buffer.str();
+            inputCpp.close();
+
+            size_t startPos = 0;
+            while ((startPos = fileContent.find("ScriptPreset", startPos)) != std::string::npos)
+            {
+                fileContent.replace(startPos, 12, name);
+                startPos += name.length();
+            }
+
+            std::ofstream outputCpp(fileExplorerPath / (name + ".cpp"));
+            if (!outputCpp.is_open())
+            {
+                ConsoleLogger::WarningLog("Failed to open and modify " + name + ".cpp. You will need to manually change \"ScriptPreset\" to " + name + " within the script.", false);
+                ImGui::End();
+                return;
+            }
+            outputCpp << fileContent;
+            outputCpp.close();
+
+            // header
+            std::ifstream inputHeader(fileExplorerPath / (name + ".h"));
+            if (!inputHeader.is_open())
+            {
+                ConsoleLogger::WarningLog("Failed to open and modify " + name + ".h. You will need to manually change \"ScriptPreset\" to " + name + " within the script.", false);
+                ImGui::End();
+                return;
+            }
+            buffer.str("");
+            buffer.clear();
+            buffer << inputHeader.rdbuf();
+            fileContent = buffer.str();
+            inputHeader.close();
+
+            startPos = 0;
+            while ((startPos = fileContent.find("ScriptPreset", startPos)) != std::string::npos)
+            {
+                fileContent.replace(startPos, 12, name);
+                startPos += name.length();
+            }
+
+            std::ofstream outputHeader(fileExplorerPath / (name + ".h"));
+            if (!outputHeader.is_open())
+            {
+                ConsoleLogger::WarningLog("Failed to open and modify " + name + ".h. You will need to manually change \"ScriptPreset\" to " + name + " within the script.", false);
+                ImGui::End();
+                return;
+            }
+            outputHeader << fileContent;
+            outputHeader.close();
+
         }
         if (!canCreate) ImGui::EndDisabled();
     }
