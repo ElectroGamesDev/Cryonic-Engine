@@ -9,6 +9,7 @@
 
 #include "Components/Component.h"
 #include "Components/AnimationPlayer.h"
+#include "Components/AudioPlayer.h"
 #include "Components/MeshRenderer.h"
 #include "Components/CameraComponent.h"
 #include "Components/Lighting.h"
