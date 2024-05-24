@@ -25,19 +25,19 @@ public:
                     "Audio Clip",
                     {
                         "Extensions": [".mp3", ".wav", ".ogg", ".flac", ".qoa", ".xm", ".mod"]
-                    },
-                    [
-                        "bool",
-                        "loop",
-                        false,
-                        "Loop"
-                    ],
-                    [
-                        "bool",
-                        "playOnStart",
-                        false,
-                        "Play On Start"
-                    ]
+                    }
+                ],
+                [
+                    "bool",
+                    "loop",
+                    false,
+                    "Loop"
+                ],
+                [
+                    "bool",
+                    "playOnStart",
+                     false,
+                    "Play On Start"
                 ]
             ]
         ]
