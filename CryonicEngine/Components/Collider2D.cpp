@@ -101,6 +101,7 @@ void Collider2D::Start() // Todo: Move to Awake()
 		bodyDef.type = b2_staticBody;
 		bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
 		body = world->CreateBody(&bodyDef);
+		ownBody = true;
 
 		// Setting the density and friction in case a Rigidbody2D is added to the game object
 		fixtureDef.density = 1.0f;
@@ -207,7 +208,8 @@ void Collider2D::EditorUpdate()
 void Collider2D::Destroy()
 {
 #if !defined(EDITOR)
-	world->DestroyBody(body);
+	if (ownBody && body != nullptr)
+		world->DestroyBody(body);
 #endif
 }
 
