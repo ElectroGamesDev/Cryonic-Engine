@@ -111,13 +111,9 @@ int main(void)
 		RaylibWrapper::EndDrawing();
     }
 
-	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
-	{
-		for (Component* component : gameObject->GetComponents())
-		{
-			component->Destroy();
-		}
-	}
+	// Todo: There may be other scenes loaded. Make sure to also unload them.
+
+	SceneManager::UnloadScene(SceneManager::GetActiveScene());
 
 	RaylibWrapper::CloseAudioDevice();
 
