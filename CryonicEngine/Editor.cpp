@@ -706,7 +706,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".mp3" || extension == ".wav" || extension == ".ogg" || extension == ".flac" || extension == ".qoa" || extension == ".xm" || extension == ".mod")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["SoundIcon"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
                     if (ImGui::IsItemHovered())
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
@@ -724,8 +724,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                                 DataFile dataFile;
                                 dataFile.path = entry.path().string() + ".data";
+                                dataFile.type = DataFileTypes::Sound;
 
-                                std::ifstream jsonFile(entry.path().string() + ".data");
+                                std::ifstream jsonFile(dataFile.path);
                                 dataFile.json = nlohmann::json::parse(jsonFile);
 
                                 objectInProperties = dataFile;
@@ -800,6 +801,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && SceneManager::GetActiveScene()->GetPath() != entry.path())
                         {
                             // Todo: Popup save window if the scene isn't saved
+                            objectInProperties = std::monostate{};
                             SceneManager::SaveScene(SceneManager::GetActiveScene());
                             SceneManager::LoadScene(entry.path());
                         }
@@ -2269,10 +2271,10 @@ void Editor::RenderProperties()
     //    resetPropertiesWin = false;
     //}
     ImGuiWindowFlags windowFlags =  ImGuiWindowFlags_NoCollapse;
-    if (ImGui::Begin((ICON_FA_GEARS + std::string(" Properties")).c_str(), nullptr, windowFlags) && std::holds_alternative<GameObject*>(objectInProperties) && std::find_if(SceneManager::GetActiveScene()->GetGameObjects().begin(), SceneManager::GetActiveScene()->GetGameObjects().end(), [&](const auto& obj) { return obj == std::get<GameObject*>(objectInProperties); }) != SceneManager::GetActiveScene()->GetGameObjects().end())
+    if (ImGui::Begin((ICON_FA_GEARS + std::string(" Properties")).c_str(), nullptr, windowFlags))
     {
         ImGui::BeginGroup();
-        if (std::holds_alternative<GameObject*>(objectInProperties))
+        if (std::holds_alternative<GameObject*>(objectInProperties) && std::find_if(SceneManager::GetActiveScene()->GetGameObjects().begin(), SceneManager::GetActiveScene()->GetGameObjects().end(), [&](const auto& obj) { return obj == std::get<GameObject*>(objectInProperties); }) != SceneManager::GetActiveScene()->GetGameObjects().end())
         {
             // Active checkbox
             ImGui::Checkbox("##Active" , &std::get<GameObject*>(objectInProperties)->active);
@@ -2722,6 +2724,160 @@ void Editor::RenderProperties()
                 }
 
                 ImGui::EndPopup();
+            }
+        }
+        // Data File
+        else if (std::holds_alternative<DataFile>(objectInProperties))
+        {
+            DataFile& dataFile = std::get<DataFile>(objectInProperties);
+            if (!std::filesystem::exists(dataFile.path))
+            {
+                objectInProperties = std::monostate{};
+                ImGui::EndGroup();
+                ImGui::End();
+                return;
+            }
+
+            int offset = 0;
+            switch (dataFile.type)
+            {
+            case DataFileTypes::Sound:
+                ImGui::SetCursorPos({ 10, 30 });
+                RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["SoundIcon"], { 25, 25 });
+                offset = 35;
+                break;
+            }
+            std::string fileName = std::filesystem::path(std::get<DataFile>(objectInProperties).path).stem().string();
+            ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 20, false));
+            ImGui::SetCursorPos({ (ImGui::GetWindowWidth() - offset - ImGui::CalcTextSize(fileName.c_str()).x) / 2 + offset, 30});
+            ImGui::Text(fileName.c_str());
+            ImGui::PopFont();
+
+            ImGui::SetCursorPosY(60);
+            ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 2.5f);
+
+            ImGui::SetCursorPos({15, 70});
+            bool updateJson = false;
+            for (auto& [key, value] : std::get<DataFile>(objectInProperties).json["public"].items())
+            {
+                // Adds spaces before all capital letters, and makes the first letter a capital
+                std::string newKey;
+                for (char c : key) {
+                    if (std::isupper(c)) {
+                        newKey += ' ';
+                    }
+                    newKey += c;
+                }
+                newKey[0] = std::toupper(newKey[0]);
+
+                if (value.is_boolean())
+                {
+                    ImGui::Text(newKey.c_str());
+                    ImGui::SameLine();
+                    bool tempValue = value.get<bool>();
+                    if (ImGui::Checkbox(("##" + key).c_str(), &tempValue))
+                    {
+                        value = tempValue;
+                        updateJson = true;
+                    }
+                }
+                else if (value.is_string())
+                {
+                    ImGui::Text(newKey.c_str());
+                    ImGui::SameLine();
+
+                    int inputWidth = ImGui::CalcTextSize(value.get<std::string>().c_str()).x + ImGui::CalcTextSize("a").x + 10;
+                    if (inputWidth < 130)
+                        inputWidth = 130;
+                    else if (inputWidth > (ImGui::GetWindowWidth() - ImGui::CalcTextSize(newKey.c_str()).x - 45))
+                        inputWidth = ImGui::GetWindowWidth() - ImGui::CalcTextSize(newKey.c_str()).x - 45;
+
+                    ImGui::SetNextItemWidth(inputWidth);
+                    ImGui::SetCursorPos({ ImGui::CalcTextSize(newKey.c_str()).x + 30, ImGui::GetCursorPosY() - 3 });
+                    std::string inputText = value.get<std::string>();
+                    char buffer[256];
+                    strcpy_s(buffer, sizeof(buffer), inputText.c_str());
+                    if (ImGui::InputText(("##" + key).c_str(), buffer, sizeof(buffer)))
+                    {
+                        value = buffer;
+                        updateJson = true;
+                    }
+
+                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
+                }
+                else if (value.is_number_integer())
+                {
+                    ImGui::Text(newKey.c_str());
+                    ImGui::SameLine();
+
+                    int inputWidth = ImGui::CalcTextSize(std::to_string(value.get<int>()).c_str()).x + ImGui::CalcTextSize("1").x + 10;
+                    if (inputWidth < 60)
+                        inputWidth = 60;
+                    else if (inputWidth > (ImGui::GetWindowWidth() - ImGui::CalcTextSize(newKey.c_str()).x - 45))
+                        inputWidth = ImGui::GetWindowWidth() - ImGui::CalcTextSize(newKey.c_str()).x - 45;
+
+                    ImGui::SetNextItemWidth(inputWidth);
+                    ImGui::SetCursorPos({ ImGui::CalcTextSize(newKey.c_str()).x + 30, ImGui::GetCursorPosY() - 3 });
+                    int input = value.get<int>();
+                    if (ImGui::InputInt(("##" + key).c_str(), &input, 0, 0))
+                    {
+                        if (input > INT_MAX)
+                            input = INT_MAX;
+                        else if (input < -INT_MIN)
+                            input = INT_MIN;
+                        value = input;
+                        updateJson = true;
+                    }
+
+                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
+                }
+                else if (value.is_number_float())
+                {
+                    ImGui::Text(newKey.c_str());
+                    ImGui::SameLine();
+
+                    // Todo: Doesn't work the best when there are a lot of decimals
+                    std::string stringValue = std::to_string(value.get<float>());
+                    stringValue.erase(stringValue.find_last_not_of('0') + 1, std::string::npos); // Removes trailing 0's
+
+                    int inputWidth = ImGui::CalcTextSize(stringValue.c_str()).x + ImGui::CalcTextSize("1").x + 10;
+                    if (inputWidth < 60)
+                        inputWidth = 60;
+                    else if (inputWidth > (ImGui::GetWindowWidth() - ImGui::CalcTextSize(newKey.c_str()).x - 45))
+                        inputWidth = ImGui::GetWindowWidth() - ImGui::CalcTextSize(newKey.c_str()).x - 45;
+
+                    ImGui::SetNextItemWidth(inputWidth);
+                    ImGui::SetCursorPos({ ImGui::CalcTextSize(newKey.c_str()).x + 30, ImGui::GetCursorPosY() - 3 });
+                    float input = value.get<float>();
+                    if (ImGui::InputFloat(("##" + key).c_str(), &input, 0, 0, "%.10g"))
+                    {
+                        value = input;
+                        updateJson = true;
+                    }
+
+                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
+                }
+                else
+                    continue;
+
+                ImGui::SetCursorPos({ 15, ImGui::GetCursorPosY() + 15 });
+            }
+
+            if (updateJson)
+            {
+                try
+               {
+                    std::ofstream file(dataFile.path);
+                    file << dataFile.json.dump(4);
+                    file.close();
+                }
+                catch (const std::exception& e)
+                {
+                    if (ConsoleLogger::showDebugMessages)
+                        ConsoleLogger::WarningLog("There was an error saving your changes to " + dataFile.path.substr(0, dataFile.path.size() - 5) + ".", false);
+                    else
+                        ConsoleLogger::WarningLog("There was an error saving your changes to " + dataFile.path + ". Error: " + e.what(), true);
+                }
             }
         }
         ImGui::EndGroup();
