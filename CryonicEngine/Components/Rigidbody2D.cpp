@@ -88,6 +88,11 @@ Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
 
 void Rigidbody2D::SetPosition(Vector2 position)
 {
+    if (bodyType == Static)
+        return;
+    if (bodyType == Kinematic) // Kinematic doesn't collide so the game object's position should be set here
+        gameObject->transform.SetPosition(position);
+
 #if !defined(EDITOR)
     body->SetAwake(true);
     body->SetTransform({ position.x, position.y }, body->GetAngle());
@@ -258,6 +263,7 @@ void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics
     // Todo: Change this to a switch case
     if (bodyType == Dynamic)
     {
+        // Todo: Change this to if-else and make one checking if they were both changed
         // Todo: This will update the body's rotation and position when it doesn't need to.
         if (gameObject->transform.GetPosition() == lastGameObjectPosition) // Todo: This shouldn't be setting the gameobject's position even when the body hasn't changed
             gameObject->transform.SetPosition({ body->GetPosition().x, body->GetPosition().y, 0 });
@@ -277,6 +283,7 @@ void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics
     }
     else if (bodyType == Kinematic)
     {
+        // Todo: Change this to if-else and make one checking if they were both changed
         if (gameObject->transform.GetPosition() != lastGameObjectPosition) // Todo: This shouldn't be setting the gameobject's position even when the body hasn't changed
             body->SetTransform({ gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y }, body->GetAngle());
 
