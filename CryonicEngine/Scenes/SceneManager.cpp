@@ -567,6 +567,7 @@ void SceneManager::CreateScene(std::filesystem::path path)
 
     SaveScene(&scene);
 
+    // Only removing game objects here since the scene will be deleted once out of scope
     for (GameObject* gameObject : scene.GetGameObjects())
         scene.RemoveGameObject(gameObject);
 }
