@@ -396,8 +396,12 @@ bool Utilities::CreateDataFile(std::filesystem::path path)
                 ConsoleLogger::WarningLog("Failed to check the size of the audio file \"" + path.stem().string() + "\" when creating the data file. Error: " + error.what(), true);
             }
             nlohmann::json jsonData = {
-                {"version", 1.0f},
-                {"loadInMemory", loadInMemory}
+                {"public", {
+                    {"loadInMemory", loadInMemory}
+                }},
+                {"private", {
+                    {"version", 1.0f}
+                }}
             };
             file << std::setw(4) << jsonData << std::endl;
         }
