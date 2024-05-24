@@ -1505,10 +1505,16 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
             {
                 // This converts the search and file name to lower case so its case insensitive
                 std::string search = searchBuffer;
-                std::string fileName = file.path().stem().string();
+                std::string fileName;
+                if (extensions.size() > 1)
+                    fileName = file.path().filename().string();
+                else
+                    fileName = file.path().stem().string();
+                std::string tempFileName = fileName;
+
                 std::transform(search.begin(), search.end(), search.begin(), ::tolower);
-                std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
-                if (searchBuffer[0] == '\0' || fileName.find(search) != std::string::npos)
+                std::transform(tempFileName.begin(), tempFileName.end(), tempFileName.begin(), ::tolower);
+                if (searchBuffer[0] == '\0' || tempFileName.find(search) != std::string::npos)
                 {
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
@@ -1517,7 +1523,7 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
                     // Checks to see if the file path contains the selectedPath and if it does, then select it
                     if (!selectedPath.empty() && file.path().string().find(selectedPath) != std::string::npos)
                         flags |= ImGuiTreeNodeFlags_Selected;
-                    if (ImGui::TreeNodeEx((file.path().stem().string()).c_str(), flags))
+                    if (ImGui::TreeNodeEx((fileName).c_str(), flags))
                     {
                         if (ImGui::IsItemClicked())
                         {
@@ -2621,7 +2627,12 @@ void Editor::RenderProperties()
                                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.17f, 0.18f, 1.00f));
                                 std::string selectedFile = "None Selected";
                                 if (!(*it)[2].is_null() && (*it)[2].get<std::string>() != "nullptr")
-                                    selectedFile = std::filesystem::path((*it)[2].get<std::string>()).stem().string();
+                                {
+                                    if ((*it)[4]["Extensions"].size() > 1)
+                                        selectedFile = std::filesystem::path((*it)[2].get<std::string>()).filename().string();
+                                    else
+                                        selectedFile = std::filesystem::path((*it)[2].get<std::string>()).stem().string();
+                                }
                                 if (ImGui::Button(selectedFile.c_str(), { ImGui::GetWindowWidth() - 130, 20 }))
                                     openSelector = true;
 
