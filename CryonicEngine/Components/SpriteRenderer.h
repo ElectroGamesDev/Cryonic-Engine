@@ -64,12 +64,21 @@ public:
 	//Texture2D& GetTexture();
 	void SetTexture(std::filesystem::path path);
 	std::filesystem::path GetTexturePath() const;
+	void SetTint(Color tint);
+	Color GetTint() const;
+	void SetRenderOrder(int order);
+	int GetRenderOrder() const;
+	void SetFlipX(bool flip);
+	bool GetFlipX() const;
+	void SetFlipY(bool flip);
+	bool GetFlipY() const;
 
 	Color tint = { 255, 255, 255, 255 };
 	int renderOrder = 0;
 	bool flipX = false;
 	bool flipY = false;
 
+	// Hide in API
 	static std::unordered_map<std::filesystem::path, std::pair<Texture2D, int>> textures;
 
 private:

@@ -46,6 +46,46 @@ std::filesystem::path SpriteRenderer::GetTexturePath() const
     return texturePath;
 }
 
+void SpriteRenderer::SetTint(Color tint)
+{
+    this->tint = tint;
+}
+
+Color SpriteRenderer::GetTint() const
+{
+    return tint;
+}
+
+void SpriteRenderer::SetRenderOrder(int order)
+{
+    renderOrder = order;
+}
+
+int SpriteRenderer::GetRenderOrder() const
+{
+    return renderOrder;
+}
+
+void SpriteRenderer::SetFlipX(bool flip)
+{
+    flipX = flip;
+}
+
+bool SpriteRenderer::GetFlipX() const
+{
+    return flipX;
+}
+
+void SpriteRenderer::SetFlipY(bool flip)
+{
+    flipY = flip;
+}
+
+bool SpriteRenderer::GetFlipY() const
+{
+    return flipY;
+}
+
 void SpriteRenderer::Update(float deltaTime)
 {
     // Todo: I should create an enum to store whether if its a sqaure, circle, etc, if its a shape. It will be faster than comparing strings in an if-else
