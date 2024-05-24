@@ -30,7 +30,7 @@ public:
 
 		file.close();
 
-		loadInMemory = jsonData["loadInMemory"].get<bool>();
+		loadInMemory = jsonData["public"]["loadInMemory"].get<bool>();
 
 		this->path = path;
 	}
