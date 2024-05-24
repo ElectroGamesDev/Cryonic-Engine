@@ -51,8 +51,11 @@ void SpriteRenderer::Update(float deltaTime)
     // Todo: I should create an enum to store whether if its a sqaure, circle, etc, if its a shape. It will be faster than comparing strings in an if-else
     if (texture != nullptr)
     {
+        int xFlip = flipX ? -1 : 1;
+        int yFlip = flipY ? 1 : -1; // The Y is already flipped
+
         RaylibWrapper::DrawTextureProFlipped({ texture->first.id, texture->first.width, texture->first.height, texture->first.mipmaps, texture->first.format },
-            { 0, 0, static_cast<float>(texture->first.width), static_cast<float>(texture->first.height) * -1 },
+            { 0, 0, static_cast<float>(texture->first.width) * xFlip, static_cast<float>(texture->first.height) * yFlip },
             { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, texture->first.width * gameObject->transform.GetScale().x / 10, texture->first.height* gameObject->transform.GetScale().y / 10 },
             { texture->first.width * gameObject->transform.GetScale().x / 10 / 2, texture->first.height * gameObject->transform.GetScale().y / 10 / 2 },
             gameObject->transform.GetRotationEuler().y,
@@ -90,6 +93,11 @@ void SpriteRenderer::EditorUpdate()
     tint.g = exposedVariables[1][0][2][1].get<int>();
     tint.b = exposedVariables[1][0][2][2].get<int>();
     tint.a = exposedVariables[1][0][2][3].get<int>();
+
+    renderOrder = exposedVariables[1][1][2].get<int>();
+
+    flipX = exposedVariables[1][2][2].get<bool>();
+    flipY = exposedVariables[1][3][2].get<bool>();
 }
 #endif
 

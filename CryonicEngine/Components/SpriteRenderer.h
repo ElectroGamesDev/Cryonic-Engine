@@ -30,6 +30,18 @@ public:
                     "renderOrder",
                     0,
                     "Render Order"
+                ],
+				[
+                    "bool",
+                    "flipX",
+                    false,
+                    "Flip X"
+                ],
+				[
+                    "bool",
+                    "flipY",
+                    false,
+                    "Flip Y"
                 ]
             ]
         ]
@@ -55,6 +67,8 @@ public:
 
 	Color tint = { 255, 255, 255, 255 };
 	int renderOrder = 0;
+	bool flipX = false;
+	bool flipY = false;
 
 	static std::unordered_map<std::filesystem::path, std::pair<Texture2D, int>> textures;
 
