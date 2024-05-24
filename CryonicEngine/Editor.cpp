@@ -2095,7 +2095,7 @@ void Editor::RenderScriptCreateWin()
             return std::isspace(c);
             }), newName.end());
         bool canCreate = true;
-        if (newName == "") canCreate = false;
+        if (newName == "" || std::filesystem::exists(fileExplorerPath / (name + ".h")) || std::filesystem::exists(fileExplorerPath / (name + ".cpp"))) canCreate = false; // Todo: Show text saying it already exists (assuming its not empty)
 
         if (!canCreate) ImGui::BeginDisabled();
         if (ImGui::Button("Create", ImVec2(163, 0)))
