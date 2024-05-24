@@ -47,5 +47,6 @@ private:
     b2FixtureDef fixtureDef;
     b2Body* body;
     b2Fixture* fixture;
+    bool ownBody = false;
 #endif
 };
