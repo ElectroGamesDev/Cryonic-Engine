@@ -68,13 +68,15 @@ int main(void)
 			collisionListener.ContinueContact();
 			timeSinceLastUpdate -= timeStep;
 
+			fixedDeltaTime = timeStep;
+
 			for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 			{
 				if (!gameObject->IsActive()) continue;
 				for (Component* component : gameObject->GetComponents())
 				{
 					if (!component->IsActive()) continue;
-					component->FixedUpdate(timeStep);
+					component->FixedUpdate();
 				}
 			}
 		}
@@ -93,6 +95,8 @@ int main(void)
 		CameraComponent::main->raylibCamera.BeginMode3D();
 		
 		// Update CollisionSystem
+
+		deltaTime = RaylibWrapper::GetFrameTime();
 		
 		for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 		{
@@ -100,7 +104,7 @@ int main(void)
 			for (Component* component : gameObject->GetComponents())
 			{
 				if (!component->IsActive()) continue;
-				component->Update(RaylibWrapper::GetFrameTime());
+				component->Update();
 			}
 		}
 
