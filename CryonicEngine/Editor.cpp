@@ -1215,14 +1215,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             }
         }
 
-        if (dragData.first != None)
-        {
-            if (dragData.second.find("HoveringValidElement") != dragData.second.end()) // Todo: Is it worth trying to find this each frame? It may be best just to set the value to false, even if its not needed
-                dragData.second["HoveringValidElement"] = false; // Setting this to false so once the cursor stops hovering a valid element, it won't set it back to true therefore letting the code above know its no longer hovering the element
-
-
-        }
-
+        if (dragData.first != None && dragData.second.find("HoveringValidElement") != dragData.second.end()) // Todo: Is it worth trying to find this each frame? It may be best just to set the value to false, even if its not needed
+            dragData.second["HoveringValidElement"] = false; // Setting this to false so once the cursor stops hovering a valid element, it won't set it back to true therefore letting the code above know its no longer hovering the element
 
         // File Explorer Tree
         int xSize = 300;
