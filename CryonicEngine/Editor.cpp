@@ -1996,14 +1996,20 @@ void Editor::RenderProjectSettings()
         ImGui::SetNextItemWidth(100);
         int windowResolutionInt[2] = { static_cast<int>(ProjectManager::projectData.windowResolution.x), static_cast<int>(ProjectManager::projectData.windowResolution.y) };
         if (ImGui::InputInt2("##WindowResolution", windowResolutionInt))
+        {
             ProjectManager::projectData.windowResolution = { static_cast<float>(windowResolutionInt[0]), static_cast<float>(windowResolutionInt[1]) };
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+        }
 
         ImGui::Text("Minimum Resolution");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(100);
         int minimumResolutionInt[2] = { static_cast<int>(ProjectManager::projectData.minimumResolution.x), static_cast<int>(ProjectManager::projectData.minimumResolution.y) };
         if (ImGui::InputInt2("##MinimumResolution", minimumResolutionInt))
+        {
             ProjectManager::projectData.minimumResolution = { static_cast<float>(minimumResolutionInt[0]), static_cast<float>(minimumResolutionInt[1]) };
+            ProjectManager::SaveProjectData(ProjectManager::projectData);
+        }
 
         ImGui::Text("Resizable");
         ImGui::SameLine();
