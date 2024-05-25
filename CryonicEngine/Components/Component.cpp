@@ -22,7 +22,7 @@ Component::Component(GameObject* obj, int id)
 //}
 //
 //
-//void Component::Update(float deltaTime)
+//void Component::Update()
 //{
 //}
 //

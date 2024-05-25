@@ -13,7 +13,7 @@ public:
     {
         return new Rigidbody3D(gameObject, -1);
     }
-    void Update(float deltaTime) override;
+    void Update() override;
     void Destroy() override;
 
     enum BodyType

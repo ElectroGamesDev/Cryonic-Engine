@@ -76,7 +76,7 @@ Rigidbody3D::Rigidbody3D(GameObject* obj, int id) : Component(obj, id) {
 //#endif
 }
 
-void Rigidbody3D::Update(float deltaTime)
+void Rigidbody3D::Update()
 {
 #if !defined(EDITOR)
     // Todo: Change this to a switch case

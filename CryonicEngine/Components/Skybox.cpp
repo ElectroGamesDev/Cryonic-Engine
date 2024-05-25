@@ -23,7 +23,7 @@ void Skybox::SetTexturePath(std::filesystem::path path)
     this->texturePath = path;
 }
 
-void Skybox::Update(float deltaTime)
+void Skybox::Update()
 {
     // Todo: Don't render if its 2D
 }

@@ -18,7 +18,7 @@ public:
 	}
 	/// Hide everything in this in the API
 	void Start() override {};
-	void Update(float deltaTime) override;
+	void Update() override;
 	void Destroy() override;
 
 	RaylibModel& GetModel();

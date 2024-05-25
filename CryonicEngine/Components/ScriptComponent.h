@@ -15,7 +15,7 @@ public:
 		return new ScriptComponent(gameObject, -1);
 	}
 	void Start() override;
-	void Update(float deltaTime) override;
+	void Update() override;
 	void Destroy() override;
 	void SetHeaderPath(std::filesystem::path path);
 	void SetCppPath(std::filesystem::path path);

@@ -13,7 +13,7 @@ public:
 		return new CameraComponent(gameObject, -1);
 	}
 	void Start() override;
-	void Update(float deltaTime) override;
+	void Update() override;
 	void Destroy() override;
 #ifdef EDITOR
 	void EditorUpdate() override;

@@ -10,7 +10,7 @@ bool setup;
 Vector3 lastPosition = {0,0,0};
 RaylibLight raylibLight;
 
-void Lighting::Update(float deltaTime)
+void Lighting::Update()
 {
 	if (!setup)
 	{

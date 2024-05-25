@@ -86,7 +86,7 @@ bool SpriteRenderer::GetFlipY() const
     return flipY;
 }
 
-void SpriteRenderer::Update(float deltaTime)
+void SpriteRenderer::Update()
 {
     // Todo: I should create an enum to store whether if its a sqaure, circle, etc, if its a shape. It will be faster than comparing strings in an if-else
     if (texture != nullptr)

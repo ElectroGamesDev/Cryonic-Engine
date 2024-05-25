@@ -6,7 +6,7 @@ void AudioPlayer::Start()
 		Play();
 }
 
-void AudioPlayer::Update(float deltaTime)
+void AudioPlayer::Update()
 {
 	if (audioClip != nullptr && audioLoaded && !audioClip->ShouldLoadInMemory())
 		Raylib::UpdateMusicStream(music);

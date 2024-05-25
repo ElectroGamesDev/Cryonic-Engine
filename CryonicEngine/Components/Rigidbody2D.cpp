@@ -253,7 +253,7 @@ float Rigidbody2D::GetAngularDamping()
 #endif
 }
 
-void Rigidbody2D::Update(float deltaTime) // Todo: should this be in the Physics Update?
+void Rigidbody2D::Update() // Todo: should this be in the Physics Update?
 {
     // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive()
 #if !defined(EDITOR)

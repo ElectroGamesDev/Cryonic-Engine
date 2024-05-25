@@ -17,7 +17,7 @@ public:
 		return new Lighting(gameObject, -1);
 	}
 	//void Start() override;
-	void Update(float deltaTime) override;
+	void Update() override;
 #ifdef EDITOR
 	void EditorUpdate() override;
 #endif

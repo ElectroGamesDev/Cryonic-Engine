@@ -13,7 +13,7 @@ void AnimationPlayer::Start()
 }
 
 
-void AnimationPlayer::Update(float deltaTime)
+void AnimationPlayer::Update()
 {
 	if (paused || animationGraph == nullptr || activeAnimationState == nullptr)
 		return;

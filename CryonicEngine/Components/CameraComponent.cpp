@@ -43,7 +43,7 @@ void CameraComponent::Start()
     main = this;
 }
 
-void CameraComponent::Update(float deltaTime)
+void CameraComponent::Update()
 {
 	if (main == nullptr)
 		main = this;

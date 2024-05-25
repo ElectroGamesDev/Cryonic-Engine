@@ -36,7 +36,7 @@ public:
 	}
 	// Hide everything from API
 	void Start() override {};
-	void Update(float deltaTime) override;
+	void Update() override;
 #if defined(EDITOR)
 	void EditorUpdate() override;
 #endif

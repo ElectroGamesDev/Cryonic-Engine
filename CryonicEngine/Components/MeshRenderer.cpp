@@ -31,7 +31,7 @@ void MeshRenderer::SetModelPath(std::filesystem::path path)
     this->modelPath = path;
 }
 
-void MeshRenderer::Update(float deltaTime)
+void MeshRenderer::Update()
 {
     if (!modelSet)
         return;

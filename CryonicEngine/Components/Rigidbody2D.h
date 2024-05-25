@@ -43,7 +43,7 @@ public:
 	BodyType bodyType = Dynamic;
 
     Rigidbody2D(GameObject* obj, int id);
-    void Update(float deltaTime) override;
+    void Update() override;
     void Destroy() override;
 
     // Hide in API

@@ -5,7 +5,7 @@ void ScriptComponent::Start()
 {
 }
 
-void ScriptComponent::Update(float deltaTime)
+void ScriptComponent::Update()
 {
 }
 
