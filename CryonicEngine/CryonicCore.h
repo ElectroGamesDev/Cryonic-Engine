@@ -4,8 +4,8 @@
 
 //void Draw3DBillboard(Camera camera, Texture2D texture, Vector3 position, float size, Color tint);
 
-static float deltaTime = 0;
-static float fixedDeltaTime = 0;
+static float deltaTime = 0.0f;
+static float fixedDeltaTime = 0.0f;
 
 #define PI 3.14159265358979323846f
 #define DEG2RAD (PI/180.0f)
@@ -352,5 +352,5 @@ Vector3 RotateVector3ByQuaternion(Vector3 vector, Quaternion quaternion);
 Quaternion EulerToQuaternion(float pitch, float yaw, float roll);
 //Returns Vector3 in Radians.
 Vector3 QuaternionToEuler(Quaternion quaternion);
-int GetDeltaTime();
-int GetFixedDeltaTime();
+float GetDeltaTime();
+float GetFixedDeltaTime();

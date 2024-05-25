@@ -57,12 +57,12 @@ Vector3 QuaternionToEuler(Quaternion quaternion)
     return result;
 }
 
-int GetDeltaTime()
+float GetDeltaTime()
 {
     return deltaTime;
 }
 
-int GetFixedDeltaTime()
+float GetFixedDeltaTime()
 {
     return fixedDeltaTime;
 }
