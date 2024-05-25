@@ -1068,6 +1068,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     {
                         // Checks if hovering animation graph
                         ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
+                        // Todo: animationGraphHovered is always true if its open. It doesn't actually check if its being hovered. Look at dropping a model file into viewport and how im checking if viewport is hovered
                         if (animationGraphWinOpen && animationGraphHovered && window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL && window->DockNode->TabBar->SelectedTabId == window->TabId)
                         {
                             RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
@@ -2829,6 +2830,45 @@ void Editor::RenderProperties()
                 }
 
                 ImGui::EndPopup();
+            }
+
+            // Dropped script files
+            // I need to use this solution since IsWindoweHovered() doesn't work well when the mouse is dragging. It's not a perfect solution as it detects it being hovered when there is a window above it, but it works
+            ImVec2 mousePos = ImGui::GetMousePos();
+            if ((mousePos.x >= ImGui::GetWindowPos().x && mousePos.x <= ImGui::GetWindowPos().x + ImGui::GetWindowWidth() && mousePos.y >= ImGui::GetWindowPos().y && mousePos.y <= ImGui::GetWindowPos().y + ImGui::GetWindowHeight()) && dragData.first != None && (std::any_cast<std::filesystem::path>(dragData.second["Path"]).extension().string() == ".h" || std::any_cast<std::filesystem::path>(dragData.second["Path"]).extension().string() == ".cpp"))
+            {
+                if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+                {
+                    std::filesystem::path path = std::filesystem::relative(std::any_cast<std::filesystem::path>(dragData.second["Path"]), ProjectManager::projectData.path / "Assets").string();
+                    int createComponent = 2; // 0 = can't find header, 1 = can't find cpp, 2 = create
+                    std::filesystem::path cppPath = path;
+
+                    if (path.extension() == ".h")
+                    {
+                        cppPath.replace_extension(".cpp");
+                        if (!std::filesystem::exists(ProjectManager::projectData.path / "Assets" / cppPath))
+                            createComponent = 1;
+                    }
+                    else
+                    {
+                        path.replace_extension(".h");
+                        if (!std::filesystem::exists(ProjectManager::projectData.path / "Assets" / path))
+                            createComponent = 0;
+                    }
+
+                    if (createComponent == 2)
+                    {
+                        ScriptComponent* scriptComponent = &std::get<GameObject*>(objectInProperties)->AddComponent<ScriptComponent>();
+                        scriptComponent->SetHeaderPath(path.string());
+                        scriptComponent->SetCppPath(cppPath);
+                        scriptComponent->SetName(path.stem().string());
+                    }
+                    else if (createComponent == 1) // Todo: send popup warning
+                        ConsoleLogger::WarningLog("Failed to add the component " + path.stem().string() + " to the game object. " + cppPath.filename().string() + " is missing. Make sure it is in the same folder as " + path.filename().string());
+                    else if (createComponent == 0) // Todo: send popup warning
+                        ConsoleLogger::WarningLog("Failed to add the component " + path.stem().string() + " to the game object. " + path.filename().string() + " is missing. Make sure it is in the same folder as " + cppPath.filename().string());
+                }
+                dragData.second["HoveringValidElement"] = true; // This lets the code in the Content Browser know its hovering something it can be placed in, so it can change the cursor icon
             }
         }
         // Data File
