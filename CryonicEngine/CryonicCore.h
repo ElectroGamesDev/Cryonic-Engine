@@ -4,8 +4,8 @@
 
 //void Draw3DBillboard(Camera camera, Texture2D texture, Vector3 position, float size, Color tint);
 
-static float deltaTime = 0.0f;
-static float fixedDeltaTime = 0.0f;
+extern float deltaTime;
+extern float fixedDeltaTime;
 
 #define PI 3.14159265358979323846f
 #define DEG2RAD (PI/180.0f)

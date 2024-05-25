@@ -1,6 +1,9 @@
 #include "CryonicCore.h"
 #include <cmath>
 
+float fixedDeltaTime = 0.0f;
+float deltaTime = 0.0f;
+
 Vector3 RotateVector3ByQuaternion(Vector3 vector, Quaternion quaternion)
 {
     Vector3 result = { 0 };
