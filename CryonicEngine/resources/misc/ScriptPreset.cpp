@@ -5,7 +5,7 @@ void ScriptPreset::Start()
 
 }
 
-void ScriptPreset::Update(float deltaTime)
+void ScriptPreset::Update()
 {
 
 }
