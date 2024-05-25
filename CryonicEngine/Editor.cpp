@@ -2355,7 +2355,7 @@ void Editor::RenderProperties()
     //    ImGui::SetNextWindowPos(ImVec2(1643, 52));
     //    resetPropertiesWin = false;
     //}
-    ImGuiWindowFlags windowFlags =  ImGuiWindowFlags_NoCollapse;
+    ImGuiWindowFlags windowFlags =  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar;
     if (ImGui::Begin((ICON_FA_GEARS + std::string(" Properties")).c_str(), nullptr, windowFlags))
     {
         ImGui::BeginGroup();
