@@ -46,8 +46,8 @@ public:
     virtual Component* Clone() { return nullptr; };
 
     virtual void Start() {};
-    virtual void Update(float deltaTime) {};
-    virtual void FixedUpdate(float fixedDeltaTime) {};
+    virtual void Update() {};
+    virtual void FixedUpdate() {};
     virtual void EditorUpdate() {};
     virtual void Destroy() {};
     virtual void OnCollisionEnter2D(Collider2D* other) {};
