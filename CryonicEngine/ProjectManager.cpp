@@ -299,9 +299,9 @@ bool ProjectManager::SetGameSettings(std::filesystem::path gameFile)
         else if (line.find("RaylibWrapper::SetTargetFPS(60);") != std::string::npos)
             outputFile << "RaylibWrapper::SetTargetFPS(" + std::to_string(projectData.maxFPS) + ");";
         else if (line.find("RaylibWrapper::SetWindowMinSize(100, 100);") != std::string::npos)
-            outputFile << "RaylibWrapper::SetWindowMinSize(" + std::to_string(projectData.minimumResolution.x) + "," + std::to_string(projectData.minimumResolution.y) + ");";
+            outputFile << "RaylibWrapper::SetWindowMinSize(" + std::to_string(static_cast<int>(projectData.minimumResolution.x)) + "," + std::to_string(static_cast<int>(projectData.minimumResolution.y)) + ");";
         else if (line.find("RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), (NAME));") != std::string::npos)
-            outputFile << "RaylibWrapper::InitWindow(" + std::to_string(projectData.windowResolution.x) + "," + std::to_string(projectData.windowResolution.y) + ", (NAME));";
+            outputFile << "RaylibWrapper::InitWindow(" + std::to_string(static_cast<int>(projectData.windowResolution.x)) + "," + std::to_string(static_cast<int>(projectData.windowResolution.y)) + ", (NAME));";
         else if (projectData.displayMode == 1 && line.find("//RaylibWrapper::ToggleFullscreen();") != std::string::npos)
             outputFile << "RaylibWrapper::ToggleFullscreen();";
         else if (projectData.displayMode == 0 && line.find("//RaylibWrapper::ToggleBorderlessWindowed();") != std::string::npos)
