@@ -77,6 +77,7 @@ int main(void)
 				{
 					if (!component->IsActive()) continue;
 					component->FixedUpdate();
+					fixedDeltaTime = timeStep; // Setting this here and before the loop incase if a component changes the fixed delta time
 				}
 			}
 		}
@@ -97,6 +98,7 @@ int main(void)
 		// Update CollisionSystem
 
 		deltaTime = RaylibWrapper::GetFrameTime();
+		float tempDelaTime = deltaTime;
 		
 		for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 		{
@@ -105,6 +107,7 @@ int main(void)
 			{
 				if (!component->IsActive()) continue;
 				component->Update();
+				deltaTime = tempDelaTime; // Setting this here and before the loop incase if a component changes the delta time
 			}
 		}
 
