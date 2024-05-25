@@ -306,6 +306,8 @@ bool ProjectManager::SetGameSettings(std::filesystem::path gameFile)
             outputFile << "RaylibWrapper::ToggleFullscreen();";
         else if (projectData.displayMode == 0 && line.find("//RaylibWrapper::ToggleBorderlessWindowed();") != std::string::npos)
             outputFile << "RaylibWrapper::ToggleBorderlessWindowed();";
+        else if (projectData.displayMode == 2 && line.find("//if (RaylibWrapper::GetScreenWidth() == RaylibWrapper::GetMonitorWidth(RaylibWrapper::GetCurrentMonitor()) && RaylibWrapper::GetScreenHeight() == RaylibWrapper::GetMonitorHeight(RaylibWrapper::GetCurrentMonitor())) RaylibWrapper::MaximizeWindow();") != std::string::npos)
+            outputFile << "if (RaylibWrapper::GetScreenWidth() == RaylibWrapper::GetMonitorWidth(RaylibWrapper::GetCurrentMonitor()) && RaylibWrapper::GetScreenHeight() == RaylibWrapper::GetMonitorHeight(RaylibWrapper::GetCurrentMonitor())) RaylibWrapper::MaximizeWindow();";
         else if (line.find("RaylibWrapper::SetConfigFlags(0);") != std::string::npos)
         {
             std::string flags = "0";
