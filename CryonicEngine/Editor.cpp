@@ -2530,7 +2530,7 @@ void Editor::RenderProperties()
                         ImGui::OpenPopup("ComponentsContextMenu");
                     }
                     int windowHeight = 1;
-                    if (component->exposedVariables != nullptr)
+                    if (component->exposedVariables != nullptr && !component->exposedVariables[1].empty())
                         windowHeight = component->exposedVariables[1].size() * 33;
 
                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.22f, 0.22f, 0.22f, 1.00f));
