@@ -894,7 +894,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             viewportHovered = (mousePos.x >= viewportPosition.x && mousePos.x <= viewportPosition.z &&
                 mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w); // Todo: This being set 3 times a frame. First in UpdateViewport (if dragging), then RenderViewport, then here.
 
-            if (viewportHovered)
+            if (viewportHovered || dragData.second.find("HoveringValidElement") != dragData.second.end() && std::any_cast<bool>(dragData.second["HoveringValidElement"]))
             {
                 if (currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
                 {
@@ -973,7 +973,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             viewportHovered = (mousePos.x >= viewportPosition.x && mousePos.x <= viewportPosition.z &&
                 mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w); // Todo: This being set 3 times a frame. First in UpdateViewport (if dragging), then RenderViewport, then here.
 
-            if (viewportHovered)
+            if (viewportHovered || dragData.second.find("HoveringValidElement") != dragData.second.end() && std::any_cast<bool>(dragData.second["HoveringValidElement"]))
             {
                 if (currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
                 {
@@ -1200,7 +1200,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         else if (dragData.first != None)
         {
             // Todo: This is not optimized and will be setting the cursor each frame
-            if (!folderHovering.empty())
+
+            if (!folderHovering.empty() || dragData.second.find("HoveringValidElement") != dragData.second.end() && std::any_cast<bool>(dragData.second["HoveringValidElement"]))
                 RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
             else
                 RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
@@ -1213,6 +1214,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 dragData.second.clear();
             }
         }
+
+        if (dragData.first != None && dragData.second.find("HoveringValidElement") != dragData.second.end())
+            dragData.second["HoveringValidElement"] = false; // Setting this to false so once the cursor stops hovering a valid element, it won't set it back to true therefore letting the code above know its no longer hovering the element
 
 
         // File Explorer Tree
@@ -2708,8 +2712,24 @@ void Editor::RenderProperties()
                                     else
                                         selectedFile = std::filesystem::path((*it)[2].get<std::string>()).stem().string();
                                 }
+                                ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
                                 if (ImGui::Button(selectedFile.c_str(), { ImGui::GetWindowWidth() - 130, 20 }))
+                                {
                                     openSelector = true;
+                                }
+                                // Checks to see if the user is hovering over the button while dragging a file with a file type that can be used for the variable
+                                else if (ImGui::IsMouseHoveringRect(cursorScreenPos, { cursorScreenPos.x + ImGui::GetWindowWidth() - 130, cursorScreenPos.y + 20 }) && dragData.first != None && dragData.second.find("Path") != dragData.second.end()) // Using this since ImGui::IsItemHovered() won't work while dragging.
+                                {
+                                    std::vector<std::string> extensions;
+                                    for (const auto& extension : (*it)[4]["Extensions"])
+                                        extensions.push_back(extension);
+                                    if (std::find(extensions.begin(), extensions.end(), std::any_cast<std::filesystem::path>(dragData.second["Path"]).extension().string()) != extensions.end())
+                                    {
+                                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+                                            (*it)[2] = std::filesystem::relative(std::any_cast<std::filesystem::path>(dragData.second["Path"]), ProjectManager::projectData.path / "Assets").string();
+                                        dragData.second["HoveringValidElement"] = true; // This lets the code in the Content Browser know its hovering something it can be placed in, so it can change the cursor icon
+                                    }
+                                }
 
                                 ImGui::PopStyleColor();
 
