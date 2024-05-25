@@ -577,7 +577,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             ImGui::PushID(entry.path().string().c_str());
             std::string id = entry.path().string().c_str();
             std::string fileName = entry.path().stem().string();
-            if (fileName.length() >= 6)
+            if (fileName.length() > 7)
             {
                 fileName = fileName.substr(0, 6);
                 fileName = fileName + "..";
