@@ -23,6 +23,7 @@ int main(void)
 	RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), (NAME));
 	//RaylibWrapper::ToggleFullscreen();
 	//RaylibWrapper::ToggleBorderlessWindowed();
+	//if (RaylibWrapper::GetScreenWidth() == RaylibWrapper::GetMonitorWidth(RaylibWrapper::GetCurrentMonitor()) && RaylibWrapper::GetScreenHeight() == RaylibWrapper::GetMonitorHeight(RaylibWrapper::GetCurrentMonitor())) RaylibWrapper::MaximizeWindow();
 	RaylibWrapper::SetWindowMinSize(100, 100);
 	RaylibWrapper::SetTargetFPS(60);
 	
