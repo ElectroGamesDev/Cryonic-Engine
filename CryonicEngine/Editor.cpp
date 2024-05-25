@@ -418,6 +418,8 @@ void Editor::UpdateViewport()
     if (ProjectManager::projectData.is3D)
         RaylibWrapper::DrawGrid(100, 10.0f);
 
+    deltaTime = RaylibWrapper::GetFrameTime();
+
     for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
         if (!gameObject->IsActive()) continue;
@@ -425,7 +427,7 @@ void Editor::UpdateViewport()
         {
             if (!component->IsActive()) continue;
             if (component->runInEditor)
-                component->Update(RaylibWrapper::GetFrameTime());
+                component->Update();
             component->EditorUpdate();
         }
     }
@@ -2287,13 +2289,15 @@ void Editor::RenderCameraView()
     //if (ProjectManager::projectData.is3D)
     //    DrawGrid(100, 10.0f);
 
+    deltaTime = RaylibWrapper::GetFrameTime();
+
     for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects()) // Todo: This is different from the main editor camera. Check if this needs to be updated.
     {
         if (!gameObject->IsActive()) continue;
         for (Component* component : gameObject->GetComponents())
         {
             if (!component->IsActive() || !component->runInEditor) continue;
-            component->Update(RaylibWrapper::GetFrameTime());
+            component->Update();
         }
     }
 
