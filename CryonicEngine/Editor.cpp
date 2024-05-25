@@ -3712,6 +3712,22 @@ void Editor::Render(void)
 
     ImGui::PopStyleVar(2);
     ImGui::PopStyleColor(1);
+
+
+    // Drag text
+    if (dragData.first != None && !viewportHovered || dragData.first != None && viewportHovered && !(dragData.first == ImageFile || dragData.first == ModelFile))
+    {
+        std::filesystem::path dragPath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+        ImVec2 textSize = ImGui::CalcTextSize(dragPath.filename().string().c_str());
+        ImGui::SetNextWindowPos(ImGui::GetMousePos()); // Places it at the bottom right of the mouse
+        //ImGui::SetNextWindowPos({ ImGui::GetMousePos().x - (textSize.x/2), ImGui::GetMousePos().y - textSize.y - 20}); // Places it at the top of the mouse
+        ImGui::SetNextWindowSize({ textSize.x + 10, textSize.y });
+        if (ImGui::Begin("##DragText", 0, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::Text((dragPath.filename().string() + "##DragText").c_str());
+            ImGui::End();
+        }
+    }
 }
 
 void Editor::SetupViewport()
