@@ -161,7 +161,7 @@ void Collider2D::Highlight(Color color, bool highlightChildren)
 	if (type == "Square")
 	{
 		RaylibWrapper::DrawRectangleOutline({ position.x + offset.x, position.y + offset.y, scale.x * 3 * size.x, scale.y * 3 * size.y },
-			{ scale.y * 3 * size.x / 2, scale.y * 3 * size.y / 2 },
+			{ scale.x * 3 * size.x / 2, scale.y * 3 * size.y / 2 },
 			gameObject->transform.GetRotationEuler().y,
 			0.1f,
 			{ color.r, color.g, color.b, color.a });
