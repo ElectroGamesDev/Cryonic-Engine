@@ -34,6 +34,8 @@ public:
     void SetSize(Vector2 size);
     Vector2 GetSize();
 
+    // Hide in API
+    bool highlight = false;
 private:
     Shape shape;
     bool trigger;
