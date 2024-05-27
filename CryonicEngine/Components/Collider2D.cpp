@@ -158,7 +158,7 @@ void Collider2D::Highlight(Color color, bool highlightChildren)
 	// Getting type from exposedVariables since shape variable isn't up-to-date with exposed variable
 	std::string type = exposedVariables[1][0][2].get<std::string>();
 
-	if (type == "Square")
+	if (type == "Square") // Todo: For children, this is being renderered before spriteRenderer
 	{
 		RaylibWrapper::DrawRectangleOutline({ position.x + offset.x, position.y + offset.y, scale.x * 3 * size.x, scale.y * 3 * size.y },
 			{ scale.x * 3 * size.x / 2, scale.y * 3 * size.y / 2 },
@@ -186,8 +186,8 @@ void Collider2D::Highlight(Color color, bool highlightChildren)
 			Collider2D* collider = dynamic_cast<Collider2D*>(component);
 			if (collider)
 			{
-				//ConsoleLogger::WarningLog("Highlighting child: " + collider->gameObject->GetName());
-				collider->Highlight({ 24, 201, 24, 200 }, !colliderFound);
+				collider->highlight = true; // Using a highlight variable instead of calling Highlight since it will render the highlight before the sprite
+				//collider->Highlight({ 24, 201, 24, 200 }, !colliderFound);
 				colliderFound = true;
 			}
 		}
@@ -200,7 +200,12 @@ void Collider2D::EditorUpdate()
 	// Must be inside the if defined since the game compiled version doesn't include Varient
 #if defined(EDITOR)
 	// Todo: Replace this solution with Events. Another possible solution would be to have another EditorUpdate() with a selectedGameObject parameter, but this is still a bad solution.
-	if (std::holds_alternative<GameObject*>(Editor::objectInProperties) && std::get<GameObject*>(Editor::objectInProperties) == gameObject)
+	if (highlight)
+	{
+		highlight = false; // Resetting the highlight variable so it doesn't stay highlighted when it shouldn't
+		Highlight({ 24, 201, 24, 200 }, true);
+	}
+	else if (std::holds_alternative<GameObject*>(Editor::objectInProperties) && std::get<GameObject*>(Editor::objectInProperties) == gameObject)
 		Highlight({ 0, 255, 0, 200 }, true);
 #endif
 }
