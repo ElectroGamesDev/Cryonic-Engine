@@ -12,6 +12,7 @@ GameObject::GameObject(int id)
     //this->bounds = bounds;
     //this->active = active;
     //this->name = name;
+    transform.gameObject = this;
     this->id = id;
     static bool seeded = false;
     if (!seeded)

@@ -115,17 +115,23 @@ public:
 
     struct Transform
     {
-        void SetPosition(Vector3 position) { _position = position; }
+        void SetPosition(Vector3 position)
+        {
+            for (GameObject* child : gameObject->childGameObjects)
+                child->transform.SetPosition(child->transform.GetLocalPosition() + position);
+
+            _position = position;
+        }
         void SetPosition(Vector2 position) { SetPosition({position.x, position.y, _position.z}); }
         void SetPosition(float x, float y, float z) { SetPosition({ x, y, z }); }
         void SetPosition(float x, float y) { SetPosition({ x, y,  _position.z }); }
         Vector3 GetPosition() { return _position; }
 
-        void SetLocalPosition(Vector3 position) { _position = position; }
+        void SetLocalPosition(Vector3 position) { gameObject->parentGameObject == nullptr ? SetPosition(position) : SetPosition(gameObject->parentGameObject->transform._position + position); }
         void SetLocalPosition(Vector2 position) { SetLocalPosition({ position.x, position.y, _position.z }); }
         void SetLocalPosition(float x, float y, float z) { SetLocalPosition({ x, y, z }); }
         void SetLocalPosition(float x, float y) { SetLocalPosition({ x, y,  _position.z }); }
-        Vector3 GetLocalPosition() { return _position; }
+        Vector3 GetLocalPosition() { return gameObject->parentGameObject == nullptr ? _position : (_position - gameObject->parentGameObject->transform._position); }
 
         void SetRotation(Quaternion rotation) { _rotation = rotation; }
         Quaternion GetRotation() { return _rotation; }
@@ -133,7 +139,13 @@ public:
         /**
         Set the game object's rotation in degrees
         */
-        void SetRotationEuler(Vector3 rotation) { _rotation = EulerToQuaternion((float)rotation.x * DEG2RAD, rotation.y * DEG2RAD, rotation.z * DEG2RAD); }
+        void SetRotationEuler(Vector3 rotation)
+        {
+            for (GameObject* child : gameObject->childGameObjects)
+                child->transform.SetRotationEuler(child->transform.GetLocalRotationEuler() + rotation);
+
+            _rotation = EulerToQuaternion((float)rotation.x * DEG2RAD, rotation.y * DEG2RAD, rotation.z * DEG2RAD);
+        }
         void SetRotationEuler(Vector2 rotation) { SetRotationEuler({ rotation.x, rotation.y, QuaternionToEuler(_rotation).z * RAD2DEG}); }
         /**
         Set the game object's rotation in degrees
@@ -149,7 +161,8 @@ public:
         /**
         Set the game object's local rotation in degrees
         */
-        void SetLocalRotationEuler(Vector3 rotation) { _rotation = EulerToQuaternion((float)rotation.x * DEG2RAD, rotation.y * DEG2RAD, rotation.z * DEG2RAD); }
+        // { gameObject->parentGameObject == nullptr ? _scale = scale : _scale = (gameObject->parentGameObject->transform._scale - scale); }
+        void SetLocalRotationEuler(Vector3 rotation) { gameObject->parentGameObject == nullptr ? SetRotationEuler({ rotation.x, rotation.y, rotation.z}) : SetRotationEuler({ gameObject->parentGameObject->transform.GetRotationEuler() + (rotation.x, rotation.y, rotation.z) }); }
         void SetLocalRotationEuler(Vector2 rotation) { SetLocalRotationEuler({ rotation.x, rotation.y, QuaternionToEuler(_rotation).z * RAD2DEG }); }
         /**
         Set the game object's local rotation in degrees
@@ -160,19 +173,25 @@ public:
         Get the game object's local rotation in degrees
         @return Vector3 euler of the rotation
         */
-        Vector3 GetLocalRotationEuler() { return QuaternionToEuler(_rotation) * RAD2DEG; }
+        Vector3 GetLocalRotationEuler() { return gameObject->parentGameObject == nullptr ? QuaternionToEuler(_rotation) * RAD2DEG : ((QuaternionToEuler(_rotation) * RAD2DEG) - (QuaternionToEuler(gameObject->parentGameObject->transform._rotation) * RAD2DEG)); }
 
-        void SetScale(Vector3 scale) { _scale = scale; }
+        void SetScale(Vector3 scale)
+        { 
+            for (GameObject* child : gameObject->childGameObjects)
+                child->transform.SetScale(child->transform.GetLocalScale() * scale);
+
+            _scale = scale;
+        }
         void SetScale(Vector2 scale) { SetScale({ scale.x, scale.y, _scale.z }); }
         void SetScale(float x, float y, float z) { SetScale({ x, y, z }); }
         void SetScale(float x, float y) { SetScale({ x, y,  _scale.z }); }
         Vector3 GetScale() { return _scale; }
 
-        void SetLocalScale(Vector3 scale) { _scale = scale; }
+        void SetLocalScale(Vector3 scale) { gameObject->parentGameObject == nullptr ? SetScale(scale) : SetScale(gameObject->parentGameObject->transform._scale * scale); }
         void SetLocalScale(Vector2 scale) { SetLocalScale({ scale.x, scale.y, _scale.z }); }
         void SetLocalScale(float x, float y, float z) { SetLocalScale({ x, y, z }); }
         void SetLocalScale(float x, float y) { SetLocalScale({ x, y, _scale.z }); }
-        Vector3 GetLocalScale() { return _scale; }
+        Vector3 GetLocalScale() { return gameObject->parentGameObject == nullptr ? _scale : (_scale / gameObject->parentGameObject->transform._scale); }
 
         Transform& operator=(const Transform& other) {
             if (this != &other) {
@@ -200,11 +219,14 @@ public:
             return !(*this == other);
         }
 
+        GameObject* gameObject;
+
     private:
         Vector3 _position = { 0,0,0 };
         Quaternion _rotation = Quaternion::Identity();
         Vector3 _scale = { 1,1,1 };
-    }; Transform transform;
+    };
+    Transform transform;
 
 private:
     //Model model;
