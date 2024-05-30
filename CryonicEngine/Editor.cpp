@@ -3319,8 +3319,8 @@ void Editor::RenderHierarchy()
                 {
                     SceneManager::GetActiveScene()->GetGameObjects().back()->SetParent(objectInHierarchyContextMenu);
                     SceneManager::GetActiveScene()->GetGameObjects().back()->transform.SetLocalPosition({0,0,0});
-                    SceneManager::GetActiveScene()->GetGameObjects().back()->transform.GetLocalRotationEuler({ 0,0,0 });
-                    SceneManager::GetActiveScene()->GetGameObjects().back()->transform.SetLocalPosition({ 0,0,0 });
+                    SceneManager::GetActiveScene()->GetGameObjects().back()->transform.SetLocalRotationEuler({ 0,0,0 });
+                    SceneManager::GetActiveScene()->GetGameObjects().back()->transform.SetLocalScale({ 0,0,0 });
                 }
 
                 //if (selectedObject != nullptr)
