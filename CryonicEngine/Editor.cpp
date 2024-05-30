@@ -2419,26 +2419,26 @@ void Editor::RenderProperties()
             ImGui::SameLine();
             ImGui::Text("X");
             ImGui::SameLine();
-            float xPos = std::get<GameObject*>(objectInProperties)->transform.GetPosition().x;
+            float xPos = std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().x;
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectXPos", &xPos, 0, 0, "%.10g")) {
-                std::get<GameObject*>(objectInProperties)->transform.SetPosition(Vector3{ xPos, std::get<GameObject*>(objectInProperties)->transform.GetPosition().y, std::get<GameObject*>(objectInProperties)->transform.GetPosition().z });
+                std::get<GameObject*>(objectInProperties)->transform.SetLocalPosition(Vector3{ xPos, std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().y, std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().z });
             }
             ImGui::SameLine();
             ImGui::Text("Y");
             ImGui::SameLine();
-            float yPos = std::get<GameObject*>(objectInProperties)->transform.GetPosition().y;
+            float yPos = std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().y;
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectYPos", &yPos, 0, 0, "%.10g")) {
-                std::get<GameObject*>(objectInProperties)->transform.SetPosition(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetPosition().x, yPos, std::get<GameObject*>(objectInProperties)->transform.GetPosition().z });
+                std::get<GameObject*>(objectInProperties)->transform.SetLocalPosition(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().x, yPos, std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().z });
             }
             ImGui::SameLine();
             ImGui::Text("Z");
             ImGui::SameLine();
-            float zPos = std::get<GameObject*>(objectInProperties)->transform.GetPosition().z;
+            float zPos = std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().z;
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectZPos", &zPos, 0, 0, "%.10g")) {
-                std::get<GameObject*>(objectInProperties)->transform.SetPosition(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetPosition().x, std::get<GameObject*>(objectInProperties)->transform.GetPosition().y, zPos });
+                std::get<GameObject*>(objectInProperties)->transform.SetLocalPosition(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().x, std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().y, zPos });
             }
             // Scale
             ImGui::NewLine();
@@ -2447,32 +2447,33 @@ void Editor::RenderProperties()
             ImGui::Text("X");
             ImGui::SameLine();
             //float xScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().x / std::get<GameObject*>(objectInProperties)->GetRealSize().x;
-            float xScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().x;
+            float xScale = std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().x;
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectXScale", &xScale, 0, 0, "%.10g")) {
                 //std::get<GameObject*>(objectInProperties)->transform.SetScale(Vector3{ xScale * std::get<GameObject*>(objectInProperties)->GetRealSize().x, std::get<GameObject*>(objectInProperties)->transform.GetScale().y, std::get<GameObject*>(objectInProperties)->transform.GetScale().z });
-                std::get<GameObject*>(objectInProperties)->transform.SetScale(Vector3{ xScale, std::get<GameObject*>(objectInProperties)->transform.GetScale().y, std::get<GameObject*>(objectInProperties)->transform.GetScale().z });
+                std::get<GameObject*>(objectInProperties)->transform.SetLocalScale(Vector3{ xScale, std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().y, std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().z });
             }
             ImGui::SameLine();
             ImGui::Text("Y");
             ImGui::SameLine();
             //float yScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().y / std::get<GameObject*>(objectInProperties)->GetRealSize().y;
-            float yScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().y;
+            float yScale = std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().y;
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectYScale", &yScale, 0, 0, "%.10g")) {
-                std::get<GameObject*>(objectInProperties)->transform.SetScale(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetScale().x, yScale, std::get<GameObject*>(objectInProperties)->transform.GetScale().z });
+                std::get<GameObject*>(objectInProperties)->transform.SetLocalScale(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().x, yScale, std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().z });
             }
             ImGui::SameLine();
             ImGui::Text("Z");
             ImGui::SameLine();
             //float zScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().z / std::get<GameObject*>(objectInProperties)->GetRealSize().z;
-            float zScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().z;
+            float zScale = std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().z;
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputFloat("##ObjectZScale", &zScale, 0, 0, "%.10g")) {
-                std::get<GameObject*>(objectInProperties)->transform.SetScale(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetScale().x, std::get<GameObject*>(objectInProperties)->transform.GetScale().y, zScale });
+                std::get<GameObject*>(objectInProperties)->transform.SetLocalScale(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().x, std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().y, zScale });
             }
             // Rotation
-            Vector3 rot = QuaternionToEuler(std::get<GameObject*>(objectInProperties)->transform.GetRotation()) * DEG;
+            //Vector3 rot = QuaternionToEuler(std::get<GameObject*>(objectInProperties)->transform.GetRotation()) * DEG;
+            Vector3 rot = std::get<GameObject*>(objectInProperties)->transform.GetLocalRotationEuler();
             ImGui::NewLine();
             ImGui::Text("Rotation:   ");
             ImGui::SameLine();
@@ -2482,21 +2483,21 @@ void Editor::RenderProperties()
             ImGui::SetNextItemWidth(width);
             // Todo: Create the bool "rotation" updated and if its updated on X, Y, Z, set it to true, then below check if its true and if it is, update the rotation. This way it reduces duplicate code. DO the same with Position and Scale
             if (ImGui::InputInt("##ObjectXRotation", &xRot, 0, 0))
-                std::get<GameObject*>(objectInProperties)->transform.SetRotationEuler({ (float)xRot, rot.y, rot.z });
+                std::get<GameObject*>(objectInProperties)->transform.SetLocalRotationEuler({ (float)xRot, rot.y, rot.z });
             ImGui::SameLine();
             ImGui::Text("Y");
             ImGui::SameLine();
             int yRot = static_cast<int>(std::round(rot.y));
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputInt("##ObjectYRotation", &yRot, 0, 0))
-                std::get<GameObject*>(objectInProperties)->transform.SetRotationEuler({ rot.x, (float)yRot, rot.z });
+                std::get<GameObject*>(objectInProperties)->transform.SetLocalRotationEuler({ rot.x, (float)yRot, rot.z });
             ImGui::SameLine();
             ImGui::Text("Z");
             ImGui::SameLine();
             int zRot = static_cast<int>(std::round(rot.z));
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputInt("##ObjectZRotation", &zRot, 0, 0))
-                std::get<GameObject*>(objectInProperties)->transform.SetRotationEuler({ rot.x, rot.y, (float)zRot });
+                std::get<GameObject*>(objectInProperties)->transform.SetLocalRotationEuler({ rot.x, rot.y, (float)zRot });
 
             ImGui::NewLine();
              
@@ -3315,7 +3316,12 @@ void Editor::RenderHierarchy()
                     component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
 
                 if (objectInHierarchyContextMenu != nullptr)
+                {
                     SceneManager::GetActiveScene()->GetGameObjects().back()->SetParent(objectInHierarchyContextMenu);
+                    SceneManager::GetActiveScene()->GetGameObjects().back()->transform.SetLocalPosition({0,0,0});
+                    SceneManager::GetActiveScene()->GetGameObjects().back()->transform.GetLocalRotationEuler({ 0,0,0 });
+                    SceneManager::GetActiveScene()->GetGameObjects().back()->transform.SetLocalPosition({ 0,0,0 });
+                }
 
                 //if (selectedObject != nullptr)
                     //EventSystem::Invoke("ObjectDeselected", selectedObject);
