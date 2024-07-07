@@ -7,6 +7,9 @@
 #include "json.hpp"
 #include "Animation.h"
 #include <variant>
+#ifndef EDITOR
+#include "Game.h"
+#endif
 
 class AnimationGraph
 {
@@ -36,8 +39,10 @@ public:
 
 	AnimationGraph(std::string path)
 	{
-		std::ifstream file(std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets" / path); // Todo: Should I just use Filesystem GetWorkingPath? GetWorkingPath isn't even the best solution here
-	
+		std::ifstream file;
+#ifndef EDITOR
+		file.open(std::filesystem::path(exeParent) / "Resources" / "Assets" / path);
+#endif
 		if (!file.is_open())
 		{
 			ConsoleLogger::ErrorLog("Animation Graph failed to load. Path: " + path);

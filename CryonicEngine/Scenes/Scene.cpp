@@ -6,6 +6,7 @@
 #include "../ProjectManager.h"
 #else
 #include "../RaylibWrapper.h" 
+#include "../Game.h"
 #endif
 
 Scene::Scene(const std::filesystem::path& path, std::deque<GameObject*> gameObjects)
@@ -82,7 +83,7 @@ GameObject* Scene::SpawnGameObject(std::string path, Vector3 position, Quaternio
 {
     std::filesystem::path newPath = path;
 #if !defined(EDITOR)
-    newPath = std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets" / newPath;
+    newPath = std::filesystem::path(exeParent) / "Resources" / "Assets" / newPath;
 #else
     newPath = ProjectManager::projectData.path / "Assets" / newPath;
 #endif

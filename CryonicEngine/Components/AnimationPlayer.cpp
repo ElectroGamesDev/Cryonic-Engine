@@ -1,4 +1,7 @@
 #include "AnimationPlayer.h"
+#ifndef EDITOR
+#include "../Game.h"
+#endif
 
 void AnimationPlayer::Start()
 {
@@ -55,7 +58,7 @@ void AnimationPlayer::Update()
 		// Using a variable so its easier to debug SetTexture if there is a syntax issue
 		std::filesystem::path path = "";
 #if !defined(EDITOR)
-		path = std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets";
+		path = std::filesystem::path(exeParent) / "Resources" / "Assets";
 #endif
 		int index = static_cast<int>(timeElapsed / (activeAnimationState->animation.GetSpeed() / activeAnimationState->animation.GetSprites()->size()));
 		if (index != previousSprite)

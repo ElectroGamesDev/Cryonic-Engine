@@ -23,6 +23,8 @@
 
 #if defined(EDITOR)
 #include "../ProjectManager.h"
+#else
+#include "../Game.h"
 #endif
 #include "../RaylibWrapper.h"
 
@@ -303,7 +305,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                     #if defined(EDITOR)
                     path = ProjectManager::projectData.path / "Assets";
                     #else
-                    path = std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets";
+                    path = std::filesystem::path(exeParent) / "Resources" / "Assets";
                     #endif
                     component.SetTexture(path / componentData["texture_path"]);
                 }

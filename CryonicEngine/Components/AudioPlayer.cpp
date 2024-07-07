@@ -1,4 +1,7 @@
 #include "AudioPlayer.h"
+#ifndef EDITOR
+#include "../Game.h"
+#endif
 
 void AudioPlayer::Start()
 {
@@ -69,7 +72,10 @@ void AudioPlayer::Play()
 		ConsoleLogger::WarningLog(gameObject->GetName() + ":Audio Player - Play() failed to play audio. No audio clip selected. Use SetAudioClip() before Play() or Play(AudioClip audioClip).", false);
 		return;
 	}
-	std::filesystem::path path = std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets" / audioClip->GetPath();
+	std::filesystem::path path;
+#ifndef EDITOR
+	path = std::filesystem::path(exeParent) / "Resources" / "Assets" / audioClip->GetPath();
+#endif
 	if (audioClip->GetPath().empty() || audioClip->GetPath() == "nullptr" || !std::filesystem::exists(path)) // It may be "nullptr" if no audio clip was set in the properties
 	{
 		ConsoleLogger::WarningLog(gameObject->GetName() + ":Audio Player - Play() failed to play audio. The selected audio clip has an invalid audio file path.", false);
@@ -94,7 +100,10 @@ void AudioPlayer::Play()
 
 void AudioPlayer::Play(AudioClip audioClip)
 {
-	std::filesystem::path path = std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets" / audioClip.GetPath();
+	std::filesystem::path path;
+#ifndef EDITOR
+	path = std::filesystem::path(exeParent) / "Resources" / "Assets" / audioClip.GetPath();
+#endif
 	if (audioClip.GetPath().empty() || audioClip.GetPath() == "nullptr" || !std::filesystem::exists(path)) // It may be "nullptr" if no audio clip was set in the properties
 	{
 		ConsoleLogger::WarningLog(gameObject->GetName() + ":Audio Player - Play(AudioClip audioClip) failed to play audio. The selected audio clip has an invalid audio file path.", false);
@@ -110,7 +119,7 @@ void AudioPlayer::Play(AudioClip audioClip)
 	}
 	else
 	{
-		musicStreams.push_back(Raylib::LoadMusicStream((std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets" / audioClip.GetPath()).string().c_str()));
+		musicStreams.push_back(Raylib::LoadMusicStream((path).string().c_str()));
 		Raylib::PlayMusicStream(music);
 	}
 }

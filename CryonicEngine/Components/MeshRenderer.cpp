@@ -2,6 +2,8 @@
 #include "../RaylibWrapper.h"
 #if defined (EDITOR)
 #include "../ProjectManager.h"
+#else
+#include "../Game.h"
 #endif
 //#include "rlgl.h"
 //#include "../ShaderManager.h"
@@ -17,7 +19,7 @@ void MeshRenderer::SetModel(ModelType model, std::filesystem::path path, Shaders
 #if defined (EDITOR)
     this->modelSet = raylibModel.Create(model, path, shader, ProjectManager::projectData.path / "Assets");
 #else
-    this->modelSet = raylibModel.Create(model, path, shader, std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets");
+    this->modelSet = raylibModel.Create(model, path, shader, std::filesystem::path(exeParent) / "Resources" / "Assets");
 #endif
 }
 

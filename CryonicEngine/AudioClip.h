@@ -6,6 +6,9 @@
 #include "RaylibWrapper.h"
 #include "ConsoleLogger.h"
 #include "json.hpp"
+#ifndef EDITOR
+#include "Game.h"
+#endif
 // This is used by AudioPlayer. It's in here since AudioPlayer.h couldn't include it without it using the wrong include path for game builds.
 namespace Raylib
 {
@@ -17,8 +20,10 @@ class AudioClip
 public:
 	AudioClip(std::string path)
 	{
-		std::ifstream file(std::filesystem::path(RaylibWrapper::GetWorkingDirectory()) / "Resources" / "Assets" / std::string(path + ".data")); // Todo: Should I just use Filesystem GetWorkingPath? GetWorkingPath isn't even the best solution here
-
+		std::ifstream file;
+#ifndef EDITOR
+		file.open(std::filesystem::path(exeParent) / "Resources" / "Assets" / std::string(path + ".data"));
+#endif
 		if (!file.is_open())
 		{
 			ConsoleLogger::ErrorLog("Audio Clip failed to load. Path: " + path);
