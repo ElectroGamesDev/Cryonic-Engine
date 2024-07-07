@@ -9,6 +9,7 @@
 #include "RaylibWrapper.h"
 #include "CollisionListener2D.h"
 #include "Physics2DDebugDraw.h"
+#include <windows.h>
 
 #ifdef IS3D
 #include "Jolt/Jolt.h"
@@ -16,9 +17,27 @@ JPH_SUPPRESS_WARNINGS
 #endif
 
 b2World* world = nullptr;
+std::filesystem::path exeParent;
 
 int main(void)
 {
+	// Sets executable path to a variable
+	HMODULE hModule = GetModuleHandle(NULL);
+	if (hModule != NULL)
+	{
+		char exePath[MAX_PATH];
+		GetModuleFileName(hModule, exePath, (sizeof(exePath)));
+		std::string temp = exePath;
+		exeParent = temp;
+		exeParent = exeParent.parent_path();
+	}
+	else
+	{
+		ConsoleLogger::WarningLog("Failed to get module handle. There may be game-breaking issues.", false);
+		exeParent = std::filesystem::current_path();
+	}
+
+	// Creates the window
 	RaylibWrapper::SetConfigFlags(0);
 	RaylibWrapper::InitWindow(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight(), (NAME));
 	//RaylibWrapper::ToggleFullscreen();
@@ -40,9 +59,9 @@ int main(void)
 
 	// Shaders must be initiated before scenes/gameobjects
 	ShaderManager::Init();
-	
+
 	// Todo: This assumes the default scene path and name
-	SceneManager::LoadScene(std::filesystem::current_path() / "Resources" / "Assets" / "Scenes" / "Default.scene");
+	SceneManager::LoadScene(exeParent / "Resources" / "Assets" / "Scenes" / "Default.scene");
 	SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
 		
 	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
