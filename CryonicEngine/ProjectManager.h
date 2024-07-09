@@ -8,6 +8,7 @@
 //#include "Editor.h"
 //#include "miniz.h"
 #include "Utilities.h"
+#include <functional>
 
 enum Templates
 {
@@ -66,7 +67,7 @@ public:
     static bool SetGameSettings(std::filesystem::path gameFile);
     static void BackupCMakeFiles(std::filesystem::path buildPath, std::filesystem::path backupPath);
     static void RestoreCMakeFiles(std::filesystem::path buildPath, std::filesystem::path backupPath);
-    static bool BuildToWindows(ProjectData projectData, bool debug);
+    static bool BuildToWindows(ProjectData projectData, bool debug, std::function<void(int, bool)> callback);
     static ProjectData LoadProject(std::filesystem::path path);
     
     static ProjectData projectData;
