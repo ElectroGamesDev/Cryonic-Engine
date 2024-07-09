@@ -1891,164 +1891,118 @@ void Editor::RenderAnimationGraph()
 
 void Editor::RenderProjectSettings()
 {
-    if (!projectSettingsWinOpen) return;
+    if (!projectSettingsWinOpen)
+        return;
+
+    static char nameBuffer[256], versionBuffer[256], authorBuffer[256], iconPathBuffer[256];
+
     if (resetProjectSettings)
     {
         float xSize = RaylibWrapper::GetScreenWidth() * 0.50;
         float ySize = RaylibWrapper::GetScreenHeight() * 0.75;
         ImGui::SetNextWindowSize(ImVec2(xSize, ySize));
         ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - xSize) / 2, (RaylibWrapper::GetScreenHeight() - ySize) / 2));
-        resetProjectSettings = false;
-    }
-    if (ImGui::Begin((ICON_FA_GEARS + std::string(" Project Properties")).c_str(), &projectSettingsWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
-    {
-        // General
-        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
-        ImGui::Text("General");
-        ImGui::PopFont();
-
-        char nameBuffer[256];
-        char versionBuffer[256];
-        char authorBuffer[256];
-        char iconPathBuffer[256];
 
         strcpy_s(nameBuffer, ProjectManager::projectData.name.c_str());
         strcpy_s(versionBuffer, ProjectManager::projectData.version.c_str());
         strcpy_s(authorBuffer, ProjectManager::projectData.author.c_str());
         strcpy_s(iconPathBuffer, ProjectManager::projectData.iconPath.c_str());
 
-        ImGui::Text("Name");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(150);
-        if (ImGui::InputText("##Name", nameBuffer, sizeof(nameBuffer)))
-        {
-            ProjectManager::projectData.name = nameBuffer;
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-        }
+        resetProjectSettings = false;
+    }
 
-        ImGui::Text("Author");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(100);
-        if (ImGui::InputText("##Author", authorBuffer, sizeof(authorBuffer)))
-        {
-            ProjectManager::projectData.author = authorBuffer;
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-        }
+    if (ImGui::Begin((ICON_FA_GEARS + std::string(" Project Properties")).c_str(), &projectSettingsWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    {
+        auto RenderSection = [](const char* title, std::function<void()> content) {
+            ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
+            ImGui::Text("%s", title);
+            ImGui::PopFont();
+            content();
+            ImGui::NewLine();
+        };
 
-        ImGui::Text("Version");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(50);
-        if (ImGui::InputText("##Version", versionBuffer, sizeof(versionBuffer)))
-        {
-            ProjectManager::projectData.version = versionBuffer;
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-        }
+        auto RenderInputField = [](const char* label, char* buffer, size_t bufferSize, std::function<void(const char*)> onEdit, float width = 150.0f) {
+            ImGui::Text("%s", label);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(width);
+            if (ImGui::InputText(("##" + std::string(label)).c_str(), buffer, bufferSize))
+            {
+                onEdit(buffer);
+                ProjectManager::SaveProjectData(ProjectManager::projectData);
+            }
+        };
 
-        ImGui::Text("Icon Path");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(200);
-        if (ImGui::InputText("##IconPath", iconPathBuffer, sizeof(iconPathBuffer))) // Todo: Add drag & drop support and file select dialog
-        {
-            ProjectManager::projectData.iconPath = iconPathBuffer;
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-        }
+        auto RenderComboBox = [](const char* label, int& currentItem, const char* items[], int itemCount, float width = 100.0f) {
+            ImGui::Text("%s", label);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(width);
+            if (ImGui::Combo(("##" + std::string(label)).c_str(), &currentItem, items, itemCount))
+                ProjectManager::SaveProjectData(ProjectManager::projectData);
+        };
 
-        ImGui::NewLine();
+        auto RenderInputInt2 = [](const char* label, Vector2& value, float width = 100.0f) {
+            ImGui::Text("%s", label);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(width);
+            int intValue[2] = { static_cast<int>(value.x), static_cast<int>(value.y) };
+            if (ImGui::InputInt2(("##" + std::string(label)).c_str(), intValue))
+            {
+                value = { static_cast<float>(intValue[0]), static_cast<float>(intValue[1]) };
+                ProjectManager::SaveProjectData(ProjectManager::projectData);
+            }
+        };
 
-        // Window Settings
-        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
-        ImGui::Text("Window Settings");
-        ImGui::PopFont();
+        auto RenderInputInt = [](const char* label, int& value, float width = 25.0f) {
+            ImGui::Text("%s", label);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(width);
+            if (ImGui::InputInt(("##" + std::string(label)).c_str(), &value, 0, 0))
+                ProjectManager::SaveProjectData(ProjectManager::projectData);
+        };
 
-        ImGui::Text("Display Mode");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(100);
-        const char* displayModes[] = { "Borderless", "Fullscreen", "Windowed" };
-        if (ImGui::Combo("##DisplayMode", &ProjectManager::projectData.displayMode, displayModes, IM_ARRAYSIZE(displayModes)))
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
+        auto RenderCheckBox = [](const char* label, bool& value) {
+            ImGui::Text("%s", label);
+            ImGui::SameLine();
+            if (ImGui::Checkbox(("##" + std::string(label)).c_str(), &value))
+                ProjectManager::SaveProjectData(ProjectManager::projectData);
+        };
 
-        ImGui::Text("Resolution");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(100);
-        int windowResolutionInt[2] = { static_cast<int>(ProjectManager::projectData.windowResolution.x), static_cast<int>(ProjectManager::projectData.windowResolution.y) };
-        if (ImGui::InputInt2("##WindowResolution", windowResolutionInt))
-        {
-            ProjectManager::projectData.windowResolution = { static_cast<float>(windowResolutionInt[0]), static_cast<float>(windowResolutionInt[1]) };
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-        }
+        auto RenderInputFloat2 = [](const char* label, Vector2& value, float width = 70.0f) {
+            ImGui::Text("%s", label);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(width);
+            if (ImGui::InputFloat2(("##" + std::string(label)).c_str(), &value.x, "%.05g"))
+                ProjectManager::SaveProjectData(ProjectManager::projectData);
+        };
 
-        ImGui::Text("Minimum Resolution");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(100);
-        int minimumResolutionInt[2] = { static_cast<int>(ProjectManager::projectData.minimumResolution.x), static_cast<int>(ProjectManager::projectData.minimumResolution.y) };
-        if (ImGui::InputInt2("##MinimumResolution", minimumResolutionInt))
-        {
-            ProjectManager::projectData.minimumResolution = { static_cast<float>(minimumResolutionInt[0]), static_cast<float>(minimumResolutionInt[1]) };
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-        }
+        RenderSection("General", [&]() {
+            RenderInputField("Name", nameBuffer, sizeof(nameBuffer), [](const char* value) { ProjectManager::projectData.name = value; });
+            RenderInputField("Author", authorBuffer, sizeof(authorBuffer), [](const char* value) { ProjectManager::projectData.author = value; }, 100.0f);
+            RenderInputField("Version", versionBuffer, sizeof(versionBuffer), [](const char* value) { ProjectManager::projectData.version = value; }, 50.0f);
+            RenderInputField("Icon Path", iconPathBuffer, sizeof(iconPathBuffer), [](const char* value) { ProjectManager::projectData.iconPath = value; }, 200.0f);
+            });
 
-        ImGui::Text("Resizable");
-        ImGui::SameLine();
-        if (ImGui::Checkbox("##ResizableWindow", &ProjectManager::projectData.resizableWindow))
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
+        RenderSection("Window Settings", [&]() {
+            const char* displayModes[] = { "Borderless", "Fullscreen", "Windowed" };
+            RenderComboBox("Display Mode", ProjectManager::projectData.displayMode, displayModes, IM_ARRAYSIZE(displayModes));
+            RenderInputInt2("Resolution", ProjectManager::projectData.windowResolution);
+            RenderInputInt2("Minimum Resolution", ProjectManager::projectData.minimumResolution);
+            RenderCheckBox("Resizable", ProjectManager::projectData.resizableWindow);
+            RenderInputInt("Max FPS", ProjectManager::projectData.maxFPS);
+            RenderCheckBox("Run In Background", ProjectManager::projectData.runInBackground);
+            RenderCheckBox("VSync", ProjectManager::projectData.vsync);
+            });
 
-        ImGui::Text("Max FPS");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(25);
-        if (ImGui::InputInt("##MaxFPS", &ProjectManager::projectData.maxFPS, 0, 0))
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
+        RenderSection("Graphics", [&]() {
+            RenderCheckBox("Anti-aliasing", ProjectManager::projectData.antialiasing);
+            RenderCheckBox("High DPI", ProjectManager::projectData.highDPI);
+            });
 
-        ImGui::Text("Run In Background");
-        ImGui::SameLine();
-        if (ImGui::Checkbox("##RunInBackground", &ProjectManager::projectData.runInBackground))
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-
-        ImGui::Text("VSync");
-        ImGui::SameLine();
-        if (ImGui::Checkbox("##VSync", &ProjectManager::projectData.vsync))
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-
-        ImGui::NewLine();
-
-        // Graphics
-        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
-        ImGui::Text("Graphics");
-        ImGui::PopFont();
-
-        ImGui::Text("Anti-aliasing");
-        ImGui::SameLine();
-        if (ImGui::Checkbox("##Antialiasing", &ProjectManager::projectData.antialiasing))
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-
-        ImGui::Text("High DPI");
-        ImGui::SameLine();
-        if (ImGui::Checkbox("##HighDPI", &ProjectManager::projectData.highDPI))
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-
-        ImGui::NewLine();
-
-        // Physics
-        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
-        ImGui::Text("Physics");
-        ImGui::PopFont();
-
-        ImGui::Text("Timestep");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(70);
-        if (ImGui::InputFloat2("##PhysicsTimeStep", &ProjectManager::projectData.physicsTimeStep.x, "%.05g"))
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-
-        ImGui::Text("Velocity Iterations");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(25);
-        if (ImGui::InputInt("##VelocityIterations", &ProjectManager::projectData.velocityIterations, 0, 0))
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
-
-        ImGui::Text("Position Iterations");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(25);
-        if (ImGui::InputInt("##PositionIterations", &ProjectManager::projectData.positionIterations, 0, 0))
-            ProjectManager::SaveProjectData(ProjectManager::projectData);
+        RenderSection("Physics", [&]() {
+            RenderInputFloat2("Timestep", ProjectManager::projectData.physicsTimeStep);
+            RenderInputInt("Velocity Iterations", ProjectManager::projectData.velocityIterations);
+            RenderInputInt("Position Iterations", ProjectManager::projectData.positionIterations);
+            });
     }
     ImGui::End();
 }
