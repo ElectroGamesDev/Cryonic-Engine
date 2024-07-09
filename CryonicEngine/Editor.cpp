@@ -119,32 +119,24 @@ RaylibWrapper::RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path
     RaylibModel model;
     model.Create(Custom, modelPath.string().c_str(), LitStandard, ProjectManager::projectData.path);
 
-    // Set a basic camera to view the model
-    RaylibWrapper::Camera modelCamera = { 0 };
-    modelCamera.position = { 0.0f, 0.0f, 6.0f };
-    modelCamera.target = { 0.0f, 0.0f, 0.0f };
-    modelCamera.up = { 0.0f, 1.0f, 0.0f };
-    modelCamera.fovy = 45.0f;
-    modelCamera.projection = RaylibWrapper::CAMERA_PERSPECTIVE;
+    // Set up camera
+    RaylibWrapper::Camera modelCamera = {
+        {0.0f, 0.0f, 6.0f},  // position
+        {0.0f, 0.0f, 0.0f},  // target
+        {0.0f, 1.0f, 0.0f},  // up
+        45.0f,               // fovy
+        RaylibWrapper::CAMERA_PERSPECTIVE // projection
+    };
 
     // Create a render texture
-    //RenderTexture2D target = LoadRenderTexture(textureSize, textureSize);
     tempRenderTextures.push_back(new RaylibWrapper::RenderTexture2D(RaylibWrapper::LoadRenderTexture(textureSize, textureSize)));
 
     // Render model to texture
     BeginTextureMode(*tempRenderTextures.back());
-
-    // Clear the render texture
     RaylibWrapper::ClearBackground(RaylibWrapper::Color{ 63, 63, 63, 255 });
-
-    // Set camera position and projection for rendering
     RaylibWrapper::BeginMode3D(modelCamera);
-
-    // Draw the model
     model.DrawModelWrapper(0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 255, 255, 255, 255);
-
     RaylibWrapper::EndMode3D();
-
     RaylibWrapper::EndTextureMode();
 
     //std::cout << "Path: " << modelPath << ", Texture Size: " << textureSize << std::endl;
