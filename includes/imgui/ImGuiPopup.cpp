@@ -19,9 +19,8 @@ namespace ImGuiPopup
 			return;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.10f, 0.10f, 0.10f, 1.00f));
-		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.30f, 0.30f, 0.30f, 1.00f));
 
 		ImGuiIO& io = ImGui::GetIO();
 		float ySize = 45;
@@ -68,7 +67,7 @@ namespace ImGuiPopup
 		ImGui::End();
 
 		ImGui::PopStyleVar(2);
-		ImGui::PopStyleColor(2);
+		ImGui::PopStyleColor();
 	}
 
 	void Create(std::string title, std::string content, std::vector<Button> buttons, bool progressBar, int progress)
