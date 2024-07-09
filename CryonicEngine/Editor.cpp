@@ -3100,15 +3100,14 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor, bool&
         objectInProperties = selectedObject = gameObject;
         //EventSystem::Invoke("ObjectSelected", selectedObject);
         cameraSelected = selectedObject->GetComponent<CameraComponent>() != nullptr;
-        if (!cameraSelected && cameraSelected) {
+        if (!cameraSelected && cameraSelected)
+        {
             cameraSelected = false;
             resetCameraView = true;
         }
     }
     else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
-    {
         objectInHierarchyContextMenu = gameObject;
-    }
 
     if (nodeOpen)
     {
