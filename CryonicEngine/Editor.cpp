@@ -1409,17 +1409,16 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
 void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnDefault)
 {
-    bool hasChildren = false;
-    if (!std::filesystem::exists(path)) // This is important as it prevents a crash if the file is deleted from an external application like File Explorer
-        return;
-
     std::error_code ec;
-    auto it = std::filesystem::directory_iterator(path, ec);
-    if (ec)
+    if (!std::filesystem::exists(path, ec)) // This is important as it prevents a crash if the file is deleted from an external application like File Explorer
         return;
 
-    for (const auto& entry : std::filesystem::directory_iterator(path))
+    bool hasChildren = false;
+    for (const auto& entry : std::filesystem::directory_iterator(path, ec))
     {
+        if (ec)
+            break;
+
         if (entry.is_directory())
         {
             hasChildren = true;
@@ -1442,13 +1441,16 @@ void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnD
             if (ImGui::IsItemClicked())
                 fileExplorerPath = path;
 
-            for (const auto& entry : std::filesystem::directory_iterator(path, ec))
+            if (hasChildren)
             {
-                if (ec)
-                    break;
+                for (const auto& entry : std::filesystem::directory_iterator(path, ec))
+                {
+                    if (ec)
+                        break;
 
-                if (entry.is_directory())
-                    RenderFileExplorerTreeNode(entry, false);
+                    if (entry.is_directory())
+                        RenderFileExplorerTreeNode(entry, false);
+                }
             }
         }
 
