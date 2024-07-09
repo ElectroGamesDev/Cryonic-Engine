@@ -46,7 +46,7 @@ bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path build
 
         if (!fileIn.is_open())
         {
-            ConsoleLogger::ErrorLog("Build Log - ScriptLoader failed to build, terminating build. Error Code 800. Path " + path.string(), false);
+            ConsoleLogger::ErrorLog("Build - ScriptLoader failed to build, terminating build. Error Code 800. Path " + path.string(), false);
             return false;
         }
 
@@ -76,7 +76,7 @@ bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path build
             }
             else
             {
-                ConsoleLogger::ErrorLog("Build Log - ScriptLoader failed to build, terminating build. Error Code 801.", false);
+                ConsoleLogger::ErrorLog("Build - ScriptLoader failed to build, terminating build. Error Code 801.", false);
                 return false;
             }
         }
@@ -98,7 +98,7 @@ bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path build
         std::ofstream fileOut(path);
         if (!fileOut.is_open())
         {
-            ConsoleLogger::ErrorLog("Build Log - ScriptLoader failed to build, terminating build. Error Code 802.", false);
+            ConsoleLogger::ErrorLog("Build - ScriptLoader failed to build, terminating build. Error Code 802.", false);
             return false;
         }
 
