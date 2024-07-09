@@ -95,11 +95,9 @@ std::filesystem::path fileExplorerPath;
 enum DragTypes {None, ImageFile, ModelFile, Folder, Other};
 std::pair<DragTypes, std::unordered_map<std::string, std::any>> dragData;
 
-//std::unordered_map<std::string, Texture2D*> imageTextures;
 std::vector<RaylibWrapper::Texture2D*> tempTextures;
 std::vector<RaylibWrapper::RenderTexture2D*> tempRenderTextures;
 
-//Quaternion Orientation = Quaternion::Identity();
 float cameraSpeed = 1;
 float oneSecondDelay = 1;
 
