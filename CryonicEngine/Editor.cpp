@@ -162,14 +162,9 @@ RaylibWrapper::RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path
 
 void Editor::RenderViewport()
 {
-    if (!viewportOpen) return;
-    //if (resetPropertiesWin)
-    //{
-    //    ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2((float)GetScreenWidth(), (float)GetScreenHeight()));
-    //    //ImGui::SetNextWindowSize(ImVec2(1280, 720));
-    //    ImGui::SetNextWindowSize(ImVec2(1366, 736));
-    //    ImGui::SetNextWindowPos(ImVec2(277, 52));
-    //}
+    if (!viewportOpen)
+        return;
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     // Todo: Use resize events
 
@@ -179,31 +174,23 @@ void Editor::RenderViewport()
         viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
         rlImGuiImageRenderTextureFit(&ViewTexture, true);
 
+        // Render tool buttons
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.f, 0.f, 0.f, 0.f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
-        ImGui::SetCursorPos(ImVec2(5, 27));
-        std::string version = "";
-        if (toolSelected == Move)
-            version ="Selected";
-        if (RaylibWrapper::rlImGuiImageButtonSize("##MoveTool", IconManager::imageTextures["MoveTool" + version + "Icon"], { 20, 20 }))
-            toolSelected = Move;
-        ImGui::SetCursorPos(ImVec2(27, 27));
-        version = "";
-        if (toolSelected == Rotate)
-            version = "Selected";
-        if (RaylibWrapper::rlImGuiImageButtonSize("##RotateTool", IconManager::imageTextures["RotateTool" + version + "Icon"], { 20, 20 }))
-            toolSelected = Rotate;
-        ImGui::SetCursorPos(ImVec2(49, 27));
-        version = "";
-        if (toolSelected == Scale)
-            version = "Selected";
-        if (RaylibWrapper::rlImGuiImageButtonSize("##ScaleTool", IconManager::imageTextures["ScaleTool" + version + "Icon"], { 20, 20 }))
-            toolSelected = Scale;
+        const char* tools[] = { "Move", "Rotate", "Scale" };
+        for (int i = 0; i < 3; ++i)
+        {
+            ImGui::SetCursorPos(ImVec2(5 + i * 22, 27));
+            if (RaylibWrapper::rlImGuiImageButtonSize(("##" + std::string(tools[i]) + "Tool").c_str(),
+                IconManager::imageTextures[std::string(tools[i]) + "Tool" + ((toolSelected == static_cast<Tool>(i)) ? "Selected" : "") + "Icon"], { 20, 20 }))
+                toolSelected = static_cast<Tool>(i);
+        }
         ImGui::PopStyleColor(3);
 
         viewportHovered = ImGui::IsWindowHovered();
 
+        // Handle camera movement
         if (ImGui::IsWindowHovered() && (RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT) || !ProjectManager::projectData.is3D && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_MIDDLE))) // Todo: Maybe change to viewportFocused instead of IsWindowFocused
         {
             //    // Todo: Add SHIFT to speed up by x2, and scroll weel to change speed
@@ -213,7 +200,6 @@ void Editor::RenderViewport()
 
             if (ProjectManager::projectData.is3D)
                 RaylibWrapper::UpdateCamera(&camera, RaylibWrapper::CAMERA_PERSPECTIVE);
-
             else
             {
                 RaylibWrapper::Vector2 deltaMouse = RaylibWrapper::Vector2Subtract(RaylibWrapper::GetMousePosition(), lastMousePosition);
@@ -270,7 +256,7 @@ void Editor::RenderViewport()
             //EnableCursor();
         }
 
-        // Move Tool Arrows
+        // Render move tool arrows
         if (selectedObject != nullptr)
         {
             Vector3 position = selectedObject->transform.GetPosition();
@@ -278,41 +264,38 @@ void Editor::RenderViewport()
             // Divding positions by Raylib window size then multiply it by Viewport window size.
             pos.x = pos.x / RaylibWrapper::GetScreenWidth() * ImGui::GetWindowSize().x;
             pos.y = pos.y / RaylibWrapper::GetScreenHeight() * ImGui::GetWindowSize().y;
+
             ImGui::SetCursorPos(ImVec2(pos.x - 10, pos.y - 35));
             RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["GreenArrow"], { 20, 40 });
             if (!movingObjectY && ImGui::IsItemHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_LEFT))
                 movingObjectY = true;
+
             ImGui::SetCursorPos(ImVec2(pos.x + 5, pos.y));
             RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["RedArrow"], { 40, 20 });
             if (!movingObjectX && ImGui::IsItemHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_LEFT))
                 movingObjectX = true;
+
             ImGui::SetCursorPos(ImVec2(pos.x + 3, pos.y - 8));
             RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["XYMoveTool"], { 15, 15 });
             if (!movingObjectX && !movingObjectY && ImGui::IsItemHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_LEFT)) // Todo: Fix this so if the user is moving with the X or Y arrow and move mouse up to XY move square, it will not switch to the XY square move tool
-            {
-                movingObjectX = true;
-                movingObjectY = true;
-            }
+                movingObjectX = movingObjectY = true;
+
             if (RaylibWrapper::IsMouseButtonReleased(RaylibWrapper::MOUSE_BUTTON_LEFT))
-            {
-                movingObjectY = false;
-                movingObjectX = false;
-            }
+                movingObjectY = movingObjectX = false;
 
             if (movingObjectX || movingObjectY || movingObjectZ)
             {
                 RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
                 RaylibWrapper::Vector2 deltaMouse = RaylibWrapper::Vector2Subtract(mousePosition, lastMousePosition);
-                float x = selectedObject->transform.GetPosition().x;
-                float y = selectedObject->transform.GetPosition().y;
-                float z = selectedObject->transform.GetPosition().z;
+
                 if (movingObjectX) // Todo: Dividing by 15 is a horrible solution. Instead I should set it to the mouse position - an offset
-                    x += deltaMouse.x / 15;
+                    position.x += deltaMouse.x / 15;
                 if (movingObjectY)
-                    y -= deltaMouse.y / 15;
+                    position.y -= deltaMouse.y / 15;
                 if (movingObjectZ)
-                    z -= deltaMouse.x / 15;
-                selectedObject->transform.SetPosition({ x, y, z });
+                    position.z -= deltaMouse.x / 15;
+
+                selectedObject->transform.SetPosition(position);
             }
         }
         lastMousePosition = RaylibWrapper::GetMousePosition();
