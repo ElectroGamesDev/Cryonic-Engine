@@ -5,6 +5,7 @@
 #include <sstream>
 #include <variant>
 #include <unordered_map>
+#include <thread>
 #include "Editor.h"
 #include "FontManager.h"
 #include "ConsoleLogger.h"
@@ -33,6 +34,7 @@
 #include <random>
 #include <cmath>
 #include "EventSystem.h"
+#include "ImGuiPopup.h"
 
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -3551,6 +3553,27 @@ void Editor::RenderTopbar()
     ImGui::End();
 }
 
+void OnBuildFinish(int success, bool debug) // 0 = failed, 1 = success, 2 = cancelled
+{
+    if (debug)
+    {
+        if (success == 1)
+            Utilities::OpenPathInExplorer(ProjectManager::projectData.path / "Internal" / "Builds" / "Debug" / (ProjectManager::projectData.name + ".exe"));
+        else if (success == 0)
+            ConsoleLogger::ErrorLog("Failed to enter play mode.");
+    }
+    else
+    {
+        ImGuiToast toast(success == 1 ? ImGuiToastType::Success : (success == 2 ? ImGuiToastType::Info : ImGuiToastType::Error), 2500, true);
+        toast.setTitle(success == 1 ? "Successfully built" : (success == 2 ? "Successfully cancelled" : "Build failed"), "");
+        toast.setContent(success == 1 ? "The project has successfully built." : (success == 2 ? "The project has successfully cancelled." : "The project failed to build."));
+        ImGui::InsertNotification(toast);
+
+        if (success == 2)
+            ConsoleLogger::InfoLog("Build - Build cancelled");
+    }
+}
+
 void Editor::Render(void)
 {
     // Todo: Put this in RenderDockSpace()
@@ -3606,7 +3629,6 @@ void Editor::Render(void)
     RenderProjectSettings();
     //RenderTopbar();
 
-
     // Todo: Move this to RenderTitleBar()
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2(190, 30));
@@ -3617,7 +3639,7 @@ void Editor::Render(void)
     if (ImGui::BeginMenuBar())
     {
         ImGui::SetCursorPos(ImVec2(5, 0));
-        if (ImGui::BeginMenu("File")) {
+        if (ImGui::BeginMenu("File", !ImGuiPopup::IsActive())) {
             if (ImGui::MenuItem("Save Project", "Ctrl+S"))
             {
                 SceneManager::SaveScene(SceneManager::GetActiveScene());
@@ -3629,37 +3651,20 @@ void Editor::Render(void)
             if (ImGui::MenuItem("Play", "Ctrl+P"))
             {
                 // Todo: Check if changes have been made and it needs to be recompiled
-                if (ProjectManager::BuildToWindows(ProjectManager::projectData, true))
-                    // Todo: This crashes the game instantly and needs to be fixed
-                    Utilities::OpenPathInExplorer(ProjectManager::projectData.path / "Internal" / "Builds" / "Debug" / std::string(ProjectManager::projectData.name + ".exe"));
-
-                    //std::system(("\"" + (ProjectManager::projectData.path / "Internal" / "Builds" / "Debug" / std::string(ProjectManager::projectData.name + ".exe")).string() + "\"").c_str());
+                std::thread(ProjectManager::BuildToWindows, ProjectManager::projectData, true, OnBuildFinish).detach();
             }
             if (ImGui::BeginMenu("Build Project"))
             {
                 if (ImGui::MenuItem("Windows", ""))
                 {
-                    if (ProjectManager::BuildToWindows(ProjectManager::projectData, false))
-                    {
-                        ImGuiToast toast(ImGuiToastType::Success, 2500, true);
-                        toast.setTitle("Successfully built", "");
-                        toast.setContent("The project has successfully built.");
-                        ImGui::InsertNotification(toast);
-                    }
-                    else
-                    {
-                        ImGuiToast toast(ImGuiToastType::Error, 2500, true);
-                        toast.setTitle("Build failed", "");
-                        toast.setContent("The project failed to build.");
-                        ImGui::InsertNotification(toast);
-                    }
+                    std::thread(ProjectManager::BuildToWindows, ProjectManager::projectData, false, OnBuildFinish).detach();
                 }
                 ImGui::EndMenu();
             }
             ImGui::EndMenu();
         }
         ImGui::SetCursorPos(ImVec2(43, 0));
-        if (ImGui::BeginMenu("Edit")) {
+        if (ImGui::BeginMenu("Edit", !ImGuiPopup::IsActive())) {
             if (ImGui::MenuItem("Project Settings", ""))
             {
                 if (projectSettingsWinOpen)
@@ -3688,7 +3693,7 @@ void Editor::Render(void)
             ImGui::EndMenu();
         }
         ImGui::SetCursorPos(ImVec2(85, 0));
-        if (ImGui::BeginMenu("Window")) {
+        if (ImGui::BeginMenu("Window", !ImGuiPopup::IsActive())) {
             if (ImGui::MenuItem("Hierarchy", "")) {}
             if (ImGui::MenuItem("Content Browser", "")) {}
             if (ImGui::MenuItem("Properties", "")) {}
@@ -3697,7 +3702,7 @@ void Editor::Render(void)
             ImGui::EndMenu();
         }
         ImGui::SetCursorPos(ImVec2(152, 0));
-        if (ImGui::BeginMenu("Help")) {
+        if (ImGui::BeginMenu("Help", !ImGuiPopup::IsActive())) {
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
@@ -3705,13 +3710,29 @@ void Editor::Render(void)
 
     ImGui::End();
 
-    if (ImGui::IsKeyPressed(ImGuiKey_S) && ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
+    // Popup Overlay to block input for like building
+    if (ImGuiPopup::IsActive())
     {
-        SceneManager::SaveScene(SceneManager::GetActiveScene());
-        ImGuiToast toast(ImGuiToastType::Success, 1500, true);
-        toast.setTitle("Project Saved", "");
-        toast.setContent("The project has successfully saved.");
-        ImGui::InsertNotification(toast);
+        ImGui::SetNextWindowBgAlpha(0.2f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(1, 1, 1, 1));
+        ImGui::SetNextWindowPos(ImVec2(0, 30));
+        ImGui::SetNextWindowSize(ImVec2(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight() - 30));
+        ImGui::Begin("##PopupOverlay", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
+        ImGui::End();
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
+    }
+    else // This makes sure stuff can't be changed while a popup or building is happening
+    {
+        if (ImGui::IsKeyPressed(ImGuiKey_S) && ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
+        {
+            SceneManager::SaveScene(SceneManager::GetActiveScene());
+            ImGuiToast toast(ImGuiToastType::Success, 1500, true);
+            toast.setTitle("Project Saved", "");
+            toast.setContent("The project has successfully saved.");
+            ImGui::InsertNotification(toast);
+        }
     }
 
     ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -3774,6 +3795,9 @@ void Editor::Render(void)
             ImGui::End();
         }
     }
+
+
+    ImGuiPopup::Render();
 }
 
 void Editor::SetupViewport()
