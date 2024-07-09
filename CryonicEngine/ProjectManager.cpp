@@ -9,7 +9,12 @@
 #include "Utilities.h"
 #include "Components/ScriptLoader.h"
 #include "json.hpp"
+#include "imgui.h"
 #include <vector>
+#include "ImGuiPopup.h"
+#include <Windows.h>
+#include <iostream>
+#include <regex>
 
 using json = nlohmann::json;
 
@@ -130,13 +135,13 @@ void ProjectManager::CleanupBuildFolder(std::filesystem::path path)
                     std::filesystem::remove(file.path());
             }
             catch (const std::exception& e) {
-                ConsoleLogger::ErrorLog("Build Log - Error deleting file: " + file.path().string() + " while cleaning up. Error: " + e.what());
+                ConsoleLogger::ErrorLog("Build - Error deleting file: " + file.path().string() + " while cleaning up. Error: " + e.what());
                 continue;
             }
         }
     }
     catch (const std::exception& e) {
-        ConsoleLogger::ErrorLog("Build Log - Error during build cleanup: " + (std::string)e.what());
+        ConsoleLogger::ErrorLog("Build - Error during build cleanup: " + (std::string)e.what());
         return;
     }
 }
@@ -227,7 +232,7 @@ void ProjectManager::BackupCMakeFiles(std::filesystem::path buildPath, std::file
                 }
             }
             catch (const std::exception& e) {
-                ConsoleLogger::ErrorLog("Build Log - Error backing up CMake file: " + file.path().string() + ". Error: " + e.what());
+                ConsoleLogger::ErrorLog("Build - Error backing up CMake file: " + file.path().string() + ". Error: " + e.what());
                 continue;
             }
         }
@@ -235,7 +240,7 @@ void ProjectManager::BackupCMakeFiles(std::filesystem::path buildPath, std::file
     catch (const std::filesystem::filesystem_error& e)
     {
         if (ConsoleLogger::showDebugMessages)
-            ConsoleLogger::ErrorLog("Build Log - Error backing up CMake files. Error: " + (std::string)e.what(), false);
+            ConsoleLogger::ErrorLog("Build - Error backing up CMake files. Error: " + (std::string)e.what(), false);
     }
 }
 
@@ -258,7 +263,7 @@ void ProjectManager::RestoreCMakeFiles(std::filesystem::path buildPath, std::fil
                     std::filesystem::copy(file.path(), buildPath);
             }
             catch (const std::exception& e) {
-                ConsoleLogger::ErrorLog("Build Log - Error restoring CMake file: " + file.path().string() + ". Error: " + e.what());
+                ConsoleLogger::ErrorLog("Build - Error restoring CMake file: " + file.path().string() + ". Error: " + e.what());
                 continue;
             }
         }
@@ -266,7 +271,7 @@ void ProjectManager::RestoreCMakeFiles(std::filesystem::path buildPath, std::fil
     catch (const std::filesystem::filesystem_error& e)
     {
         if (ConsoleLogger::showDebugMessages)
-            ConsoleLogger::ErrorLog("Build Log - Error restoring up CMake files. Error: " + (std::string)e.what(), false);
+            ConsoleLogger::ErrorLog("Build - Error restoring up CMake files. Error: " + (std::string)e.what(), false);
     }
 }
 
@@ -278,12 +283,12 @@ bool ProjectManager::SetGameSettings(std::filesystem::path gameFile)
 
     if (!inputFile)
     {
-        ConsoleLogger::ErrorLog("Build Log - Error opening Game.cpp. Terminating build.", false);
+        ConsoleLogger::ErrorLog("Build - Error opening Game.cpp. Terminating build.", false);
         return false;
     }
     if (!outputFile)
     {
-        ConsoleLogger::ErrorLog("Build Log - Error creating temporary game.cpp file. Terminating build.", false);
+        ConsoleLogger::ErrorLog("Build - Error creating temporary game.cpp file. Terminating build.", false);
         return false;
     }
 
@@ -361,10 +366,30 @@ bool ProjectManager::SetGameSettings(std::filesystem::path gameFile)
     return true;
 }
 
-bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo: Maybe make a .json format file that contains information like scenes and which scene should be first opened
+void CancelBuild()
 {
+    ImGuiPopup::Cancel();
+    ImGuiPopup::SetContent("Cancelling build...");
+}
+
+bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::function<void(int, bool)> callback) // Todo: Maybe make a .json format file that contains information like scenes and which scene should be first opened
+{
+    ImGuiPopup::Create("Building to windows", "Saving scenes...", { {"Cancel", CancelBuild} }, true);
+
     // Backing up and restoring cmake files is completely useless since when cmake files are moved, it breaks incremental builds. Not sure if this is an issue with CMake, or my code.
     SceneManager::SaveScene(SceneManager::GetActiveScene());
+
+    if (ImGuiPopup::IsCancelled())
+    {
+        ImGuiPopup::SetActive(false);
+        callback(2, debug);
+        return false;
+    }
+    else
+    {
+        ImGuiPopup::SetContent("Creating directories...");
+        ImGuiPopup::SetProgress(5);
+    }
 
     std::filesystem::path path = projectData.path / "Builds" / "Windows";
     std::filesystem::path buildPath;
@@ -392,6 +417,18 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     std::string projectName = projectData.name; // Project name with underscores instead of spaces
     std::replace(projectName.begin(), projectName.end(), ' ', '_');
 
+    if (ImGuiPopup::IsCancelled())
+    {
+        ImGuiPopup::SetActive(false);
+        callback(2, debug);
+        return false;
+    }
+    else
+    {
+        ImGuiPopup::SetContent("Copying files...");
+        ImGuiPopup::SetProgress(10);
+    }
+
     try
     {
         // Todo: Using __FILE__ won't work on other computers
@@ -402,12 +439,23 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         std::filesystem::remove_all(buildPath / "3D");
         std::filesystem::remove_all(buildPath / "2D");
 
+        if (ImGuiPopup::IsCancelled())
+        {
+            ImGuiPopup::SetActive(false);
+            callback(2, debug);
+            return false;
+        }
+        else
+        {
+            ImGuiPopup::SetContent("Setting game name...");
+            ImGuiPopup::SetProgress(15);
+        }
 
         // Changing name of the game in the CMakeList.txt
         std::ifstream cmakeListsFile(buildPath / "CMakeLists.txt");
         if (!cmakeListsFile.is_open())
         {
-            ConsoleLogger::ErrorLog("Build Log - Failed to open the CMakesLists.txt to modify the game's name. Terminating build.", false);
+            ConsoleLogger::ErrorLog("Build - Failed to open the CMakesLists.txt to modify the game's name. Terminating build.", false);
             try {
                 for (const auto& file : std::filesystem::directory_iterator(buildPath))
                     if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
@@ -415,6 +463,8 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
             }
             catch (const std::filesystem::filesystem_error& ex) {}
             //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
+            callback(0, debug);
+            ImGuiPopup::SetActive(false);
             return false;
         }
 
@@ -425,7 +475,7 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
             contents.replace(pos, 19, "project(\"" + projectName + "\")");
         else
         {
-            ConsoleLogger::ErrorLog("Build Log - Failed to set the name of the game. Terminating build.", false);
+            ConsoleLogger::ErrorLog("Build - Failed to set the name of the game. Terminating build.", false);
             try {
                 for (const auto& file : std::filesystem::directory_iterator(buildPath))
                     if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
@@ -433,11 +483,24 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
             }
             catch (const std::filesystem::filesystem_error& ex) {}
             //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
+            callback(0, debug);
+            ImGuiPopup::SetActive(false);
             return false;
         }
 
         std::ofstream(buildPath / "CMakeLists.txt") << contents;
 
+        if (ImGuiPopup::IsCancelled())
+        {
+            ImGuiPopup::SetActive(false);
+            callback(2, debug);
+            return false;
+        }
+        else
+        {
+            ImGuiPopup::SetContent("Setting project settings...");
+            ImGuiPopup::SetProgress(20);
+        }
 
         // Set values from project settings in Game.cxp
         if (!SetGameSettings(buildPath / "Source" / "Game.cpp"))
@@ -449,6 +512,8 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
             }
             catch (const std::filesystem::filesystem_error& ex) {}
             //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
+            callback(0, debug);
+            ImGuiPopup::SetActive(false);
             return false;
         }
 
@@ -463,7 +528,7 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     }
     catch (const std::filesystem::filesystem_error& e)
     {
-        ConsoleLogger::ErrorLog("Build Log - Error copying BuildPresets directory and/or files. Terminating build. Error: " + (std::string)e.what(), false);
+        ConsoleLogger::ErrorLog("Build - Error copying BuildPresets directory and/or files. Terminating build. Error: " + (std::string)e.what(), false);
         try {
             for (const auto& file : std::filesystem::directory_iterator(buildPath))
                 if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
@@ -471,7 +536,21 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         }
         catch (const std::filesystem::filesystem_error& ex) {}
         //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
+        callback(0, debug);
+        ImGuiPopup::SetActive(false);
         return false;
+    }
+
+    if (ImGuiPopup::IsCancelled())
+    {
+        ImGuiPopup::SetActive(false);
+        callback(2, debug);
+        return false;
+    }
+    else
+    {
+        ImGuiPopup::SetContent("Copying API files...");
+        ImGuiPopup::SetProgress(25);
     }
 
     if (!std::filesystem::exists(projectData.path / "api"))
@@ -487,6 +566,18 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
 
     CopyAssetFiles(buildPath / "Resources" / "Assets");
 
+    if (ImGuiPopup::IsCancelled())
+    {
+        ImGuiPopup::SetActive(false);
+        callback(2, debug);
+        return false;
+    }
+    else
+    {
+        ImGuiPopup::SetContent("Copying resource files...");
+        ImGuiPopup::SetProgress(30);
+    }
+
     // Copies resource files
     try {
         // Todo: Using __FILE__ won't work on other computers
@@ -494,7 +585,7 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         std::filesystem::copy(std::filesystem::path(__FILE__).parent_path() / "resources" / "shaders", buildPath / "Resources" / "shaders", std::filesystem::copy_options::recursive);
     }
     catch (const std::exception& e) {
-        ConsoleLogger::ErrorLog("Build Log - Failed to copy resource files: " + (std::string)e.what());
+        ConsoleLogger::ErrorLog("Build - Failed to copy resource files: " + (std::string)e.what());
         try {
             for (const auto& file : std::filesystem::directory_iterator(buildPath))
                 if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile")
@@ -502,7 +593,21 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         }
         catch (const std::filesystem::filesystem_error& ex) {}
         //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
+        callback(0, debug);
+        ImGuiPopup::SetActive(false);
         return false;
+    }
+
+    if (ImGuiPopup::IsCancelled())
+    {
+        ImGuiPopup::SetActive(false);
+        callback(2, debug);
+        return false;
+    }
+    else
+    {
+        ImGuiPopup::SetContent("Building scripts...");
+        ImGuiPopup::SetProgress(35);
     }
 
     if (!BuildScripts(projectData.path / "Assets" / "Scripts", buildPath / "Source")) // Todo: This should handle the error messages, not BuildScripts(). BuildScripts() should return an int
@@ -514,7 +619,21 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         }
         catch (const std::filesystem::filesystem_error& ex) {}
         //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
+        callback(0, debug);
+        ImGuiPopup::SetActive(false);
         return false;
+    }
+
+    if (ImGuiPopup::IsCancelled())
+    {
+        ImGuiPopup::SetActive(false);
+        callback(2, debug);
+        return false;
+    }
+    else
+    {
+        ImGuiPopup::SetContent("Setting exposed variables...");
+        ImGuiPopup::SetProgress(40);
     }
 
     GenerateExposedVariablesFunctions(buildPath / "Source");
@@ -523,7 +642,19 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     std::filesystem::path originalPath = std::filesystem::current_path();
     _chdir(buildPath.string().c_str());
 
-    ConsoleLogger::InfoLog("Build Log - Running cmake", false);
+    if (ImGuiPopup::IsCancelled())
+    {
+        ImGuiPopup::SetActive(false);
+        callback(2, debug);
+        return false;
+    }
+    else
+    {
+        ImGuiPopup::SetContent("Running CMake...");
+        ImGuiPopup::SetProgress(45);
+    }
+
+    ConsoleLogger::InfoLog("Build - Running cmake", false);
 
     std::string buildType;
     if (debug)
@@ -531,11 +662,204 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     else
         buildType = "Release";
 
-    system(("cmake -G \"MinGW Makefiles\" -DCMAKE_BUILD_TYPE=" + buildType + " .").c_str());
+    //system(("cmake -G \"MinGW Makefiles\" -DCMAKE_BUILD_TYPE=" + buildType + " .").c_str());
 
-    ConsoleLogger::InfoLog("Build Log - Running mingw32-make", false);
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+    std::string command = "cmake -G \"MinGW Makefiles\" -DCMAKE_BUILD_TYPE=" + buildType + " .";
 
-    system(("mingw32-make -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1))) + " PLATFORM=PLATFORM_DESKTOP").c_str()); // Todo: Make the number of cores configurable, and default at 75%. Also make sure its at least 1.
+    if (!CreateProcessA(NULL, const_cast<LPSTR>(command.c_str()), NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi))
+    {
+        ConsoleLogger::ErrorLog("Build - Failed to run CMake");
+        ImGuiPopup::SetActive(false);
+        callback(0, false);
+        return false;
+    }
+
+    while (true)
+    {
+        DWORD waitResult = WaitForSingleObject(pi.hProcess, 100);
+        if (waitResult == WAIT_OBJECT_0)
+            break;
+        else if (waitResult != WAIT_TIMEOUT)
+        {
+            ConsoleLogger::ErrorLog("Build - Failed to run CMake");
+            ImGuiPopup::SetActive(false);
+            callback(0, debug);
+            return false;
+        }
+        if (ImGuiPopup::IsCancelled())
+        {
+            Utilities::TerminateProcess(pi.dwProcessId, 1); // Using a custom TerminateProcess() function since window's TerminateProcess(), and CloseHandle() wouldn't work during MinGW make
+
+            //system(("taskkill /F /T /PID " + std::to_string(pi.dwProcessId)).c_str()); // This works, but is a bad solution
+
+            // This does not work
+            //TerminateProcess(pi.hProcess, 2);
+            //CloseHandle(pi.hProcess);
+            //CloseHandle(pi.hThread);
+
+            ConsoleLogger::InfoLog("CMake cancelled");
+
+            ImGuiPopup::SetActive(false);
+            callback(2, debug);
+            return false;
+        }
+    }
+
+    DWORD exitCode;
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    if (exitCode != 0)
+    {
+        ConsoleLogger::ErrorLog("Build - Failed to run CMake");
+        ImGuiPopup::SetActive(false);
+        callback(0, debug);
+        return false;
+    }
+
+    if (ImGuiPopup::IsCancelled())
+    {
+        ImGuiPopup::SetActive(false);
+        callback(2, debug);
+        return false;
+    }
+    else
+    {
+        ImGuiPopup::SetContent("Compiling..."); // Todo: Consider getting each message and putting them here, or at least a simplified version from the message
+        ImGuiPopup::SetProgress(50);
+    }
+
+    ConsoleLogger::InfoLog("Build - Running mingw32-make", false);
+
+    // Creating a pipe so I can get the output from MinGW Make
+    SECURITY_ATTRIBUTES saAttr;
+    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.bInheritHandle = TRUE;
+    saAttr.lpSecurityDescriptor = NULL;
+
+    HANDLE hStdoutRead, hStdoutWrite;
+    bool pipeCreated = true;
+
+    if (!CreatePipe(&hStdoutRead, &hStdoutWrite, &saAttr, 0))
+    {
+        ConsoleLogger::ErrorLog("Failed to create pipe for MinGW Make");
+        pipeCreated = false;
+    }
+
+    // Crating a process and running MinGW Make
+    
+    //system(("mingw32-make -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1))) + " PLATFORM=PLATFORM_DESKTOP").c_str());
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+
+    if (pipeCreated)
+    {
+        SetHandleInformation(hStdoutRead, HANDLE_FLAG_INHERIT, 0);
+        if (ConsoleLogger::showDebugMessages)
+            si.hStdError = GetStdHandle(STD_ERROR_HANDLE); // This is needed to keep the colours on error messages
+        else
+            si.hStdError = hStdoutWrite;
+        si.hStdOutput = hStdoutWrite;
+        si.dwFlags |= STARTF_USESTDHANDLES;
+    }
+
+    command = "mingw32-make -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1))) + " PLATFORM=PLATFORM_DESKTOP"; // Todo: Make the number of cores configurable, and default at 75%. Also make sure its at least 1.
+
+    if (!CreateProcessA(NULL, const_cast<LPSTR>(command.c_str()), NULL, NULL, TRUE, NULL, NULL, NULL, &si, &pi))
+    {
+        ConsoleLogger::ErrorLog("Build - Failed to run mingw32-make");
+        if (pipeCreated)
+        {
+            CloseHandle(hStdoutRead);
+            CloseHandle(hStdoutWrite);
+        }
+        ImGuiPopup::SetActive(false);
+        callback(0, false);
+        return false;
+    }
+
+    if (pipeCreated)
+        CloseHandle(hStdoutWrite);
+
+    char buffer[4096];
+    DWORD dwRead;
+
+    while (true)
+    {
+        DWORD waitResult = WaitForSingleObject(pi.hProcess, 100);
+        if (waitResult == WAIT_OBJECT_0)
+            break;
+        else if (waitResult != WAIT_TIMEOUT)
+        {
+            ConsoleLogger::ErrorLog("Build - Failed to compile game");
+            ImGuiPopup::SetActive(false);
+            callback(0, debug);
+            if (pipeCreated)
+                CloseHandle(hStdoutRead);
+            return false;
+        }
+
+        if (ImGuiPopup::IsCancelled())
+        {
+            Utilities::TerminateProcess(pi.dwProcessId, 1); // Using a custom TerminateProcess() function since window's TerminateProcess(), and CloseHandle() wouldn't work during MinGW make
+
+            //system(("taskkill /F /T /PID " + std::to_string(pi.dwProcessId)).c_str()); // This works, but is a bad solution
+
+            // This does not work
+            //TerminateProcess(pi.hProcess, 2);
+            //CloseHandle(pi.hProcess);
+            //CloseHandle(pi.hThread);
+
+            ConsoleLogger::InfoLog("MinGW Make cancelled");
+
+            ImGuiPopup::SetActive(false);
+            callback(2, debug);
+            if (pipeCreated)
+                CloseHandle(hStdoutRead);
+            return false;
+        }
+
+        if (pipeCreated && ReadFile(hStdoutRead, buffer, sizeof(buffer) - 1, &dwRead, NULL) && dwRead > 0)
+        {
+            buffer[dwRead] = '\0';
+            std::string line(buffer, dwRead);
+
+            std::smatch match;
+
+            if (std::regex_search(line, match, std::regex(R"(Linking CXX executable)")))
+            {
+                ImGuiPopup::SetContent("Linking executable...");
+                ImGuiPopup::SetProgress(90);
+            }
+            else if (std::regex_search(line, match, std::regex(R"(\[(\s?\d{1,3})%\])")))
+                ImGuiPopup::SetProgress(50 + ((std::stoi(match[1]) * 40) / 100)); // MinGW compile is only worth 40% of the total build progress which is why it multiplies by 40 and divides by 100
+
+            if (ConsoleLogger::showDebugMessages)
+                std::cout << buffer;
+        }
+    }
+
+    if (pipeCreated)
+        CloseHandle(hStdoutRead);
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    if (exitCode != 0)
+    {
+        ConsoleLogger::ErrorLog("Build - Failed to compile game");
+        ImGuiPopup::SetActive(false);
+        callback(0, debug);
+        return false;
+    }
 
     // Resets the current path
     _chdir(originalPath.string().c_str());
@@ -544,16 +868,29 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     //std::filesystem::rename(buildPath / "Game.exe", buildPath / projectData.name + ".exe.); ------------------------ Fix this
 
     // Rename exe to replace underscores with spaces
-    ConsoleLogger::InfoLog("Build Log - Renaming executable", false);
+
+    if (ImGuiPopup::IsCancelled())
+    {
+        ImGuiPopup::SetActive(false);
+        callback(2, debug);
+        return false;
+    }
+    else
+    {
+        ImGuiPopup::SetContent("Finishing up...");
+        ImGuiPopup::SetProgress(95);
+    }
+
+    ConsoleLogger::InfoLog("Build - Renaming executable", false);
     try {
         std::filesystem::rename(buildPath / std::string(projectName + ".exe"), buildPath / std::string(projectData.name + ".exe"));
     }
     catch (const std::filesystem::filesystem_error& ex)
     {
         if (ConsoleLogger::showDebugMessages)
-            ConsoleLogger::WarningLog(std::string("Build Log - The executable could not be renamed. Error: ") + ex.what());
+            ConsoleLogger::WarningLog(std::string("Build - The executable could not be renamed. Error: ") + ex.what());
         else
-            ConsoleLogger::WarningLog("Build Log - The executable failed to be renamed");
+            ConsoleLogger::WarningLog("Build - The executable failed to be renamed");
     }
 
     // Backing up CMake Files for incremental builds
@@ -562,7 +899,7 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
     // Cleanup
     if (!debug)
     {
-        ConsoleLogger::InfoLog("Build Log - Cleaning up", false);
+        ConsoleLogger::InfoLog("Build - Cleaning up", false);
         CleanupBuildFolder(buildPath);
     }
 
@@ -584,9 +921,9 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         catch (const std::filesystem::filesystem_error& ex)
         {
             if (ConsoleLogger::showDebugMessages)
-                ConsoleLogger::ErrorLog(std::string("Build Log - There was an error moving build files to your selectred build folder. Terminating build. Error: ") + ex.what());
+                ConsoleLogger::ErrorLog(std::string("Build - There was an error moving build files to your selectred build folder. Terminating build. Error: ") + ex.what());
             else
-                ConsoleLogger::ErrorLog("Build Log - There was an error moving build files to your selectred build folder. Terminating build.");
+                ConsoleLogger::ErrorLog("Build - There was an error moving build files to your selectred build folder. Terminating build.");
 
             try {
                 for (const auto& file : std::filesystem::directory_iterator(buildPath))
@@ -595,6 +932,8 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
             }
             catch (const std::filesystem::filesystem_error& ex) {}
 
+            callback(0, debug);
+            ImGuiPopup::SetActive(false);
             return false;
         }
 
@@ -606,11 +945,13 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug) // Todo
         catch (const std::filesystem::filesystem_error& ex) {}
     }
 
-    ConsoleLogger::InfoLog("Build Log - Build complete", false);
+    ConsoleLogger::InfoLog("Build - Build complete", false);
 
     if (!debug)
         Utilities::OpenPathInExplorer(path);
 
+    callback(1, debug);
+    ImGuiPopup::SetActive(false);
     return true;
 }
 
