@@ -3035,11 +3035,17 @@ void Editor::RenderProperties()
 
 void Editor::RenderConsole()
 {
+    static std::string previousMessages = "";
     if (ImGui::Begin((ICON_FA_CODE + std::string(" Console")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
     {
         ImGui::Text(ConsoleLogger::consoleText.c_str());
+        
+        if (ConsoleLogger::consoleText != previousMessages && ImGui::GetScrollMaxY() - ImGui::GetScrollY() < 50)
+            ImGui::SetScrollHereY(1);
     }
     ImGui::End();
+
+    previousMessages = ConsoleLogger::consoleText;
 }
 
 bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor)
