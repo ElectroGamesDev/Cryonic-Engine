@@ -36,7 +36,7 @@ public:
 	void RenderFileExplorer();
 	int RenderColorPicker(std::string name, ImVec2 position, ImVec4& selectedColor, ImVec4& previousColor); // Does this really need to be in here?
 	void RenderProperties();
-	bool RenderHierarchyNode(GameObject* gameObject, bool normalColor);
+	bool RenderHierarchyNode(GameObject* gameObject, bool normalColor, bool& childDoubleClicked);
 	void RenderHierarchy();
 	void RenderTopbar();
 	void RenderComponentsWin();

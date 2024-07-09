@@ -3066,107 +3066,76 @@ void Editor::RenderConsole()
     numberOfLogs = ConsoleLogger::logs.size();
 }
 
-bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor)
+bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor, bool& childDoubleClicked)
 {
+    childDoubleClicked = false;
+
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
-
-    if (normalColor)
-        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(36, 40, 43, 255)); // 53, 53, 53
-    else
-        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(45, 48, 51, 255)); // 62, 62, 62
+    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, normalColor ? IM_COL32(36, 40, 43, 255) : IM_COL32(45, 48, 51, 255));
 
     //ImGui::PushStyleColor(ImGuiCol_Header, {64, 64, 64, 255});
 
-    ImGuiTreeNodeFlags flags =  ImGuiTreeNodeFlags_SpanAvailWidth;
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
 
     if (selectedObject != nullptr && selectedObject->GetId() == gameObject->GetId())
         flags |= ImGuiTreeNodeFlags_Selected;
 
-    if (gameObject->GetChildren().size() <= 0)
-        flags |= ImGuiTreeNodeFlags_Leaf;
-    else flags |= ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+    flags |= gameObject->GetChildren().empty() ? ImGuiTreeNodeFlags_Leaf : ImGuiTreeNodeFlags_OpenOnArrow;
 
     //std::string icon = ICON_FA_CUBE;
     //if (gameObject->GetComponent<CameraComponent>()) // Todo: Not sure if this is a good idea to check if it has teh Camera component every frame.
     //    icon = ICON_FA_CAMERA;
 
-    if (ImGui::TreeNodeEx((ICON_FA_CUBE + std::string(" ") + gameObject->GetName() + "##" + std::to_string(gameObject->GetId())).c_str(), flags))
+    // This is coded a bit different than I normally would since TreeNodeEx() doesn't return true if the game object has children but its not expanded
+    bool nodeOpen = ImGui::TreeNodeEx((ICON_FA_CUBE + std::string(" ") + gameObject->GetName() + "##" + std::to_string(gameObject->GetId())).c_str(), flags);
+
+    bool currentNodeDoubleClicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+
+    if (ImGui::IsItemClicked())
     {
-        if (!ImGui::IsItemToggledOpen())
-        {
-            if (ImGui::IsItemClicked())
-            {
-                hierarchyObjectClicked = true;
-                //if (selectedObject != nullptr)
-                    //EventSystem::Invoke("ObjectDeselected", selectedObject);
-                objectInProperties = gameObject;
-                selectedObject = gameObject;
-                //EventSystem::Invoke("ObjectSelected", selectedObject);
-
-                if (selectedObject->GetComponent<CameraComponent>() != nullptr)
-                    cameraSelected = true;
-                else if (cameraSelected)
-                {
-                    cameraSelected = false;
-                    resetCameraView = true;
-                }
-            }
-            else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
-                objectInHierarchyContextMenu = gameObject;
-
-
-            for (GameObject* child : gameObject->GetChildren())
-                normalColor = RenderHierarchyNode(child, normalColor);
-
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-            {
-                // Todo: If 3D, rotate the camera and set proper distance depending on the mesh's size
-                // Todo: For 2D and if its a sprite, set proper distance so entire sprite fits on screen
-                // Todo: Lerp camera position to target
-                camera.position = { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, camera.position.z };
-                camera.target.x = camera.position.x;
-                camera.target.y = camera.position.y;
-            }
+        hierarchyObjectClicked = true;
+        //if (selectedObject != nullptr)
+        //EventSystem::Invoke("ObjectDeselected", selectedObject);
+        objectInProperties = selectedObject = gameObject;
+        //EventSystem::Invoke("ObjectSelected", selectedObject);
+        cameraSelected = selectedObject->GetComponent<CameraComponent>() != nullptr;
+        if (!cameraSelected && cameraSelected) {
+            cameraSelected = false;
+            resetCameraView = true;
         }
+    }
+    else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+    {
+        objectInHierarchyContextMenu = gameObject;
+    }
 
+    if (nodeOpen)
+    {
+        for (GameObject* child : gameObject->GetChildren())
+        {
+            bool childClicked = false;
+            normalColor = RenderHierarchyNode(child, !normalColor, childClicked);
+            childDoubleClicked |= childClicked;
+        }
         ImGui::TreePop();
     }
-    // For some reason if the game object has children and its not expanded, the if statment above doesn't return true.
-    else if (gameObject->GetChildren().size() > 0)
+
+    if (currentNodeDoubleClicked && !childDoubleClicked)
     {
-        if (ImGui::IsItemClicked())
-        {
-            hierarchyObjectClicked = true;
-            //if (selectedObject != nullptr)
-                //EventSystem::Invoke("ObjectDeselected", selectedObject);
-            objectInProperties = gameObject;
-            selectedObject = gameObject;
-            //EventSystem::Invoke("ObjectSelected", selectedObject);
+        // Todo: If 3D, rotate the camera and set proper distance depending on the mesh's size
+        // Todo: For 2D and if its a sprite, set proper distance so entire sprite fits on screen
+        // Todo: Lerp camera position to target
+        const auto& pos = gameObject->transform.GetPosition();
+        ConsoleLogger::InfoLog("GameObject: " + gameObject->GetName() +
+            " X: " + std::to_string(pos.x) +
+            " Y: " + std::to_string(pos.y));
 
-            if (selectedObject->GetComponent<CameraComponent>() != nullptr)
-                cameraSelected = true;
-            else if (cameraSelected)
-            {
-                cameraSelected = false;
-                resetCameraView = true;
-            }
-        }
-        else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
-            objectInHierarchyContextMenu = gameObject;
-
-        // Unlike above, I am not rendering children since the node must be closed for this code to run
-
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-        {
-            // Todo: If 3D, rotate the camera and set proper distance depending on the mesh's size
-            // Todo: For 2D and if its a sprite, set proper distance so entire sprite fits on screen
-            // Todo: Lerp camera position to target
-            camera.position = { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, camera.position.z };
-            camera.target.x = camera.position.x;
-            camera.target.y = camera.position.y;
-        }
+        camera.position = { pos.x, pos.y, camera.position.z };
+        camera.target = { pos.x, pos.y, camera.target.z };
     }
+
+    childDoubleClicked |= currentNodeDoubleClicked;
 
     return normalColor; // Todo: If has child and child is open, return the lowest color rather than this node's color
 }
@@ -3190,7 +3159,10 @@ void Editor::RenderHierarchy()
 
         for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
             if (gameObject->GetParent() == nullptr)
-                hierarchyRowColor = !RenderHierarchyNode(gameObject, hierarchyRowColor);
+            {
+                bool childDoubleClicked = false;
+                hierarchyRowColor = !RenderHierarchyNode(gameObject, hierarchyRowColor, childDoubleClicked);
+            }
 
         hierarchyRowColor = false;
         ImGui::EndTable();
