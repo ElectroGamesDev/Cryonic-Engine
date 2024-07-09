@@ -3171,7 +3171,7 @@ void Editor::RenderHierarchy()
                 ModelType model;
             };
 
-            static const std::vector<ObjectItem> objectItems = {
+            static const std::vector<ObjectItem> menuObjects = {
                 {"Create Empty", "GameObject", 1, Custom},
                 {"Create Cube", "Cube", 3, Cube},
                 {"Create Cylinder", "Cylinder", 3, Cylinder},
@@ -3186,7 +3186,7 @@ void Editor::RenderHierarchy()
 
             ObjectItem objectToCreate = {"", "", 0, Custom};
             
-            for (const ObjectItem& item : objectItems)
+            for (const ObjectItem& item : menuObjects)
             {
                 if ((!ProjectManager::projectData.is3D && item.dimension == 3) || (ProjectManager::projectData.is3D && item.dimension == 2))
                     continue;
