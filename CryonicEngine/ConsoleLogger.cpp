@@ -6,13 +6,13 @@
 #endif
 
 bool ConsoleLogger::showDebugMessages = true;
-std::vector<std::pair<std::string, ConsoleLogger::ConsoleLogType>> ConsoleLogger::consoleText;
+std::vector<std::pair<std::string, ConsoleLogger::ConsoleLogType>> ConsoleLogger::logs;
 
 void ConsoleLogger::InfoLog(const std::string& message, bool devMessage)
 {
     if (devMessage && !showDebugMessages) return;
     std::cout << "[INFO] " << message << std::endl;
-    consoleText.push_back({ message, ConsoleLogType::INFO });
+    logs.push_back({ message, ConsoleLogType::INFO });
 }
 
 void ConsoleLogger::WarningLog(const std::string& message, bool devMessage)
@@ -26,7 +26,7 @@ void ConsoleLogger::WarningLog(const std::string& message, bool devMessage)
 #ifdef _WIN32
     SetConsoleTextAttribute(hConsole, 15); // Reset color
 #endif
-    consoleText.push_back({ message, ConsoleLogType::WARNING });
+    logs.push_back({ message, ConsoleLogType::WARNING });
 }
 
 void ConsoleLogger::ErrorLog(const std::string& message, bool devMessage)
@@ -40,5 +40,5 @@ void ConsoleLogger::ErrorLog(const std::string& message, bool devMessage)
 #ifdef _WIN32
     SetConsoleTextAttribute(hConsole, 15); // Reset color
 #endif
-    consoleText.push_back({ message, ConsoleLogType::ERROR_ });
+    logs.push_back({ message, ConsoleLogType::ERROR_ });
 }

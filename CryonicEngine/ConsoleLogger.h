@@ -21,6 +21,6 @@ public:
         ConsoleLogType type;
     };
 
-    static std::vector<std::pair<std::string, ConsoleLogType>> consoleText;
+    static std::vector<std::pair<std::string, ConsoleLogType>> logs;
     static bool showDebugMessages;
 };
