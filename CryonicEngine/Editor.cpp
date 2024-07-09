@@ -324,7 +324,9 @@ void Editor::RenderViewport()
 
 void Editor::UpdateViewport()
 {
-    if (!viewportOpen) return;
+    if (!viewportOpen)
+        return;
+
     if (RaylibWrapper::IsWindowResized())
     {
         UnloadRenderTexture(ViewTexture);
@@ -409,12 +411,8 @@ void Editor::UpdateViewport()
 
     RaylibWrapper::BeginTextureMode(ViewTexture);
 
-    if (ProjectManager::projectData.is3D)
-    {
-        RaylibWrapper::ClearBackground({ 135, 206, 235, 255 });
-    }
-    else
-        RaylibWrapper::ClearBackground({128, 128, 128, 255});
+    RaylibWrapper::ClearBackground(ProjectManager::projectData.is3D ? RaylibWrapper::Color{ 135, 206, 235, 255 } : RaylibWrapper::Color{ 128, 128, 128, 255 });
+
     RaylibWrapper::BeginMode3D(camera);
 
     if (ProjectManager::projectData.is3D)
@@ -424,12 +422,17 @@ void Editor::UpdateViewport()
 
     for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
-        if (!gameObject->IsActive()) continue;
+        if (!gameObject->IsActive())
+            continue;
+
         for (Component* component : gameObject->GetComponents())
         {
-            if (!component->IsActive()) continue;
+            if (!component->IsActive())
+                continue;
+
             if (component->runInEditor)
                 component->Update();
+
             component->EditorUpdate();
         }
     }
@@ -440,6 +443,7 @@ void Editor::UpdateViewport()
         ImVec2 mousePos = ImGui::GetMousePos();
         viewportHovered = (mousePos.x >= viewportPosition.x && mousePos.x <= viewportPosition.z &&
             mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w);
+
         if (viewportHovered)
         {
             RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
@@ -450,13 +454,6 @@ void Editor::UpdateViewport()
             RaylibWrapper::Texture2D texture = std::any_cast<RaylibWrapper::Texture2D>(dragData.second["Texture"]);
             float centerWidth = texture.width / 2.0f;
             float centerHeight = texture.height / 2.0f;
-            //DrawRectangleWrapper(position.x, position.y, 20, 20, 0, 255, 255, 255, 255);
-            //RaylibWrapper::DrawTexturePro(texture,
-            //    { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) },
-            //    { position.x - centerWidth, position.y - centerHeight },
-            //    {centerWidth, centerHeight},
-            //    0,
-            //    {255, 255, 255, 255});
 
             RaylibWrapper::DrawTextureProFlipped(texture,
                 { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) * -1 },
