@@ -3035,17 +3035,35 @@ void Editor::RenderProperties()
 
 void Editor::RenderConsole()
 {
-    static std::string previousMessages = "";
+    static int numberOfLogs = 0;
     if (ImGui::Begin((ICON_FA_CODE + std::string(" Console")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
     {
-        ImGui::Text(ConsoleLogger::consoleText.c_str());
+        for (std::pair<std::string, ConsoleLogger::ConsoleLogType>& message : ConsoleLogger::logs)
+        {
+            switch (message.second)
+            {
+                case ConsoleLogger::ConsoleLogType::INFO:
+                    ImGui::TextColored({ 0.8f, 0.8f, 0.8f, 1.0f }, "[INFO]");
+                    break;
+                case ConsoleLogger::ConsoleLogType::WARNING:
+                    ImGui::TextColored({ 1.0f, 1.0f, 0.60f, 1.0f }, "[WARNING]");
+                    break;
+                case ConsoleLogger::ConsoleLogType::ERROR_:
+                    ImGui::TextColored({ 1.0f, 0.4f, 0.4f, 1.0f }, "[ERROR]");
+                    break;
+            }
+            ImGui::SameLine();
+            ImGui::Text(message.first.c_str());
+        }
         
-        if (ConsoleLogger::consoleText != previousMessages && ImGui::GetScrollMaxY() - ImGui::GetScrollY() < 50)
+        if (ConsoleLogger::logs.size() != numberOfLogs && ImGui::GetScrollMaxY() - ImGui::GetScrollY() < 50)
             ImGui::SetScrollHereY(1);
+
+        ImGui::NewLine();
     }
     ImGui::End();
 
-    previousMessages = ConsoleLogger::consoleText;
+    numberOfLogs = ConsoleLogger::logs.size();
 }
 
 bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor)
