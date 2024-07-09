@@ -3702,6 +3702,7 @@ void Editor::Render(void)
         if (ImGui::BeginMenu("Window", !ImGuiPopup::IsActive())) {
             if (ImGui::MenuItem("Hierarchy", "")) {}
             if (ImGui::MenuItem("Content Browser", "")) {}
+            if (ImGui::MenuItem("Console", "")) {}
             if (ImGui::MenuItem("Properties", "")) {}
             if (ImGui::MenuItem("Sprite Editor", "")) {}
             if (ImGui::MenuItem("Animation Graph", "")) { animationGraphWinOpen = true; }
