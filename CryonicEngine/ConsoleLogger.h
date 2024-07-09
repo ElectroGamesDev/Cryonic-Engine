@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <utility>
 
 class ConsoleLogger
 {
@@ -10,8 +12,8 @@ public:
     static void ErrorLog(const std::string& message, bool devMessage = true);
 
     enum class ConsoleLogType {
-        WARNING,
         INFO,
+        WARNING,
         ERROR_
     };
     struct ConsoleLog {
@@ -19,6 +21,6 @@ public:
         ConsoleLogType type;
     };
 
-    static std::string consoleText;
+    static std::vector<std::pair<std::string, ConsoleLogType>> consoleText;
     static bool showDebugMessages;
 };
