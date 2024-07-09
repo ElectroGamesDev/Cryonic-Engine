@@ -55,6 +55,9 @@ void Scene::RemoveGameObject(GameObject* gameObject)
     for (Component* component : gameObject->GetComponents())
         gameObject->RemoveComponent(component);
 
+    if (gameObject->GetParent() != nullptr)
+        gameObject->SetParent(nullptr);
+
     auto it = std::find_if(m_GameObjects.begin(), m_GameObjects.end(),
         [gameObject](const GameObject* go) { return go->GetId() == gameObject->GetId(); });
     if (it != m_GameObjects.end()) {
