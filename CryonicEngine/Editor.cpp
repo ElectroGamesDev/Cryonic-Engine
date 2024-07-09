@@ -1465,9 +1465,10 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
     if (id != oldId)
     {
         open = true;
-        memset(searchBuffer, '\0', sizeof(searchBuffer));
+        memset(searchBuffer, 0, sizeof(searchBuffer));
         ImGui::SetNextWindowScroll({0,0});
     }
+
     std::string selectedFile = "";
     ImGui::SetNextWindowSize(ImVec2(200, 250));
     ImGui::SetNextWindowPos(position);
@@ -1506,60 +1507,56 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
         ImGui::TreePop();
     }
 
+    std::string search = searchBuffer;
+    std::transform(search.begin(), search.end(), search.begin(), ::tolower);
+
     try
     {
         for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
         {
-            if (std::filesystem::is_regular_file(file) && std::find(extensions.begin(), extensions.end(), file.path().extension().string()) != extensions.end())
+            if (!std::filesystem::is_regular_file(file) || std::find(extensions.begin(), extensions.end(), file.path().extension().string()) == extensions.end())
+                continue;
+
+            // This converts the search and file name to lower case so its case insensitive
+            std::string fileName = (extensions.size() > 1) ? file.path().filename().string() : file.path().stem().string();
+            std::string lowerFileName = fileName;
+
+            std::transform(lowerFileName.begin(), lowerFileName.end(), lowerFileName.begin(), ::tolower);
+
+            if (searchBuffer[0] != '\0' && lowerFileName.find(search) == std::string::npos)
+                continue;
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            // Using ImGuiTreeNodeFlags_Framed flag adds a frame and aligns it to the left, but then selected flag doesn't work. I would need to set the node color if I want to make it so they have a frame or aligned to the left
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding;
+            // Checks to see if the file path contains the selectedPath and if it does, then select it
+            if (!selectedPath.empty() && file.path().string().find(selectedPath) != std::string::npos)
+                flags |= ImGuiTreeNodeFlags_Selected;
+
+            if (ImGui::TreeNodeEx((fileName).c_str(), flags))
             {
-                // This converts the search and file name to lower case so its case insensitive
-                std::string search = searchBuffer;
-                std::string fileName;
-                if (extensions.size() > 1)
-                    fileName = file.path().filename().string();
-                else
-                    fileName = file.path().stem().string();
-                std::string tempFileName = fileName;
-
-                std::transform(search.begin(), search.end(), search.begin(), ::tolower);
-                std::transform(tempFileName.begin(), tempFileName.end(), tempFileName.begin(), ::tolower);
-                if (searchBuffer[0] == '\0' || tempFileName.find(search) != std::string::npos)
+                if (ImGui::IsItemClicked())
                 {
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    // Using ImGuiTreeNodeFlags_Framed flag adds a frame and aligns it to the left, but then selected flag doesn't work. I would need to set the node color if I want to make it so they have a frame or aligned to the left
-                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding;
-                    // Checks to see if the file path contains the selectedPath and if it does, then select it
-                    if (!selectedPath.empty() && file.path().string().find(selectedPath) != std::string::npos)
-                        flags |= ImGuiTreeNodeFlags_Selected;
-                    if (ImGui::TreeNodeEx((fileName).c_str(), flags))
-                    {
-                        if (ImGui::IsItemClicked())
-                        {
-                            oldId = -9999;
-                            selectedFile = "NULL";
-                            memset(searchBuffer, '\0', sizeof(searchBuffer));
-                            ImGui::SetScrollY(0.0f);
-                            selectedFile = std::filesystem::relative(file.path(), ProjectManager::projectData.path / "Assets").string();
-                        }
-
-                        ImGui::TreePop();
-                    }
+                    oldId = -9999;
+                    memset(searchBuffer, 0, sizeof(searchBuffer));
+                    ImGui::SetScrollY(0.0f);
+                    selectedFile = std::filesystem::relative(file.path(), ProjectManager::projectData.path / "Assets").string();
                 }
+                ImGui::TreePop();
             }
         }
     }
     catch (const std::exception& ex)
     {
         ConsoleLogger::ErrorLog("Failed to iterate project files to find " + type + " files", true);
-        memset(searchBuffer, '\0', sizeof(searchBuffer));
+        memset(searchBuffer, 0, sizeof(searchBuffer));
         selectedFile = "NULL";
         oldId = -9999;
         ImGui::SetScrollY(0.0f);
     }
 
     ImGui::EndTable();
-
     ImGui::End();
     ImGui::PopStyleVar(3);
     ImGui::PopStyleColor(3);
@@ -1569,7 +1566,7 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
         oldId = -9999;
         open = true;
         selectedFile = "NULL";
-        memset(searchBuffer, '\0', sizeof(searchBuffer));
+        memset(searchBuffer, 0, sizeof(searchBuffer));
         // Setting the scroll here does not work.
         ImGui::SetScrollY(0.0f);
     }
