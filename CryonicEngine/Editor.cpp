@@ -2009,10 +2009,13 @@ void Editor::RenderProjectSettings()
 
 void Editor::RenderScriptCreateWin()
 {
-    if (!scriptCreateWinOpen) return;
+    if (!scriptCreateWinOpen)
+        return;
+
     ImGui::SetNextWindowSize(ImVec2(180, 180));
     ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 180) / 2, (RaylibWrapper::GetScreenHeight() - 180) / 2));
-    if (ImGui::Begin("Create Script", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+
+    if (ImGui::Begin("Create Script", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         ImGui::Text("Script Name");
         static char behaviourName[36] = "";
@@ -2021,7 +2024,7 @@ void Editor::RenderScriptCreateWin()
         ImGui::NewLine();
         if (ImGui::Button("Cancel", ImVec2(163, 0)))
         {
-            strcpy_s(behaviourName, sizeof(behaviourName), "");
+            memset(behaviourName, 0, sizeof(behaviourName));
             scriptCreateWinOpen = false;
         }
 
@@ -2032,7 +2035,9 @@ void Editor::RenderScriptCreateWin()
         newName.erase(std::remove_if(newName.begin(), newName.end(), [](unsigned char c) {
             return std::isspace(c);
             }), newName.end());
-        bool canCreate = true;
+
+        bool canCreate = !name.empty() && !std::filesystem::exists(fileExplorerPath / (name + ".h")) && !std::filesystem::exists(fileExplorerPath / (name + ".cpp"));
+
         if (newName == "" || std::filesystem::exists(fileExplorerPath / (name + ".h")) || std::filesystem::exists(fileExplorerPath / (name + ".cpp"))) canCreate = false; // Todo: Show text saying it already exists (assuming its not empty)
 
         if (!canCreate) ImGui::BeginDisabled();
@@ -2051,68 +2056,39 @@ void Editor::RenderScriptCreateWin()
             std::filesystem::copy_file(miscPath / "ScriptPreset.cpp", fileExplorerPath / (name + ".cpp"));
 
             // Replace "ScriptPreset" with the script name in the .cpp and .h
+            auto ReplaceInFile = [&name](const std::filesystem::path& filePath) {
+                std::ifstream input(filePath);
+                if (!input.is_open())
+                {
+                    ConsoleLogger::WarningLog("Failed to modify " + name + filePath.extension().string() + ". You will need to manually change \"ScriptPreset\" to " + name + " within the script.", false);
+                    ImGui::End();
+                    return;
+                }
+                std::stringstream buffer;
+                buffer << input.rdbuf();
+                std::string content = buffer.str();
+                input.close();
 
-            // .cpp
-            std::ifstream inputCpp(fileExplorerPath / (name + ".cpp"));
-            if (!inputCpp.is_open())
-            {
-                ConsoleLogger::WarningLog("Failed to open and modify " + name + ".cpp. You will need to manually change \"ScriptPreset\" to " + name + " within the script.", false);
-                ImGui::End();
-                return;
-            }
-            std::stringstream buffer;
-            buffer << inputCpp.rdbuf();
-            std::string fileContent = buffer.str();
-            inputCpp.close();
+                size_t pos = 0;
+                while ((pos = content.find("ScriptPreset", pos)) != std::string::npos)
+                {
+                    content.replace(pos, 12, name);
+                    pos += name.length();
+                }
 
-            size_t startPos = 0;
-            while ((startPos = fileContent.find("ScriptPreset", startPos)) != std::string::npos)
-            {
-                fileContent.replace(startPos, 12, name);
-                startPos += name.length();
-            }
+                std::ofstream output(filePath);
+                if (!output.is_open())
+                {
+                    ConsoleLogger::WarningLog("Failed to modify " + name + filePath.extension().string() + ". You will need to manually change \"ScriptPreset\" to " + name + " within the script.", false);
+                    ImGui::End();
+                    return;
+                }
+                output << content;
+                output.close();
+            };
 
-            std::ofstream outputCpp(fileExplorerPath / (name + ".cpp"));
-            if (!outputCpp.is_open())
-            {
-                ConsoleLogger::WarningLog("Failed to open and modify " + name + ".cpp. You will need to manually change \"ScriptPreset\" to " + name + " within the script.", false);
-                ImGui::End();
-                return;
-            }
-            outputCpp << fileContent;
-            outputCpp.close();
-
-            // header
-            std::ifstream inputHeader(fileExplorerPath / (name + ".h"));
-            if (!inputHeader.is_open())
-            {
-                ConsoleLogger::WarningLog("Failed to open and modify " + name + ".h. You will need to manually change \"ScriptPreset\" to " + name + " within the script.", false);
-                ImGui::End();
-                return;
-            }
-            buffer.str("");
-            buffer.clear();
-            buffer << inputHeader.rdbuf();
-            fileContent = buffer.str();
-            inputHeader.close();
-
-            startPos = 0;
-            while ((startPos = fileContent.find("ScriptPreset", startPos)) != std::string::npos)
-            {
-                fileContent.replace(startPos, 12, name);
-                startPos += name.length();
-            }
-
-            std::ofstream outputHeader(fileExplorerPath / (name + ".h"));
-            if (!outputHeader.is_open())
-            {
-                ConsoleLogger::WarningLog("Failed to open and modify " + name + ".h. You will need to manually change \"ScriptPreset\" to " + name + " within the script.", false);
-                ImGui::End();
-                return;
-            }
-            outputHeader << fileContent;
-            outputHeader.close();
-
+            ReplaceInFile(fileExplorerPath / (name + ".h"));
+            ReplaceInFile(fileExplorerPath / (name + ".cpp"));
         }
         if (!canCreate) ImGui::EndDisabled();
     }
