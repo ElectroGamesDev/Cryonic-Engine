@@ -3127,9 +3127,6 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor, bool&
         // Todo: For 2D and if its a sprite, set proper distance so entire sprite fits on screen
         // Todo: Lerp camera position to target
         const auto& pos = gameObject->transform.GetPosition();
-        ConsoleLogger::InfoLog("GameObject: " + gameObject->GetName() +
-            " X: " + std::to_string(pos.x) +
-            " Y: " + std::to_string(pos.y));
 
         camera.position = { pos.x, pos.y, camera.position.z };
         camera.target = { pos.x, pos.y, camera.target.z };
