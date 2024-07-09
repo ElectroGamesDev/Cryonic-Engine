@@ -477,8 +477,6 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
     if (resetFileExplorerWin)
     {
         resetFileExplorerWin = false;
-    //    ImGui::SetNextWindowSize(ImVec2(1920, 282));
-    //    ImGui::SetNextWindowPos(ImVec2(0, 788));
         fileExplorerPath = ProjectManager::projectData.path / "Assets"; // Todo: Make sure Assets path exists, if not then create it.
     }
 
@@ -1414,6 +1412,12 @@ void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnD
     bool hasChildren = false;
     if (!std::filesystem::exists(path)) // This is important as it prevents a crash if the file is deleted from an external application like File Explorer
         return;
+
+    std::error_code ec;
+    auto it = std::filesystem::directory_iterator(path, ec);
+    if (ec)
+        return;
+
     for (const auto& entry : std::filesystem::directory_iterator(path))
     {
         if (entry.is_directory())
@@ -1424,16 +1428,9 @@ void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnD
     }
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
-    if (!hasChildren)
-        flags |= ImGuiTreeNodeFlags_Leaf;
-    else
-        flags |= ImGuiTreeNodeFlags_OpenOnArrow;
-
-    if (path == fileExplorerPath)
-        flags |= ImGuiTreeNodeFlags_Selected;
-
-    if (openOnDefault)
-        flags |= ImGuiTreeNodeFlags_DefaultOpen;
+    flags |= hasChildren ? ImGuiTreeNodeFlags_OpenOnArrow : ImGuiTreeNodeFlags_Leaf;
+    flags |= (path == fileExplorerPath) ? ImGuiTreeNodeFlags_Selected : 0;
+    flags |= openOnDefault ? ImGuiTreeNodeFlags_DefaultOpen : 0;
 
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
@@ -1444,8 +1441,12 @@ void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnD
         {
             if (ImGui::IsItemClicked())
                 fileExplorerPath = path;
-            for (const auto& entry : std::filesystem::directory_iterator(path))
+
+            for (const auto& entry : std::filesystem::directory_iterator(path, ec))
             {
+                if (ec)
+                    break;
+
                 if (entry.is_directory())
                     RenderFileExplorerTreeNode(entry, false);
             }
