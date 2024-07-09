@@ -15,4 +15,5 @@ namespace Utilities
     std::vector<std::string> GetGltfAnimationNames(std::filesystem::path path);
     bool CreateDataFile(std::filesystem::path path);
     bool ImportFile(std::filesystem::path filePath, std::filesystem::path importPath);
+    void TerminateProcess(int dwProcessId, int uExitCode); // A TerminateProcess function that actually works unlike Window's TermianteProcess()
 };

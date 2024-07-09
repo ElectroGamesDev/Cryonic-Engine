@@ -14,6 +14,7 @@
 #include <algorithm>
 #define TINYGLTF_IMPLEMENTATION
 #include "tiny_gltf.h"
+#include <tlhelp32.h>
 
 void Utilities::HideFile(std::filesystem::path path) // Todo: Figure out why the file isn't being hidden
 {
@@ -531,4 +532,36 @@ std::string Utilities::SelectFolderDialog(const std::filesystem::path& projectPa
         return !std::isprint(static_cast<unsigned char>(c));
         }), path.end());
     return path;
+}
+
+void Utilities::TerminateProcess(int dwProcessId, int uExitCode)
+{
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE)
+    {
+        return;
+    }
+
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+
+    if (Process32First(hSnapshot, &pe32))
+    {
+        do
+        {
+            if (pe32.th32ParentProcessID == dwProcessId)
+            {
+                TerminateProcess(pe32.th32ProcessID, uExitCode);
+            }
+        } while (Process32Next(hSnapshot, &pe32));
+    }
+
+    CloseHandle(hSnapshot);
+
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwProcessId);
+    if (hProcess != NULL)
+    {
+        ::TerminateProcess(hProcess, uExitCode);
+        CloseHandle(hProcess);
+    }
 }
