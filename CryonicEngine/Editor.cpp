@@ -3163,70 +3163,39 @@ void Editor::RenderHierarchy()
         {
             ImGui::Separator();
 
-            std::string objectToCreate = "";
-
-            if (ImGui::MenuItem("Create Empty"))
+            struct ObjectItem
             {
-                hierarchyContextMenuOpen = false;
-                objectToCreate = "Empty";
-            }
+                std::string menuName;
+                std::string name;
+                int dimension; // 1 = both, 2 = 2D, 3 = 3D
+                ModelType model;
+            };
 
-            if (ProjectManager::projectData.is3D)
+            static const std::vector<ObjectItem> objectItems = {
+                {"Create Empty", "GameObject", 1, Custom},
+                {"Create Cube", "Cube", 3, Cube},
+                {"Create Cylinder", "Cylinder", 3, Cylinder},
+                {"Create Sphere", "Sphere", 3, Sphere},
+                {"Create Plane", "Plane", 3, Plane},
+                {"Create Cone", "Cone", 3, Cone},
+                {"Create Light", "Light", 3, Custom},
+                {"Create Square", "Square", 2, Custom},
+                {"Create Circle", "Circle", 2, Custom},
+                {"Create Camera", "Camera", 1, Custom}
+            };
+
+            ObjectItem objectToCreate = {"", "", 0, Custom};
+            
+            for (const ObjectItem& item : objectItems)
             {
-                if (ImGui::MenuItem("Create Cube"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Cube";
-                }
+                if ((!ProjectManager::projectData.is3D && item.dimension == 3) || (ProjectManager::projectData.is3D && item.dimension == 2))
+                    continue;
 
-                if (ImGui::MenuItem("Create Cylinder"))
+                if (ImGui::MenuItem(item.menuName.c_str()))
                 {
                     hierarchyContextMenuOpen = false;
-                    objectToCreate = "Cylinder";
+                    objectToCreate = item;
                 }
-
-                if (ImGui::MenuItem("Create Sphere"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Sphere";
-                }
-
-                if (ImGui::MenuItem("Create Plane"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Plane";
-                }
-
-                if (ImGui::MenuItem("Create Cone"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Cone";
-                }
-
-                if (ImGui::MenuItem("Light"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Light";
-                }
-            }
-            else
-            {
-                if (ImGui::MenuItem("Create Square"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Square";
-                }
-                if (ImGui::MenuItem("Create Circle"))
-                {
-                    hierarchyContextMenuOpen = false;
-                    objectToCreate = "Circle";
-                }
-            }
-
-            if (ImGui::MenuItem("Create Camera"))
-            {
-                hierarchyContextMenuOpen = false;
-                objectToCreate = "Camera";
             }
 
             if (objectInHierarchyContextMenu != nullptr && ImGui::MenuItem("Delete"))
@@ -3236,6 +3205,7 @@ void Editor::RenderHierarchy()
 
                 if (std::holds_alternative<GameObject*>(objectInProperties) && std::get<GameObject*>(objectInProperties)->GetId() == objectInHierarchyContextMenu->GetId())
                     objectInProperties = std::monostate{};
+
                 if (selectedObject != nullptr && objectInHierarchyContextMenu->GetId() == selectedObject->GetId())
                 {
                     //EventSystem::Invoke("ObjectDeselected", nullptr);
@@ -3246,7 +3216,7 @@ void Editor::RenderHierarchy()
                 objectInHierarchyContextMenu = nullptr;
             }
 
-            if (objectToCreate != "")
+            if (!objectToCreate.name.empty())
             {
                 hierarchyObjectClicked = true;
 
@@ -3254,10 +3224,8 @@ void Editor::RenderHierarchy()
                 gameObject->transform.SetPosition({ 0,0,0 });
                 gameObject->transform.SetScale({ 1,1,1 });
                 gameObject->transform.SetRotation(Quaternion::Identity());
-                gameObject->SetName(objectToCreate);
-                if (objectToCreate == "Empty")
-                    gameObject->SetName("GameObject");
-                else if (objectToCreate == "Camera")
+                gameObject->SetName(objectToCreate.name);
+                if (objectToCreate.name == "Camera")
                 {
                     gameObject->AddComponent<CameraComponent>();
                     if (!ProjectManager::projectData.is3D)
@@ -3266,56 +3234,45 @@ void Editor::RenderHierarchy()
                         gameObject->transform.SetRotationEuler({ 180, 0, 0 });
                     }
                 }
-                else if (objectToCreate == "Light")
+                else if (objectToCreate.name == "Light")
                     gameObject->AddComponent<Lighting>();
-                else
+                else if (objectToCreate.name != "GameObject")
                 {
                     if (ProjectManager::projectData.is3D)
                     {
                         MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
-                        meshRenderer.SetModelPath(objectToCreate);
-
-                        if (objectToCreate == "Cube")
-                            meshRenderer.SetModel(Cube, "Cube", LitStandard);
-                        else if (objectToCreate == "Plane")
-                            meshRenderer.SetModel(Plane, "Plane", LitStandard);
-                        else if (objectToCreate == "Sphere")
-                            meshRenderer.SetModel(Sphere, "Sphere", LitStandard);
-                        else if (objectToCreate == "Cylinder")
-                            meshRenderer.SetModel(Cylinder, "Cylinder", LitStandard);
-                        else if (objectToCreate == "Cone")
-                            meshRenderer.SetModel(Cone, "Cone", LitStandard);
+                        meshRenderer.SetModelPath(objectToCreate.name);
+                        meshRenderer.SetModel(objectToCreate.model, objectToCreate.name, LitStandard);
                     }
                     else
                     {
                         SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
-                        spriteRenderer.SetTexture(objectToCreate);
+                        spriteRenderer.SetTexture(objectToCreate.name);
 
                         //gameObject->AddComponent<Collider2D>(); // Todo: Set size and type
                     }
-
                 }
 
                 //SceneManager::GetActiveScene()->AddGameObject(gameObject);
 
-                for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
+                for (Component* component : gameObject->GetComponents())
                     component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
 
                 if (objectInHierarchyContextMenu != nullptr)
                 {
-                    SceneManager::GetActiveScene()->GetGameObjects().back()->SetParent(objectInHierarchyContextMenu);
-                    SceneManager::GetActiveScene()->GetGameObjects().back()->transform.SetLocalPosition({0,0,0});
-                    SceneManager::GetActiveScene()->GetGameObjects().back()->transform.SetLocalRotationEuler({ 0,0,0 });
-                    SceneManager::GetActiveScene()->GetGameObjects().back()->transform.SetLocalScale({ 0,0,0 });
+                    gameObject->SetParent(objectInHierarchyContextMenu);
+                    gameObject->transform.SetLocalPosition({0,0,0});
+                    gameObject->transform.SetLocalRotationEuler({ 0,0,0 });
+                    gameObject->transform.SetLocalScale({ 0,0,0 });
                 }
 
                 //if (selectedObject != nullptr)
                     //EventSystem::Invoke("ObjectDeselected", selectedObject);
-                selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
-                objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
+                selectedObject = gameObject;
+                objectInProperties = gameObject;
                 //EventSystem::Invoke("ObjectSelected", selectedObject);
 
-                if (selectedObject->GetComponent<CameraComponent>() != nullptr) // Todo: Should this if-else-if statement be moved up into the "else if (objectToCreate == "Camera")" statement?
+                if (selectedObject->GetComponent<CameraComponent>() != nullptr)
                     cameraSelected = true;
                 else if (cameraSelected)
                 {
