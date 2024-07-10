@@ -2187,10 +2187,9 @@ void Editor::RenderCameraView()
     RaylibWrapper::EndTextureMode();
 
     if (ImGui::Begin("Camera View", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
-    {
         rlImGuiImageRenderTextureFit(&cameraRenderTexture, true);
-        ImGui::End();
-    }
+
+    ImGui::End();
 }
 
 int Editor::RenderColorPicker(std::string name, ImVec2 position, ImVec4& selectedColor, ImVec4& previousColor) // Todo: Does this really need to be in the Editor.h? Also Add Undo/Redo
@@ -2198,21 +2197,26 @@ int Editor::RenderColorPicker(std::string name, ImVec2 position, ImVec4& selecte
     // return 0 = do nothing, 1 = update color, 2 = update color and close
     static bool open = true;
     int action = 0;
+
     ImGui::SetNextWindowSize(ImVec2(250, 250));
     ImGui::SetNextWindowPos(position);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.18f, 0.18f, 0.18f, 1.00f));
     ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.12f, 0.12f, 0.12f, 1.00f));
     ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.12f, 0.12f, 0.12f, 1.00f));
+
     ImGui::Begin(name.c_str(), &open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking);
     if (ImGui::ColorPicker4(("##ColorPicker" + name).c_str(), (float*)&selectedColor, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoLabel, (float*)&previousColor))
         action = 1;
+
+    ImGui::End();
+    ImGui::PopStyleColor(3);
+
     if (!open)
     {
         open = true;
         action = 2;
     }
-    ImGui::End();
-    ImGui::PopStyleColor(3);
+
     return action;
 }
 
