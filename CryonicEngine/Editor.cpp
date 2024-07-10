@@ -2156,31 +2156,20 @@ void Editor::RenderComponentsWin()
 
 void Editor::RenderCameraView()
 {
-    if (!cameraSelected) return;
+    if (!cameraSelected)
+        return;
 
     if (resetCameraView)
     {
         cameraRenderTexture = RaylibWrapper::LoadRenderTexture(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight());
         ImGui::SetNextWindowSize(ImVec2(200, 112));
-        if (!viewportOpened)
-            ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 200) / 2, (RaylibWrapper::GetScreenHeight() - 112) / 2));
-        else
-            ImGui::SetNextWindowPos(ImVec2(viewportPosition.z - 200, viewportPosition.w - 112));
+        ImGui::SetNextWindowPos(viewportOpened ? ImVec2(viewportPosition.z - 200, viewportPosition.w - 112) : ImVec2((RaylibWrapper::GetScreenWidth() - 200) / 2, (RaylibWrapper::GetScreenHeight() - 112) / 2));
         resetCameraView = false;
     }
 
     RaylibWrapper::BeginTextureMode(cameraRenderTexture);
-    if (ProjectManager::projectData.is3D)
-    {
-        RaylibWrapper::ClearBackground({ 135, 206, 235, 255 });
-    }
-    else
-        RaylibWrapper::ClearBackground({128, 128, 128, 255});
-
+    RaylibWrapper::ClearBackground(ProjectManager::projectData.is3D ? RaylibWrapper::Color{ 135, 206, 235, 255 } : RaylibWrapper::Color{128, 128, 128, 255});
     selectedObject->GetComponent<CameraComponent>()->raylibCamera.BeginMode3D();
-
-    //if (ProjectManager::projectData.is3D)
-    //    DrawGrid(100, 10.0f);
 
     deltaTime = RaylibWrapper::GetFrameTime();
 
@@ -2189,20 +2178,19 @@ void Editor::RenderCameraView()
         if (!gameObject->IsActive()) continue;
         for (Component* component : gameObject->GetComponents())
         {
-            if (!component->IsActive() || !component->runInEditor) continue;
-            component->Update();
+            if (component->IsActive() && component->runInEditor)
+                component->Update();
         }
     }
 
     RaylibWrapper::EndMode3D();
-
     RaylibWrapper::EndTextureMode();
 
     if (ImGui::Begin("Camera View", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
     {
         rlImGuiImageRenderTextureFit(&cameraRenderTexture, true);
+        ImGui::End();
     }
-    ImGui::End();
 }
 
 int Editor::RenderColorPicker(std::string name, ImVec2 position, ImVec4& selectedColor, ImVec4& previousColor) // Todo: Does this really need to be in the Editor.h? Also Add Undo/Redo
