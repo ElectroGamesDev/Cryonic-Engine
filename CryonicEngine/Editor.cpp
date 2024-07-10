@@ -2097,7 +2097,8 @@ void Editor::RenderScriptCreateWin()
 
 void Editor::RenderComponentsWin()
 {
-    if (!componentsWindowOpen || !std::holds_alternative<GameObject*>(objectInProperties)) return;
+    if (!componentsWindowOpen || !std::holds_alternative<GameObject*>(objectInProperties))
+        return;
 
     if (resetComponentsWin)
     {
@@ -2106,68 +2107,48 @@ void Editor::RenderComponentsWin()
         ImGui::SetNextWindowScroll({0,0});
         resetComponentsWin = false;
     }
+
     if (ImGui::Begin("Add Component", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NoCollapse))
     {
         // Internal Components
         float buttonWidth = ImGui::GetWindowWidth() - 28;
-        // Todo: Add MeshRenderer
-        if (ImGui::Button("Camera", ImVec2(buttonWidth, 0)))
-        {
-            std::get<GameObject*>(objectInProperties)->AddComponent<CameraComponent>();
-            componentsWindowOpen = false;
-            resetComponentsWin = true;
-        }
-        else if (ImGui::Button("Light", ImVec2(buttonWidth, 0)))
-        {
-            std::get<GameObject*>(objectInProperties)->AddComponent<Lighting>();
-            componentsWindowOpen = false;
-            resetComponentsWin = true;
-        }
-        else if (ImGui::Button("Collider2D", ImVec2(buttonWidth, 0)))
-        {
-            std::get<GameObject*>(objectInProperties)->AddComponent<Collider2D>();
-            componentsWindowOpen = false;
-            resetComponentsWin = true;
-        }
-        else if (ImGui::Button("Rigidbody2D", ImVec2(buttonWidth, 0)))
-        {
-            std::get<GameObject*>(objectInProperties)->AddComponent<Rigidbody2D>();
-            componentsWindowOpen = false;
-            resetComponentsWin = true;
-        }
-        else if (ImGui::Button("Animation Player", ImVec2(buttonWidth, 0)))
-        {
-            std::get<GameObject*>(objectInProperties)->AddComponent<AnimationPlayer>();
-            componentsWindowOpen = false;
-            resetComponentsWin = true;
-        }
-        else if (ImGui::Button("Audio Player", ImVec2(buttonWidth, 0)))
-        {
-            std::get<GameObject*>(objectInProperties)->AddComponent<AudioPlayer>();
-            componentsWindowOpen = false;
-            resetComponentsWin = true;
-        }
-        ImGui::Separator();
-        // External Components
-        for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
-        {
-            if (!std::filesystem::is_regular_file(file) || file.path().extension() != ".h") continue;
-            if (ImGui::Button(file.path().stem().string().c_str(), ImVec2(buttonWidth, 0)))
-            {
-                std::filesystem::path path = std::filesystem::relative(file.path(), ProjectManager::projectData.path / "Assets");
 
-                // Todo: First search same folder for .cpp if its not there, then search all sub folders, then all previous folders.
-                std::filesystem::path cppPath = path;
-                cppPath.replace_extension(".cpp");
-                ScriptComponent* scriptComponent = &std::get<GameObject*>(objectInProperties)->AddComponent<ScriptComponent>();
-                scriptComponent->SetHeaderPath(path.string());
-                scriptComponent->SetCppPath(cppPath);
-                scriptComponent->SetName(path.stem().string());
-                //scriptComponent->name = file.path().stem().string();
-
+        auto AddComponentButton = [&](const char* componentName, auto&& addComponentFunc) {
+            if (ImGui::Button(componentName, ImVec2(buttonWidth, 0))) {
+                addComponentFunc();
                 componentsWindowOpen = false;
                 resetComponentsWin = true;
             }
+        };
+
+        // Internal components
+        AddComponentButton("Camera", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<CameraComponent>(); });
+        AddComponentButton("Light", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<Lighting>(); });
+        AddComponentButton("Collider2D", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<Collider2D>(); });
+        AddComponentButton("Rigidbody2D", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<Rigidbody2D>(); });
+        AddComponentButton("SpriteRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<SpriteRenderer>(); });
+        AddComponentButton("MeshRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<MeshRenderer>(); });
+        AddComponentButton("Animation Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<AnimationPlayer>(); });
+        AddComponentButton("Audio Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<AudioPlayer>(); });
+
+        ImGui::Separator();
+
+        // External coponents
+        for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
+        {
+            if (!std::filesystem::is_regular_file(file) || file.path().extension() != ".h")
+                continue;
+
+            std::filesystem::path relativePath = std::filesystem::relative(file.path(), ProjectManager::projectData.path / "Assets");
+            std::filesystem::path cppPath = relativePath;
+            cppPath.replace_extension(".cpp");
+
+            AddComponentButton(file.path().stem().string().c_str(), [&]() {
+                ScriptComponent* scriptComponent = &std::get<GameObject*>(objectInProperties)->AddComponent<ScriptComponent>();
+                scriptComponent->SetHeaderPath(relativePath.string());
+                scriptComponent->SetCppPath(cppPath);
+                scriptComponent->SetName(relativePath.stem().string());
+                });
         }
     }
     ImGui::End();
