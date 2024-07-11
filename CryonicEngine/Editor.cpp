@@ -2224,29 +2224,24 @@ void Editor::RenderProperties()
 {
     static bool show = true;
 
-    //if (resetPropertiesWin)
-    //{
-    //    ImGui::SetNextWindowSize(ImVec2(300, 736));
-    //    ImGui::SetNextWindowPos(ImVec2(1643, 52));
-    //    resetPropertiesWin = false;
-    //}
-    ImGuiWindowFlags windowFlags =  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar;
-    if (ImGui::Begin((ICON_FA_GEARS + std::string(" Properties")).c_str(), nullptr, windowFlags))
+    if (ImGui::Begin((ICON_FA_GEARS + std::string(" Properties")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar))
     {
         ImGui::BeginGroup();
-        if (std::holds_alternative<GameObject*>(objectInProperties) && std::find_if(SceneManager::GetActiveScene()->GetGameObjects().begin(), SceneManager::GetActiveScene()->GetGameObjects().end(), [&](const auto& obj) { return obj == std::get<GameObject*>(objectInProperties); }) != SceneManager::GetActiveScene()->GetGameObjects().end())
+        //if (std::holds_alternative<GameObject*>(objectInProperties) && std::find_if(SceneManager::GetActiveScene()->GetGameObjects().begin(), SceneManager::GetActiveScene()->GetGameObjects().end(), [&](const auto& obj) { return obj == (*propertiesGameObject); }) != SceneManager::GetActiveScene()->GetGameObjects().end())
+        if (auto* propertiesGameObject = std::get_if<GameObject*>(&objectInProperties))
         {
             // Active checkbox
-            ImGui::Checkbox("##Active" , &std::get<GameObject*>(objectInProperties)->active);
+            ImGui::Checkbox("##Active" , &(*propertiesGameObject)->active);
+
             // Name
             ImGui::SameLine();
             char nameBuffer[256] = {};
-            strcpy_s(nameBuffer, std::get<GameObject*>(objectInProperties)->GetName().c_str());
+            strcpy_s(nameBuffer, (*propertiesGameObject)->GetName().c_str());
             ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 45);
-            if (ImGui::InputText("##ObjectNameText", nameBuffer, sizeof(nameBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
-                std::get<GameObject*>(objectInProperties)->SetName(std::string(nameBuffer));
-            }
-            // Layers & Tags
+            if (ImGui::InputText("##ObjectNameText", nameBuffer, sizeof(nameBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
+                (*propertiesGameObject)->SetName(std::string(nameBuffer));
+
+            // Layers
             ImGui::NewLine();
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 10);
             int width = (ImGui::GetWindowWidth() - 125) / 2;
@@ -2268,6 +2263,8 @@ void Editor::RenderProperties()
                 }
                 ImGui::EndCombo();
             }
+
+            // Tags
             ImGui::SameLine();
             ImGui::Text("Tag:");
             ImGui::SameLine();
@@ -2287,134 +2284,125 @@ void Editor::RenderProperties()
                 }
                 ImGui::EndCombo();
             }
+
+            auto RenderNumProperty = [&](const std::string& type, const std::string& label, float& value, float width, std::function<void(float)> update, bool isFloat = true)
+            {
+                ImGui::Text(label.c_str());
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(width);
+
+                if (isFloat)
+                {
+                    if (ImGui::InputFloat((std::string("##") + label + type).c_str(), &value, 0, 0, "%.10g"))
+                        update(value);
+                }
+                else
+                {
+                    int intValue = value;
+                    if (ImGui::InputInt((std::string("##") + label + type).c_str(), &intValue, 0, 0))
+                        update(intValue);
+                }
+            };
+
             // Position
+            Vector3 localPosition = (*propertiesGameObject)->transform.GetLocalPosition();
             width = (ImGui::GetWindowWidth() - 165) / 3;
+
             ImGui::NewLine();
             ImGui::Text("Position:   ");
+
             ImGui::SameLine();
-            ImGui::Text("X");
+            RenderNumProperty("Position", "X", localPosition.x, width, [&](float x) {
+                (*propertiesGameObject)->transform.SetLocalPosition({ x, localPosition.y, localPosition.z });
+                });
             ImGui::SameLine();
-            float xPos = std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().x;
-            ImGui::SetNextItemWidth(width);
-            if (ImGui::InputFloat("##ObjectXPos", &xPos, 0, 0, "%.10g")) {
-                std::get<GameObject*>(objectInProperties)->transform.SetLocalPosition(Vector3{ xPos, std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().y, std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().z });
-            }
+            RenderNumProperty("Position", "Y", localPosition.y, width, [&](float y) {
+                (*propertiesGameObject)->transform.SetLocalPosition({ localPosition.x, y, localPosition.z });
+                });
             ImGui::SameLine();
-            ImGui::Text("Y");
-            ImGui::SameLine();
-            float yPos = std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().y;
-            ImGui::SetNextItemWidth(width);
-            if (ImGui::InputFloat("##ObjectYPos", &yPos, 0, 0, "%.10g")) {
-                std::get<GameObject*>(objectInProperties)->transform.SetLocalPosition(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().x, yPos, std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().z });
-            }
-            ImGui::SameLine();
-            ImGui::Text("Z");
-            ImGui::SameLine();
-            float zPos = std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().z;
-            ImGui::SetNextItemWidth(width);
-            if (ImGui::InputFloat("##ObjectZPos", &zPos, 0, 0, "%.10g")) {
-                std::get<GameObject*>(objectInProperties)->transform.SetLocalPosition(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().x, std::get<GameObject*>(objectInProperties)->transform.GetLocalPosition().y, zPos });
-            }
+            RenderNumProperty("Position", "Z", localPosition.z, width, [&](float z) {
+                (*propertiesGameObject)->transform.SetLocalPosition({ localPosition.x, localPosition.y, z });
+                });
+
             // Scale
+            Vector3 localScale = (*propertiesGameObject)->transform.GetLocalScale();
+
             ImGui::NewLine();
             ImGui::Text("Scale:        ");
+
             ImGui::SameLine();
-            ImGui::Text("X");
+            RenderNumProperty("Scale", "X", localScale.x, width, [&](float x) {
+                (*propertiesGameObject)->transform.SetLocalScale({ x, localScale.y, localScale.z });
+                });
             ImGui::SameLine();
-            //float xScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().x / std::get<GameObject*>(objectInProperties)->GetRealSize().x;
-            float xScale = std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().x;
-            ImGui::SetNextItemWidth(width);
-            if (ImGui::InputFloat("##ObjectXScale", &xScale, 0, 0, "%.10g")) {
-                //std::get<GameObject*>(objectInProperties)->transform.SetScale(Vector3{ xScale * std::get<GameObject*>(objectInProperties)->GetRealSize().x, std::get<GameObject*>(objectInProperties)->transform.GetScale().y, std::get<GameObject*>(objectInProperties)->transform.GetScale().z });
-                std::get<GameObject*>(objectInProperties)->transform.SetLocalScale(Vector3{ xScale, std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().y, std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().z });
-            }
+            RenderNumProperty("Scale", "Y", localScale.y, width, [&](float y) {
+                (*propertiesGameObject)->transform.SetLocalScale({ localScale.x, y, localScale.z });
+                });
             ImGui::SameLine();
-            ImGui::Text("Y");
-            ImGui::SameLine();
-            //float yScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().y / std::get<GameObject*>(objectInProperties)->GetRealSize().y;
-            float yScale = std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().y;
-            ImGui::SetNextItemWidth(width);
-            if (ImGui::InputFloat("##ObjectYScale", &yScale, 0, 0, "%.10g")) {
-                std::get<GameObject*>(objectInProperties)->transform.SetLocalScale(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().x, yScale, std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().z });
-            }
-            ImGui::SameLine();
-            ImGui::Text("Z");
-            ImGui::SameLine();
-            //float zScale = std::get<GameObject*>(objectInProperties)->transform.GetScale().z / std::get<GameObject*>(objectInProperties)->GetRealSize().z;
-            float zScale = std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().z;
-            ImGui::SetNextItemWidth(width);
-            if (ImGui::InputFloat("##ObjectZScale", &zScale, 0, 0, "%.10g")) {
-                std::get<GameObject*>(objectInProperties)->transform.SetLocalScale(Vector3{ std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().x, std::get<GameObject*>(objectInProperties)->transform.GetLocalScale().y, zScale });
-            }
+            RenderNumProperty("Scale", "Z", localScale.z, width, [&](float z) {
+                (*propertiesGameObject)->transform.SetLocalScale({ localScale.x, localScale.y, z });
+                });
+
             // Rotation
-            //Vector3 rot = QuaternionToEuler(std::get<GameObject*>(objectInProperties)->transform.GetRotation()) * DEG;
-            Vector3 rot = std::get<GameObject*>(objectInProperties)->transform.GetLocalRotationEuler();
+            Vector3 localRotation = (*propertiesGameObject)->transform.GetLocalRotationEuler();
+
             ImGui::NewLine();
             ImGui::Text("Rotation:   ");
+
             ImGui::SameLine();
-            ImGui::Text("X");
+            RenderNumProperty("Rotation", "X", localRotation.x, width, [&](float x) {
+                (*propertiesGameObject)->transform.SetLocalRotationEuler({ x, localRotation.y, localRotation.z });
+                }, false);
             ImGui::SameLine();
-            int xRot = static_cast<int>(std::round(rot.x));
-            ImGui::SetNextItemWidth(width);
-            // Todo: Create the bool "rotation" updated and if its updated on X, Y, Z, set it to true, then below check if its true and if it is, update the rotation. This way it reduces duplicate code. DO the same with Position and Scale
-            if (ImGui::InputInt("##ObjectXRotation", &xRot, 0, 0))
-                std::get<GameObject*>(objectInProperties)->transform.SetLocalRotationEuler({ (float)xRot, rot.y, rot.z });
+            RenderNumProperty("Rotation", "Y", localRotation.y, width, [&](float y) {
+                (*propertiesGameObject)->transform.SetLocalRotationEuler({ localRotation.x, y, localRotation.z });
+                }, false);
             ImGui::SameLine();
-            ImGui::Text("Y");
-            ImGui::SameLine();
-            int yRot = static_cast<int>(std::round(rot.y));
-            ImGui::SetNextItemWidth(width);
-            if (ImGui::InputInt("##ObjectYRotation", &yRot, 0, 0))
-                std::get<GameObject*>(objectInProperties)->transform.SetLocalRotationEuler({ rot.x, (float)yRot, rot.z });
-            ImGui::SameLine();
-            ImGui::Text("Z");
-            ImGui::SameLine();
-            int zRot = static_cast<int>(std::round(rot.z));
-            ImGui::SetNextItemWidth(width);
-            if (ImGui::InputInt("##ObjectZRotation", &zRot, 0, 0))
-                std::get<GameObject*>(objectInProperties)->transform.SetLocalRotationEuler({ rot.x, rot.y, (float)zRot });
+            RenderNumProperty("Rotation", "Z", localRotation.z, width, [&](float z) {
+                (*propertiesGameObject)->transform.SetLocalRotationEuler({ localRotation.x, localRotation.y, z });
+                }, false);
 
             ImGui::NewLine();
              
             //Components
-            static nlohmann::json* colorPopupOpened;
+            static nlohmann::json* colorPopupOpened = nullptr;
             static ImVec4 selectedColor;
             static ImVec4 previousColor;
             static ImVec2 popupPosition;
             int componentsNum = 0;
             static Component* componentInContextMenu = nullptr;
-            for (Component* component : std::get<GameObject*>(objectInProperties)->GetComponents())
+            float buttonWidth = ImGui::GetWindowWidth() - 15;
+
+            for (Component* component : (*propertiesGameObject)->GetComponents())
             {
                 componentsNum++;
-                float buttonWidth = ImGui::GetWindowWidth() - 15;
                 //ImGui::Separator();
                 int deleteYPos = ImGui::GetCursorPosY();
-                std::string name;
-                if (typeid(*component) == typeid(ScriptComponent))
-                    name = ICON_FA_FILE_CODE + std::string(" ") + dynamic_cast<ScriptComponent*>(component)->GetName();
-                else
-                    name = component->iconUnicode + " " + component->name;
+                std::string name = (typeid(*component) == typeid(ScriptComponent)) ?
+                    ICON_FA_FILE_CODE + std::string(" ") + dynamic_cast<ScriptComponent*>(component)->GetName() :
+                    component->iconUnicode + " " + component->name;
 
                 ImGui::SetNextItemWidth(buttonWidth);
-                bool collapsingHeaderExpanded = false;
                 if (ImGui::CollapsingHeader((name + "##" + std::to_string(ImGui::GetCursorPosY())).c_str())) // Todo: Figure out why the width isn't being set on this
                 {
-                    collapsingHeaderExpanded = true;
-                    if (ImGui::IsItemClicked(1))
+                    if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
                     {
                         componentInContextMenu = component;
                         ImGui::OpenPopup("ComponentsContextMenu");
                     }
-                    int windowHeight = 1;
-                    if (component->exposedVariables != nullptr && !component->exposedVariables[1].empty())
-                        windowHeight = component->exposedVariables[1].size() * 33;
+
+                    int windowHeight = (component->exposedVariables != nullptr && !component->exposedVariables[1].empty()) ?component->exposedVariables[1].size() * 33 : 1;
 
                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.22f, 0.22f, 0.22f, 1.00f));
                     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.0f);
                     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
                     ImGui::SetCursorPos(ImVec2(ImGui::GetCursorPosX(), ImGui::GetCursorPosY() - 5));
+
                     // Todo: Is creating a child window the best thing to do here?
+
                     ImGui::BeginChild((std::to_string(ImGui::GetCursorPosY())).c_str(), ImVec2(buttonWidth, windowHeight), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysUseWindowPadding);
+                    
+                    // Check to see if exposed variables updated
                     if (typeid(*component) == typeid(ScriptComponent) && (component->exposedVariables == nullptr || oneSecondDelay <= 0)) // Todo: Do not check them for updates. Also check if its empty // Todo: Threading
                     {
                         if (component->exposedVariables == nullptr || component->exposedVariables[0].empty()) // Todo: Check every ~1 second if the file is modified and if should get exposed variables again. DONOT change values, only remove removed variables
@@ -2428,17 +2416,24 @@ void Editor::RenderProperties()
                             {
                                 nlohmann::json updatedJson = Utilities::GetExposedVariables(ProjectManager::projectData.path / "Assets" / dynamic_cast<ScriptComponent*>(component)->GetHeaderPath()); // Todo: Add Threading
 
-                                for (auto updatedElement = updatedJson[1].begin(); updatedElement != updatedJson[1].end(); ++updatedElement)
+                                //for (auto updatedElement = updatedJson[1].begin(); updatedElement != updatedJson[1].end(); ++updatedElement)
+                                //{
+                                //    for (auto oldElement = component->exposedVariables[1].begin(); oldElement != component->exposedVariables[1].end(); ++oldElement)
+                                //    {
+                                //        if ((*updatedElement)[0] == (*oldElement)[0] && (*updatedElement)[1] == (*oldElement)[1])
+                                //        {
+                                //            (*updatedElement)[2] = (*oldElement)[2];
+                                //            break;
+                                //        }
+                                //    }
+                                //}
+
+                                for (auto& updatedElement : updatedJson[1])
                                 {
-                                    for (auto oldElement = component->exposedVariables[1].begin(); oldElement != component->exposedVariables[1].end(); ++oldElement)
-                                    {
-                                        if ((*updatedElement)[0] == (*oldElement)[0] && (*updatedElement)[1] == (*oldElement)[1])
-                                        {
-                                            (*updatedElement)[2] = (*oldElement)[2];
-                                            //(*updatedElement)[4] = (*oldElement)[4];
-                                            break;
-                                        }
-                                    }
+                                    auto it = std::find_if(component->exposedVariables[1].begin(), component->exposedVariables[1].end(),
+                                        [&](const auto& oldElement) { return updatedElement[0] == oldElement[0] && updatedElement[1] == oldElement[1]; });
+                                    if (it != component->exposedVariables[1].end())
+                                        updatedElement[2] = (*it)[2];
                                 }
 
                                 component->exposedVariables = updatedJson;
@@ -2463,22 +2458,6 @@ void Editor::RenderProperties()
                                 bool value = (*it)[2].get<bool>();
                                 if (ImGui::Checkbox(("##" + name).c_str(), &value))
                                     (*it)[2] = value;
-                                //std::string value = (*it)[5];
-                                //ImGui::SetNextItemWidth(60);
-                                //if (ImGui::BeginCombo(("##" + name).c_str(), value.c_str()))
-                                //{
-                                //    if (ImGui::Selectable("True", value == "true"))
-                                //    {
-                                //        (*it)[2] = "true";
-                                //        (*it)[4] = "True";
-                                //    }
-                                //    if (ImGui::Selectable("False", value == "false"))
-                                //    {
-                                //        (*it)[2] = "false";
-                                //        (*it)[4] = "False";
-                                //    }
-                                //    ImGui::EndCombo();
-                                //}
                             }
                             else if ((*it)[0] == "string" || (*it)[0] == "char")
                             {
@@ -2539,6 +2518,7 @@ void Editor::RenderProperties()
                                 ImGui::SetNextItemWidth(width);
                                 ImGui::InputFloat(("##X" + name).c_str(), &x, 0, 0, "%.10g");
                                 (*it)[2][0] = x;
+
                                 ImGui::SameLine();
                                 ImGui::Text("Y");
                                 ImGui::SameLine();
@@ -2558,20 +2538,22 @@ void Editor::RenderProperties()
                                 ImGui::SetNextItemWidth(width);
                                 ImGui::InputFloat(("##X" + name).c_str(), &x, 0, 0, "%.10g");
                                 (*it)[2][0] = x;
+
                                 ImGui::SameLine();
                                 ImGui::Text("Y");
                                 ImGui::SameLine();
                                 float y = (*it)[2][1].get<float>();
                                 ImGui::SetNextItemWidth(width);
                                 ImGui::InputFloat(("##Y" + name).c_str(), &y, 0, 0, "%.10g");
-                                (*it)[2][1] = x;
+                                (*it)[2][1] = y;
+
                                 ImGui::SameLine();
                                 ImGui::Text("Z");
                                 ImGui::SameLine();
                                 float z = (*it)[2][2].get<float>();
                                 ImGui::SetNextItemWidth(width);
                                 ImGui::InputFloat(("##Z" + name).c_str(), &z, 0, 0, "%.10g");
-                                (*it)[2][2] = x;
+                                (*it)[2][2] = z;
                             }
                             else if ((*it).size() > 4 && (*it)[4].contains("Extensions"))
                             {
@@ -2590,9 +2572,8 @@ void Editor::RenderProperties()
                                 }
                                 ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
                                 if (ImGui::Button(selectedFile.c_str(), { ImGui::GetWindowWidth() - 130, 20 }))
-                                {
                                     openSelector = true;
-                                }
+
                                 // Checks to see if the user is hovering over the button while dragging a file with a file type that can be used for the variable
                                 else if (ImGui::IsMouseHoveringRect(cursorScreenPos, { cursorScreenPos.x + ImGui::GetWindowWidth() - 130, cursorScreenPos.y + 20 }) && dragData.first != None && dragData.second.find("Path") != dragData.second.end()) // Using this since ImGui::IsItemHovered() won't work while dragging.
                                 {
@@ -2653,8 +2634,7 @@ void Editor::RenderProperties()
                     ImGui::PopStyleVar(2);
                     ImGui::PopStyleColor();
                 }
-                bool canOpenMenu = false;
-                if (!collapsingHeaderExpanded && ImGui::IsItemClicked(1))
+                else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
                 {
                     componentInContextMenu = component;
                     ImGui::OpenPopup("ComponentsContextMenu");
@@ -2669,11 +2649,11 @@ void Editor::RenderProperties()
                 ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.16f, 0.17f, 0.18f, 1.00f));
                 ImGui::Checkbox("##ComponentActive", &component->active); // Todo: This isn't detecting clicks
                 ImGui::PopStyleColor();
+
                 ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 25, deleteYPos));
                 if (ImGui::Button(("X##" + std::to_string(componentsNum)).c_str())) // Todo: This isn't detecting clicks
-                {
-                    std::get<GameObject*>(objectInProperties)->RemoveComponent(component);
-                }
+                    (*propertiesGameObject)->RemoveComponent(component);
+
                 ImGui::PopStyleColor(2);
                 ImGui::SetCursorPosY(oldYPos);
             }
@@ -2701,7 +2681,7 @@ void Editor::RenderProperties()
             {
                 if (ImGui::MenuItem("Delete"))
                 {
-                    std::get<GameObject*>(objectInProperties)->RemoveComponent(componentInContextMenu);
+                    (*propertiesGameObject)->RemoveComponent(componentInContextMenu);
                     componentInContextMenu = nullptr;
                 }
 
@@ -2734,7 +2714,7 @@ void Editor::RenderProperties()
 
                     if (createComponent == 2)
                     {
-                        ScriptComponent* scriptComponent = &std::get<GameObject*>(objectInProperties)->AddComponent<ScriptComponent>();
+                        ScriptComponent* scriptComponent = &(*propertiesGameObject)->AddComponent<ScriptComponent>();
                         scriptComponent->SetHeaderPath(path.string());
                         scriptComponent->SetCppPath(cppPath);
                         scriptComponent->SetName(path.stem().string());
@@ -2768,6 +2748,7 @@ void Editor::RenderProperties()
                 offset = 35;
                 break;
             }
+
             std::string fileName = std::filesystem::path(std::get<DataFile>(objectInProperties).path).stem().string();
             ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 20, false));
             ImGui::SetCursorPos({ (ImGui::GetWindowWidth() - offset - ImGui::CalcTextSize(fileName.c_str()).x) / 2 + offset, 30});
