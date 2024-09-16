@@ -16,7 +16,11 @@ static bool updateFonts = false;
 
 void FontManager::InitFontManager()
 {
+#if defined(EDITOR)
 	defaultFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("resources/fonts/Familiar-Pro-Bold.ttf", 16);
+#else
+	//defaultFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("resources/fonts/Roboto-Medium.ttf", 16); // A default font shouldn't be needed
+#endif
 	RaylibWrapper::Imgui_ImplRaylib_BuildFontAtlas();
 }
 
