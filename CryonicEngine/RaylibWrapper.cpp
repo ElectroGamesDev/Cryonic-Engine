@@ -3,10 +3,8 @@
 #include "rlgl.h"
 #include "raymath.h"
 #include <cstring>
-//#if defined(EDITOR)
 #include "imgui_impl_raylib.h"
 #include "rlImGui.h"
-//#endif
 
 #ifndef SMOOTH_CIRCLE_ERROR_RATE
 #define SMOOTH_CIRCLE_ERROR_RATE    0.5f      // Circle error rate
@@ -1234,7 +1232,6 @@ namespace RaylibWrapper {
     //}
 
 
-//#if defined(EDITOR)
     // ImGui Raylib
     bool ImGui_ImplRaylib_Init() {
         return ::ImGui_ImplRaylib_Init();
@@ -1369,5 +1366,4 @@ namespace RaylibWrapper {
     void Imgui_ImplRaylib_BuildFontAtlas() {
         ::Imgui_ImplRaylib_BuildFontAtlas();
     }
-//#endif
 }
