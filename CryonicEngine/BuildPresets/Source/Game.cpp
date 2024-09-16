@@ -10,6 +10,7 @@
 #include "CollisionListener2D.h"
 #include "Physics2DDebugDraw.h"
 #include <windows.h>
+#include "imgui_internal.h"
 
 #ifdef IS3D
 #include "Jolt/Jolt.h"
@@ -47,6 +48,18 @@ int main(void)
 	RaylibWrapper::SetTargetFPS(60);
 	
 	RaylibWrapper::InitAudioDevice();
+
+	// ImGui Setup
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     // Enabled Multi-Viewports
+	io.ConfigWindowsMoveFromTitleBarOnly = true;
+	ImGui::StyleColorsDark();
+	RaylibWrapper::ImGui_ImplRaylib_Init();
+
+	//FontManager::InitFontManager(); // No default font needs to be loaded
 
 	// Must go before scene loading
 	CollisionListener2D collisionListener;
