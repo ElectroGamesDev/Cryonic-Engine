@@ -1,7 +1,5 @@
 #pragma once
-#if defined(EDITOR)
 #include "imgui.h"
-#endif
 #include <cmath>
 
 namespace RaylibWrapper
@@ -780,7 +778,6 @@ namespace RaylibWrapper
     float GetMusicTimePlayed(Music music);                          // Get current music time played (in seconds)
 
 
-#if defined(EDITOR)
     // ImGui Raylib
     bool ImGui_ImplRaylib_Init();
     void ImGui_ImplRaylib_Shutdown();
@@ -805,5 +802,4 @@ namespace RaylibWrapper
     bool rlImGuiImageButton(const char* name, const Texture* image);
     bool rlImGuiImageButtonSize(const char* name, const Texture* image, ImVec2 size);
     void Imgui_ImplRaylib_BuildFontAtlas();
-#endif
 }
