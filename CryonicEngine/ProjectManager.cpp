@@ -1246,14 +1246,14 @@ void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path pat
         if (!std::filesystem::exists(path / component.first.filename()) && !std::filesystem::exists(path / "Components" / component.first.filename())) // Todo: Should probably store whether the component is internal or not instead of doing this
         {
             // Todo: Do something if the file does not exist
-            ConsoleLogger::ErrorLog("Failed to find " + (path / component.first.filename()).string()); // Todo: Remove this warning, or maybe keep it for developer mode
+            ConsoleLogger::ErrorLog("Failed to find \"" + (path / component.first.filename()).string() + "\".Error Code 700"); // Todo: Remove this warning, or maybe keep it for developer mode
             continue;
         }
         // Todo: This assume the .cpp is in the same location as the header. Consider getting the .cpp path from the Component and store it in the components map
         if (!std::filesystem::exists(path / (component.first.stem().string() + ".cpp")) && !std::filesystem::exists(path / "Components" / (component.first.stem().string() + ".cpp")))
         {
             // Todo: Do something if the file does not exist
-            ConsoleLogger::ErrorLog("Failed to find " + (path / (component.first.stem().string() + ".cpp")).string()); // Todo: Remove this warning, or maybe keep it for developer mode
+            ConsoleLogger::ErrorLog("Failed to find \"" + (path / (component.first.stem().string() + ".cpp")).string() + "\". Error code 700"); // Todo: Remove this warning, or maybe keep it for developer mode
             continue;
         }
 
