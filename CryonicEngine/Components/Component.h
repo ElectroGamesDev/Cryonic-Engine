@@ -37,7 +37,19 @@ public:
     nlohmann::json exposedVariables = nullptr;
 #endif
 
-    void SetActive(bool active) { this->active = active; };
+    void SetActive(bool active)
+    {
+        if (active == this->active)
+            return;
+        this->active = active;
+        if (gameObject->IsGlobalActive())
+        {
+            if (active)
+                Enable();
+            else
+                Disable();
+        }
+    };
     bool IsActive() const { return active; };
 
     // Hide In API
@@ -50,6 +62,10 @@ public:
     virtual void FixedUpdate() {};
     virtual void EditorUpdate() {};
     virtual void Destroy() {};
+    // Called when the component or gameobject is enabled/activated
+    virtual void Enable() {};
+    // Called when the component or gameobject is disabled/deactivated
+    virtual void Disable() {};
     virtual void OnCollisionEnter2D(Collider2D* other) {};
     virtual void OnCollisionExit2D(Collider2D* other) {};
     virtual void OnCollisionStay2D(Collider2D* other) {};
