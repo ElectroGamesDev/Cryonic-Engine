@@ -63,7 +63,53 @@ bool GameObject::IsActive() const
 
 void GameObject::SetActive(bool active)
 {
+    if (active == this->active)
+        return;
     this->active = active;
+
+    if (IsGlobalActive())
+    {
+        for (Component* component : components)
+        {
+            if (component->IsActive())
+            {
+                if (active)
+                    component->Enable();
+                else
+                    component->Disable();
+            }
+        }
+    }
+
+    for (GameObject* child : childGameObjects)
+        child->SetGlobalActive(active);
+}
+
+// Hide in API
+void GameObject::SetGlobalActive(bool globalActive)
+{
+    if (globalActive == this->globalActive)
+        return;
+    this->globalActive = globalActive;
+
+    for (Component* component : components)
+    {
+        if (component->IsActive())
+        {
+            if (globalActive)
+                component->Enable();
+            else
+                component->Disable();
+        }
+    }
+
+    for (GameObject* child : childGameObjects)
+        child->SetGlobalActive(globalActive);
+};
+
+bool GameObject::IsGlobalActive() const
+{
+    return globalActive;
 }
 
 //Material GameObject::GetMaterial() const

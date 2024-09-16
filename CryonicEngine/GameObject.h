@@ -41,8 +41,15 @@ public:
     //void SetRotationEuler();
     void SetActive(bool active);
     bool IsActive() const;
+    // Hide in API
+    void SetGlobalActive(bool active);
+    // Hide in API
+    bool IsGlobalActive() const;
     int GetId() const;
-    bool active = true;
+    // Hide In API
+    bool active = true; // local state
+    // Hide In API
+    bool globalActive = true; // parent's state
 
     void SetParent(GameObject* gameObject);
     GameObject* GetParent();
