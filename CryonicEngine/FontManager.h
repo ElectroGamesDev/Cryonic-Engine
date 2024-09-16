@@ -1,6 +1,5 @@
 #pragma once
 
-#if defined(EDITOR)
 #include <iostream>
 #include <string>
 #include <vector>
@@ -16,4 +15,3 @@ namespace FontManager
     void UpdateFonts();
     void InitFontManager();
 };
-#endif

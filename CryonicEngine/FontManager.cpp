@@ -11,7 +11,6 @@
 
 namespace FontManager
 {
-
 	static ImFont* defaultFont;
 	static std::vector<std::pair<std::string, int>> unloadedFonts;
 	static std::unordered_map<std::string, std::unordered_map<int, ImFont*>> fonts;
