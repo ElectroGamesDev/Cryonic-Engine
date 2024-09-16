@@ -11,6 +11,8 @@
 #include "Physics2DDebugDraw.h"
 #include <windows.h>
 #include "imgui_internal.h"
+#include "FontManager.h"
+#include <vector>
 
 #ifdef IS3D
 #include "Jolt/Jolt.h"
@@ -59,7 +61,7 @@ int main(void)
 	ImGui::StyleColorsDark();
 	RaylibWrapper::ImGui_ImplRaylib_Init();
 
-	//FontManager::InitFontManager(); // No default font needs to be loaded
+	FontManager::InitFontManager();
 
 	// Must go before scene loading
 	CollisionListener2D collisionListener;
@@ -115,6 +117,11 @@ int main(void)
 			}
 		}
 
+		// GUI
+		RaylibWrapper::ImGui_ImplRaylib_ProcessEvents();
+		RaylibWrapper::ImGui_ImplRaylib_NewFrame();
+		ImGui::NewFrame();
+
 		if (CameraComponent::main != nullptr)
             ShaderManager::UpdateShaders(CameraComponent::main->gameObject->transform.GetPosition().x, CameraComponent::main->gameObject->transform.GetPosition().y, CameraComponent::main->gameObject->transform.GetPosition().z);
 		
@@ -132,7 +139,12 @@ int main(void)
 
 		deltaTime = RaylibWrapper::GetFrameTime();
 		float tempDelaTime = deltaTime;
-		
+
+		ImGui::SetNextWindowPos(ImVec2(0, 0));
+		ImGui::SetNextWindowSize(ImVec2(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight()));
+		ImGui::Begin("##Game", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
+
+		// Call components Update()
 		for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 		{
 			if (!gameObject->IsActive()) continue;
@@ -144,9 +156,15 @@ int main(void)
 			}
 		}
 
+		ImGui::End();
+
 		//world->DebugDraw();
 		
 		RaylibWrapper::EndMode3D();
+
+		// Render GUI
+		ImGui::Render();
+		RaylibWrapper::ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
 		
 		RaylibWrapper::EndDrawing();
     }
@@ -156,6 +174,8 @@ int main(void)
 	SceneManager::UnloadScene(SceneManager::GetActiveScene());
 
 	RaylibWrapper::CloseAudioDevice();
+	RaylibWrapper::ImGui_ImplRaylib_Shutdown();
+	ImGui::DestroyContext();
 
 	ShaderManager::Cleanup();
     RaylibWrapper::CloseWindow();
