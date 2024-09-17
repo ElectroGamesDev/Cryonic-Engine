@@ -31,6 +31,12 @@
     <Filter Include="Source Files\imnodes">
       <UniqueIdentifier>{a70e54ae-73a7-431c-a768-a3225c67c554}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Components\UI">
+      <UniqueIdentifier>{c8022c77-e0c5-4a44-9c69-3d05d2180ea7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Components\UI">
+      <UniqueIdentifier>{0e53eea1-af1b-4cc1-ad5a-c57e40cbb31a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CryonicEngine.cpp">
@@ -173,6 +179,9 @@
     </ClCompile>
     <ClCompile Include="..\includes\imgui\ImGuiPopup.cpp">
       <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\Label.cpp">
+      <Filter>Source Files\Components\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -352,6 +361,12 @@
     </ClInclude>
     <ClInclude Include="..\includes\imgui\ImGuiPopup.h">
       <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Label.h">
+      <Filter>Header Files\Components\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Font.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

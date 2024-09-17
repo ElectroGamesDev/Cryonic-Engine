@@ -172,6 +172,7 @@
     <ClCompile Include="Components\Collider2D.cpp" />
     <ClCompile Include="Components\Collider3D.cpp" />
     <ClCompile Include="Components\Component.cpp" />
+    <ClCompile Include="Components\Label.cpp" />
     <ClCompile Include="Components\Lighting.cpp" />
     <ClCompile Include="Components\MeshRenderer.cpp" />
     <ClCompile Include="Components\Rigidbody2D.cpp" />
@@ -233,6 +234,7 @@
     <ClInclude Include="Components\Collider2D.h" />
     <ClInclude Include="Components\Collider3D.h" />
     <ClInclude Include="Components\Component.h" />
+    <ClInclude Include="Components\Label.h" />
     <ClInclude Include="Components\Lighting.h" />
     <ClInclude Include="Components\MeshRenderer.h" />
     <ClInclude Include="Components\Rigidbody2D.h" />
@@ -245,6 +247,7 @@
     <ClInclude Include="CryonicCore.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="EventSystem.h" />
+    <ClInclude Include="Font.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="IconManager.h" />
