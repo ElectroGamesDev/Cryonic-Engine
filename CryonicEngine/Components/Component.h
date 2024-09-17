@@ -32,6 +32,12 @@ public:
     bool active = true;
     // Hide In API
     int id;
+    // Hide in API
+    bool startCalled = false;
+    // Hide in API
+    bool awakeCalled = false;
+    // Hide in API
+    bool initialized = false; // Whether the component is ready to call functions like Start, Awake, Enable, Disable, etc.
 
 #if defined(EDITOR)
     nlohmann::json exposedVariables = nullptr;
@@ -42,10 +48,22 @@ public:
         if (active == this->active)
             return;
         this->active = active;
-        if (gameObject->IsGlobalActive())
+        if (gameObject->IsGlobalActive() && initialized)
         {
             if (active)
+            {
+                if (!awakeCalled)
+                {
+                    awakeCalled = true;
+                    Awake();
+                }
                 Enable();
+                if (!startCalled)
+                {
+                    startCalled = true;
+                    Start();
+                }
+            }
             else
                 Disable();
         }
@@ -57,6 +75,7 @@ public:
     // Hide In API
     virtual Component* Clone() { return nullptr; };
 
+    virtual void Awake() {}
     virtual void Start() {};
     virtual void Update() {};
     virtual void FixedUpdate() {};
