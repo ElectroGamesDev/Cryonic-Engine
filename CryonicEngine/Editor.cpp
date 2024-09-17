@@ -2415,7 +2415,11 @@ void Editor::RenderProperties()
         if (auto* propertiesGameObject = std::get_if<GameObject*>(&objectInProperties))
         {
             // Active checkbox
-            ImGui::Checkbox("##Active" , &(*propertiesGameObject)->active);
+            // Doing it this way so it calls the SetActive() function
+            bool active = (*propertiesGameObject)->active;
+            ImGui::Checkbox("##Active" , &active);
+            if (active != (*propertiesGameObject)->active)
+                (*propertiesGameObject)->SetActive(active);
 
             // Name
             ImGui::SameLine();
@@ -3126,7 +3130,11 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor, bool&
     //    icon = ICON_FA_CAMERA;
 
     // This is coded a bit different than I normally would since TreeNodeEx() doesn't return true if the game object has children but its not expanded
+    if (!gameObject->IsActive() || !gameObject->IsGlobalActive())
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.65f, 0.65f, 0.65f, 1));
     bool nodeOpen = ImGui::TreeNodeEx((ICON_FA_CUBE + std::string(" ") + gameObject->GetName() + "##" + std::to_string(gameObject->GetId())).c_str(), flags);
+    if (!gameObject->IsActive() || !gameObject->IsGlobalActive())
+        ImGui::PopStyleColor();
 
     bool currentNodeDoubleClicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
 
