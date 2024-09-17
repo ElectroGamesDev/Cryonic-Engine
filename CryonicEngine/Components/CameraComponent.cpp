@@ -73,3 +73,9 @@ void CameraComponent::EditorUpdate()
     // Draw3DBillboard(Editor::camera, *IconManager::imageTextures["CameraGizmoIcon"], gameObject->transform.GetPosition(), 2.0f, { 255, 255, 255, 150 }); // Todo: Re-add this
 }
 #endif
+
+Vector2 CameraComponent::GetWorldToScreen(Vector3 position)
+{
+	std::array<float, 2> pos = raylibCamera.GetWorldToScreen(position.x, position.y, position.z);
+	return {pos[0], pos[1]};
+}

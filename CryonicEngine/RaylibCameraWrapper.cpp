@@ -52,3 +52,9 @@ void RaylibCamera::BeginMode3D()
 {
 	RaylibWrapper::BeginMode3D({ { camera.position.x, camera.position.y, camera.position.z }, { camera.target.x, camera.target.y, camera.target.z }, { camera.up.x, camera.up.y, camera.up.z }, camera.fovy, camera.projection });
 }
+
+std::array<float, 2> RaylibCamera::GetWorldToScreen(float x, float y, float z)
+{
+	Vector2 pos = ::GetWorldToScreen({x, y, z}, camera);
+	return {pos.x, pos.y};
+}

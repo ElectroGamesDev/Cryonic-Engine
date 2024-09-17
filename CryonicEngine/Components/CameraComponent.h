@@ -18,7 +18,7 @@ public:
 #ifdef EDITOR
 	void EditorUpdate() override;
 #endif
-	//void Destroy() override;
+	Vector2 GetWorldToScreen(Vector3 position);
 
 	RaylibCamera raylibCamera;;
 	static CameraComponent* main;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 class RaylibCamera
 {
 public:
@@ -13,4 +15,5 @@ public:
 	// 0 = Perspective, 1 = Orthographic
 	void SetProjection(int projection);
 	void BeginMode3D();
+	std::array<float, 2> GetWorldToScreen(float x, float y, float z);
 };
