@@ -22,7 +22,7 @@ ProjectData ProjectManager::projectData;
 
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
-    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "Scenes", "ConsoleLogger", "FontManager", "GameObject", "Components", "ShaderManager", "InputSystem", "CollisionListener2D", "EventSystem", "Animation", "AnimationGraph", "AudioClip", "Physics2DDebugDraw", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
+    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "Scenes", "ConsoleLogger", "FontManager", "Font", "GameObject", "Components", "ShaderManager", "InputSystem", "CollisionListener2D", "EventSystem", "Animation", "AnimationGraph", "AudioClip", "Physics2DDebugDraw", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
     
     if (projectData.is3D)
         filesToCopy.push_back("CollisionListener3D");
