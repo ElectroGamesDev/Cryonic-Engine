@@ -78,18 +78,6 @@ int main(void)
 	// Todo: This assumes the default scene path and name
 	SceneManager::LoadScene(exeParent / "Resources" / "Assets" / "Scenes" / "Default.scene");
 	SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
-		
-	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
-	{
-		if (!gameObject->IsActive() || !gameObject->IsGlobalActive())
-			continue;
-		for (Component* component : gameObject->GetComponents())
-		{
-			if (!component->IsActive())
-				continue;
-			component->Start();
-		}
-	}
 
 	float timeStep = 1.0f / 60.0f;
 	int32 velocityIterations = 8;
