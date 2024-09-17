@@ -325,7 +325,10 @@ void Editor::RenderViewport()
         }
         else if (ImGui::IsWindowHovered() && RaylibWrapper::GetMouseWheelMove() != 0)
         {
-            float newZoom = camera.fovy - RaylibWrapper::GetMouseWheelMove() * 5;
+            int multiplier = 1;
+            if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_LEFT_SHIFT) || RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_RIGHT_SHIFT))
+                multiplier = 2;
+            float newZoom = camera.fovy - RaylibWrapper::GetMouseWheelMove() * 5 * multiplier;
             if (newZoom > 0 && newZoom < 250)
                 camera.fovy = newZoom;
         }
