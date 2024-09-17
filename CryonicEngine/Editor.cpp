@@ -205,6 +205,10 @@ void Editor::RenderViewport()
                 (contentSize.x - renderSize.x) * 0.5f,
                 (contentSize.y - renderSize.y) * 0.5f
             );
+            //RaylibWrapper::Vector2 cameraPos = RaylibWrapper::GetWorldToScreen({0,0}, camera);
+            //ConsoleLogger::InfoLog("X: " + std::to_string(camera.position.x) + " Y: " + std::to_string(camera.position.y));
+            //renderPos.x += windowPos.x -  (camera.position.x / RaylibWrapper::GetScreenWidth() * windowSize.x);
+            //renderPos.y += windowPos.y + (camera.position.y / RaylibWrapper::GetScreenHeight() * windowSize.y);
             renderPos.x += windowPos.x;
             renderPos.y += windowPos.y;
 
@@ -229,47 +233,6 @@ void Editor::RenderViewport()
 
             // Draw the rectangle
             ImGui::GetWindowDrawList()->AddRect(rectMin, rectMax, IM_COL32(255, 255, 0, 255), 0.0f, 0, 1.0f);
-
-            // Old, kind of works
-            //ImVec2 windowPos = ImGui::GetWindowPos();
-            //ImVec2 windowSize = ImGui::GetWindowSize();
-
-            //float textureAspectRatio = ProjectManager::projectData.windowResolution.x / ProjectManager::projectData.windowResolution.y;
-            //float windowAspectRatio = contentSize.x / contentSize.y;
-
-            //ImVec2 renderSize;
-            //ImVec2 renderPos;
-
-            //if (textureAspectRatio > windowAspectRatio) {
-            //    renderSize.x = contentSize.x;
-            //    renderSize.y = renderSize.x / textureAspectRatio;
-            //    renderPos.x = 0;
-            //    renderPos.y = (contentSize.y - renderSize.y) * 0.5f;
-            //}
-            //else {
-            //    renderSize.y = contentSize.y;
-            //    renderSize.x = renderSize.y * textureAspectRatio;
-            //    renderPos.x = (contentSize.x - renderSize.x) * 0.5f;
-            //    renderPos.y = 0;
-            //}
-
-            //ImVec2 rectMin = ImVec2(windowPos.x + renderPos.x, windowPos.y + windowSize.y - contentSize.y + renderPos.y);
-            //ImVec2 rectMax = ImVec2(rectMin.x + renderSize.x, rectMin.y + renderSize.y);
-
-            // ORIGINAL
-            //ImVec2 centerPos = ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowWidth() / 2, ImGui::GetWindowPos().y + ImGui::GetWindowHeight() / 2);
-            //ImVec2 resolution = ImVec2(ProjectManager::projectData.windowResolution.x * (ImGui::GetWindowWidth() / ViewTexture.texture.width),
-            //    ProjectManager::projectData.windowResolution.y * (ImGui::GetWindowHeight() / ViewTexture.texture.height));
-
-            ////ImGui::GetWindowDrawList()->AddRect({ centerPos.x - resolution.x / 2, centerPos.y - resolution.y / 2 },
-            //    { centerPos.x + resolution.x / 2, centerPos.y + resolution.y / 2 },
-            //    IM_COL32(255, 255, 0, 255), 0, 0, 5);
-
-            //RaylibWrapper::DrawRectangleOutline({ ImGui::GetWindowWidth() / 2, ImGui::GetWindowHeight() / 2, 20, 30},
-            //    { ImGui::GetWindowWidth() / 2, ImGui::GetWindowHeight() / 2 },
-            //    0,
-            //    0.1f,
-            //    { 255, 255, 0, 255 });
         }
 
         // Render tool buttons
@@ -359,6 +322,12 @@ void Editor::RenderViewport()
         {
             //ShowCursor();
             //EnableCursor();
+        }
+        else if (ImGui::IsWindowHovered() && RaylibWrapper::GetMouseWheelMove() != 0)
+        {
+            float newZoom = camera.fovy - RaylibWrapper::GetMouseWheelMove() * 5;
+            if (newZoom > 0 && newZoom < 250)
+                camera.fovy = newZoom;
         }
 
         // Render move tool arrows
