@@ -482,7 +482,7 @@ void Editor::UpdateViewport()
 
     for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
-        if (!gameObject->IsActive())
+        if (!gameObject->IsActive() || !gameObject->IsGlobalActive())
             continue;
 
         for (Component* component : gameObject->GetComponents())
