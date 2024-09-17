@@ -20,6 +20,7 @@
 #include "../Components/Rigidbody2D.h"
 #include "../Components/AnimationPlayer.h"
 #include "../Components/AudioPlayer.h"
+#include "../Components/Label.h"
 
 #if defined(EDITOR)
 #include "../ProjectManager.h"
@@ -450,6 +451,30 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             else if (componentData["name"] == "AudioPlayer")
             {
                 AudioPlayer& component = gameObject->AddComponent<AudioPlayer>(componentData["id"]);
+                component.SetActive(componentData["active"]);
+                // Sets exposed variables, and updates them if needed
+#if defined(EDITOR)
+                if (component.exposedVariables == nullptr)
+                    component.exposedVariables = componentData["exposed_variables"];
+                else if (!componentData["exposed_variables"].is_null())
+                {
+                    for (auto jsonExposedVariable = componentData["exposed_variables"][1].begin(); jsonExposedVariable != componentData["exposed_variables"][1].end(); ++jsonExposedVariable)
+                    {
+                        for (auto exposedVariable = component.exposedVariables[1].begin(); exposedVariable != component.exposedVariables[1].end(); ++exposedVariable)
+                        {
+                            if ((*jsonExposedVariable)[0] == (*exposedVariable)[0] && (*jsonExposedVariable)[1] == (*exposedVariable)[1])
+                            {
+                                (*exposedVariable)[2] = (*jsonExposedVariable)[2];
+                                break;
+                            }
+                        }
+                    }
+                }
+#endif
+            }
+            else if (componentData["name"] == "Label")
+            {
+                Label& component = gameObject->AddComponent<Label>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)

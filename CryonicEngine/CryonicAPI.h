@@ -19,3 +19,4 @@
 #include "Components/Rigidbody2D.h"
 //#include "Components/Rigidbody3D.h"
 #include "Components/Skybox.h"
+#include "Components/Label.h"
