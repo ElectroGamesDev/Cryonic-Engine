@@ -6,6 +6,9 @@
 //#include "imgui_impl_raylib.h"
 #if defined(EDITOR)
 #include "IconsFontAwesome6.h"
+#include "ProjectManager.h"
+#else
+#include "Game.h"
 #endif
 #include "RaylibWrapper.h"
 
@@ -26,8 +29,21 @@ namespace FontManager
 		RaylibWrapper::Imgui_ImplRaylib_BuildFontAtlas();
 	}
 
-	ImFont* LoadFont(std::string font, int size, bool iconFont)
+	ImFont* LoadFont(std::string font, int size, bool iconFont, bool checkIfExists)
 	{
+		if (checkIfExists)
+		{
+			auto fontIter = fonts.find(font);
+			if (fontIter != fonts.end())
+			{
+				auto& sizeMap = fontIter->second;
+				auto sizeIter = sizeMap.find(size);
+
+				if (sizeIter != sizeMap.end())
+					return sizeIter->second;
+			}
+		}
+
 		if (iconFont)
 		{
 #if defined(EDITOR)
@@ -55,7 +71,8 @@ namespace FontManager
 
 	void LoadFonts(std::string font, std::vector<int> sizes)
 	{
-		for (auto& size : sizes) LoadFont(font, size, false);
+		for (auto& size : sizes)
+			LoadFont(font, size, false);
 	}
 
 	ImFont* GetFont(std::string font, int size, bool checkIfExists)
@@ -82,7 +99,7 @@ namespace FontManager
 				return sizeIter->second;
 		}
 
-		return LoadFont(font, size, false);
+		return LoadFont(font, size, false, false);
 	}
 
 	void UpdateFonts()
@@ -93,7 +110,23 @@ namespace FontManager
 
 		for (auto& font : unloadedFonts)
 		{
-			fonts[font.first][font.second] = io.Fonts->AddFontFromFileTTF(("resources/fonts/" + font.first + ".ttf").c_str(), font.second);
+#if defined(EDITOR)
+			bool updatedFont = false;
+			if (font.first.length() > 3)
+			{
+				std::string extension = font.first.substr(font.first.length() - 4);
+				if (extension == ".ttf" || extension == ".otf")
+				{
+					fonts[font.first][font.second] = io.Fonts->AddFontFromFileTTF((ProjectManager::projectData.path.string() + "/Assets/" + font.first).c_str(), font.second);
+					updatedFont = true;
+				}
+			}
+
+			if (!updatedFont)
+				fonts[font.first][font.second] = io.Fonts->AddFontFromFileTTF(("resources/fonts/" + font.first + ".ttf").c_str(), font.second);
+#else
+			fonts[font.first][font.second] = io.Fonts->AddFontFromFileTTF((exeParent.string() + "/resources/Assets/" + font.first).c_str(), font.second);
+#endif
 		}
 		unloadedFonts.clear();
 

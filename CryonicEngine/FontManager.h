@@ -9,7 +9,7 @@
 
 namespace FontManager
 {
-    ImFont* LoadFont(std::string font, int size, bool iconFont = false);
+    ImFont* LoadFont(std::string font, int size, bool iconFont = false, bool checkIfExists = false);
     ImFont* GetFont(std::string font, int size, bool checkIfExists = true);
     void LoadFonts(std::string font, std::vector<int> sizes);
     void UpdateFonts();
