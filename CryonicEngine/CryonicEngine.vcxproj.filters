@@ -37,6 +37,9 @@
     <Filter Include="Header Files\Components\UI">
       <UniqueIdentifier>{0e53eea1-af1b-4cc1-ad5a-c57e40cbb31a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GUI">
+      <UniqueIdentifier>{bfcc3e3b-284c-4ab5-b957-44ea67bcd22a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CryonicEngine.cpp">
@@ -182,6 +185,15 @@
     </ClCompile>
     <ClCompile Include="Components\Label.cpp">
       <Filter>Source Files\Components\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\CanvasRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CanvasEditor.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CanvasEditor.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -367,6 +379,12 @@
     </ClInclude>
     <ClInclude Include="Font.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\CanvasRenderer.h">
+      <Filter>Header Files\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Element.h">
+      <Filter>Header Files\GUI</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

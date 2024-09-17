@@ -26,6 +26,7 @@
 #include "Components/AnimationPlayer.h"
 #include "Components/AudioPlayer.h"
 #include "Components/Label.h"
+#include "Components/CanvasRenderer.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
 #include "ProjectManager.h"
@@ -36,6 +37,7 @@
 #include <cmath>
 #include "EventSystem.h"
 #include "ImGuiPopup.h"
+#include "CanvasEditor.h"
 
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -897,6 +899,35 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             // Todo: Send error message
                         }
                     }
+                    else if (extension == ".canvas")
+                    {
+                        RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CanvasIcon"], ImVec2(32, 32));
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        {
+                            // Todo: If something is already in the Canvas Editor window and its not saved, popup asking to save, don't save, or cancel
+
+                            std::ifstream dataFile(entry.path());
+                            if (dataFile.is_open())
+                            {
+                                // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
+                                dataFile >> CanvasEditor::canvasData;
+                                CanvasEditor::canvasData["path"] = entry.path(); // Updating the path incase it changed.
+
+                                if (CanvasEditor::windowOpen) // If the canvas editor is open, focus it
+                                {
+                                    ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str());
+                                    if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                                        window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+                                }
+                                else
+                                    CanvasEditor::windowOpen = true; // This should focus the canvas editor window
+                            }
+                            else
+                            {
+                                // Todo: Send error message
+                            }
+                        }
+                    }
 
                     if (ImGui::IsItemHovered())
                     {
@@ -1457,6 +1488,39 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                                     }
                                 }},
                                 {"links", nlohmann::json::array()}
+                            };
+
+                            file << std::setw(4) << jsonData << std::endl;
+                            file.close();
+                        }
+                        else
+                        {
+                            // Todo: Properly handle if the file couldn't be opened. Maybe retry a few times, then popup with a message and delete the file.
+                            std::filesystem::remove(filePath);
+                        }
+
+
+                        renamingFile = filePath;
+                        strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
+                    }
+                    else
+                    {
+                        // Todo: Handle if it wasn't created
+                    }
+                }
+                if (ImGui::MenuItem("Create Canvas"))
+                {
+                    explorerContextMenuOpen = false;
+                    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Canvas", "canvas");
+                    if (filePath != "")
+                    {
+                        std::ofstream file(filePath);
+                        if (file.is_open())
+                        {
+                            nlohmann::json jsonData = {
+                                {"version", 1},
+                                {"path", filePath},
+                                {"gameobjects", nlohmann::json::array()}
                             };
 
                             file << std::setw(4) << jsonData << std::endl;
@@ -3389,6 +3453,7 @@ void Editor::Render(void)
         ImGui::DockBuilderDockWindow((ICON_FA_SITEMAP + std::string(" Hierarchy")).c_str(), dock_id_left);
         ImGui::DockBuilderDockWindow((ICON_FA_CUBES + std::string(" Viewport")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), dock_main_id);
+        ImGui::DockBuilderDockWindow((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_GEARS + std::string(" Properties")).c_str(), dock_id_right);
         ImGui::DockBuilderDockWindow((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str(), dock_id_bottom);
         ImGui::DockBuilderDockWindow((ICON_FA_CODE + std::string(" Console")).c_str(), dock_id_bottom);
@@ -3418,6 +3483,7 @@ void Editor::Render(void)
     RenderComponentsWin();
     RenderScriptCreateWin();
     RenderAnimationGraph();
+    CanvasEditor::Render();
     RenderProjectSettings();
     //RenderTopbar();
 
@@ -3492,6 +3558,7 @@ void Editor::Render(void)
             if (ImGui::MenuItem("Properties", "")) {}
             if (ImGui::MenuItem("Sprite Editor", "")) {}
             if (ImGui::MenuItem("Animation Graph", "")) { animationGraphWinOpen = true; }
+            if (ImGui::MenuItem("Canvas Editor", "")) { CanvasEditor::windowOpen = true; }
             ImGui::EndMenu();
         }
         ImGui::SetCursorPos(ImVec2(152, 0));

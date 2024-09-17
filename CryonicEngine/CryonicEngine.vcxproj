@@ -164,11 +164,14 @@
     <ClCompile Include="..\includes\imgui\rlImGui.cpp" />
     <ClCompile Include="..\includes\imnodes\imnodes.cpp" />
     <ClCompile Include="AudioClip.cpp" />
+    <ClCompile Include="CanvasEditor.cpp" />
+    <ClCompile Include="CanvasEditor.h" />
     <ClCompile Include="CollisionListener2D.cpp" />
     <ClCompile Include="CollisionListener3D.cpp" />
     <ClCompile Include="Components\AnimationPlayer.cpp" />
     <ClCompile Include="Components\AudioPlayer.cpp" />
     <ClCompile Include="Components\CameraComponent.cpp" />
+    <ClCompile Include="Components\CanvasRenderer.cpp" />
     <ClCompile Include="Components\Collider2D.cpp" />
     <ClCompile Include="Components\Collider3D.cpp" />
     <ClCompile Include="Components\Component.cpp" />
@@ -231,6 +234,7 @@
     <ClInclude Include="Components\AnimationPlayer.h" />
     <ClInclude Include="Components\AudioPlayer.h" />
     <ClInclude Include="Components\CameraComponent.h" />
+    <ClInclude Include="Components\CanvasRenderer.h" />
     <ClInclude Include="Components\Collider2D.h" />
     <ClInclude Include="Components\Collider3D.h" />
     <ClInclude Include="Components\Component.h" />
@@ -250,6 +254,7 @@
     <ClInclude Include="Font.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="GUI\Element.h" />
     <ClInclude Include="IconManager.h" />
     <ClInclude Include="Components\SpriteRenderer.h" />
     <ClInclude Include="InputSystem.h" />
