@@ -61,6 +61,7 @@ public:
     virtual void Update() {};
     virtual void FixedUpdate() {};
     virtual void EditorUpdate() {};
+    virtual void RenderGui() {};
     virtual void Destroy() {};
     // Called when the component or gameobject is enabled/activated
     virtual void Enable() {};
