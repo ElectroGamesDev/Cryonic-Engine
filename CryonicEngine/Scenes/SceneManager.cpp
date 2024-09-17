@@ -246,7 +246,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 component.SetModelPath(componentData["model_path"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
-                #if defined(EDITOR)
+#if defined(EDITOR)
                 if (component.exposedVariables == nullptr)
                     component.exposedVariables = componentData["exposed_variables"];
                 else if (!componentData["exposed_variables"].is_null())
@@ -263,7 +263,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                         }
                     }
                 }
-                #endif
+#endif
 
                 if (component.GetModelPath().string() == "Cube")
                     component.SetModel(Cube, component.GetModelPath().string(), LitStandard);
@@ -304,11 +304,11 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 if (componentData["texture_path"] != "Square" && componentData["texture_path"] != "Circle")
                 {
                     std::filesystem::path path;
-                    #if defined(EDITOR)
+#if defined(EDITOR)
                     path = ProjectManager::projectData.path / "Assets";
-                    #else
+#else
                     path = std::filesystem::path(exeParent) / "Resources" / "Assets";
-                    #endif
+#endif
                     component.SetTexture(path / componentData["texture_path"]);
                 }
                 else
@@ -520,37 +520,42 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                     }
                 }
 #endif
-                }
+            }
 
             // Todo: make Component of type Component so then I can set the Component variables like SetActive, id, expoedVariables, etc only once and not in each if statement
         }
 
+        // Set exposed variables values, then call Awake() and Enable()
+#if !defined(EDITOR)
+        for (Component* component : gameObject->GetComponents())
+        {
+            component->SetExposedVariables();
+            component->initialized = true;
+            if (gameObject->IsActive() && gameObject->IsGlobalActive())
+            {
+                component->Awake();
+                component->awakeCalled = true;
+                component->Enable();
+            }
+        }
+#endif
 
         // Add game object to scene
         //scene.AddGameObject();
     }
 
-    for (GameObject* gameObject : scene.GetGameObjects())
-    {
-        // Set exposed variables values
-#if !defined(EDITOR)
-        for (Component* component : gameObject->GetComponents())
-        {
-            component->SetExposedVariables();
-            // Todo: Call OnAwake() here although the Set Parent should be before this
-    }
-        #endif
-
-        // Set parents
-        if (parentObjects[gameObject->GetId()] != 0)
-            for (GameObject* go : scene.GetGameObjects())
-                if (go->GetId() == parentObjects[gameObject->GetId()])
-                {
-                    gameObject->SetParent(go);
-                    break;
-                }
-    }
-
+    // Moved this below
+    //for (GameObject* gameObject : scene.GetGameObjects())
+    //{
+    //    // Set parents
+    //    if (parentObjects[gameObject->GetId()] != 0)
+    //        for (GameObject* go : scene.GetGameObjects())
+    //            if (go->GetId() == parentObjects[gameObject->GetId()])
+    //            {
+    //                gameObject->SetParent(go);
+    //                break;
+    //            }
+    //}
 
     // Todo: I'm not sure if this is needed. I should check if the scene is already loaded above.
     bool sceneFound = false;
@@ -570,6 +575,31 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             for (Component* component : gameObject->GetComponents())
                 component->gameObject = gameObject;
     }
+
+    for (GameObject* gameObject : scene.GetGameObjects())
+    {
+        // Set parents
+        if (parentObjects[gameObject->GetId()] != 0)
+            for (GameObject* go : scene.GetGameObjects())
+                if (go->GetId() == parentObjects[gameObject->GetId()])
+                {
+                    gameObject->SetParent(go);
+                    break;
+                }
+
+#if !defined(EDITOR)
+        if (!gameObject->IsActive() || !gameObject->IsGlobalActive())
+            continue;
+        for (Component* component : gameObject->GetComponents())
+        {
+            if (!component->IsActive())
+                continue;
+            component->Start();
+            component->startCalled = true;
+        }
+#endif
+    }
+
     ConsoleLogger::InfoLog("The scene \"" + filePath.stem().string() + "\" has been loaded");
 
     return true;
