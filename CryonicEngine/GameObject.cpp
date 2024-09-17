@@ -67,6 +67,7 @@ void GameObject::SetActive(bool active)
         return;
     this->active = active;
 
+#if !defined(EDITOR)
     if (IsGlobalActive())
     {
         for (Component* component : components)
@@ -80,6 +81,7 @@ void GameObject::SetActive(bool active)
             }
         }
     }
+#endif
 
     for (GameObject* child : childGameObjects)
         child->SetGlobalActive(active);
@@ -92,6 +94,7 @@ void GameObject::SetGlobalActive(bool globalActive)
         return;
     this->globalActive = globalActive;
 
+#if !defined(EDITOR)
     for (Component* component : components)
     {
         if (component->IsActive())
@@ -102,6 +105,7 @@ void GameObject::SetGlobalActive(bool globalActive)
                 component->Disable();
         }
     }
+#endif
 
     for (GameObject* child : childGameObjects)
         child->SetGlobalActive(globalActive);
