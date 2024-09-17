@@ -25,6 +25,7 @@
 #include "Components/Rigidbody2D.h"
 #include "Components/AnimationPlayer.h"
 #include "Components/AudioPlayer.h"
+#include "Components/Label.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
 #include "ProjectManager.h"
@@ -88,6 +89,8 @@ bool resetFileExplorerWin = true;
 bool resetHierarchy = true;
 bool resetCameraView = true;
 bool resetProjectSettings = true;
+
+bool guiVisible = false;
 
 nlohmann::json animationGraphData = nullptr;
 
@@ -160,9 +163,112 @@ void Editor::RenderViewport()
 
     if (ImGui::Begin((ICON_FA_CUBES + std::string(" Viewport")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar))
     {
+        ImVec2 contentSize = ImGui::GetContentRegionAvail();
+
         viewportPosition = { ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y };
         viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
         rlImGuiImageRenderTextureFit(&ViewTexture, true);
+
+        // Render GUI from components
+        if (guiVisible)
+        {
+            for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+            {
+                if (!gameObject->IsActive())
+                    continue;
+
+                for (Component* component : gameObject->GetComponents())
+                {
+                    if (!component->IsActive())
+                        continue;
+
+                    component->RenderGui();
+                }
+            }
+
+            // Outline
+            ImVec2 windowPos = ImGui::GetWindowPos();
+            ImVec2 windowSize = ImGui::GetWindowSize();
+
+            ImVec2 aspectRatioSize(ProjectManager::projectData.windowResolution.x, ProjectManager::projectData.windowResolution.y);
+
+            // Calculate the scaling factor used by rlImGuiImageRenderTextureFit
+            float scaleX = contentSize.x / ViewTexture.texture.width;
+            float scaleY = contentSize.y / ViewTexture.texture.height;
+            float scale = (ViewTexture.texture.height * scaleX > contentSize.y) ? scaleY : scaleX;
+
+            // Compute the actual rendered position and size of the image
+            ImVec2 renderSize = ImVec2(ViewTexture.texture.width * scale, ViewTexture.texture.height * scale);
+            ImVec2 renderPos = ImVec2(
+                (contentSize.x - renderSize.x) * 0.5f,
+                (contentSize.y - renderSize.y) * 0.5f
+            );
+            renderPos.x += windowPos.x;
+            renderPos.y += windowPos.y;
+
+            // Adjust for the title bar height
+            renderPos.y += windowSize.y - contentSize.y;
+
+            // Calculate scaling to fit the aspect ratio size within the render size
+            float aspectRatio = aspectRatioSize.x / aspectRatioSize.y;
+            float renderAspectRatio = renderSize.x / renderSize.y;
+            float finalScale = (renderAspectRatio > aspectRatio) ? renderSize.y / aspectRatioSize.y : renderSize.x / aspectRatioSize.x;
+
+            // Compute the rectangle size and position based on the final scale
+            ImVec2 rectSize = ImVec2(aspectRatioSize.x * finalScale, aspectRatioSize.y * finalScale);
+            ImVec2 rectPos = ImVec2(
+                renderPos.x + (renderSize.x - rectSize.x) * 0.5f,
+                renderPos.y + (renderSize.y - rectSize.y) * 0.5f
+            );
+
+            // Add offset for the rectangle
+            ImVec2 rectMin = ImVec2(rectPos.x, rectPos.y);
+            ImVec2 rectMax = ImVec2(rectMin.x + rectSize.x, rectMin.y + rectSize.y);
+
+            // Draw the rectangle
+            ImGui::GetWindowDrawList()->AddRect(rectMin, rectMax, IM_COL32(255, 255, 0, 255), 0.0f, 0, 1.0f);
+
+            // Old, kind of works
+            //ImVec2 windowPos = ImGui::GetWindowPos();
+            //ImVec2 windowSize = ImGui::GetWindowSize();
+
+            //float textureAspectRatio = ProjectManager::projectData.windowResolution.x / ProjectManager::projectData.windowResolution.y;
+            //float windowAspectRatio = contentSize.x / contentSize.y;
+
+            //ImVec2 renderSize;
+            //ImVec2 renderPos;
+
+            //if (textureAspectRatio > windowAspectRatio) {
+            //    renderSize.x = contentSize.x;
+            //    renderSize.y = renderSize.x / textureAspectRatio;
+            //    renderPos.x = 0;
+            //    renderPos.y = (contentSize.y - renderSize.y) * 0.5f;
+            //}
+            //else {
+            //    renderSize.y = contentSize.y;
+            //    renderSize.x = renderSize.y * textureAspectRatio;
+            //    renderPos.x = (contentSize.x - renderSize.x) * 0.5f;
+            //    renderPos.y = 0;
+            //}
+
+            //ImVec2 rectMin = ImVec2(windowPos.x + renderPos.x, windowPos.y + windowSize.y - contentSize.y + renderPos.y);
+            //ImVec2 rectMax = ImVec2(rectMin.x + renderSize.x, rectMin.y + renderSize.y);
+
+            // ORIGINAL
+            //ImVec2 centerPos = ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowWidth() / 2, ImGui::GetWindowPos().y + ImGui::GetWindowHeight() / 2);
+            //ImVec2 resolution = ImVec2(ProjectManager::projectData.windowResolution.x * (ImGui::GetWindowWidth() / ViewTexture.texture.width),
+            //    ProjectManager::projectData.windowResolution.y * (ImGui::GetWindowHeight() / ViewTexture.texture.height));
+
+            ////ImGui::GetWindowDrawList()->AddRect({ centerPos.x - resolution.x / 2, centerPos.y - resolution.y / 2 },
+            //    { centerPos.x + resolution.x / 2, centerPos.y + resolution.y / 2 },
+            //    IM_COL32(255, 255, 0, 255), 0, 0, 5);
+
+            //RaylibWrapper::DrawRectangleOutline({ ImGui::GetWindowWidth() / 2, ImGui::GetWindowHeight() / 2, 20, 30},
+            //    { ImGui::GetWindowWidth() / 2, ImGui::GetWindowHeight() / 2 },
+            //    0,
+            //    0.1f,
+            //    { 255, 255, 0, 255 });
+        }
 
         // Render tool buttons
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
@@ -176,6 +282,13 @@ void Editor::RenderViewport()
                 IconManager::imageTextures[std::string(tools[i]) + "Tool" + ((toolSelected == static_cast<Tool>(i)) ? "Selected" : "") + "Icon"], { 20, 20 }))
                 toolSelected = static_cast<Tool>(i);
         }
+
+        // Render GUI Visibility button
+        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 32, 27));
+        if (RaylibWrapper::rlImGuiImageButtonSize("##GuiVisibiltiy",
+            IconManager::imageTextures["GuiVisibiltiy" + std::string(guiVisible ? "Selected" : "") + "Icon"], { 20, 20 }))
+            guiVisible = !guiVisible;
+
         ImGui::PopStyleColor(3);
 
         viewportHovered = ImGui::IsWindowHovered();
@@ -403,10 +516,10 @@ void Editor::UpdateViewport()
             if (!component->IsActive())
                 continue;
 
+            component->EditorUpdate();
+
             if (component->runInEditor)
                 component->Update();
-
-            component->EditorUpdate();
         }
     }
 
@@ -700,6 +813,40 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                                 std::ifstream jsonFile(dataFile.path);
                                 dataFile.json = nlohmann::json::parse(jsonFile);
+
+                                objectInProperties = dataFile;
+                            }
+                        }
+                    }
+                }
+                else if (extension == ".ttf" || extension == ".otf")
+                {
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FontIcon"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    if (ImGui::IsItemHovered())
+                    {
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        {
+                            dragData.first = Other;
+                            dragData.second["Path"] = entry.path();
+                        }
+                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        {
+                            // Puts the data into objectInProperties so it is displayed in the properties window
+                            if (!std::holds_alternative<DataFile>(objectInProperties) || std::filesystem::path(std::get<DataFile>(objectInProperties).path) != (entry.path().string() + ".data"))
+                            {
+                                bool dataExists = true;
+                                if (!std::filesystem::exists(entry.path().string() + ".data"))
+                                    dataExists = Utilities::CreateDataFile(entry.path());
+
+                                DataFile dataFile;
+                                dataFile.path = entry.path().string() + ".data";
+                                dataFile.type = DataFileTypes::Sound;
+
+                                if (!dataExists)
+                                {
+                                    std::ifstream jsonFile(dataFile.path);
+                                    dataFile.json = nlohmann::json::parse(jsonFile);
+                                }
 
                                 objectInProperties = dataFile;
                             }
@@ -2130,6 +2277,7 @@ void Editor::RenderComponentsWin()
         AddComponentButton("MeshRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<MeshRenderer>(); });
         AddComponentButton("Animation Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<AnimationPlayer>(); });
         AddComponentButton("Audio Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<AudioPlayer>(); });
+        AddComponentButton("Label", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<Label>(); });
 
         ImGui::Separator();
 
