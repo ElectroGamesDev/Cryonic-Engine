@@ -118,6 +118,8 @@ int main(void)
 		}
 
 		// GUI
+		FontManager::UpdateFonts();
+
 		RaylibWrapper::ImGui_ImplRaylib_ProcessEvents();
 		RaylibWrapper::ImGui_ImplRaylib_NewFrame();
 		ImGui::NewFrame();
@@ -152,6 +154,7 @@ int main(void)
 			{
 				if (!component->IsActive()) continue;
 				component->Update();
+				component->RenderGui();
 				deltaTime = tempDelaTime; // Setting this here and before the loop incase if a component changes the delta time
 			}
 		}
