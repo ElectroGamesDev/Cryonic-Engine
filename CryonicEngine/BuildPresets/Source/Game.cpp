@@ -81,10 +81,12 @@ int main(void)
 		
 	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 	{
-		if (!gameObject->IsActive()) continue;
+		if (!gameObject->IsActive() || !gameObject->IsGlobalActive())
+			continue;
 		for (Component* component : gameObject->GetComponents())
 		{
-			if (!component->IsActive()) continue;
+			if (!component->IsActive())
+				continue;
 			component->Start();
 		}
 	}
@@ -107,10 +109,12 @@ int main(void)
 
 			for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 			{
-				if (!gameObject->IsActive()) continue;
+				if (!gameObject->IsActive() || !gameObject->IsGlobalActive())
+					continue;
 				for (Component* component : gameObject->GetComponents())
 				{
-					if (!component->IsActive()) continue;
+					if (!component->IsActive())
+						continue;
 					component->FixedUpdate();
 					fixedDeltaTime = timeStep; // Setting this here and before the loop incase if a component changes the fixed delta time
 				}
