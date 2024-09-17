@@ -20,3 +20,4 @@
 //#include "Components/Rigidbody3D.h"
 #include "Components/Skybox.h"
 #include "Components/Label.h"
+#include "Components/CanvasRenderer.h"
