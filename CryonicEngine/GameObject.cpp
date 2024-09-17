@@ -72,10 +72,22 @@ void GameObject::SetActive(bool active)
     {
         for (Component* component : components)
         {
-            if (component->IsActive())
+            if (component->IsActive() && component->initialized)
             {
                 if (active)
+                {
+                    if (!component->awakeCalled)
+                    {
+                        component->awakeCalled = true;
+                        component->Awake();
+                    }
                     component->Enable();
+                    if (!component->startCalled)
+                    {
+                        component->startCalled = true;
+                        component->Start();
+                    }
+                }
                 else
                     component->Disable();
             }
@@ -97,10 +109,22 @@ void GameObject::SetGlobalActive(bool globalActive)
 #if !defined(EDITOR)
     for (Component* component : components)
     {
-        if (component->IsActive())
+        if (component->IsActive() && component->initialized)
         {
             if (globalActive)
+            {
+                if (!component->awakeCalled)
+                {
+                    component->awakeCalled = true;
+                    component->Awake();
+                }
                 component->Enable();
+                if (!component->startCalled)
+                {
+                    component->startCalled = true;
+                    component->Start();
+                }
+            }
             else
                 component->Disable();
         }
