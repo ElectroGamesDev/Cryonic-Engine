@@ -35,7 +35,7 @@ public:
 
     // Todo: Currently for each AnimationPlayer, its creating a new copy of the animations data. It should instead use references if its already been created.
 
-	void Start() override;
+	void Awake() override;
 	void Update() override;
     void Destroy() override;
 

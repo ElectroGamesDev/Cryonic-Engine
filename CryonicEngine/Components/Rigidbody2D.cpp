@@ -57,24 +57,25 @@ Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
         ]
     )";
     exposedVariables = nlohmann::json::parse(variables);
+#endif
+}
 
-#else
-    SetExposedVariables(); // SetExposedVariables() is currently called on all components after the constructor. This should fix the issue.
-
+void Rigidbody2D::Awake()
+{
+#if !defined(EDITOR)
     lastGameObjectPosition = gameObject->transform.GetPosition();
     lastGameObjectRotation = gameObject->transform.GetRotation();
 
-	b2BodyDef bodyDef;
+    b2BodyDef bodyDef;
     // Todo: Change this to a switch case
-    // The exposed variables don't get set until after the cosntructor since the component doesn't have it's ID yet so bodyType is always Dynamic here
     if (bodyType == Dynamic)
         bodyDef.type = b2_dynamicBody;
     else if (bodyType == Kinematic)
         bodyDef.type = b2_kinematicBody;
     else
         bodyDef.type = b2_staticBody;
-	bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
-	body = world->CreateBody(&bodyDef);
+    bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
+    body = world->CreateBody(&bodyDef);
 
     SetGravityScale(gravityScale);
     SetContinuous(continuousDetection);

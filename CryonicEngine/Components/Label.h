@@ -57,7 +57,7 @@ public:
 		return new Label(gameObject, -1);
 	}
 	// Hide everything from API
-	void Start() override;
+	void Awake() override;
 	void RenderGui() override;
 #if defined(EDITOR)
 	void EditorUpdate() override;

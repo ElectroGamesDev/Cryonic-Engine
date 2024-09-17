@@ -8,9 +8,8 @@
 #include "../imgui.h"
 #endif
 
-void Label::Start()
+void Label::Awake()
 {
-    // Todo: Move this to Awake
 #if defined(EDITOR)
     font = new Font(exposedVariables[1][2][2].get<std::string>()); // Todo: Handle if the path no longer exists
 #endif

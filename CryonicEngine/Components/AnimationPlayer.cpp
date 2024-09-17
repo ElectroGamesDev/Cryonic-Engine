@@ -3,11 +3,10 @@
 #include "../Game.h"
 #endif
 
-void AnimationPlayer::Start()
+void AnimationPlayer::Awake()
 {
 	spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
 
-	// Todo: Move to Awake()/Constructor but after exposed variables are set. Having in Start could cause issues if user's change the animationGraph via a script
 	if (animationGraph != nullptr)
 	{
 		SetAnimationGraph(animationGraph);

@@ -43,6 +43,7 @@ public:
 	BodyType bodyType = Dynamic;
 
     Rigidbody2D(GameObject* obj, int id);
+    void Awake() override;
     void Update() override;
     void Destroy() override;
 
