@@ -535,7 +535,8 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             {
                 component->Awake();
                 component->awakeCalled = true;
-                component->Enable();
+                if (component->IsActive() && gameObject->IsActive() && gameObject->IsGlobalActive())
+                    component->Enable();
             }
         }
 #endif
