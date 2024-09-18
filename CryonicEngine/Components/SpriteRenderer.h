@@ -54,7 +54,6 @@ public:
 		return new SpriteRenderer(gameObject, -1);
 	}
 	// Hide everything from API
-	void Start() override {};
 	void Update() override;
 #if defined(EDITOR)
 	void EditorUpdate() override;
