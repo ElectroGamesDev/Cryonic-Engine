@@ -74,4 +74,5 @@ private:
 	std::string text;
     Font* font = nullptr;
     int fontSize = 16;
+    bool setup = false;
 };
