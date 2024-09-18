@@ -18,53 +18,53 @@ namespace CanvasEditor
 
     void Render()
     {
-        if (!windowOpen) return;
-        //ImGui::SetNextWindowSize(ImVec2(180, 180));
-        //ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 180) / 2, (RaylibWrapper::GetScreenHeight() - 180) / 2));
+        //if (!windowOpen) return;
+        ////ImGui::SetNextWindowSize(ImVec2(180, 180));
+        ////ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 180) / 2, (RaylibWrapper::GetScreenHeight() - 180) / 2));
 
-        static nlohmann::json* selectedNode = nullptr;
+        //static nlohmann::json* selectedNode = nullptr;
 
-        // Todo: Add zoom support
+        //// Todo: Add zoom support
 
-        if (ImGui::Begin((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str(), &windowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
-        {
-            bool update = false;
-            ImNodes::BeginNodeEditor();
-            if (canvasData.is_null())
-            {
-                // Todo: Fade background and make it so user can't move grid
-                // Todo: Add a button to create a Canvas and have it open up a file explorer to set path
-                ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
-                ImVec2 textSize = ImGui::CalcTextSize("No Canvas selected. Select or create one in the Content Browser.");
-                ImGui::SetCursorPos(ImVec2((ImGui::GetWindowWidth() - textSize.x) * 0.5f, (ImGui::GetWindowHeight() - textSize.y) * 0.5f));
-                ImGui::Text("No Canvas selected. Select or create one in the Content Browser.");
-                ImGui::PopFont();
-                ImNodes::EndNodeEditor();
-                ImGui::End();
-                selectedNode = nullptr;
-                return;
-            }
+        //if (ImGui::Begin((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str(), &windowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+        //{
+        //    bool update = false;
+        //    ImNodes::BeginNodeEditor();
+        //    if (canvasData.is_null())
+        //    {
+        //        // Todo: Fade background and make it so user can't move grid
+        //        // Todo: Add a button to create a Canvas and have it open up a file explorer to set path
+        //        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 25, false));
+        //        ImVec2 textSize = ImGui::CalcTextSize("No Canvas selected. Select or create one in the Content Browser.");
+        //        ImGui::SetCursorPos(ImVec2((ImGui::GetWindowWidth() - textSize.x) * 0.5f, (ImGui::GetWindowHeight() - textSize.y) * 0.5f));
+        //        ImGui::Text("No Canvas selected. Select or create one in the Content Browser.");
+        //        ImGui::PopFont();
+        //        ImNodes::EndNodeEditor();
+        //        ImGui::End();
+        //        selectedNode = nullptr;
+        //        return;
+        //    }
 
-            ImNodes::EndNodeEditor();
+        //    ImNodes::EndNodeEditor();
 
-            if (update)
-            {
-                std::ofstream file(canvasData["path"].get<std::filesystem::path>());
-                if (file.is_open())
-                {
-                    file << std::setw(4) << canvasData << std::endl;
-                    file.close();
-                    update = false;
-                }
-            }
+        //    if (update)
+        //    {
+        //        std::ofstream file(canvasData["path"].get<std::filesystem::path>());
+        //        if (file.is_open())
+        //        {
+        //            file << std::setw(4) << canvasData << std::endl;
+        //            file.close();
+        //            update = false;
+        //        }
+        //    }
 
-            // Todo: When saving, pop up saying the canvas file was deleted or moved. Asked to recreate it or delete it
-        }
-        ImGui::End();
+        //    // Todo: When saving, pop up saying the canvas file was deleted or moved. Asked to recreate it or delete it
+        //}
+        //ImGui::End();
     }
 
-    //bool RenderHierarchyNode(nlohmann::json* gameObject, bool normalColor, bool& childDoubleClicked)
-    //{
+    bool RenderHierarchyNode(nlohmann::json* gameObject, bool normalColor, bool& childDoubleClicked)
+    {
     //    childDoubleClicked = false;
 
     //    ImGui::TableNextRow();
@@ -111,10 +111,11 @@ namespace CanvasEditor
     //    childDoubleClicked |= currentNodeDoubleClicked;
 
     //    return normalColor; // Todo: If has child and child is open, return the lowest color rather than this node's color
-    //}
+        return false;
+    }
 
-    //void RenderHierarchy()
-    //{
+    void RenderHierarchy()
+    {
     //    hierarchyObjectClicked = false;
     //    ImGui::Begin((ICON_FA_SITEMAP + std::string(" Hierarchy##CanvasEditor")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse);
 
@@ -188,7 +189,7 @@ namespace CanvasEditor
     //                gameObject->SetName(objectToCreate.name);
     //                if (objectToCreate.name == "Camera")
     //                {
-    //                    gameObject->AddComponent<CameraComponent>();
+    //                    gameObject->AddComponentInternal<CameraComponent>();
     //                    if (!ProjectManager::projectData.is3D)
     //                    {
     //                        gameObject->transform.SetPosition({ 0,0,0 });
@@ -196,21 +197,21 @@ namespace CanvasEditor
     //                    }
     //                }
     //                else if (objectToCreate.name == "Light")
-    //                    gameObject->AddComponent<Lighting>();
+    //                    gameObject->AddComponentInternal<Lighting>();
     //                else if (objectToCreate.name != "GameObject")
     //                {
     //                    if (ProjectManager::projectData.is3D)
     //                    {
-    //                        MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
+    //                        MeshRenderer& meshRenderer = gameObject->AddComponentInternal<MeshRenderer>();
     //                        meshRenderer.SetModelPath(objectToCreate.name);
     //                        meshRenderer.SetModel(objectToCreate.model, objectToCreate.name, LitStandard);
     //                    }
     //                    else
     //                    {
-    //                        SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
+    //                        SpriteRenderer& spriteRenderer = gameObject->AddComponentInternal<SpriteRenderer>();
     //                        spriteRenderer.SetTexture(objectToCreate.name);
 
-    //                        //gameObject->AddComponent<Collider2D>(); // Todo: Set size and type
+    //                        //gameObject->AddComponentInternal<Collider2D>(); // Todo: Set size and type
     //                    }
     //                }
 
@@ -249,5 +250,5 @@ namespace CanvasEditor
     //            objectInProperties = std::monostate{};
     //    }
     //    ImGui::End();
-    //}
+    }
 }
