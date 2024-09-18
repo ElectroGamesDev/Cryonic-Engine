@@ -33,17 +33,16 @@ void Label::RenderGui()
     screenPosition.y -= textSize.y / 2 - 10;
 
     ImGui::SetCursorPos({ screenPosition.x, screenPosition.y });
-    ImGui::TextColored({(float)color.r / 255, (float)color.g / 255, (float)color.b / 255, (float)color.a / 255}, text.c_str());
+    ImGui::TextColored({ (float)color.r / 255, (float)color.g / 255, (float)color.b / 255, (float)color.a / 255 }, text.c_str());
     ImGui::PopFont();
 }
 
 #if defined(EDITOR)
 void Label::EditorUpdate()
 {
-    static bool setup = false;
     if (!setup)
     {
-        Start();
+        Awake();
         setup = true;
     }
 
@@ -53,6 +52,15 @@ void Label::EditorUpdate()
     color.a = exposedVariables[1][1][2][3].get<int>();
 
     text = exposedVariables[1][0][2].get<std::string>();
+
+    if (fontSize != exposedVariables[1][3][2].get<int>())
+        SetFontSize(exposedVariables[1][3][2].get<int>());
+
+    if (font->GetPath() != exposedVariables[1][2][2])
+    {
+        SetFont(new Font(exposedVariables[1][2][2].get<std::string>()));
+        // Todo: Should it unload the old font?
+    }
 }
 #endif
 
