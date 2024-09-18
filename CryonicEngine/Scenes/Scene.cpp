@@ -91,7 +91,7 @@ GameObject* Scene::SpawnGameObject(std::string path, Vector3 position, Quaternio
     newPath = ProjectManager::projectData.path / "Assets" / newPath;
 #endif
 
-    if (!newPath.has_extension() || (newPath.extension() == ".png" || newPath.extension() == ".jpg" || newPath.extension() == ".jpeg"))
+    if (!newPath.has_extension() || (newPath.extension() != ".png" && newPath.extension() != ".jpg" && newPath.extension() != ".jpeg"))
     {
         ConsoleLogger::WarningLog("Failed to spawn a game object. The specified file must be a PNG, JPG, or JPEG. specified path: " + newPath.string());
         return nullptr;
