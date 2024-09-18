@@ -428,7 +428,7 @@ void Editor::UpdateViewport()
 
     //            GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
     //            Material material;
-    //            MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
+    //            MeshRenderer& meshRenderer = gameObject->AddComponentInternal<MeshRenderer>();
     //            meshRenderer.SetModelPath(folderPath / filename);
     //            meshRenderer.SetModel(LoadModel(meshRenderer.GetModelPath().string().c_str()));
     //            gameObject->transform.SetPosition({ 0,0,0 });
@@ -1056,9 +1056,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     if (assetsPosition != std::string::npos)
                         texturePath = texturePath.string().substr(assetsPosition + 7);
 
-                    SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
+                    SpriteRenderer& spriteRenderer = gameObject->AddComponentInternal<SpriteRenderer>();
                     spriteRenderer.SetTexture(ProjectManager::projectData.path / "Assets" / texturePath);
-                    gameObject->AddComponent<Collider2D>(); // Todo: Set to convex/texture type
+                    gameObject->AddComponentInternal<Collider2D>(); // Todo: Set to convex/texture type
 
                     for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
                         component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
@@ -1171,7 +1171,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         gameObject->transform.SetRotation(Quaternion::Identity());
                         gameObject->SetName(modelPath.stem().string());
 
-                        MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
+                        MeshRenderer& meshRenderer = gameObject->AddComponentInternal<MeshRenderer>();
                         meshRenderer.SetModelPath(modelPath);
                         meshRenderer.SetModel(ModelType::Custom, modelPath, LitStandard);
 
@@ -2296,24 +2296,24 @@ void Editor::RenderComponentsWin()
         // Internal Components
         float buttonWidth = ImGui::GetWindowWidth() - 28;
 
-        auto AddComponentButton = [&](const char* componentName, auto&& addComponentFunc) {
+        auto AddComponentInternalButton = [&](const char* componentName, auto&& AddComponentInternalFunc) {
             if (ImGui::Button(componentName, ImVec2(buttonWidth, 0))) {
-                addComponentFunc();
+                AddComponentInternalFunc();
                 componentsWindowOpen = false;
                 resetComponentsWin = true;
             }
         };
 
         // Internal components
-        AddComponentButton("Camera", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<CameraComponent>(); });
-        AddComponentButton("Light", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<Lighting>(); });
-        AddComponentButton("Collider2D", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<Collider2D>(); });
-        AddComponentButton("Rigidbody2D", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<Rigidbody2D>(); });
-        AddComponentButton("SpriteRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<SpriteRenderer>(); });
-        AddComponentButton("MeshRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<MeshRenderer>(); });
-        AddComponentButton("Animation Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<AnimationPlayer>(); });
-        AddComponentButton("Audio Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<AudioPlayer>(); });
-        AddComponentButton("Label", [&]() { std::get<GameObject*>(objectInProperties)->AddComponent<Label>(); });
+        AddComponentInternalButton("Camera", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<CameraComponent>(); });
+        AddComponentInternalButton("Light", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Lighting>(); });
+        AddComponentInternalButton("Collider2D", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Collider2D>(); });
+        AddComponentInternalButton("Rigidbody2D", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Rigidbody2D>(); });
+        AddComponentInternalButton("SpriteRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<SpriteRenderer>(); });
+        AddComponentInternalButton("MeshRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<MeshRenderer>(); });
+        AddComponentInternalButton("Animation Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<AnimationPlayer>(); });
+        AddComponentInternalButton("Audio Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<AudioPlayer>(); });
+        AddComponentInternalButton("Label", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Label>(); });
 
         ImGui::Separator();
 
@@ -2327,8 +2327,8 @@ void Editor::RenderComponentsWin()
             std::filesystem::path cppPath = relativePath;
             cppPath.replace_extension(".cpp");
 
-            AddComponentButton(file.path().stem().string().c_str(), [&]() {
-                ScriptComponent* scriptComponent = &std::get<GameObject*>(objectInProperties)->AddComponent<ScriptComponent>();
+            AddComponentInternalButton(file.path().stem().string().c_str(), [&]() {
+                ScriptComponent* scriptComponent = &std::get<GameObject*>(objectInProperties)->AddComponentInternal<ScriptComponent>();
                 scriptComponent->SetHeaderPath(relativePath.string());
                 scriptComponent->SetCppPath(cppPath);
                 scriptComponent->SetName(relativePath.stem().string());
@@ -2902,7 +2902,7 @@ void Editor::RenderProperties()
 
                     if (createComponent == 2)
                     {
-                        ScriptComponent* scriptComponent = &(*propertiesGameObject)->AddComponent<ScriptComponent>();
+                        ScriptComponent* scriptComponent = &(*propertiesGameObject)->AddComponentInternal<ScriptComponent>();
                         scriptComponent->SetHeaderPath(path.string());
                         scriptComponent->SetCppPath(cppPath);
                         scriptComponent->SetName(path.stem().string());
@@ -3273,7 +3273,7 @@ void Editor::RenderHierarchy()
                 gameObject->SetName(objectToCreate.name);
                 if (objectToCreate.name == "Camera")
                 {
-                    gameObject->AddComponent<CameraComponent>();
+                    gameObject->AddComponentInternal<CameraComponent>();
                     if (!ProjectManager::projectData.is3D)
                     {
                         gameObject->transform.SetPosition({ 0,0,0 });
@@ -3281,21 +3281,21 @@ void Editor::RenderHierarchy()
                     }
                 }
                 else if (objectToCreate.name == "Light")
-                    gameObject->AddComponent<Lighting>();
+                    gameObject->AddComponentInternal<Lighting>();
                 else if (objectToCreate.name != "GameObject")
                 {
                     if (ProjectManager::projectData.is3D)
                     {
-                        MeshRenderer& meshRenderer = gameObject->AddComponent<MeshRenderer>();
+                        MeshRenderer& meshRenderer = gameObject->AddComponentInternal<MeshRenderer>();
                         meshRenderer.SetModelPath(objectToCreate.name);
                         meshRenderer.SetModel(objectToCreate.model, objectToCreate.name, LitStandard);
                     }
                     else
                     {
-                        SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
+                        SpriteRenderer& spriteRenderer = gameObject->AddComponentInternal<SpriteRenderer>();
                         spriteRenderer.SetTexture(objectToCreate.name);
 
-                        //gameObject->AddComponent<Collider2D>(); // Todo: Set size and type
+                        //gameObject->AddComponentInternal<Collider2D>(); // Todo: Set size and type
                     }
                 }
 

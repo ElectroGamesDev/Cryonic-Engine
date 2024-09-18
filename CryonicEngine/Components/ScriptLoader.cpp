@@ -8,7 +8,7 @@ void SetupScriptComponent(GameObject* gameObject, int id, bool active, std::stri
 {
     if (true == false) {}
 // SetupScriptComponent
-        //COMPONENT& component = gameObject->AddComponent<COMPONENT>();
+        //COMPONENT& component = gameObject->AddComponentInternal<COMPONENT>();
         //component.gameObject = gameObject;
         //component.id = id;
         //component.SetActive(active);
@@ -70,7 +70,7 @@ bool BuildScripts(std::filesystem::path projectPath, std::filesystem::path build
                 auto functionInsertionIndex = std::distance(lines.begin(), insertionPoint) + 1;
                 for (const std::string& name : scriptNames)
                 {
-                    lines.insert(lines.begin() + functionInsertionIndex, "else if (scriptName == \"" + name + "\") {" + name + "& component = gameObject->AddComponent<" + name + ">(); component.gameObject = gameObject; component.id = id; component.SetActive(active); }");
+                    lines.insert(lines.begin() + functionInsertionIndex, "else if (scriptName == \"" + name + "\") {" + name + "& component = gameObject->AddComponentInternal<" + name + ">(); component.gameObject = gameObject; component.id = id; component.SetActive(active); }");
                     functionInsertionIndex++;
                 }
             }
