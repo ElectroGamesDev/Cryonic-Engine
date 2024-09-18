@@ -76,6 +76,32 @@ public:
         //else
         //    return nullptr;
         components.push_back(newComponent);
+
+        newComponent->SetExposedVariables();
+        newComponent->initialized = true;
+        // Todo: if the any of the statements below return false, then the remaining would be false too
+        if (newComponent->IsActive() && IsActive() && IsGlobalActive())
+        {
+            newComponent->Awake();
+            newComponent->awakeCalled = true;
+        }
+        if (newComponent->IsActive() && IsActive() && IsGlobalActive())
+            newComponent->Enable();
+        if (newComponent->IsActive() && IsActive() && IsGlobalActive())
+        {
+            newComponent->Start();
+            newComponent->startCalled = true;
+        }
+        return *newComponent;
+    }
+
+    // Hide in API
+    // Adds a component to a game object without calling Awake(), Enable(), Start(), SetExposedVariables(), and setting intitialized to true
+    template <typename T>
+    T& AddComponentInternal() {
+        T* newComponent = new T(this, -1);
+        static_cast<Component*>(newComponent)->gameObject = this; // Todo: This may cause a crash if its not a component
+        components.push_back(newComponent);
         return *newComponent;
     }
 
