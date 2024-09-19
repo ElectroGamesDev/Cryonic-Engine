@@ -59,7 +59,7 @@ void Image::RenderGui()
         position.y += Editor::viewportPosition.y;
 #endif
 
-        ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(position.x, position.y), gameObject->transform.GetScale().x * 50, IM_COL32(color.r, color.g, color.b, color.a));
+        ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(position.x, position.y), gameObject->transform.GetScale().x * 25, IM_COL32(color.r, color.g, color.b, color.a));
     }
 }
 
