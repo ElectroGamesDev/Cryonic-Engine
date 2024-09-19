@@ -2309,7 +2309,16 @@ void Editor::RenderComponentsWin()
         AddComponentInternalButton("Camera", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<CameraComponent>(); });
         AddComponentInternalButton("Light", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Lighting>(); });
         AddComponentInternalButton("Collider2D", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Collider2D>(); });
-        AddComponentInternalButton("Rigidbody2D", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Rigidbody2D>(); });
+        AddComponentInternalButton("Rigidbody2D", [&]()
+            {
+                if (std::get<GameObject*>(objectInProperties)->GetComponent<Rigidbody2D>())
+                {
+                    // Todo: Add popup?
+                    ConsoleLogger::ErrorLog("Failed to add Rigidbody2D to " + std::get<GameObject*>(objectInProperties)->GetName() + ". This game object already has a Rigidbody2D attached to it.");
+                    return;
+                }
+                std::get<GameObject*>(objectInProperties)->AddComponentInternal<Rigidbody2D>();
+            });
         AddComponentInternalButton("SpriteRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<SpriteRenderer>(); });
         AddComponentInternalButton("MeshRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<MeshRenderer>(); });
         AddComponentInternalButton("Animation Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<AnimationPlayer>(); });
