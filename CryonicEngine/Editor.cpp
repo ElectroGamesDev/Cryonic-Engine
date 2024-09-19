@@ -64,7 +64,7 @@ RaylibWrapper::RenderTexture cameraRenderTexture;
 RaylibWrapper::Texture2D GridTexture = { 0 };
 
 bool viewportOpened = true;
-Vector4 viewportPosition;
+Vector4 Editor::viewportPosition;
 
 std::variant<std::monostate, GameObject*, DataFile> Editor::objectInProperties = std::monostate{}; // Make a struct or something that holds a Path and ifstream String. Not specific to material so prefabs and stuff can use
 GameObject* selectedObject = nullptr;
@@ -3307,7 +3307,7 @@ void Editor::RenderHierarchy()
                 gameObject->transform.SetPosition({ 0,0,0 });
                 gameObject->transform.SetScale({ 1,1,1 });
                 gameObject->transform.SetRotation(Quaternion::Identity());
-                gameObject->SetName(objectToCreate.name);
+                gameObject->SetName(objectToCreate.name + guiObjectToCreate.name);
                 if (objectToCreate.name == "Camera")
                 {
                     gameObject->AddComponentInternal<CameraComponent>();
