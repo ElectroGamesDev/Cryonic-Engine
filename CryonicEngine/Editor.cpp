@@ -26,6 +26,7 @@
 #include "Components/AnimationPlayer.h"
 #include "Components/AudioPlayer.h"
 #include "Components/Label.h"
+#include "Components/Image.h"
 #include "Components/CanvasRenderer.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
@@ -2314,6 +2315,7 @@ void Editor::RenderComponentsWin()
         AddComponentInternalButton("Animation Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<AnimationPlayer>(); });
         AddComponentInternalButton("Audio Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<AudioPlayer>(); });
         AddComponentInternalButton("Label", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Label>(); });
+        AddComponentInternalButton("Image", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Image>(); });
 
         ImGui::Separator();
 
