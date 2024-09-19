@@ -67,8 +67,13 @@ public:
     bool IsChild(GameObject& gameObject, GameObject* parent = nullptr);
 
     template <typename T>
-    T& AddComponent() {
+    T* AddComponent() {
         T* newComponent = new T(this, -1);
+        if (!static_cast<Component*>(newComponent)->valid)
+        {
+            delete newComponent;
+            return nullptr;
+        }
         static_cast<Component*>(newComponent)->gameObject = this; // Todo: This may cause a crash if its not a component
         //Component* componentPtr = static_cast<Component*>(newComponent);
         //if (componentPtr)
@@ -80,6 +85,7 @@ public:
         newComponent->SetExposedVariables();
         newComponent->initialized = true;
         // Todo: if the any of the statements below return false, then the remaining would be false too
+#if !defined(EDITOR)
         if (newComponent->IsActive() && IsActive() && IsGlobalActive())
         {
             newComponent->Awake();
@@ -92,14 +98,15 @@ public:
             newComponent->Start();
             newComponent->startCalled = true;
         }
-        return *newComponent;
+#endif
+        return newComponent;
     }
 
     // Hide in API
-    // Adds a component to a game object without calling Awake(), Enable(), Start(), SetExposedVariables(), and setting intitialized to true
+    // Adds a component to a game object without calling Awake(), Enable(), Start(), SetExposedVariables(), and setting intitialized to true. It also ignores the valid flag
     template <typename T>
-    T& AddComponentInternal() {
-        T* newComponent = new T(this, -1);
+    T& AddComponentInternal(int id = -1) {
+        T* newComponent = new T(this, id);
         static_cast<Component*>(newComponent)->gameObject = this; // Todo: This may cause a crash if its not a component
         components.push_back(newComponent);
         return *newComponent;
