@@ -1298,6 +1298,11 @@ namespace RaylibWrapper {
         ImGui::Image((ImTextureID)image, ImVec2(size.x, size.y));
     }
 
+    void rlImGuiImageSizeTintV(const Texture* image, Vector2 size, Vector4 tint)
+    {
+        ImGui::Image((ImTextureID)image, ImVec2(size.x, size.y), { 0,0 }, {1,1}, ImVec4(tint.x, tint.y, tint.z, tint.w));
+    }
+
     void rlImGuiImageRect(const Texture* image, int destWidth, int destHeight, Rectangle sourceRect) {
         ImVec2 uv0;
         ImVec2 uv1;

@@ -796,6 +796,7 @@ namespace RaylibWrapper
     void rlImGuiImage(const Texture* image);
     void rlImGuiImageSize(const Texture* image, int width, int height);
     void rlImGuiImageSizeV(const Texture* image, Vector2 size);
+    void rlImGuiImageSizeTintV(const Texture* image, Vector2 size, Vector4 tint);
     void rlImGuiImageRect(const Texture* image, int destWidth, int destHeight, Rectangle sourceRect);
     void rlImGuiImageRenderTexture(const RenderTexture* image);
     void rlImGuiImageRenderTextureFit(const RenderTexture* image, bool center);
