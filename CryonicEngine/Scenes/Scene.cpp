@@ -109,9 +109,9 @@ GameObject* Scene::SpawnGameObject(std::string path, Vector3 position, Quaternio
     gameObject->transform.SetRotation(rotation);
     gameObject->SetName(newPath.stem().string());
 
-    SpriteRenderer& spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
-    spriteRenderer.SetTexture(newPath);
-    spriteRenderer.gameObject = gameObject;
+    SpriteRenderer* spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
+    spriteRenderer->SetTexture(newPath);
+    spriteRenderer->gameObject = gameObject;
 
     return gameObject;
 }
