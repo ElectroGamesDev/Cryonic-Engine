@@ -68,6 +68,8 @@ public:
     void SetFontSize(int size);
     int GetFontSize() const;
     void SetFont(Font* font);
+    void SetColor(Color color);
+    Color GetColor() const;
 
 private:
 	Color color = { 255, 255, 255, 255 };

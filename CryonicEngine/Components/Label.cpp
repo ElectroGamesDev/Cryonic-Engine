@@ -87,3 +87,13 @@ void Label::SetFont(Font* font)
     this->font = font;
     SetFontSize(fontSize);
 }
+
+void Label::SetColor(Color color)
+{
+    this->color = color;
+}
+
+Color Label::GetColor() const
+{
+    return color;
+}
