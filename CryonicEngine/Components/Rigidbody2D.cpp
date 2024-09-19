@@ -5,6 +5,13 @@
 #endif
 
 Rigidbody2D::Rigidbody2D(GameObject* obj, int id) : Component(obj, id) {
+
+    if (gameObject->GetComponent<Rigidbody2D>())
+    {
+        ConsoleLogger::ErrorLog("Failed to add Rigidbody2D to " + gameObject->GetName() + ". This game object already has a Rigidbody2D attached to it.");
+        valid = false;
+    }
+
 	name = "Rigidbody2D";
     iconUnicode = "\xee\x96\x9d";
 #if defined(EDITOR)
