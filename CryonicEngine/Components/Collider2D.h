@@ -5,6 +5,8 @@
 #include "../box2d/box2d.h"
 #endif
 
+class Rigidbody2D;
+
 enum Shape
 {
     Square,
@@ -21,10 +23,16 @@ public:
 
     // Hide in API
     void Highlight(Color color, bool highlightChildren);
+    // Hide in API
+    void SetRigidbody(Rigidbody2D* rb);
+    // Hide in API
+    void RemoveRigidbody();
 
     void Start() override;
     void EditorUpdate() override;
     void Destroy() override;
+    void Enable() override;
+    void Disable() override;
 
     Shape GetShape();
     void SetTrigger(bool value);
@@ -47,8 +55,8 @@ private:
     void Createb2Fixture();
 
     b2FixtureDef fixtureDef;
-    b2Body* body;
-    b2Fixture* fixture;
+    b2Body* body = nullptr;
+    b2Fixture* fixture = nullptr;
     bool ownBody = false;
 #endif
 };

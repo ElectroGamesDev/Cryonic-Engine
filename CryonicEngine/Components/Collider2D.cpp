@@ -91,27 +91,34 @@ void Collider2D::Createb2Fixture()
 }
 #endif
 
-void Collider2D::Start() // Todo: Move to Awake()
+void Collider2D::Start()
 {
 #if !defined(EDITOR)
-	Rigidbody2D* rb = gameObject->GetComponent<Rigidbody2D>();
-	if (rb == nullptr)
-	{
-		b2BodyDef bodyDef;
-		bodyDef.type = b2_staticBody;
-		bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
-		body = world->CreateBody(&bodyDef);
-		ownBody = true;
+	if (body && fixture)
+		return;
 
-		// Setting the density and friction in case a Rigidbody2D is added to the game object
-		fixtureDef.density = 1.0f;
-		fixtureDef.friction = 0.3f;
+	// Putting this in Start() instead of Awake() to ensure the rigidbody component gets set up first
+
+	Rigidbody2D* rb = gameObject->GetComponent<Rigidbody2D>();
+	if (rb == nullptr || !rb->IsActive() || !rb->gameObject->IsActive() || !rb->gameObject->IsGlobalActive())
+	{
+		SetRigidbody(rb);
+		//b2BodyDef bodyDef;
+		//bodyDef.type = b2_staticBody;
+		//bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
+		//body = world->CreateBody(&bodyDef);
+		//ownBody = true;
+
+		//// Setting the density and friction in case a Rigidbody2D is added to the game object
+		//fixtureDef.density = 1.0f;
+		//fixtureDef.friction = 0.3f;
 	}
 	else
 	{
 		fixtureDef.density = rb->GetMass();
 		fixtureDef.friction = 0.3f;
 		body = rb->body;
+		rb->colliders.push_back(this);
 	}
 
 	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
@@ -213,8 +220,98 @@ void Collider2D::EditorUpdate()
 void Collider2D::Destroy()
 {
 #if !defined(EDITOR)
-	if (ownBody && body != nullptr)
+	if (!body)
+		return;
+
+	if (ownBody)
 		world->DestroyBody(body);
+	else
+		body->DestroyFixture(fixture);
+#endif
+}
+
+void Collider2D::Enable()
+{
+#if !defined(EDITOR)
+	if (!fixture) // This is needed since the fixture is setup in Start(), and Enable() runs before Start()
+		return;
+	b2Filter filter = fixture->GetFilterData();
+	filter.categoryBits = 0x0001;
+	filter.maskBits = 0xFFFF;
+	fixture->SetFilterData(filter);
+#endif
+}
+
+void Collider2D::Disable()
+{
+#if !defined(EDITOR)
+	b2Filter filter = fixture->GetFilterData();
+	filter.categoryBits = 0x8000;
+	filter.maskBits = 0x0000;
+	fixture->SetFilterData(filter);
+#endif
+}
+
+void Collider2D::SetRigidbody(Rigidbody2D* rb)
+{
+#if !defined(EDITOR)
+	if (body)
+	{
+		if (ownBody)
+		{
+			world->DestroyBody(rb->body);
+			ownBody = false;
+		}
+		else
+			rb->body->DestroyFixture(fixture);
+	}
+	body = rb->body;
+	fixtureDef.density = rb->GetMass();
+	fixtureDef.friction = 0.3f;
+	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
+	Createb2Fixture();
+#endif
+}
+
+void Collider2D::RemoveRigidbody()
+{
+#if !defined(EDITOR)
+	if (!body)
+		return;
+
+	if (ownBody)
+	{
+		world->DestroyBody(body);
+		ownBody = false;
+	}
+	else
+		body->DestroyFixture(fixture);
+
+	// Tries to find a new body, if it fails to find one, then create one
+	// Removed this code because only one Rigidbody can be attached to a gameobjerct. If this function is called, then its assumed its called by the only rigidbody component
+	//Rigidbody2D* rb = gameObject->GetComponent<Rigidbody2D>();
+	//if (rb == nullptr || !rb->IsActive() || !rb->gameObject->IsActive() || !rb->gameObject->IsGlobalActive())
+	//{
+		b2BodyDef bodyDef;
+		bodyDef.type = b2_staticBody;
+		bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
+		body = world->CreateBody(&bodyDef);
+		ownBody = true;
+
+		// Setting the density and friction in case a Rigidbody2D is added to the game object
+		fixtureDef.density = 1.0f;
+		fixtureDef.friction = 0.3f;
+	//}
+	//else
+	//{
+	//	fixtureDef.density = rb->GetMass();
+	//	fixtureDef.friction = 0.3f;
+	//	body = rb->body;
+	//	rb->colliders.push_back(this);
+	//}
+
+	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
+	Createb2Fixture();
 #endif
 }
 
