@@ -87,6 +87,36 @@ void Rigidbody2D::Awake()
 #endif
 }
 
+void Rigidbody2D::Enable()
+{
+#if !defined(EDITOR)
+    body->SetEnabled(true);
+#endif
+
+    for (Component* component : gameObject->GetComponents())
+    {
+        Collider2D* collider = dynamic_cast<Collider2D*>(component);
+        if (collider)
+        {
+#if !defined(EDITOR)
+            collider->SetRigidbody(this);
+#endif
+            colliders.push_back(collider);
+        }
+    }
+}
+
+void Rigidbody2D::Disable()
+{
+#if !defined(EDITOR)
+    body->SetEnabled(false);
+#endif
+
+    for (Collider2D* collider : colliders)
+        collider->RemoveRigidbody();
+    colliders.clear();
+}
+
 void Rigidbody2D::SetPosition(Vector2 position)
 {
     if (bodyType == Static)

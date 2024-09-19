@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Component.h"
+#include "Collider2D.h"
+#include <deque>
 #if !defined(EDITOR)
 #include "../box2d/box2d.h"
 #endif
@@ -46,6 +48,11 @@ public:
     void Awake() override;
     void Update() override;
     void Destroy() override;
+    void Enable() override;
+    void Disable() override;
+
+    // Hide in API
+    std::deque<Collider2D*> colliders;
 
     // Hide in API
 #if !defined(EDITOR)
