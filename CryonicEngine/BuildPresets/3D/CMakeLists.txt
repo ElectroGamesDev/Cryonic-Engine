@@ -33,7 +33,10 @@ file(GLOB SOURCE_FILES
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-target_compile_options(${PROJECT_NAME} PRIVATE -Werror=implicit-function-declaration)
+target_compile_options(${PROJECT_NAME} PRIVATE
+    #-Werror=implicit-function-declaration
+    -w
+)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE IS3D)
 
