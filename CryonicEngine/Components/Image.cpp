@@ -2,6 +2,7 @@
 #include "../RaylibWrapper.h"
 #include "CameraComponent.h"
 #if defined (EDITOR)
+#include "../Editor.h"
 #else
 #include "../imgui.h"
 #endif
@@ -39,20 +40,26 @@ void Image::RenderGui()
     }
     else if (sprite->GetPath() == "Square")
     {
-        Vector3 position = gameObject->transform.GetPosition();
-        Vector3 scale = gameObject->transform.GetScale();
-        RaylibWrapper::DrawRectangleProFlipped({ position.x, position.y, scale.x * 3, scale.y * 3 },
-            {
-                scale.x * 3 / 2,
-                scale.y * 3 / 2
-            },
-            gameObject->transform.GetRotationEuler().y,
-            { color.r, color.g, color.b, color.a });
+#if defined(EDITOR)
+        position.x += Editor::viewportPosition.x;
+        position.y += Editor::viewportPosition.y;
+#endif
+
+        ImVec2 min = ImVec2(gameObject->transform.GetScale().x * 50 / 2, gameObject->transform.GetScale().y * 50 / 2);
+        ImVec2 max = ImVec2(gameObject->transform.GetScale().x * 50 / 2, gameObject->transform.GetScale().y * 50 / 2);
+        min = ImVec2(position.x - min.x, position.y - min.y);
+        max = ImVec2(position.x + max.x, position.y + max.y);
+
+        ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(min.x, min.y), ImVec2(max.x, max.y), IM_COL32(color.r, color.g, color.b, color.a));
     }
     else if (sprite->GetPath() == "Circle")
     {
-        Vector3 position = gameObject->transform.GetPosition();
-        RaylibWrapper::DrawCircleSectorFlipped({ position.x, position.y }, gameObject->transform.GetScale().x * 1.5f, 0, 360, 36, { color.r, color.g, color.b, color.a });
+#if defined(EDITOR)
+        position.x += Editor::viewportPosition.x;
+        position.y += Editor::viewportPosition.y;
+#endif
+
+        ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(position.x, position.y), gameObject->transform.GetScale().x * 50, IM_COL32(color.r, color.g, color.b, color.a));
     }
 }
 
