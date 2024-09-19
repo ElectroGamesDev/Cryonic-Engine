@@ -1666,6 +1666,47 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
     std::string search = searchBuffer;
     std::transform(search.begin(), search.end(), search.begin(), ::tolower);
 
+    if (type == "Sprite")
+    {
+        // Square
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding;
+        if (selectedPath == "Square")
+            flags |= ImGuiTreeNodeFlags_Selected;
+
+        if (ImGui::TreeNodeEx("Square", flags))
+        {
+            if (ImGui::IsItemClicked())
+            {
+                oldId = -9999;
+                memset(searchBuffer, 0, sizeof(searchBuffer));
+                ImGui::SetScrollY(0.0f);
+                selectedFile = "Square";
+            }
+            ImGui::TreePop();
+        }
+
+        // Circle
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding;
+        if (selectedPath == "Circle")
+            flags |= ImGuiTreeNodeFlags_Selected;
+
+        if (ImGui::TreeNodeEx("Circle", flags))
+        {
+            if (ImGui::IsItemClicked())
+            {
+                oldId = -9999;
+                memset(searchBuffer, 0, sizeof(searchBuffer));
+                ImGui::SetScrollY(0.0f);
+                selectedFile = "Circle";
+            }
+            ImGui::TreePop();
+        }
+    }
+
     try
     {
         for (const auto& file : std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"))
@@ -1685,7 +1726,7 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             // Using ImGuiTreeNodeFlags_Framed flag adds a frame and aligns it to the left, but then selected flag doesn't work. I would need to set the node color if I want to make it so they have a frame or aligned to the left
-            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding;
+            flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding;
             // Checks to see if the file path contains the selectedPath and if it does, then select it
             if (!selectedPath.empty() && file.path().string().find(selectedPath) != std::string::npos)
                 flags |= ImGuiTreeNodeFlags_Selected;
