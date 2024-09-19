@@ -38,6 +38,8 @@ public:
     bool awakeCalled = false;
     // Hide in API
     bool initialized = false; // Whether the component is ready to call functions like Start, Awake, Enable, Disable, etc.
+    // Hide in API
+    bool valid = true; // Used in component construcors to let AddComponent<>() know if it should continue with adding the component. Used in Rigidbody2D
 
 #if defined(EDITOR)
     nlohmann::json exposedVariables = nullptr;
