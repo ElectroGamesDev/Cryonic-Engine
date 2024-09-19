@@ -56,4 +56,6 @@ public:
 	static RaylibWrapper::Camera2D camera2D;
 
 	static std::variant<std::monostate, GameObject*, DataFile> objectInProperties;
+
+	static Vector4 viewportPosition;
 };
