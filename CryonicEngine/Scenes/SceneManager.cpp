@@ -242,7 +242,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             // Temporary solution
             if (componentData["name"] == "MeshRenderer")
             {
-                MeshRenderer& component = gameObject->AddComponent<MeshRenderer>(componentData["id"]);
+                MeshRenderer& component = gameObject->AddComponentInternal<MeshRenderer>(componentData["id"]);
                 //component.gameObject = &gameObject;
                 component.SetModelPath(componentData["model_path"]);
                 component.SetActive(componentData["active"]);
@@ -281,7 +281,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "SpriteRenderer")
             {
-                SpriteRenderer& component = gameObject->AddComponent<SpriteRenderer>(componentData["id"]);
+                SpriteRenderer& component = gameObject->AddComponentInternal<SpriteRenderer>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -318,7 +318,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             else if (componentData["name"] == "ScriptComponent")
             {
 #if defined(EDITOR)
-                ScriptComponent& component = gameObject->AddComponent<ScriptComponent>(componentData["id"]);
+                ScriptComponent& component = gameObject->AddComponentInternal<ScriptComponent>(componentData["id"]);
                 //component.gameObject = &gameObject;
                 component.SetCppPath(componentData["cpp_path"]);
                 component.SetHeaderPath(componentData["header_path"]);
@@ -332,7 +332,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "CameraComponent")
             {
-                CameraComponent& component = gameObject->AddComponent<CameraComponent>(componentData["id"]);
+                CameraComponent& component = gameObject->AddComponentInternal<CameraComponent>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -356,7 +356,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "Lighting")
             {
-                Lighting& component = gameObject->AddComponent<Lighting>(componentData["id"]);
+                Lighting& component = gameObject->AddComponentInternal<Lighting>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -380,7 +380,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "Collider2D")
             {
-                Collider2D& component = gameObject->AddComponent<Collider2D>(componentData["id"]);
+                Collider2D& component = gameObject->AddComponentInternal<Collider2D>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -404,7 +404,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "Rigidbody2D")
             {
-                Rigidbody2D& component = gameObject->AddComponent<Rigidbody2D>(componentData["id"]);
+                Rigidbody2D& component = gameObject->AddComponentInternal<Rigidbody2D>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -428,7 +428,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "AnimationPlayer")
             {
-                AnimationPlayer& component = gameObject->AddComponent<AnimationPlayer>(componentData["id"]);
+                AnimationPlayer& component = gameObject->AddComponentInternal<AnimationPlayer>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -452,7 +452,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "AudioPlayer")
             {
-                AudioPlayer& component = gameObject->AddComponent<AudioPlayer>(componentData["id"]);
+                AudioPlayer& component = gameObject->AddComponentInternal<AudioPlayer>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -476,7 +476,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "Label")
             {
-                Label& component = gameObject->AddComponent<Label>(componentData["id"]);
+                Label& component = gameObject->AddComponentInternal<Label>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -500,7 +500,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "Image")
             {
-                Image& component = gameObject->AddComponent<Image>(componentData["id"]);
+                Image& component = gameObject->AddComponentInternal<Image>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -524,7 +524,7 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             }
             else if (componentData["name"] == "CanvasRenderer")
             {
-                CanvasRenderer& component = gameObject->AddComponent<CanvasRenderer>(componentData["id"]);
+                CanvasRenderer& component = gameObject->AddComponentInternal<CanvasRenderer>(componentData["id"]);
                 component.SetActive(componentData["active"]);
                 // Sets exposed variables, and updates them if needed
 #if defined(EDITOR)
@@ -665,8 +665,8 @@ void SceneManager::CreateScene(std::filesystem::path path)
     }
     cameraObject->transform.SetScale({ 1,1,1 });
     cameraObject->SetName("Camera");
-    CameraComponent& camera = cameraObject->AddComponent<CameraComponent>();
-    camera.gameObject = cameraObject;
+    CameraComponent* camera = cameraObject->AddComponent<CameraComponent>();
+    camera->gameObject = cameraObject;
 #endif
 
     if (!std::filesystem::exists(path.parent_path()))
