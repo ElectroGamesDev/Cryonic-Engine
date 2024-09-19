@@ -309,9 +309,11 @@ void GameObject::SetParent(GameObject* gameObject)
     if (parentGameObject != nullptr) // If its nullptr, then the game object will become a root game object.
     {
         parentGameObject->childGameObjects.push_back(this);
-        if (!parentGameObject->active) // Todo: Check parentActive
-            active = false; // Todo: Set parentActive instead
+        if (!parentGameObject->active || !parentGameObject->globalActive)
+            SetGlobalActive(false);
     }
+    else if (!IsGlobalActive())
+        SetGlobalActive(true);
 }
 
 GameObject* GameObject::GetParent()
