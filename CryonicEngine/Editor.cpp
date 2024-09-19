@@ -3228,6 +3228,12 @@ void Editor::RenderHierarchy()
                 ModelType model;
             };
 
+            struct GuiObjectItem
+            {
+                std::string menuName;
+                std::string name;
+            };
+
             static const std::vector<ObjectItem> menuObjects = {
                 {"Create Empty", "GameObject", 1, Custom},
                 {"Create Cube", "Cube", 3, Cube},
@@ -3239,6 +3245,11 @@ void Editor::RenderHierarchy()
                 {"Create Square", "Square", 2, Custom},
                 {"Create Circle", "Circle", 2, Custom},
                 {"Create Camera", "Camera", 1, Custom}
+            };
+
+            static const std::vector<GuiObjectItem> menuGUIObjects = {
+                {"Create Label", "Label"},
+                {"Create Image", "Image"}
             };
 
             ObjectItem objectToCreate = {"", "", 0, Custom};
@@ -3253,6 +3264,21 @@ void Editor::RenderHierarchy()
                     hierarchyContextMenuOpen = false;
                     objectToCreate = item;
                 }
+            }
+
+            GuiObjectItem guiObjectToCreate = { "", "" };
+
+            if (ImGui::BeginMenu("GUI"))
+            {
+                for (const GuiObjectItem& item : menuGUIObjects)
+                {
+                    if (ImGui::MenuItem(item.menuName.c_str()))
+                    {
+                        hierarchyContextMenuOpen = false;
+                        guiObjectToCreate = item;
+                    }
+                }
+                ImGui::EndMenu();
             }
 
             if (objectInHierarchyContextMenu != nullptr && ImGui::MenuItem("Delete"))
@@ -3273,7 +3299,7 @@ void Editor::RenderHierarchy()
                 objectInHierarchyContextMenu = nullptr;
             }
 
-            if (!objectToCreate.name.empty())
+            if (!objectToCreate.name.empty() || !guiObjectToCreate.name.empty())
             {
                 hierarchyObjectClicked = true;
 
@@ -3293,7 +3319,7 @@ void Editor::RenderHierarchy()
                 }
                 else if (objectToCreate.name == "Light")
                     gameObject->AddComponentInternal<Lighting>();
-                else if (objectToCreate.name != "GameObject")
+                else if (objectToCreate.name != "GameObject" && guiObjectToCreate.name == "")
                 {
                     if (ProjectManager::projectData.is3D)
                     {
@@ -3309,6 +3335,10 @@ void Editor::RenderHierarchy()
                         //gameObject->AddComponentInternal<Collider2D>(); // Todo: Set size and type
                     }
                 }
+                else if (guiObjectToCreate.name == "Label")
+                    gameObject->AddComponentInternal<Label>();
+                else if (guiObjectToCreate.name == "Image")
+                    gameObject->AddComponentInternal<Image>();
 
                 //SceneManager::GetActiveScene()->AddGameObject(gameObject);
 
