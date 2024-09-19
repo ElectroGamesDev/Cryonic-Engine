@@ -173,6 +173,14 @@ public:
         void SetLocalPosition(float x, float y) { SetLocalPosition({ x, y,  _position.z }); }
         Vector3 GetLocalPosition() { return gameObject->parentGameObject == nullptr ? _position : (_position - gameObject->parentGameObject->transform._position); }
 
+        void MovePosition(Vector3 displacement) { SetPosition(GetPosition() + displacement); };
+        void MovePosition(Vector2 displacement) { SetPosition(Vector2(GetPosition().x + displacement.x, GetPosition().y + displacement.y)); };
+        void MovePosition(float x, float y) { MovePosition(Vector2{ x, y }); };
+
+        void MoveLocalPosition(Vector3 displacement) { SetLocalPosition(GetLocalPosition() + displacement); }
+        void MoveLocalPosition(Vector2 displacement) { SetLocalPosition(Vector2(GetLocalPosition().x + displacement.x, GetLocalPosition().y + displacement.y)); };
+        void MoveLocalPosition(float x, float y) { MoveLocalPosition(Vector2(x, y)); };
+
         void SetRotation(Quaternion rotation) { _rotation = rotation; }
         Quaternion GetRotation() { return _rotation; }
 
