@@ -27,6 +27,7 @@
 #include "Components/AudioPlayer.h"
 #include "Components/Label.h"
 #include "Components/Image.h"
+#include "Components/Button.h"
 #include "Components/CanvasRenderer.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
@@ -1666,7 +1667,7 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
     std::string search = searchBuffer;
     std::transform(search.begin(), search.end(), search.begin(), ::tolower);
 
-    if (type == "Sprite")
+    if (type == "Sprite" || type == "Image")
     {
         // Square
         ImGui::TableNextRow();
@@ -2366,6 +2367,7 @@ void Editor::RenderComponentsWin()
         AddComponentInternalButton("Audio Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<AudioPlayer>(); });
         AddComponentInternalButton("Label", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Label>(); });
         AddComponentInternalButton("Image", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Image>(); });
+        AddComponentInternalButton("Button", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Button>(); });
 
         ImGui::Separator();
 
@@ -3290,7 +3292,8 @@ void Editor::RenderHierarchy()
 
             static const std::vector<GuiObjectItem> menuGUIObjects = {
                 {"Create Label", "Label"},
-                {"Create Image", "Image"}
+                {"Create Image", "Image"},
+                {"Create Button", "Button"}
             };
 
             ObjectItem objectToCreate = {"", "", 0, Custom};
@@ -3380,6 +3383,8 @@ void Editor::RenderHierarchy()
                     gameObject->AddComponentInternal<Label>();
                 else if (guiObjectToCreate.name == "Image")
                     gameObject->AddComponentInternal<Image>();
+                else if (guiObjectToCreate.name == "Button")
+                    gameObject->AddComponentInternal<Button>();
 
                 //SceneManager::GetActiveScene()->AddGameObject(gameObject);
 
