@@ -10,12 +10,16 @@
 
 void Label::Awake()
 {
+#if defined(EDITOR)
     if (exposedVariables[1][2][2].get<std::string>() == "None")
         return;
 
-#if defined(EDITOR)
     font = new Font(exposedVariables[1][2][2].get<std::string>()); // Todo: Handle if the path no longer exists
+#else
+    if (font->GetPath() == "None")
+        return;
 #endif
+
     SetFont(font);
 }
 
@@ -48,6 +52,7 @@ void Label::EditorUpdate()
 {
     if (exposedVariables[1][2][2].get<std::string>() == "None")
     {
+        // Todo: Should it unload the font if font != nullptr?
         font = nullptr;
         return;
     }
@@ -68,7 +73,7 @@ void Label::EditorUpdate()
     if (fontSize != exposedVariables[1][3][2].get<int>())
         SetFontSize(exposedVariables[1][3][2].get<int>());
 
-    if (font->GetPath() != exposedVariables[1][2][2])
+    if (!font || font->GetPath() != exposedVariables[1][2][2])
     {
         SetFont(new Font(exposedVariables[1][2][2].get<std::string>()));
         // Todo: Should it unload the old font?
@@ -87,7 +92,8 @@ std::string Label::GetText() const
 void Label::SetFontSize(int size)
 {
     fontSize = size;
-    FontManager::LoadFont(font->GetPath(), fontSize, false, true);
+    if (font)
+        FontManager::LoadFont(font->GetPath(), fontSize, false, true);
 }
 int Label::GetFontSize() const
 {
