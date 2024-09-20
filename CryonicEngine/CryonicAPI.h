@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "ConsoleLogger.h"
 #include "GameObject.h"
 #include "Scenes/SceneManager.h"
@@ -21,4 +23,5 @@
 #include "Components/Skybox.h"
 #include "Components/Label.h"
 #include "Components/Image.h"
+#include "Components/Button.h"
 #include "Components/CanvasRenderer.h"
