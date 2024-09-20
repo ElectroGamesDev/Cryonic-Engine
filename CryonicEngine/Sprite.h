@@ -26,7 +26,7 @@ public:
 //			return;
 //		}
 
-		if (path != "Square" && path != "Circle")
+		if (path != "Square" && path != "Circle" && path != "None")
 		{
 			// Todo: This needs to be removed once SpriteRenderer texture loading path is fixed
 #if defined(EDITOR)
