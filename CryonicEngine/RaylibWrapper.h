@@ -802,5 +802,6 @@ namespace RaylibWrapper
     void rlImGuiImageRenderTextureFit(const RenderTexture* image, bool center);
     bool rlImGuiImageButton(const char* name, const Texture* image);
     bool rlImGuiImageButtonSize(const char* name, const Texture* image, ImVec2 size);
+    bool rlImGuiImageButtonSizeTint(const char* name, const Texture* image, ImVec2 size, ImVec4 tint);
     void Imgui_ImplRaylib_BuildFontAtlas();
 }

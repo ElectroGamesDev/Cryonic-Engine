@@ -1368,6 +1368,10 @@ namespace RaylibWrapper {
         return ImGui::ImageButton(name, (ImTextureID)image, size);
     }
 
+    bool rlImGuiImageButtonSizeTint(const char* name, const Texture* image, ImVec2 size, ImVec4 tint) {
+        return ImGui::ImageButton(name, (ImTextureID)image, size, { 0,0 }, {1, 1}, { 0,0,0,0 }, tint);
+    }
+
     void Imgui_ImplRaylib_BuildFontAtlas() {
         ::Imgui_ImplRaylib_BuildFontAtlas();
     }
