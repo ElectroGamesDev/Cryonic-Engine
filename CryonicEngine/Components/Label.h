@@ -22,7 +22,7 @@ public:
                 [
                     "string",
                     "text",
-                    "",
+                    "New Text",
                     "Text"
                 ],
                 [
@@ -34,7 +34,7 @@ public:
                 [
                     "Font",
                     "font",
-                    "nullptr",
+                    "None",
                     "Font",
                     {
                         "Extensions": [".ttf", ".otf"]
