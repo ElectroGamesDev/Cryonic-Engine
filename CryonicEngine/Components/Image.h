@@ -3,7 +3,6 @@
 #include "Component.h"
 #include "../CryonicCore.h"
 #include "../Sprite.h"
-#include "../FontManager.h"
 
 class Image : public Component
 {
