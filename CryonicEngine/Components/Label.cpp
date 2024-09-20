@@ -10,6 +10,9 @@
 
 void Label::Awake()
 {
+    if (exposedVariables[1][2][2].get<std::string>() == "None")
+        return;
+
 #if defined(EDITOR)
     font = new Font(exposedVariables[1][2][2].get<std::string>()); // Todo: Handle if the path no longer exists
 #endif
@@ -18,6 +21,9 @@ void Label::Awake()
 
 void Label::RenderGui()
 {
+    if (!font)
+        return;
+
     ImGui::PushFont(FontManager::GetFont(font->GetPath(), fontSize, false));
     Vector2 screenPosition = CameraComponent::main->GetWorldToScreen(gameObject->transform.GetPosition());
 
@@ -40,6 +46,12 @@ void Label::RenderGui()
 #if defined(EDITOR)
 void Label::EditorUpdate()
 {
+    if (exposedVariables[1][2][2].get<std::string>() == "None")
+    {
+        font = nullptr;
+        return;
+    }
+
     if (!setup)
     {
         Awake();
