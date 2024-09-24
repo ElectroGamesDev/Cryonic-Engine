@@ -11,12 +11,12 @@
 void Label::Awake()
 {
 #if defined(EDITOR)
-    if (exposedVariables[1][2][2].get<std::string>() == "None")
+    if (exposedVariables[1][2][2].get<std::string>() == "nullptr")
         return;
 
     font = new Font(exposedVariables[1][2][2].get<std::string>()); // Todo: Handle if the path no longer exists
 #else
-    if (font->GetPath() == "None")
+    if (!font)
         return;
 #endif
 
@@ -25,7 +25,7 @@ void Label::Awake()
 
 void Label::RenderGui()
 {
-    if (!font)
+    if (!font || text.empty())
         return;
 
     ImGui::PushFont(FontManager::GetFont(font->GetPath(), fontSize, false));
@@ -50,7 +50,7 @@ void Label::RenderGui()
 #if defined(EDITOR)
 void Label::EditorUpdate()
 {
-    if (exposedVariables[1][2][2].get<std::string>() == "None")
+    if (exposedVariables[1][2][2].get<std::string>() == "nullptr")
     {
         // Todo: Should it unload the font if font != nullptr?
         font = nullptr;

@@ -15,12 +15,12 @@ void Button::Awake()
     //SetSprite(sprite);
 
 #if defined(EDITOR)
-    if (exposedVariables[1][9][2].get<std::string>() == "None") // Font
+    if (exposedVariables[1][9][2].get<std::string>() == "nullptr") // Font
         return;
 
     font = new Font(exposedVariables[1][9][2].get<std::string>()); // Todo: Handle if the path no longer exists
 #else
-    if (font->GetPath() == "None")
+    if (!font)
         return;
 #endif
     SetFont(font);
@@ -173,7 +173,7 @@ void Button::EditorUpdate()
         // Todo: Should it unload the old sprite?
     }
 
-    if (exposedVariables[1][9][2].get<std::string>() != "None") // Font
+    if (exposedVariables[1][9][2].get<std::string>() != "nullptr") // Font
     {
         if (fontSize != exposedVariables[1][10][2].get<int>())
             SetFontSize(exposedVariables[1][10][2].get<int>());
