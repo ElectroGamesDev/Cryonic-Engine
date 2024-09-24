@@ -2845,7 +2845,10 @@ void Editor::RenderProperties()
                                         openSelector = false;
                                     else if (!selectedFile.empty())
                                     {
-                                        (*it)[2] = selectedFile;
+                                        if (selectedFile == "None")
+                                            (*it)[2] = "nullptr";
+                                        else
+                                            (*it)[2] = selectedFile;
                                         openSelector = false;
                                     }
                                 }
