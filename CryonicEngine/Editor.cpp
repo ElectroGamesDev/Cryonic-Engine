@@ -2735,14 +2735,14 @@ void Editor::RenderProperties()
                                 ImGui::SameLine();
                                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
                                 // Todo: Add black outline
-                                if (ImGui::ColorButton(("##" + name).c_str(), ImVec4((*it)[2][0], (*it)[2][1], (*it)[2][2], (*it)[2][3]), 0, ImVec2(20, 20)))
+                                if (ImGui::ColorButton(("##" + name).c_str(), ImVec4((*it)[2][0].get<float>() / 255, (*it)[2][1].get<float>() / 255, (*it)[2][2].get<float>() / 255, (*it)[2][3].get<float>() / 255), 0, ImVec2(20, 20)))
                                 {
                                     if (colorPopupOpened != nullptr && colorPopupOpened[3] == name)
                                         colorPopupOpened = nullptr;
                                     else
                                     {
                                         colorPopupOpened = &(*it);
-                                        previousColor = ImVec4((*it)[2][0] / 255, (*it)[2][1] / 255, (*it)[2][2] / 255, (*it)[2][3] / 255);
+                                        previousColor = ImVec4((*it)[2][0].get<float>() / 255, (*it)[2][1].get<float>() / 255, (*it)[2][2].get<float>() / 255, (*it)[2][3].get<float>() / 255);
                                         selectedColor = previousColor;
                                     }
                                 }
@@ -2907,7 +2907,7 @@ void Editor::RenderProperties()
 
             if (colorPopupOpened != nullptr)
             {
-                int action = RenderColorPicker("Tint", popupPosition, selectedColor, previousColor);
+                int action = RenderColorPicker("Color", popupPosition, selectedColor, previousColor);
                 if (action != 0)
                 {
                     (*colorPopupOpened)[2][0] = selectedColor.x * 255;
