@@ -30,9 +30,27 @@ public:
                 ],
                 [
                     "Color",
-                    "color",
+                    "normalColor",
                     [ 200, 200, 200, 255 ],
-                    "Color"
+                    "Normal Color"
+                ],
+                [
+                    "Color",
+                    "hoveredColor",
+                    [ 210, 210, 210, 255 ],
+                    "Hovered Color"
+                ],
+                [
+                    "Color",
+                    "pressedColor",
+                    [ 190, 190, 190, 255 ],
+                    "Pressed Color"
+                ],
+                [
+                    "Color",
+                    "disabledColor",
+                    [ 125, 125, 125, 255 ],
+                    "Disabled Color"
                 ],
                 [
                     "bool",
@@ -51,6 +69,12 @@ public:
                     "textColor",
                     [ 0, 0, 0, 255 ],
                     "Text Color"
+                ],
+                [
+                    "Color",
+                    "disabledTextColor",
+                    [ 60, 60, 60, 200 ],
+                    "Disabled Text Color"
                 ],
                 [
                     "Font",
@@ -85,8 +109,14 @@ public:
 #endif
 
     void SetImage(Sprite* sprite);
-    void SetColor(Color color);
-    Color GetColor() const;
+    void SetNormalColor(Color color);
+    Color GetNormalColor() const;
+    void SetHoveredColor(Color color);
+    Color GetHoveredColor() const;
+    void SetPressedColor(Color color);
+    Color GetPressedColor() const;
+    void SetDisabledColor(Color color);
+    Color GetDisabledColor() const;
     void SetDisabled(bool disable);
     bool IsDisabled();
     void SetText(std::string text);
@@ -96,6 +126,8 @@ public:
     void SetFont(Font* font);
     void SetTextColor(Color color);
     Color GetTextColor() const;
+    void SetDisabledTextColor (Color color);
+    Color GetDisabledTextColor() const;
     bool IsHovered() const;
 
     // This only works for static functions and lambda
@@ -108,10 +140,14 @@ public:
 
 private:
     Sprite* image = nullptr;
-    Color color = { 255, 255, 255, 255 };
+    Color normalColor = { 255, 255, 255, 255 };
+    Color hoveredColor = { 255, 255, 255, 255 };
+    Color pressedColor = { 255, 255, 255, 255 };
+    Color disabledColor = { 255, 255, 255, 255 };
     bool disabled;
     std::string text;
     Color textColor = { 255, 255, 255, 255 };
+    Color disabledTextColor = { 255, 255, 255, 255 };
     Font* font = nullptr;
     int fontSize = 16;
     bool hovered = false;

@@ -15,10 +15,10 @@ void Button::Awake()
     //SetSprite(sprite);
 
 #if defined(EDITOR)
-    if (exposedVariables[1][5][2].get<std::string>() == "None") // Font
+    if (exposedVariables[1][9][2].get<std::string>() == "None") // Font
         return;
 
-    font = new Font(exposedVariables[1][5][2].get<std::string>()); // Todo: Handle if the path no longer exists
+    font = new Font(exposedVariables[1][9][2].get<std::string>()); // Todo: Handle if the path no longer exists
 #else
     if (font->GetPath() == "None")
         return;
@@ -46,12 +46,6 @@ void Button::RenderGui()
     ImGui::SetCursorPos({ position.x, position.y });
 
     // Image / Button
-#if defined(EDITOR)
-    ImGui::BeginDisabled();
-#else
-    if (disabled)
-        ImGui::BeginDisabled();
-#endif
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {0,0});
@@ -62,17 +56,50 @@ void Button::RenderGui()
     if (image->GetTexture())
     {
         RaylibWrapper::Texture2D* texture = image->GetTexture();
-        if (RaylibWrapper::rlImGuiImageButtonSizeTint(("##" + text + std::to_string(id)).c_str(), texture, { size.x * gameObject->transform.GetScale().x, size.y * gameObject->transform.GetScale().y }, { (float)color.r, (float)color.g, (float)color.b, (float)color.a }))
+
+        Color color = normalColor;
+        if (disabled)
+            color = disabledColor;
+        else
+        {
+#if !defined(EDITOR)
+            bool isHovered = ImGui::IsMouseHoveringRect({ ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y }, { size.x * gameObject->transform.GetScale().x, size.y * gameObject->transform.GetScale().y });
+            color = isHovered ? (ImGui::IsMouseDown(ImGuiKey_MouseLeft) ? pressedColor : hoveredColor) : normalColor;
+#endif
+        }
+
+        if (RaylibWrapper::rlImGuiImageButtonSizeTint(("##" + text + std::to_string(id)).c_str(), texture, { size.x * gameObject->transform.GetScale().x, size.y * gameObject->transform.GetScale().y }, { (float)color.r / 255, (float)color.g / 255, (float)color.b / 255, (float)color.a / 255 }))
             buttonClicked = true;
     }
     else if (image->GetPath() == "Square")
     {
-        ImVec4 newColor = { (float)color.r / 255, (float)color.g / 255, (float)color.b / 255, (float)color.a / 255 };
-        ImGui::PushStyleColor(ImGuiCol_Button, newColor);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { newColor.x + 0.1f, newColor.y + 0.1f, newColor.z + 0.1f, newColor.w + 0.1f });
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, { newColor.x - 0.1f, newColor.y - 0.1f, newColor.z - 0.1f, newColor.w - 0.1f });
-        if (ImGui::Button(("##" + text + std::to_string(id)).c_str(), { size.x * gameObject->transform.GetScale().x, size.y * gameObject->transform.GetScale().y }))
+        if (!disabled)
+        {
+#if defined(EDITOR)
+            ImGui::PushStyleColor(ImGuiCol_Button, { (float)normalColor.r / 255, (float)normalColor.g / 255, (float)normalColor.b / 255, (float)normalColor.a / 255 });
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { (float)normalColor.r / 255, (float)normalColor.g / 255, (float)normalColor.b / 255, (float)normalColor.a / 255 });
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, { (float)normalColor.r / 255, (float)normalColor.g / 255, (float)normalColor.b / 255, (float)normalColor.a / 255 });
+#else
+            ImGui::PushStyleColor(ImGuiCol_Button, { (float)normalColor.r / 255, (float)normalColor.g / 255, (float)normalColor.b / 255, (float)normalColor.a / 255 });
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { (float)hoveredColor.r / 255, (float)hoveredColor.g / 255, (float)hoveredColor.b / 255, (float)hoveredColor.a / 255 });
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, { (float)pressedColor.r / 255, (float)pressedColor.g / 255, (float)pressedColor.b / 255, (float)pressedColor.a / 255 });
+#endif
+        }
+        else
+        {
+            ImGui::PushStyleColor(ImGuiCol_Button, { (float)disabledColor.r / 255, (float)disabledColor.g / 255, (float)disabledColor.b / 255, (float)disabledColor.a / 255 });
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { (float)disabledColor.r / 255, (float)disabledColor.g / 255, (float)disabledColor.b / 255, (float)disabledColor.a / 255 });
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, { (float)disabledColor.r / 255, (float)disabledColor.g / 255, (float)disabledColor.b / 255, (float)disabledColor.a / 255 });
+        }
+
+#if defined(EDITOR)
+        // Todo: This should be changed to an image
+        ImGui::Button(("##" + text + std::to_string(id)).c_str(), { size.x * gameObject->transform.GetScale().x, size.y * gameObject->transform.GetScale().y });
+#else
+        if (ImGui::Button(("##" + text + std::to_string(id)).c_str(), { size.x * gameObject->transform.GetScale().x, size.y * gameObject->transform.GetScale().y }) && !disabled)
             buttonClicked = true;
+#endif
+
         ImGui::PopStyleColor(3);
     }
     //    else if (image->GetPath() == "Circle")
@@ -93,20 +120,17 @@ void Button::RenderGui()
 
     hovered = ImGui::IsItemHovered();
 
-#if defined(EDITOR)
-    ImGui::EndDisabled();
-#else
-    if (disabled)
-        ImGui::EndDisabled();
-#endif
-
     // Text
     if (font && text != "")
     {
+        Color color = textColor;
+        if (disabled)
+            color = disabledTextColor;
+
         ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
         ImGui::SetCursorPos({ textPosition.x - textSize.x / 2, textPosition.y - textSize.y / 2 });
         ImGui::PushFont(FontManager::GetFont(font->GetPath(), fontSize, false));
-        ImGui::TextColored({ (float)textColor.r, (float)textColor.g, (float)textColor.b, (float)textColor.a }, text.c_str());
+        ImGui::TextColored({ (float)color.r / 255, (float)color.g / 255, (float)color.b / 255, (float)color.a / 255 }, text.c_str());
         ImGui::PopFont();
     }
 
@@ -124,19 +148,24 @@ void Button::EditorUpdate()
         setup = true;
     }
 
-    color.r = exposedVariables[1][1][2][0].get<int>();
-    color.g = exposedVariables[1][1][2][1].get<int>();
-    color.b = exposedVariables[1][1][2][2].get<int>();
-    color.a = exposedVariables[1][1][2][3].get<int>();
+    auto updateColor = [&](Color& color, int index)
+    {
+        color.r = exposedVariables[1][index][2][0].get<int>();
+        color.g = exposedVariables[1][index][2][1].get<int>();
+        color.b = exposedVariables[1][index][2][2].get<int>();
+        color.a = exposedVariables[1][index][2][3].get<int>();
+    };
 
-    textColor.r = exposedVariables[1][4][2][0].get<int>();
-    textColor.g = exposedVariables[1][4][2][1].get<int>();
-    textColor.b = exposedVariables[1][4][2][2].get<int>();
-    textColor.a = exposedVariables[1][4][2][3].get<int>();
+    updateColor(normalColor, 1);
+    updateColor(hoveredColor, 2);
+    updateColor(pressedColor, 3);
+    updateColor(disabledColor, 4);
+    updateColor(textColor, 7);
+    updateColor(disabledTextColor, 8);
 
-    disabled = exposedVariables[1][2][2].get<bool>();
+    disabled = exposedVariables[1][5][2].get<bool>();
 
-    text = exposedVariables[1][3][2].get<std::string>();
+    text = exposedVariables[1][6][2].get<std::string>();
 
     if (image->GetPath() != exposedVariables[1][0][2])
     {
@@ -144,14 +173,14 @@ void Button::EditorUpdate()
         // Todo: Should it unload the old sprite?
     }
 
-    if (exposedVariables[1][5][2].get<std::string>() != "None") // Font
+    if (exposedVariables[1][9][2].get<std::string>() != "None") // Font
     {
-        if (fontSize != exposedVariables[1][6][2].get<int>())
-            SetFontSize(exposedVariables[1][6][2].get<int>());
+        if (fontSize != exposedVariables[1][10][2].get<int>())
+            SetFontSize(exposedVariables[1][10][2].get<int>());
 
-        if (!font || font->GetPath() != exposedVariables[1][5][2])
+        if (!font || font->GetPath() != exposedVariables[1][9][2])
         {
-            SetFont(new Font(exposedVariables[1][5][2].get<std::string>()));
+            SetFont(new Font(exposedVariables[1][9][2].get<std::string>()));
             // Todo: Should it unload the old font?
         }
     }
@@ -165,14 +194,44 @@ void Button::SetImage(Sprite* image)
     this->image = image;
 }
 
-void Button::SetColor(Color color)
+void Button::SetNormalColor(Color color)
 {
-    this->color = color;
+    this->normalColor = color;
 }
 
-Color Button::GetColor() const
+Color Button::GetNormalColor() const
 {
-    return color;
+    return normalColor;
+}
+
+void Button::SetHoveredColor(Color color)
+{
+    this->hoveredColor = color;
+}
+
+Color Button::GetHoveredColor() const
+{
+    return hoveredColor;
+}
+
+void Button::SetPressedColor(Color color)
+{
+    this->pressedColor = color;
+}
+
+Color Button::GetPressedColor() const
+{
+    return pressedColor;
+}
+
+void Button::SetDisabledColor(Color color)
+{
+    this->disabledColor = color;
+}
+
+Color Button::GetDisabledColor() const
+{
+    return disabledColor;
 }
 
 void Button::SetDisabled(bool disable)
@@ -218,6 +277,16 @@ void Button::SetTextColor(Color color)
 Color Button::GetTextColor() const
 {
     return textColor;
+}
+
+void Button::SetDisabledTextColor(Color color)
+{
+    this->disabledTextColor = color;
+}
+
+Color Button::GetDisabledTextColor() const
+{
+    return disabledTextColor;
 }
 
 bool Button::IsHovered() const
