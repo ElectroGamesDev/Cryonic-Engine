@@ -79,7 +79,7 @@ public:
                 [
                     "Font",
                     "font",
-                    "None",
+                    "nullptr",
                     "Font",
                     {
                         "Extensions": [".ttf", ".otf"]
