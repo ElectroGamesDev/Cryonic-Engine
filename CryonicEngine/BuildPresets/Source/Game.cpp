@@ -139,6 +139,7 @@ int main(void)
 		ImGui::Begin("##Game", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
 		// Call components Update()
+		// Not sure if I should use a range-based loop since a gameobject or component can be deleted within the loop
 		for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 		{
 			if (!gameObject->IsActive()) continue;
@@ -146,8 +147,10 @@ int main(void)
 			{
 				if (!component->IsActive()) continue;
 				component->Update();
-				component->RenderGui();
 				deltaTime = tempDelaTime; // Setting this here and before the loop incase if a component changes the delta time
+
+				if (gameObject && component) // Component/Gameobject may get deleted in the Update(). I could also check if the gameobject and component is still active here although most likely useless overhead
+					component->RenderGui();
 			}
 		}
 
