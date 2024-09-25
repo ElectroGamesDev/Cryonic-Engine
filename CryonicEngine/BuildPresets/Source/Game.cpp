@@ -4,6 +4,7 @@
 #include "Scenes/SceneManager.h"
 #include "Components/Component.h"
 #include "Components/CameraComponent.h"
+#include "AudioClip.h"
 #include "ShaderManager.h"
 #include "RaylibModelWrapper.h"
 #include "RaylibWrapper.h"
@@ -170,6 +171,10 @@ int main(void)
 	// Todo: There may be other scenes loaded. Make sure to also unload them.
 
 	SceneManager::UnloadScene(SceneManager::GetActiveScene());
+
+	// Cleanup sounds (AudioPlayer cleans up streamed sounds)
+	for (auto& pair : AudioClip::sounds)
+		Raylib::UnloadSound(pair.second);
 
 	RaylibWrapper::CloseAudioDevice();
 	RaylibWrapper::ImGui_ImplRaylib_Shutdown();
