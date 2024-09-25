@@ -46,8 +46,10 @@ public:
 #endif
 	}
 
+    void Awake() override;
 	void Start() override;
 	void Update() override;
+    void Destroy() override;
 
     bool IsPlaying() const;
     void Play();
@@ -59,8 +61,6 @@ public:
     void SetLooping(bool loop);
     bool IsLooping() const;
 
-    void Destroy() override;
-
     // Get clip length -- Should this be in AudioClip? But then audioClip would need to be puclic or create a GetAudioClip() const. ALthough people should have their audioclip unless they dragged it into AudioPlayer.
     //   It should stay private since SetAudioClip() does important stuff
     // Get current time elapsed?
@@ -68,12 +68,13 @@ public:
     void SetAudioClip(AudioClip audioClip);
 
 private:
-    bool audioLoaded = false; // Whether sound or music is loaded
-    Raylib::Music music; // Used for streaming sounds
-    Raylib::Sound sound; // Used for sounds in memory
+    Raylib::Music* music; // Used for streaming sounds
+    Raylib::Sound* sound; // Used for streaming sounds
     std::vector<Raylib::Music> musicStreams; // Used for Play(audioClip)
+    std::vector<Raylib::Sound> sounds; // Used for Play(audioClip)
     AudioClip* audioClip = nullptr;
     bool loop = false;
     bool paused = false;
     bool playOnStart = false;
+    bool playingSound = false;
 };
