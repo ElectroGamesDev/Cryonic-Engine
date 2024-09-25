@@ -1,6 +1,6 @@
 #include "AudioClip.h"
 
-bool AudioClip::ShouldLoadInMemory() const
+bool AudioClip::LoadedInMemory() const
 {
 	return loadInMemory;
 }
@@ -8,4 +8,9 @@ bool AudioClip::ShouldLoadInMemory() const
 std::string AudioClip::GetPath() const
 {
 	return path;
+}
+
+Raylib::Sound* AudioClip::GetRaylibSound()
+{
+	return sound;
 }

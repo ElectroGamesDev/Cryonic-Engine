@@ -24,7 +24,7 @@ public:
 #ifndef EDITOR
 		file.open(std::filesystem::path(exeParent) / "Resources" / "Assets" / std::string(path + ".data"));
 #endif
-		if (!file.is_open())
+		if (!file.is_open()) // Todo: Instead if the audio file exists, but the data file doesnt, just give it default values
 		{
 			ConsoleLogger::ErrorLog("Audio Clip failed to load. Path: " + path);
 			return;
@@ -37,7 +37,21 @@ public:
 
 		loadInMemory = jsonData["public"]["loadInMemory"].get<bool>();
 
+#ifndef EDITOR
+		if (loadInMemory)
+		{
+			sound = new Raylib::Sound();
+			*sound = Raylib::LoadSound((exeParent.string() + "/Resources/Assets/" + path).c_str()); // Todo: Check to ensure this loads
+		}
+#endif
+
 		this->path = path;
+	}
+
+	~AudioClip()
+	{
+		if (sound)
+			Raylib::UnloadSound(*sound);
 	}
 
 	/**
@@ -45,7 +59,7 @@ public:
 	 *
 	 * @return [bool] True if the audio clip should be loaded into memory, false if it should is streamed.
 	 */
-	bool ShouldLoadInMemory() const; // This is useless to scripting API, but is useful for AudioPlayer.
+	bool LoadedInMemory() const; // This is useless to scripting API, but is useful for AudioPlayer.
 
 	/**
 	 * @brief Returns the relative path to the audio clip file.
@@ -53,8 +67,12 @@ public:
 	 * @return [std::string] The relative path to the audio clip file.
 	 */
 	std::string GetPath() const;
+	
+	// Hide in API
+	Raylib::Sound* GetRaylibSound();
 
 private:
 	std::string path = "";
 	bool loadInMemory = false; // True = load the audio clip into the disk, False = stream the audio clip
+	Raylib::Sound* sound; // Used for sounds in memory
 };
