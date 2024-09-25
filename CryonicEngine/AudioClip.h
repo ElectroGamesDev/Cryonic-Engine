@@ -40,8 +40,13 @@ public:
 #ifndef EDITOR
 		if (loadInMemory)
 		{
-			sound = new Raylib::Sound();
-			*sound = Raylib::LoadSound((exeParent.string() + "/Resources/Assets/" + path).c_str()); // Todo: Check to ensure this loads
+			if (auto it = sounds.find(path); it != sounds.end())
+				sound = &it->second;
+			else
+			{
+				sounds[path] = Raylib::LoadSound((exeParent.string() + "/Resources/Assets/" + path).c_str());
+				sound = &sounds[path];
+			}
 		}
 #endif
 
@@ -50,8 +55,9 @@ public:
 
 	~AudioClip()
 	{
-		if (sound)
-			Raylib::UnloadSound(*sound);
+		// Sounds are unloaded in Game.cpp
+		//if (sound)
+		//	Raylib::UnloadSound(*sound);
 	}
 
 	/**
@@ -70,6 +76,9 @@ public:
 	
 	// Hide in API
 	Raylib::Sound* GetRaylibSound();
+
+	// Hide in API
+	static std::unordered_map<std::filesystem::path, Raylib::Sound> sounds;
 
 private:
 	std::string path = "";
