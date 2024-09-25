@@ -3,6 +3,7 @@
 #include "Component.h"
 #include "../CryonicCore.h"
 #include <unordered_map>
+#include "../Sprite.h"
 
 
 class SpriteRenderer : public Component
@@ -19,6 +20,15 @@ public:
         [
             0,
             [
+                [
+                    "Sprite",
+                    "sprite",
+                    "Square",
+                    "Sprite",
+                    {
+                        "Extensions": [".png", ".jpg", ".jpeg"]
+                    }
+                ],
                 [
                     "Color",
                     "tint",
@@ -54,15 +64,15 @@ public:
 		return new SpriteRenderer(gameObject, -1);
 	}
 	// Hide everything from API
+	void Awake() override;
 	void Update() override;
 #if defined(EDITOR)
 	void EditorUpdate() override;
 #endif
 	void Destroy() override;
 
-	//Texture2D& GetTexture();
-	void SetTexture(std::filesystem::path path);
-	std::filesystem::path GetTexturePath() const;
+	void SetSprite(Sprite* sprite);
+	Sprite* GetSprite();
 	void SetTint(Color tint);
 	Color GetTint() const;
 	void SetRenderOrder(int order);
@@ -78,9 +88,13 @@ public:
 	bool flipY = false;
 
 	// Hide in API
-	static std::unordered_map<std::filesystem::path, std::pair<Texture2D, int>> textures;
+	//static std::unordered_map<std::filesystem::path, std::pair<Texture2D, int>> textures;
 
 private:
-	std::pair<Texture2D, int>* texture = nullptr;
-	std::filesystem::path texturePath;
+	Sprite* sprite = nullptr;
+#if defined(EDITOR)
+	bool setup = false;
+#endif
+	//std::pair<Texture2D, int>* texture = nullptr;
+	//std::filesystem::path texturePath;
 };
