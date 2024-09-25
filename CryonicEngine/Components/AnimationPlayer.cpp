@@ -54,15 +54,10 @@ void AnimationPlayer::Update()
 			}
 		}
 
-		// Using a variable so its easier to debug SetTexture if there is a syntax issue
-		std::filesystem::path path = "";
-#if !defined(EDITOR)
-		path = std::filesystem::path(exeParent) / "Resources" / "Assets";
-#endif
-		int index = static_cast<int>(timeElapsed / (activeAnimationState->animation.GetSpeed() / activeAnimationState->animation.GetSprites()->size()));
+		int index = static_cast<int>(timeElapsed / (activeAnimationState->animation.GetSpeed() / activeAnimationState->animation.GetSprites().size()));
 		if (index != previousSprite)
 		{
-			spriteRenderer->SetTexture(path / (*activeAnimationState->animation.GetSprites())[index]);
+			spriteRenderer->SetSprite(new Sprite(activeAnimationState->animation.GetSprites()[index]->GetRelativePath()));
 			previousSprite = index;
 		}
 		timeElapsed += deltaTime;

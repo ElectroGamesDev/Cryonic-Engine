@@ -110,7 +110,7 @@ GameObject* Scene::SpawnGameObject(std::string path, Vector3 position, Quaternio
     gameObject->SetName(newPath.stem().string());
 
     SpriteRenderer* spriteRenderer = gameObject->AddComponent<SpriteRenderer>();
-    spriteRenderer->SetTexture(newPath);
+    spriteRenderer->SetSprite(new Sprite(path)); // Using path here since the Sprite constructor takes in a relative path
     spriteRenderer->gameObject = gameObject;
 
     return gameObject;

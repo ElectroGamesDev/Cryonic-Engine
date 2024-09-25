@@ -110,10 +110,6 @@ bool SceneManager::SaveScene(Scene* scene)
             {
                 componentData["model_path"] = dynamic_cast<MeshRenderer*>(component)->GetModelPath();
             }
-            if (dynamic_cast<SpriteRenderer*>(component))
-            {
-                componentData["texture_path"] = dynamic_cast<SpriteRenderer*>(component)->GetTexturePath().string();
-            }
             else if (dynamic_cast<ScriptComponent*>(component))
             {
                 componentData["cpp_path"] = dynamic_cast<ScriptComponent*>(component)->GetCppPath();
@@ -291,19 +287,6 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             {
                 SpriteRenderer& component = gameObject->AddComponentInternal<SpriteRenderer>(componentData["id"]);
                 setExposedVariables(component, componentData);
-
-                if (componentData["texture_path"] != "Square" && componentData["texture_path"] != "Circle")
-                {
-                    std::filesystem::path path;
-#if defined(EDITOR)
-                    path = ProjectManager::projectData.path / "Assets";
-#else
-                    path = std::filesystem::path(exeParent) / "Resources" / "Assets";
-#endif
-                    component.SetTexture(path / componentData["texture_path"]);
-                }
-                else
-                    component.SetTexture(componentData["texture_path"]);
             }
             else if (componentData["name"] == "ScriptComponent")
             {

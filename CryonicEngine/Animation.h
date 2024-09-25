@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include "Sprite.h"
 
 class Animation
 {
@@ -36,9 +37,9 @@ public:
 		return speed;
 	}
 
-	const std::vector<std::string>* GetSprites()
+	const std::vector<Sprite*>& GetSprites()
 	{
-		return &sprites;
+		return sprites;
 	}
 
 	// Hide in API
@@ -46,5 +47,5 @@ public:
 	std::string name;
 	bool loop;
 	float speed;
-	std::vector<std::string> sprites;
+	std::vector<Sprite*> sprites;
 };

@@ -1070,7 +1070,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         texturePath = texturePath.string().substr(assetsPosition + 7);
 
                     SpriteRenderer& spriteRenderer = gameObject->AddComponentInternal<SpriteRenderer>();
-                    spriteRenderer.SetTexture(ProjectManager::projectData.path / "Assets" / texturePath);
+                    spriteRenderer.SetSprite(new Sprite(ProjectManager::projectData.path.string() + "/Assets/" + texturePath.string()));
                     gameObject->AddComponentInternal<Collider2D>(); // Todo: Set to convex/texture type
 
                     for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
@@ -3403,7 +3403,7 @@ void Editor::RenderHierarchy()
                     else
                     {
                         SpriteRenderer& spriteRenderer = gameObject->AddComponentInternal<SpriteRenderer>();
-                        spriteRenderer.SetTexture(objectToCreate.name);
+                        spriteRenderer.SetSprite(new Sprite(objectToCreate.name));
 
                         //gameObject->AddComponentInternal<Collider2D>(); // Todo: Set size and type
                     }
