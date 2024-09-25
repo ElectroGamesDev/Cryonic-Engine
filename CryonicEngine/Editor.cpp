@@ -96,6 +96,8 @@ bool resetProjectSettings = true;
 
 bool guiVisible = false;
 
+std::string focusContentBrowserFile = "";
+
 nlohmann::json animationGraphData = nullptr;
 
 std::filesystem::path fileExplorerPath;
@@ -644,6 +646,14 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             ImGui::SetCursorPosY(nextY);
             ImGui::SetCursorPosX(nextX);
             ImVec2 pos = ImGui::GetCursorPos();
+
+            // Set focused item
+            if (focusContentBrowserFile == entry.path().string()) // This doesn't show the navigation rectangle because apparently its hidden when navigating with a mouse (https://github.com/ocornut/imgui/issues/4054)
+            {
+                ImGui::SetKeyboardFocusHere();
+                focusContentBrowserFile = "";
+            }
+
             if (entry.is_directory())
             {
                 // Need to create custom hover check code since ImGui::IsItemHovered() won't trigger as when dragging a file the ImGui Mouse Position doesn't update
@@ -951,6 +961,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     continue;
                 }
             }
+
             ImGui::PushFont(FontManager::GetFont("Roboto-Bold", 15, false));
             ImGui::SetCursorPosY(ImGui::GetCursorPosY());
             ImGui::SetCursorPosX(nextX + (32/2) - (ImGui::CalcTextSize(fileName.c_str()).x / 2) + ImGui::CalcTextSize(" ").x); // ImGui::CalcTextSize(" ").x adds one space so its properly aligned
@@ -2816,6 +2827,21 @@ void Editor::RenderProperties()
                                 if (ImGui::Button(selectedFile.c_str(), { ImGui::GetWindowWidth() - 130, 20 }))
                                     openSelector = true;
 
+                                // If right clicked, then go to it in the content browser
+                                if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right) &&
+                                    std::filesystem::exists(ProjectManager::projectData.path / "Assets" / std::filesystem::path((*it)[2].get<std::string>())))
+                                {
+                                    // Set content browser path to the file
+                                    fileExplorerPath = ProjectManager::projectData.path / "Assets" / std::filesystem::path((*it)[2].get<std::string>()).parent_path();
+
+                                    // Focus Content Browser
+                                    ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str());
+                                    if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                                        window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+                                    focusContentBrowserFile = (ProjectManager::projectData.path / "Assets" / std::filesystem::path((*it)[2].get<std::string>())).string();
+                                }
+
                                 // Checks to see if the user is hovering over the button while dragging a file with a file type that can be used for the variable
                                 else if (ImGui::IsMouseHoveringRect(cursorScreenPos, { cursorScreenPos.x + ImGui::GetWindowWidth() - 130, cursorScreenPos.y + 20 }) && dragData.first != None && dragData.second.find("Path") != dragData.second.end()) // Using this since ImGui::IsItemHovered() won't work while dragging.
                                 {
@@ -3928,6 +3954,7 @@ void Editor::Init()
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enabled Docking
     //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     // Enabled Multi-Viewports
     io.ConfigWindowsMoveFromTitleBarOnly = true;
+    io.NavActive = true;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
