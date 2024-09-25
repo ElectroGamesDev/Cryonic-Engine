@@ -26,9 +26,10 @@ public:
 //			return;
 //		}
 
+		relativePath = path;
+
 		if (path != "Square" && path != "Circle" && path != "None")
 		{
-			// Todo: This needs to be removed once SpriteRenderer texture loading path is fixed
 #if defined(EDITOR)
 			path = ProjectManager::projectData.path.string() + "/Assets/" + path;
 #else
@@ -36,11 +37,11 @@ public:
 #endif
 
 			if (auto it = textures.find(path); it != textures.end())
-				texture = it->second;
+				texture = it->second.first;
 			else
 			{
-				textures[path] = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(path.c_str()));
-				texture = textures[path];
+				textures[path].first = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(path.c_str()));
+				texture = textures[path].first;
 			}
 		}
 
@@ -48,19 +49,25 @@ public:
 	}
 
 	/**
-	 * @brief Returns the relative path to the sprite file.
+	 * @brief Returns the full path to the sprite file.
 	 *
-	 * @return [string] The relative path to the sprite file.
+	 * @return [string] The full path to the sprite file.
 	 */
 	std::string GetPath() const { return path; };
+
+	/**
+	* @brief Returns the relative path to the sprite file.
+	*
+	* @return [string] The relative path to the sprite file.
+	*/
+	std::string GetRelativePath() const { return relativePath; };
 
 	// Hide in API
 	RaylibWrapper::Texture2D* GetTexture() const { return texture; };
 
-	// Hide in API
-	static std::unordered_map<std::filesystem::path, RaylibWrapper::Texture2D*> textures;
-
 private:
 	std::string path;
+	std::string relativePath;
 	RaylibWrapper::Texture2D* texture = nullptr;
+	static std::unordered_map<std::filesystem::path, std::pair<RaylibWrapper::Texture2D*, int>> textures;
 };
