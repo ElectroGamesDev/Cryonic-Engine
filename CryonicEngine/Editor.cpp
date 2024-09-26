@@ -976,9 +976,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     if (newFileName != "" || newFileName == renamingFile.stem())
                     {
                         // Todo: If a file already exists with that name and extension, popup a warning asking if they want to replace/overwrite or cancel
-                        bool hasDataFile = std::filesystem::exists(renamingFile.string() + ".data");
                         std::filesystem::rename(renamingFile, (renamingFile.parent_path() / (newFileName + renamingFile.extension().string())));
-                        if (hasDataFile)
+                        if (std::filesystem::exists(renamingFile.string() + ".data"))
                             std::filesystem::rename(renamingFile.string() + ".data", (renamingFile.parent_path() / (newFileName + renamingFile.extension().string() + ".data")));
 
                         fileRenameFirstFrame = true;
@@ -1351,9 +1350,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (!folderHovering.empty()) // Todo: Add support for dropping files onto folders in the file explorer tree, and the previous folders buttons near the top of the file explorer
                 {
                     std::filesystem::path path = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
-                    bool hasDataFile = std::filesystem::exists(path.string() + ".data");
                     std::filesystem::rename(path, folderHovering / path.filename());
-                    if (hasDataFile)
+                    if (std::filesystem::exists(path.string() + ".data"))
                         std::filesystem::rename(path.string() + ".data", folderHovering / (path.filename().string() + ".data"));
 
                 }
