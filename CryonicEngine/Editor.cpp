@@ -976,9 +976,11 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     if (newFileName != "" || newFileName == renamingFile.stem())
                     {
                         // Todo: If a file already exists with that name and extension, popup a warning asking if they want to replace/overwrite or cancel
+                        bool hasDataFile = std::filesystem::exists(renamingFile.string() + ".data");
                         std::filesystem::rename(renamingFile, (renamingFile.parent_path() / (newFileName + renamingFile.extension().string())));
-                        if (std::filesystem::exists(renamingFile.string() + ".data"))
+                        if (hasDataFile)
                             std::filesystem::rename(renamingFile.string() + ".data", (renamingFile.parent_path() / (newFileName + renamingFile.extension().string() + ".data")));
+
                         fileRenameFirstFrame = true;
                     }
                     renamingFile = "";
@@ -1337,7 +1339,6 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         else if (dragData.first != None)
         {
             // Todo: This is not optimized and will be setting the cursor each frame
-
             if (!folderHovering.empty() || dragData.second.find("HoveringValidElement") != dragData.second.end() && std::any_cast<bool>(dragData.second["HoveringValidElement"]))
                 RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
             else
@@ -1346,6 +1347,16 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
             {
                 RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
+
+                if (!folderHovering.empty()) // Todo: Add support for dropping files onto folders in the file explorer tree, and the previous folders buttons near the top of the file explorer
+                {
+                    std::filesystem::path path = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+                    bool hasDataFile = std::filesystem::exists(path.string() + ".data");
+                    std::filesystem::rename(path, folderHovering / path.filename());
+                    if (hasDataFile)
+                        std::filesystem::rename(path.string() + ".data", folderHovering / (path.filename().string() + ".data"));
+
+                }
 
                 dragData.first = None;
                 dragData.second.clear();
