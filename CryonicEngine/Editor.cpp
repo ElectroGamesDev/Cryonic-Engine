@@ -40,6 +40,7 @@
 #include "EventSystem.h"
 #include "ImGuiPopup.h"
 #include "CanvasEditor.h"
+#include "FileWatcher.h"
 
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -890,26 +891,26 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         {
                             // Todo: If something is already in the Canvas Editor window and its not saved, popup asking to save, don't save, or cancel
 
-                            std::ifstream dataFile(entry.path());
-                            if (dataFile.is_open())
-                            {
-                                // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
-                                dataFile >> CanvasEditor::canvasData;
-                                CanvasEditor::canvasData["path"] = entry.path(); // Updating the path incase it changed.
+                            //std::ifstream dataFile(entry.path());
+                            //if (dataFile.is_open())
+                            //{
+                            //    // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
+                            //    dataFile >> CanvasEditor::canvasData;
+                            //    CanvasEditor::canvasData["path"] = entry.path(); // Updating the path incase it changed.
 
-                                if (CanvasEditor::windowOpen) // If the canvas editor is open, focus it
-                                {
-                                    ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str());
-                                    if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
-                                        window->DockNode->TabBar->NextSelectedTabId = window->TabId;
-                                }
-                                else
-                                    CanvasEditor::windowOpen = true; // This should focus the canvas editor window
-                            }
-                            else
-                            {
-                                // Todo: Send error message
-                            }
+                            //    if (CanvasEditor::windowOpen) // If the canvas editor is open, focus it
+                            //    {
+                            //        ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str());
+                            //        if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                            //            window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+                            //    }
+                            //    else
+                            //        CanvasEditor::windowOpen = true; // This should focus the canvas editor window
+                            //}
+                            //else
+                            //{
+                            //    // Todo: Send error message
+                            //}
                         }
                     }
 
@@ -976,6 +977,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     {
                         // Todo: If a file already exists with that name and extension, popup a warning asking if they want to replace/overwrite or cancel
                         std::filesystem::rename(renamingFile, (renamingFile.parent_path() / (newFileName + renamingFile.extension().string())));
+                        if (std::filesystem::exists(renamingFile.string() + ".data"))
+                            std::filesystem::rename(renamingFile.string() + ".data", (renamingFile.parent_path() / (newFileName + renamingFile.extension().string() + ".data")));
                         fileRenameFirstFrame = true;
                     }
                     renamingFile = "";
@@ -3579,7 +3582,7 @@ void Editor::Render(void)
     RenderComponentsWin();
     RenderScriptCreateWin();
     RenderAnimationGraph();
-    CanvasEditor::Render();
+    //CanvasEditor::Render();
     RenderProjectSettings();
     //RenderTopbar();
 
@@ -3654,7 +3657,7 @@ void Editor::Render(void)
             if (ImGui::MenuItem("Properties", "")) {}
             if (ImGui::MenuItem("Sprite Editor", "")) {}
             if (ImGui::MenuItem("Animation Graph", "")) { animationGraphWinOpen = true; }
-            if (ImGui::MenuItem("Canvas Editor", "")) { CanvasEditor::windowOpen = true; }
+            //if (ImGui::MenuItem("Canvas Editor", "")) { CanvasEditor::windowOpen = true; }
             ImGui::EndMenu();
         }
         ImGui::SetCursorPos(ImVec2(152, 0));
@@ -3971,6 +3974,8 @@ void Editor::Init()
     InitScenes(); // Must go after InitMisc() and ShaderManager::Init()
 
     SetupViewport();
+
+    FileWatcher::Init();
 
     while (!closeEditor)
     {
