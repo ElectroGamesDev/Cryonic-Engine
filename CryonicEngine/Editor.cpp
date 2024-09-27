@@ -1074,7 +1074,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         texturePath = texturePath.string().substr(assetsPosition + 7);
 
                     SpriteRenderer& spriteRenderer = gameObject->AddComponentInternal<SpriteRenderer>();
-                    spriteRenderer.SetSprite(new Sprite(ProjectManager::projectData.path.string() + "/Assets/" + texturePath.string()));
+                    spriteRenderer.exposedVariables[1][0][2] = texturePath.string();
+                    //spriteRenderer.SetSprite(new Sprite(ProjectManager::projectData.path.string() + "/Assets/" + texturePath.string()));
                     gameObject->AddComponentInternal<Collider2D>(); // Todo: Set to convex/texture type
 
                     for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
