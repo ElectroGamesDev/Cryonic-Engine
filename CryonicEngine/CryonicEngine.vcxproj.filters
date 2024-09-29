@@ -204,6 +204,9 @@
     <ClCompile Include="Components\Button.cpp">
       <Filter>Source Files\Components\UI</Filter>
     </ClCompile>
+    <ClCompile Include="FileWatcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -403,6 +406,9 @@
     </ClInclude>
     <ClInclude Include="Components\Button.h">
       <Filter>Header Files\Components\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="FileWatcher.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
