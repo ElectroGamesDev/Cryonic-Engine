@@ -36,12 +36,12 @@ public:
 			path = exeParent.string() + "/Resources/Assets/" + path;
 #endif
 
-			if (auto it = textures.find(path); it != textures.end())
-				texture = it->second.first;
+			if (auto it = textures.find(relativePath); it != textures.end())
+				texture = &it->second;
 			else
 			{
-				textures[path].first = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(path.c_str()));
-				texture = textures[path].first;
+				textures[relativePath].first = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(path.c_str()));
+				texture = &textures[relativePath];
 			}
 		}
 
@@ -53,21 +53,48 @@ public:
 	 *
 	 * @return [string] The full path to the sprite file.
 	 */
-	std::string GetPath() const { return path; };
+	const std::string GetPath() { return path; };
 
 	/**
 	* @brief Returns the relative path to the sprite file.
 	*
 	* @return [string] The relative path to the sprite file.
 	*/
-	std::string GetRelativePath() const { return relativePath; };
+	const std::string GetRelativePath() { return relativePath; };
 
 	// Hide in API
-	RaylibWrapper::Texture2D* GetTexture() const { return texture; };
+	RaylibWrapper::Texture2D* GetTexture()
+	{
+#if defined(EDITOR)
+ 		// This wont work since some of the code checks GetTexture() to see if a texture is loaded every frame.
+		if (texture->first == nullptr) // Texture will be nullptr if the Sprite gets reloaded.
+		{
+			auto it = textures.find(relativePath);
+			if (it != textures.end())
+				texture->first = it->second.first;
+			else
+			{
+				if (std::filesystem::exists(path))
+				{
+					textures[path].first = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(path.c_str()));
+					texture->first = textures[path].first;
+				}
+				else
+				{
+					path = "None";
+					relativePath = path;
+				}
+			}
+		}
+#endif
+		return (texture == nullptr) ? nullptr : texture->first;
+	};
+
+	// Hide in API
+	static std::unordered_map<std::filesystem::path, std::pair<RaylibWrapper::Texture2D*, int>> textures;
 
 private:
 	std::string path;
 	std::string relativePath;
-	RaylibWrapper::Texture2D* texture = nullptr;
-	static std::unordered_map<std::filesystem::path, std::pair<RaylibWrapper::Texture2D*, int>> textures;
+	std::pair<RaylibWrapper::Texture2D*, int>* texture = nullptr;
 };
