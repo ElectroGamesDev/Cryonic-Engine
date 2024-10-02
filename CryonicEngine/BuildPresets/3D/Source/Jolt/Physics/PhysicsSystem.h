@@ -20,6 +20,7 @@ class JobSystem;
 class StateRecorder;
 class TempAllocator;
 class PhysicsStepListener;
+class SoftBodyContactListener;
 
 /// The main class for the physics system. It contains all rigid bodies and simulates them.
 ///
@@ -47,9 +48,14 @@ public:
 	void						SetBodyActivationListener(BodyActivationListener *inListener) { mBodyManager.SetBodyActivationListener(inListener); }
 	BodyActivationListener *	GetBodyActivationListener() const							{ return mBodyManager.GetBodyActivationListener(); }
 
-	/// Listener that is notified whenever a contact point between two bodies is added/updated/removed
+	/// Listener that is notified whenever a contact point between two bodies is added/updated/removed.
+	/// You can't change contact listener during PhysicsSystem::Update but it can be changed at any other time.
 	void						SetContactListener(ContactListener *inListener)				{ mContactManager.SetContactListener(inListener); }
 	ContactListener *			GetContactListener() const									{ return mContactManager.GetContactListener(); }
+
+	/// Listener that is notified whenever a contact point between a soft body and another body
+	void						SetSoftBodyContactListener(SoftBodyContactListener *inListener) { mSoftBodyContactListener = inListener; }
+	SoftBodyContactListener *	GetSoftBodyContactListener() const							{ return mSoftBodyContactListener; }
 
 	/// Set the function that combines the friction of two bodies and returns it
 	/// Default method is the geometric mean: sqrt(friction1 * friction2).
@@ -67,16 +73,16 @@ public:
 
 	/// Access to the body interface. This interface allows to to create / remove bodies and to change their properties.
 	const BodyInterface &		GetBodyInterface() const									{ return mBodyInterfaceLocking; }
-	BodyInterface &				GetBodyInterface() 											{ return mBodyInterfaceLocking; }
+	BodyInterface &				GetBodyInterface()											{ return mBodyInterfaceLocking; }
 	const BodyInterface &		GetBodyInterfaceNoLock() const								{ return mBodyInterfaceNoLock; } ///< Version that does not lock the bodies, use with great care!
-	BodyInterface & 			GetBodyInterfaceNoLock()									{ return mBodyInterfaceNoLock; } ///< Version that does not lock the bodies, use with great care!
+	BodyInterface &				GetBodyInterfaceNoLock()									{ return mBodyInterfaceNoLock; } ///< Version that does not lock the bodies, use with great care!
 
 	/// Access to the broadphase interface that allows coarse collision queries
 	const BroadPhaseQuery &		GetBroadPhaseQuery() const									{ return *mBroadPhase; }
 
 	/// Interface that allows fine collision queries against first the broad phase and then the narrow phase.
 	const NarrowPhaseQuery &	GetNarrowPhaseQuery() const									{ return mNarrowPhaseQueryLocking; }
-	const NarrowPhaseQuery & 	GetNarrowPhaseQueryNoLock() const							{ return mNarrowPhaseQueryNoLock; } ///< Version that does not lock the bodies, use with great care!
+	const NarrowPhaseQuery &	GetNarrowPhaseQueryNoLock() const							{ return mNarrowPhaseQueryNoLock; } ///< Version that does not lock the bodies, use with great care!
 
 	/// Add constraint to the world
 	void						AddConstraint(Constraint *inConstraint)						{ mConstraintManager.Add(&inConstraint, 1); }
@@ -84,16 +90,21 @@ public:
 	/// Remove constraint from the world
 	void						RemoveConstraint(Constraint *inConstraint)					{ mConstraintManager.Remove(&inConstraint, 1); }
 
-	/// Batch add constraints. Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
+	/// Batch add constraints.
 	void						AddConstraints(Constraint **inConstraints, int inNumber)	{ mConstraintManager.Add(inConstraints, inNumber); }
 
-	/// Batch remove constraints. Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
+	/// Batch remove constraints.
 	void						RemoveConstraints(Constraint **inConstraints, int inNumber)	{ mConstraintManager.Remove(inConstraints, inNumber); }
 
 	/// Get a list of all constraints
 	Constraints					GetConstraints() const										{ return mConstraintManager.GetConstraints(); }
 
 	/// Optimize the broadphase, needed only if you've added many bodies prior to calling Update() for the first time.
+	/// Don't call this every frame as PhysicsSystem::Update spreads out the same work over multiple frames.
+	/// If you add many bodies through BodyInterface::AddBodiesPrepare/AddBodiesFinalize and if the bodies in a batch are
+	/// in a roughly unoccupied space (e.g. a new level section) then a call to OptimizeBroadPhase is also not needed
+	/// as batch adding creates an efficient bounding volume hierarchy.
+	/// Don't call this function while bodies are being modified from another thread or use the locking BodyInterface to modify bodies.
 	void						OptimizeBroadPhase();
 
 	/// Adds a new step listener
@@ -139,7 +150,7 @@ public:
 
 	/// Set gravity value
 	void						SetGravity(Vec3Arg inGravity)								{ mGravity = inGravity; }
-	Vec3		 				GetGravity() const											{ return mGravity; }
+	Vec3						GetGravity() const											{ return mGravity; }
 
 	/// Returns a locking interface that won't actually lock the body. Use with great care!
 	inline const BodyLockInterfaceNoLock &	GetBodyLockInterfaceNoLock() const				{ return mBodyLockInterfaceNoLock; }
@@ -188,6 +199,9 @@ public:
 	/// - During the ContactListener::OnContactRemoved callback this function can be used to determine if this is the last contact pair between the bodies (function returns false) or if there are other contacts still present (function returns true).
 	bool						WereBodiesInContact(const BodyID &inBody1ID, const BodyID &inBody2ID) const { return mContactManager.WereBodiesInContact(inBody1ID, inBody2ID); }
 
+	/// Get the bounding box of all bodies in the physics system
+	AABox						GetBounds() const											{ return mBroadPhase->GetBounds(); }
+
 #ifdef JPH_TRACK_BROADPHASE_STATS
 	/// Trace the accumulated broadphase stats to the TTY
 	void						ReportBroadphaseStats()										{ mBroadPhase->ReportStats(); }
@@ -235,6 +249,9 @@ private:
 	/// Number of constraints to process at once in JobDetermineActiveConstraints
 	static constexpr int		cDetermineActiveConstraintsBatchSize = 64;
 
+	/// Number of constraints to process at once in JobSetupVelocityConstraints, we want a low number of threads working on this so we take fairly large batches
+	static constexpr int		cSetupVelocityConstraintsBatchSize = 256;
+
 	/// Number of bodies to process at once in JobApplyGravity
 	static constexpr int		cApplyGravityBatchSize = 64;
 
@@ -274,7 +291,10 @@ private:
 	/// The broadphase does quick collision detection between body pairs
 	BroadPhase *				mBroadPhase = nullptr;
 
-    /// Simulation settings
+	/// The soft body contact listener
+	SoftBodyContactListener *	mSoftBodyContactListener = nullptr;
+
+	/// Simulation settings
 	PhysicsSettings				mPhysicsSettings;
 
 	/// The contact manager resolves all contacts during a simulation step
