@@ -50,6 +50,13 @@ const static Color MAGENTA = { 255, 0, 255, 255 };
 const static Color SKYBLUE = { 135, 206, 235, 255 };
 const static Color VIOLET = { 238, 130, 238, 255 };
 
+enum BodyType
+{
+    Dynamic,
+    Kinematic,
+    Static
+};
+
 struct Vector2
 {
     float x;

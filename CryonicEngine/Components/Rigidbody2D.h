@@ -7,13 +7,6 @@
 #include "../box2d/box2d.h"
 #endif
 
-enum BodyType
-{
-    Dynamic,
-    Kinematic,
-    Static
-};
-
 class Rigidbody2D : public Component {
 public:
     Rigidbody2D* Clone() override
