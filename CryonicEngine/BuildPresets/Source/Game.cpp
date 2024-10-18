@@ -8,19 +8,25 @@
 #include "ShaderManager.h"
 #include "RaylibModelWrapper.h"
 #include "RaylibWrapper.h"
-#include "CollisionListener2D.h"
-#include "Physics2DDebugDraw.h"
 #include <windows.h>
 #include "imgui_internal.h"
 #include "FontManager.h"
 #include <vector>
 
 #ifdef IS3D
-#include "Jolt/Jolt.h"
+#include "../Jolt/Jolt.h"
+#include "../Jolt/Core/Factory.h"
+#include "../Jolt/Core/TempAllocator.h"
+#include "../Jolt/Core/JobSystemThreadPool.h"
+#include "Component/Rigidbody3D.h"
 JPH_SUPPRESS_WARNINGS
-#endif
+#else
+#include "CollisionListener2D.h"
+#include "Physics2DDebugDraw.h"
 
 b2World* world = nullptr;
+#endif
+
 std::filesystem::path exeParent;
 
 int main(void)
@@ -64,7 +70,35 @@ int main(void)
 
 	FontManager::InitFontManager();
 
-	// Must go before scene loading
+	// Physics setup. Must go before scene loading
+#ifdef IS3D
+	RegisterDefaultAllocator();
+	Factory::sInstance = new Factory();
+	RegisterTypes();
+	TempAllocatorImpl temp_allocator(10 * 1024 * 1024);
+	JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, thread::hardware_concurrency() - 1);
+
+	const uint cMaxBodies = 65536;
+	const uint cNumBodyMutexes = 0;
+	const uint cMaxBodyPairs = 65536;
+	const uint cMaxContactConstraints = 10240;
+
+	BPLayerInterfaceImpl broadPhaseLayerInterface;
+	ObjectVsBroadPhaseLayerFilterImplObjectVsBroadphaseLayerFilter;
+	ObjectLayerPairFilterImpl objectVsObjectLayerFilter;
+
+	PhysicsSystem physicsSystem;
+	physicsSystem.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, broadPhaseLayerInterface, objectVsBroadphaseLayerFilter, objectVsObjectLayerFilter);
+
+	//MyBodyActivationListener bodyActivationListener;
+	//physicsSystem.SetBodyActivationListener(&body_activationListener);
+
+	MyContactListener contactListener;
+	physicsSystem.SetContactListener(&contactListener);
+
+	BodyInterface& bodyInterface = physicsSystem.GetBodyInterface();
+	Rigidbody3D::bodyInterface = physicsSystem.GetBodyInterface();
+#else
 	CollisionListener2D collisionListener;
 	b2Vec2 gravity(0.0f, -9.8f);
 	world = new b2World(gravity);
@@ -72,6 +106,7 @@ int main(void)
 	//Physics2DDebugDraw debugDraw;
 	//debugDraw.SetFlags(b2Draw::e_shapeBit);
 	//world->SetDebugDraw(&debugDraw);
+#endif
 
 	// Shaders must be initiated before scenes/gameobjects
 	ShaderManager::Init();
@@ -80,6 +115,7 @@ int main(void)
 	SceneManager::LoadScene(exeParent / "Resources" / "Assets" / "Scenes" / "Default.scene");
 	SceneManager::SetActiveScene(&SceneManager::GetScenes()->back());
 
+	// Todo: Get this from project settings
 	float timeStep = 1.0f / 60.0f;
 	int32 velocityIterations = 8;
 	int32 positionIterations = 3;
@@ -90,8 +126,12 @@ int main(void)
 		timeSinceLastUpdate += RaylibWrapper::GetFrameTime();
 		while (timeSinceLastUpdate >= timeStep)
 		{
+#ifdef IS3D
+			physicsSystem.Update(timeStep, cCollisionSteps, &temp_allocator, &job_system);
+#else
 			world->Step(timeStep, velocityIterations, positionIterations);
-			collisionListener.ContinueContact();
+			collisionListener.ContinueContact(); // Todo: Should this go after the loop?
+#endif
 			timeSinceLastUpdate -= timeStep;
 
 			fixedDeltaTime = timeStep;
@@ -157,8 +197,10 @@ int main(void)
 
 		ImGui::End();
 
+#ifdef IS2D
 		//world->DebugDraw();
-		
+#endif
+
 		RaylibWrapper::EndMode3D();
 
 		// Render GUI
@@ -182,6 +224,12 @@ int main(void)
 
 	ShaderManager::Cleanup();
     RaylibWrapper::CloseWindow();
+#ifdef IS3D
+	UnregisterTypes();
+	delete Factory::sInstance;
+	Factory::sInstance = nullptr;
+#else
 	delete world;
+#endif
 	return 0;
 }
