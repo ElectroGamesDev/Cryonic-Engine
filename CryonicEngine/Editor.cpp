@@ -3537,6 +3537,13 @@ void OnBuildFinish(int success, bool debug) // 0 = failed, 1 = success, 2 = canc
         if (success == 2)
             ConsoleLogger::InfoLog("Build - Build cancelled");
     }
+
+    if (success == 0)
+    {
+        ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+        if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+            window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+    }
 }
 
 void Editor::Render(void)
