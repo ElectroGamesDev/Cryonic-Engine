@@ -44,6 +44,7 @@ public:
 
     // Hide in API
     bool highlight = false;
+
 private:
     Shape shape;
     bool trigger;

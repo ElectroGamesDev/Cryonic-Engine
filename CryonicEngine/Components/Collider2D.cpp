@@ -322,6 +322,7 @@ Shape Collider2D::GetShape()
 
 void Collider2D::SetTrigger(bool value)
 {
+	trigger = value;
 #if !defined(EDITOR)
 	fixture->SetSensor(value);
 #endif
@@ -330,7 +331,7 @@ void Collider2D::SetTrigger(bool value)
 bool Collider2D::IsTrigger()
 {
 #if !defined(EDITOR)
-	return fixture->IsSensor();
+	return trigger;
 #else
 	return false;
 #endif
