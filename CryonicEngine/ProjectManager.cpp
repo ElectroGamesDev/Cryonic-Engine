@@ -16,6 +16,9 @@
 #include <iostream>
 #include <regex>
 
+#include <cstdio>
+
+
 using json = nlohmann::json;
 
 ProjectData ProjectManager::projectData;
@@ -372,8 +375,42 @@ void CancelBuild()
     ImGuiPopup::SetContent("Cancelling build...");
 }
 
+bool IsProgramInstalled(const char* program)
+{
+    std::array<char, 128> buffer;
+    std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(program, "r"), _pclose);
+
+    if (!pipe)
+    {
+        // Todo: Handle error here
+        return false;
+    }
+
+    if (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)  // If the command does not exist, then it doesnt have an output
+        return true;
+
+    return false;
+
+}
+
 bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::function<void(int, bool)> callback) // Todo: Maybe make a .json format file that contains information like scenes and which scene should be first opened
 {
+    // Check if cmake is installed
+    if (!IsProgramInstalled("cmake --version"))
+    {
+        ConsoleLogger::ErrorLog("Build - Failed due to not having cmake installed. Please install cmake or add it to your environment variables.");
+        callback(0, debug);
+        return false;
+    }
+
+    // Check if MinGW32 is installed
+    if (!IsProgramInstalled("mingw32-make --version"))
+    {
+        ConsoleLogger::ErrorLog("Build - Failed due to not having mingw32-make installed. Please install mingw32-make or add it to your environment variables.");
+        callback(0, debug);
+        return false;
+    }
+
     ImGuiPopup::Create("Building to windows", "Saving scenes...", { {"Cancel", CancelBuild} }, true);
 
     // Backing up and restoring cmake files is completely useless since when cmake files are moved, it breaks incremental builds. Not sure if this is an issue with CMake, or my code.
