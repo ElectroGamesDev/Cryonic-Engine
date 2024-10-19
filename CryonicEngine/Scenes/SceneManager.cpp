@@ -159,7 +159,11 @@ bool SceneManager::SaveScene(Scene* scene)
         else if (file.bad())
         {
             char errorMessage[256];
+#ifdef WINDOWS
             strerror_s(errorMessage, sizeof(errorMessage), errno);
+#else
+            strerror_r(errno, errorMessage, sizeof(errorMessage));
+#endif
             ConsoleLogger::WarningLog("The scene \"" + scene->GetPath().stem().string() + "\" failed to save. Error: " + std::string(errorMessage));
         }
         else if (file.is_open())
@@ -169,7 +173,11 @@ bool SceneManager::SaveScene(Scene* scene)
         else
         {
             char errorMessage[256];
+#ifdef WINDOWS
             strerror_s(errorMessage, sizeof(errorMessage), errno);
+#else
+            strerror_r(errno, errorMessage, sizeof(errorMessage));
+#endif
             ConsoleLogger::WarningLog("The scene \"" + scene->GetPath().stem().string() + "\" failed to save. Error: " + std::string(errorMessage));
         }
         return false;
