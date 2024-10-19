@@ -25,6 +25,16 @@ GameObject::GameObject(int id)
         this->id = 100000 + rand() % 900000; // Todo: Make sure this is always unique
 }
 
+bool GameObject::IsComponentValid(Component* component)
+{
+    return component->valid;
+}
+
+void GameObject::SetComponentGameObject(Component* component)
+{
+    component->gameObject = this;
+}
+
 //Model GameObject::GetModel() const
 //{
 //    return model;

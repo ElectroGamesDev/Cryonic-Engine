@@ -66,15 +66,21 @@ public:
 
     bool IsChild(GameObject& gameObject, GameObject* parent = nullptr);
 
+    // These two functions are used by AddComponent() and AddInternalComponent() since these need to be implemented in the GaemObject.cpp
+    // Hide in API
+    bool IsComponentValid(Component* component);
+    // Hide in API
+    void SetComponentGameObject(Component* component);
+
     template <typename T>
     T* AddComponent() {
         T* newComponent = new T(this, -1);
-        if (!static_cast<Component*>(newComponent)->valid)
+        if (!IsComponentValid(static_cast<Component*>(newComponent)))
         {
             delete newComponent;
             return nullptr;
         }
-        static_cast<Component*>(newComponent)->gameObject = this; // Todo: This may cause a crash if its not a component
+        SetComponentGameObject(static_cast<Component*>(newComponent)); // Todo: This may cause a crash if its not a component
         //Component* componentPtr = static_cast<Component*>(newComponent);
         //if (componentPtr)
         //    componentPtr->gameObject = this;
@@ -107,7 +113,7 @@ public:
     template <typename T>
     T& AddComponentInternal(int id = -1) {
         T* newComponent = new T(this, id);
-        static_cast<Component*>(newComponent)->gameObject = this; // Todo: This may cause a crash if its not a component
+        SetComponentGameObject(static_cast<Component*>(newComponent)); // Todo: This may cause a crash if its not a component
         components.push_back(newComponent);
         return *newComponent;
     }
@@ -116,7 +122,7 @@ public:
     template <typename T>
     T& AddComponent(int id) {
         T* newComponent = new T(this, id);
-        static_cast<Component*>(newComponent)->gameObject = this; // Todo: This may cause a crash if its not a component
+        SetComponentGameObject(static_cast<Component*>(newComponent)); // Todo: This may cause a crash if its not a component
         components.push_back(newComponent);
         return *newComponent;
     }
