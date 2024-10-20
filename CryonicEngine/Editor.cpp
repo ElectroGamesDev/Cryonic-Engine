@@ -1073,8 +1073,15 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     if (assetsPosition != std::string::npos)
                         texturePath = texturePath.string().substr(assetsPosition + 7);
 
+                    std::string texturePathString = texturePath.string();
+                    for (char& c : texturePathString) // Reformatted the path for unix
+                    {
+                        if (c == '\\')
+                            c = '/';
+                    }
+
                     SpriteRenderer& spriteRenderer = gameObject->AddComponentInternal<SpriteRenderer>();
-                    spriteRenderer.exposedVariables[1][0][2] = texturePath.string();
+                    spriteRenderer.exposedVariables[1][0][2] = texturePathString;
                     //spriteRenderer.SetSprite(new Sprite(ProjectManager::projectData.path.string() + "/Assets/" + texturePath.string()));
                     gameObject->AddComponentInternal<Collider2D>(); // Todo: Set to convex/texture type
 
@@ -1510,6 +1517,14 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 {
                     explorerContextMenuOpen = false;
                     std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Canvas", "canvas");
+
+                    std::string filePathString = filePath.string();
+                    for (char& c : filePathString) // Reformatted the path for unix
+                    {
+                        if (c == '\\')
+                            c = '/';
+                    }
+
                     if (filePath != "")
                     {
                         std::ofstream file(filePath);
@@ -1517,7 +1532,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         {
                             nlohmann::json jsonData = {
                                 {"version", 1},
-                                {"path", filePath},
+                                {"path", filePathString},
                                 {"gameobjects", nlohmann::json::array()}
                             };
 
@@ -1791,6 +1806,12 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
         memset(searchBuffer, 0, sizeof(searchBuffer));
         // Setting the scroll here does not work.
         ImGui::SetScrollY(0.0f);
+    }
+
+    for (char& c : selectedFile) // Reformatted the path for unix
+    {
+        if (c == '\\')
+            c = '/';
     }
 
     oldId = id;
@@ -3630,9 +3651,10 @@ void Editor::Render(void)
             if (ImGui::BeginMenu("Build Project"))
             {
                 if (ImGui::MenuItem("Windows", ""))
-                {
                     std::thread(ProjectManager::BuildToWindows, ProjectManager::projectData, false, OnBuildFinish).detach();
-                }
+
+                if (ImGui::MenuItem("Web", ""))
+                    std::thread(ProjectManager::BuildToWeb, ProjectManager::projectData, OnBuildFinish).detach();
                 ImGui::EndMenu();
             }
             ImGui::EndMenu();
