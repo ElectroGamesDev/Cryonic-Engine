@@ -68,7 +68,11 @@ public:
     static void BackupCMakeFiles(std::filesystem::path buildPath, std::filesystem::path backupPath);
     static void RestoreCMakeFiles(std::filesystem::path buildPath, std::filesystem::path backupPath);
     static bool BuildToWindows(ProjectData projectData, bool debug, std::function<void(int, bool)> callback);
+    static bool BuildToWeb(ProjectData projectData, std::function<void(int, bool)> callback);
     static ProjectData LoadProject(std::filesystem::path path);
     
     static ProjectData projectData;
+
+private:
+    static bool PrepareBuild(std::string platform, std::string& projectName, std::filesystem::path& path, std::filesystem::path& originalPath, std::filesystem::path& buildPath, ProjectData& projectData, bool debug, std::function<void(int, bool)>& callback);
 };
