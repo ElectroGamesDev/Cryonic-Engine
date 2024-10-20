@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef WEB
+#include <unordered_set>
+#endif
+
 enum KeyboardKey
 {
     // Alphanumeric keys
@@ -157,6 +161,13 @@ public:
     static bool IsButtonPressed(MouseButton key);
     static bool IsButtonReleased(MouseButton key);
     static bool IsButtonDown(MouseButton key);
+
+    // This is used because mouse inputs don't work on web if the input happens between BeginDrawing() and EndDrawing(). Edit: This has been commented out because it appears to work without it, and the Raylib wiki may be out of date
+//#ifdef WEB
+//    static std::unordered_set<MouseButton> buttonsPressed;
+//    static std::unordered_set<MouseButton> buttonsReleased;
+//    static std::unordered_set<MouseButton> buttonsDown;
+//#endif
 };
 
 

@@ -19,19 +19,39 @@ bool Keyboard::IsKeyDown(KeyboardKey key)
 
 
 // Mouse
+
+// This is used because mouse inputs don't work on web if the input happens between BeginDrawing() and EndDrawing(). Edit: This has been commented out because it appears to work without it, and the Raylib wiki may be out of date
+//#ifdef WEB
+//std::unordered_set<MouseButton> Mouse::buttonsPressed;
+//std::unordered_set<MouseButton> Mouse::buttonsReleased;
+//std::unordered_set<MouseButton> Mouse::buttonsDown;
+//#endif
+
 bool Mouse::IsButtonPressed(MouseButton button)
 {
+//#ifdef WEB
+//	return buttonsPressed.find(button) != buttonsPressed.end();
+//#else
 	return IsMouseButtonPressedWrapper(static_cast<int>(button));
+//#endif
 }
 
 bool Mouse::IsButtonReleased(MouseButton button)
 {
+//#ifdef WEB
+//	return buttonsReleased.find(button) != buttonsReleased.end();
+//#else
 	return IsMouseButtonReleasedWrapper(static_cast<int>(button));
+//#endif
 }
 
 bool Mouse::IsButtonDown(MouseButton button)
 {
+//#ifdef WEB
+//	return buttonsDown.find(button) != buttonsDown.end();
+//#else
 	return IsMouseButtonDownWrapper(static_cast<int>(button));
+//#endif
 }
 
 
