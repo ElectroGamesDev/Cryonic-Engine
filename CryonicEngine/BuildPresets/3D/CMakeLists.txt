@@ -6,6 +6,11 @@ set(CMAKE_C_STANDARD 11)
 
 #set(CMAKE_BUILD_TYPE Debug)
 
+if ("${PLATFORM}" STREQUAL "WEB")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s ALLOW_MEMORY_GROWTH=1 -s GL_ENABLE_GET_PROC_ADDRESS=1")
+  set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -g0")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g0")
@@ -42,6 +47,16 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE IS3D)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE NAME="${PROJECT_NAME}")
 
-target_link_libraries(${PROJECT_NAME} PRIVATE raylib box2d jolt winmm)
+target_compile_definitions(${PROJECT_NAME} PRIVATE ${PLATFORM})
+
+if(${PLATFORM} STREQUAL "WINDOWS")
+    target_link_libraries(${PROJECT_NAME} PRIVATE raylib jolt winmm)
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE raylib jolt)
+endif()
+
+if ("${PLATFORM}" STREQUAL "WEB")
+  target_link_options(${PROJECT_NAME} PUBLIC --preload-file Resources)
+endif()
 
 target_link_options(${PROJECT_NAME} PRIVATE "-mwindows")
