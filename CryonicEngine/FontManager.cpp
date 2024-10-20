@@ -125,7 +125,10 @@ namespace FontManager
 			if (!updatedFont)
 				fonts[font.first][font.second] = io.Fonts->AddFontFromFileTTF(("resources/fonts/" + font.first + ".ttf").c_str(), font.second);
 #else
-			fonts[font.first][font.second] = io.Fonts->AddFontFromFileTTF((exeParent.string() + "/resources/Assets/" + font.first).c_str(), font.second);
+			if (exeParent.empty())
+				fonts[font.first][font.second] = io.Fonts->AddFontFromFileTTF(("resources/Assets/" + font.first).c_str(), font.second);
+			else
+				fonts[font.first][font.second] = io.Fonts->AddFontFromFileTTF((exeParent.string() + "/resources/Assets/" + font.first).c_str(), font.second);
 #endif
 		}
 		unloadedFonts.clear();
