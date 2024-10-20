@@ -47,7 +47,7 @@ namespace FileWatcher
         }
     }
 
-    void CheckIfFileMoved(std::filesystem::path path)
+    void CheckIfFileMoved(std::filesystem::path path) //  This doesn't work well
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
@@ -55,8 +55,8 @@ namespace FileWatcher
         if (it != deletedFiles.end())
         {
             // File was not added, and therefore assumed to not have been moved. Handle deleted files here
-            std::cout << path.string() + " Has been deleted" << std::endl;
             deletedFiles.erase(it);
+            std::cout << path.string() + " Has been deleted" << std::endl;
         }
     }
 
