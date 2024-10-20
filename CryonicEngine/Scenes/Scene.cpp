@@ -86,7 +86,10 @@ GameObject* Scene::SpawnGameObject(std::string path, Vector3 position, Quaternio
 {
     std::filesystem::path newPath = path;
 #if !defined(EDITOR)
-    newPath = std::filesystem::path(exeParent) / "Resources" / "Assets" / newPath;
+    if (exeParent.empty())
+        newPath = "Resources/Assets" / newPath;
+    else
+        newPath = std::filesystem::path(exeParent) / "Resources" / "Assets" / newPath;
 #else
     newPath = ProjectManager::projectData.path / "Assets" / newPath;
 #endif

@@ -20,9 +20,18 @@ class AudioClip
 public:
 	AudioClip(std::string path)
 	{
+		for (char& c : path) // Reformat the path for unix
+		{
+			if (c == '\\')
+				c = '/';
+		}
+
 		std::ifstream file;
 #ifndef EDITOR
-		file.open(std::filesystem::path(exeParent) / "Resources" / "Assets" / std::string(path + ".data"));
+		if (exeParent.empty())
+			file.open("Resources/Assets/" + path + ".data");
+		else
+			file.open(std::filesystem::path(exeParent) / "Resources" / "Assets" / std::string(path + ".data"));
 #endif
 		if (!file.is_open()) // Todo: Instead if the audio file exists, but the data file doesnt, just give it default values
 		{
@@ -36,7 +45,6 @@ public:
 		file.close();
 
 		loadInMemory = jsonData["public"]["loadInMemory"].get<bool>();
-
 #ifndef EDITOR
 		if (loadInMemory)
 		{
@@ -44,7 +52,10 @@ public:
 				sound = &it->second;
 			else
 			{
-				sounds[path] = Raylib::LoadSound((exeParent.string() + "/Resources/Assets/" + path).c_str());
+				if (exeParent.empty())
+					sounds[path] = Raylib::LoadSound(("Resources/Assets/" + path).c_str());
+				else
+					sounds[path] = Raylib::LoadSound((exeParent.string() + "/Resources/Assets/" + path).c_str());
 				sound = &sounds[path];
 			}
 		}

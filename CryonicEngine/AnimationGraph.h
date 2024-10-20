@@ -39,9 +39,18 @@ public:
 
 	AnimationGraph(std::string path)
 	{
+		for (char& c : path) // Reformat the path for unix
+		{
+			if (c == '\\')
+				c = '/';
+		}
+
 		std::ifstream file;
 #ifndef EDITOR
-		file.open(std::filesystem::path(exeParent) / "Resources" / "Assets" / path);
+		if (exeParent.empty())
+			file.open("Resources/Assets/" + path);
+		else
+			file.open(std::filesystem::path(exeParent) / "Resources" / "Assets" / path);
 #endif
 		if (!file.is_open())
 		{

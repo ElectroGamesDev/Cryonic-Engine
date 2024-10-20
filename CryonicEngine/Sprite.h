@@ -26,6 +26,12 @@ public:
 //			return;
 //		}
 
+		for (char& c : path) // Reformatted the path for unix.
+		{
+			if (c == '\\')
+				c = '/';
+		}
+
 		relativePath = path;
 
 		if (path != "Square" && path != "Circle" && path != "None")
@@ -33,7 +39,10 @@ public:
 #if defined(EDITOR)
 			path = ProjectManager::projectData.path.string() + "/Assets/" + path;
 #else
-			path = exeParent.string() + "/Resources/Assets/" + path;
+			if (exeParent.empty())
+				path = "Resources/Assets/" + path;
+			else
+				path = exeParent.string() + "/Resources/Assets/" + path;
 #endif
 
 			if (auto it = textures.find(relativePath); it != textures.end())

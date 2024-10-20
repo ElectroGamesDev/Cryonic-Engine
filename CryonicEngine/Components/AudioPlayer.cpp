@@ -10,7 +10,10 @@ void AudioPlayer::Awake()
 
 	std::filesystem::path path;
 #ifndef EDITOR
-	path = std::filesystem::path(exeParent) / "Resources" / "Assets" / audioClip->GetPath();
+	if (exeParent.empty())
+		path = "Resources/Assets/" + audioClip->GetPath();
+	else
+		path = std::filesystem::path(exeParent) / "Resources" / "Assets" / audioClip->GetPath();
 #endif
 
 	if (this->audioClip->LoadedInMemory())
@@ -115,7 +118,10 @@ void AudioPlayer::SetAudioClip(AudioClip audioClip)
 
 	std::filesystem::path path;
 #ifndef EDITOR
-	path = std::filesystem::path(exeParent) / "Resources" / "Assets" / audioClip.GetPath();
+	if (exeParent.empty())
+		path = "Resources/Assets/" + audioClip.GetPath();
+	else
+		path = std::filesystem::path(exeParent) / "Resources" / "Assets" / audioClip.GetPath();
 #endif
 
 	if (path.string().empty() || path.string() == "nullptr") // It may be "nullptr" if no audio clip was set in the properties
@@ -175,7 +181,10 @@ void AudioPlayer::Play(AudioClip audioClip)
 {
 	std::filesystem::path path;
 #ifndef EDITOR
-	path = std::filesystem::path(exeParent) / "Resources" / "Assets" / audioClip.GetPath();
+	if (exeParent.empty())
+		path = "Resources/Assets/" + audioClip.GetPath();
+	else
+		path = std::filesystem::path(exeParent) / "Resources" / "Assets" / audioClip.GetPath();
 #endif
 	if (audioClip.GetPath().empty() || audioClip.GetPath() == "nullptr" || !std::filesystem::exists(path)) // It may be "nullptr" if no audio clip was set in the properties
 	{
