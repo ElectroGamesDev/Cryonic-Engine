@@ -112,8 +112,13 @@ bool SceneManager::SaveScene(Scene* scene)
             }
             else if (dynamic_cast<ScriptComponent*>(component))
             {
-                componentData["cpp_path"] = dynamic_cast<ScriptComponent*>(component)->GetCppPath();
-                componentData["header_path"] = dynamic_cast<ScriptComponent*>(component)->GetHeaderPath();
+                auto formatPathForUnix = [](std::string path) {
+                    std::replace(path.begin(), path.end(), '\\', '/');
+                    return path;
+                };
+
+                componentData["cpp_path"] = formatPathForUnix(dynamic_cast<ScriptComponent*>(component)->GetCppPath().string());
+                componentData["header_path"] = formatPathForUnix(dynamic_cast<ScriptComponent*>(component)->GetHeaderPath().string());
             }
 
             componentsData.push_back(componentData);
