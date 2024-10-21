@@ -269,13 +269,23 @@ struct Vector4 {
     }
 
     Vector4 operator*(const Vector4& other) const {
-        return { x * other.x, y * other.y, z * other.z, w * other.w };
+        //return { x * other.x, y * other.y, z * other.z, w * other.w };
+        Vector4 result = { 0 };
+
+        float qax = x, qay = y, qaz = z, qaw = w;
+        float qbx = other.x, qby = other.y, qbz = other.z, qbw = other.w;
+
+        result.x = qax * qbw + qaw * qbx + qay * qbz - qaz * qby;
+        result.y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
+        result.z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
+        result.w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
+
+        return result;
     }
 
     Vector4 operator/(float scalar) const {
-        if (scalar != 0.0f) {
+        if (scalar != 0.0f)
             return { x / scalar, y / scalar, z / scalar, w / scalar };
-        }
         else
             return { 0.0f, 0.0f, 0.0f, 0.0f }; // Todo: Send error
     }
@@ -322,10 +332,14 @@ struct Vector4 {
     }
 
     Vector4& operator*=(const Vector4& other) {
-        x *= other.x;
-        y *= other.y;
-        z *= other.z;
-        w *= other.w;
+        float qax = x, qay = y, qaz = z, qaw = w;
+        float qbx = other.x, qby = other.y, qbz = other.z, qbw = other.w;
+
+        x = qax * qbw + qaw * qbx + qay * qbz - qaz * qby;
+        y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
+        z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
+        w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
+
         return *this;
     }
 
@@ -356,8 +370,9 @@ struct Vector4 {
 typedef Vector4 Quaternion;
 
 Vector3 RotateVector3ByQuaternion(Vector3 vector, Quaternion quaternion);
-Quaternion EulerToQuaternion(float pitch, float yaw, float roll);
-//Returns Vector3 in Radians.
+Quaternion EulerToQuaternion(float roll, float pitch, float yaw);
+// Returns Vector3 in Radians.
 Vector3 QuaternionToEuler(Quaternion quaternion);
+void NormalizeEuler(Vector3& euler);
 float GetDeltaTime();
 float GetFixedDeltaTime();
