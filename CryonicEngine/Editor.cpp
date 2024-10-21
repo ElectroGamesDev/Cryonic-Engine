@@ -3544,7 +3544,7 @@ void OnBuildFinish(int success, bool debug) // 0 = failed, 1 = success, 2 = canc
     if (debug)
     {
         if (success == 1)
-            Utilities::OpenPathInExplorer(ProjectManager::projectData.path / "Internal" / "Builds" / "Debug" / (ProjectManager::projectData.name + ".exe"));
+            Utilities::OpenPathInExplorer(ProjectManager::projectData.path / "Internal" / "Builds" / "Windows" / "Debug" / (ProjectManager::projectData.name + ".exe"));
         else if (success == 0)
             ConsoleLogger::ErrorLog("Failed to enter play mode.");
     }
