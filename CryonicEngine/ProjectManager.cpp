@@ -462,7 +462,7 @@ bool ProjectManager::PrepareBuild(std::string platform, std::string& projectName
         std::filesystem::remove_all(buildPath / "3D");
         std::filesystem::remove_all(buildPath / "2D");
 
-        std::filesystem::copy(buildPath / platform, buildPath / "Source", std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
+        std::filesystem::copy(buildPath / platform, buildPath, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
         std::filesystem::remove_all(buildPath / "Windows");
         std::filesystem::remove_all(buildPath / "Web");
 
@@ -1279,7 +1279,7 @@ bool ProjectManager::BuildToWeb(ProjectData projectData, std::function<void(int,
 
         for (const auto& file : std::filesystem::directory_iterator(buildPath))
         {
-            if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile" && file.path().filename().string() != "Resources")
+            if (file.path().filename().string() != "CMakeFilesBackup" && file.path().filename().string() != "CMakeFiles" && file.path().filename().string() != "cmake_install.cmake" && file.path().filename().string() != "CMakeCache.txt" && file.path().filename().string() != "CMakeLists.txt" && file.path().filename().string() != "Makefile" && file.path().filename().string() != "Resources" && file.path().filename().string() != "Template.html")
             {
                 //if (std::filesystem::exists(path / file.path().filename()))
                 //    std::filesystem::remove_all(path / file.path().filename());
