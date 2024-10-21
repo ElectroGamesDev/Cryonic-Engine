@@ -2323,8 +2323,9 @@ void Editor::RenderScriptCreateWin()
                 return;
             }
             std::filesystem::path miscPath = std::filesystem::path(__FILE__).parent_path() / "resources" / "misc";
-            std::filesystem::copy_file(miscPath / "ScriptPreset.h", fileExplorerPath / (name + ".h"));
-            std::filesystem::copy_file(miscPath / "ScriptPreset.cpp", fileExplorerPath / (name + ".cpp"));
+            std::string presetType = ProjectManager::projectData.is3D ? "3D" : "2D";
+            std::filesystem::copy_file(miscPath / ("ScriptPreset " + presetType + ".h"), fileExplorerPath / (name + ".h"));
+            std::filesystem::copy_file(miscPath / ("ScriptPreset " + presetType + ".cpp"), fileExplorerPath / (name + ".cpp"));
 
             // Replace "ScriptPreset" with the script name in the .cpp and .h
             auto ReplaceInFile = [&name](const std::filesystem::path& filePath) {
