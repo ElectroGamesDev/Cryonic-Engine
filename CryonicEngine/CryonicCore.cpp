@@ -16,16 +16,16 @@ Vector3 RotateVector3ByQuaternion(Vector3 vector, Quaternion quaternion)
 }
 
 // Todo: Make this take in degrees instaed of radios. Will need to update all code using this function
-Quaternion EulerToQuaternion(float pitch, float yaw, float roll)
+Quaternion EulerToQuaternion(float roll, float pitch, float yaw)
 {
     Quaternion result = { 0 };
 
-    float x0 = cosf(pitch * 0.5f);
-    float x1 = sinf(pitch * 0.5f);
-    float y0 = cosf(yaw * 0.5f);
-    float y1 = sinf(yaw * 0.5f);
-    float z0 = cosf(roll * 0.5f);
-    float z1 = sinf(roll * 0.5f);
+    float x0 = cosf(roll * 0.5f);
+    float x1 = sinf(roll * 0.5f);
+    float y0 = cosf(pitch * 0.5f);
+    float y1 = sinf(pitch * 0.5f);
+    float z0 = cosf(yaw * 0.5f);
+    float z1 = sinf(yaw * 0.5f);
 
     result.x = x1 * y0 * z0 - x0 * y1 * z1;
     result.y = x0 * y1 * z0 + x1 * y0 * z1;
@@ -57,7 +57,20 @@ Vector3 QuaternionToEuler(Quaternion quaternion)
     float z1 = 1.0f - 2.0f * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
     result.z = atan2f(z0, z1);
 
+    // Normalize euler angles
+    //static float max = 6.2831853072f;
+    //result.x = fmod(fmod(result.x, max) + max, max);
+    //result.y = fmod(fmod(result.y, max) + max, max);
+    //result.z = fmod(fmod(result.z, max) + max, max);
+
     return result;
+}
+
+void NormalizeEuler(Vector3& euler)
+{
+    euler.x = ((int)euler.x % 360 + 360) % 360;
+    euler.y = ((int)euler.y % 360 + 360) % 360;
+    euler.z = ((int)euler.z % 360 + 360) % 360;
 }
 
 float GetDeltaTime()
