@@ -187,7 +187,13 @@ public:
         void MoveLocalPosition(Vector2 displacement) { SetLocalPosition(Vector2(GetLocalPosition().x + displacement.x, GetLocalPosition().y + displacement.y)); };
         void MoveLocalPosition(float x, float y) { MoveLocalPosition(Vector2(x, y)); };
 
-        void SetRotation(Quaternion rotation) { _rotation = rotation; }
+        void SetRotation(Quaternion rotation)
+        {
+#ifdef EDITOR
+            eulerRotation = QuaternionToEuler(rotation) * RAD2DEG;
+#endif
+            _rotation = rotation;
+        }
         Quaternion GetRotation() { return _rotation; }
 
         /**
@@ -195,39 +201,118 @@ public:
         */
         void SetRotationEuler(Vector3 rotation)
         {
+#ifdef EDITOR
+            eulerRotation = rotation;
+            NormalizeEuler(eulerRotation);
+#endif
             for (GameObject* child : gameObject->childGameObjects)
                 child->transform.SetRotationEuler(child->transform.GetLocalRotationEuler() + rotation);
 
             _rotation = EulerToQuaternion((float)rotation.x * DEG2RAD, rotation.y * DEG2RAD, rotation.z * DEG2RAD);
         }
-        void SetRotationEuler(Vector2 rotation) { SetRotationEuler({ rotation.x, rotation.y, QuaternionToEuler(_rotation).z * RAD2DEG}); }
+        /**
+        Set the game object's rotation in degrees
+        */
+        void SetRotationEuler(Vector2 rotation)
+        {
+#ifdef EDITOR
+            SetRotationEuler({ rotation.x, rotation.y, eulerRotation.z });
+#else
+            SetRotationEuler({ rotation.x, rotation.y, QuaternionToEuler(_rotation).z * RAD2DEG });
+#endif
+        }
         /**
         Set the game object's rotation in degrees
         */
         void SetRotationEuler(float x, float y, float z) { SetRotationEuler({ x, y, z }); }
-        void SetRotationEuler(float x, float y) { SetRotationEuler({ x, y, QuaternionToEuler(_rotation).z * RAD2DEG }); }
+        /**
+        Set the game object's rotation in degrees
+        */
+        void SetRotationEuler(float x, float y) { SetRotationEuler(Vector2(x, y)); }
         /**
         Get the game object's rotation in degrees
         @return Vector3 euler of the rotation
         */
-        Vector3 GetRotationEuler() { return QuaternionToEuler(_rotation) * RAD2DEG; }
+        Vector3 GetRotationEuler()
+        {
+#ifdef EDITOR
+            return eulerRotation;
+#else
+            return QuaternionToEuler(_rotation) * RAD2DEG;
+#endif
+        }
 
         /**
         Set the game object's local rotation in degrees
         */
-        // { gameObject->parentGameObject == nullptr ? _scale = scale : _scale = (gameObject->parentGameObject->transform._scale - scale); }
-        void SetLocalRotationEuler(Vector3 rotation) { gameObject->parentGameObject == nullptr ? SetRotationEuler({ rotation.x, rotation.y, rotation.z}) : SetRotationEuler({ gameObject->parentGameObject->transform.GetRotationEuler() + (rotation.x, rotation.y, rotation.z) }); }
-        void SetLocalRotationEuler(Vector2 rotation) { SetLocalRotationEuler({ rotation.x, rotation.y, QuaternionToEuler(_rotation).z * RAD2DEG }); }
+        void SetLocalRotationEuler(Vector3 rotation)
+        {
+            gameObject->parentGameObject == nullptr
+                ? SetRotationEuler(rotation)
+                : SetRotationEuler({ gameObject->parentGameObject->transform.GetRotationEuler() + rotation });
+        }
+        /**
+        Set the game object's local rotation in degrees
+        */
+        void SetLocalRotationEuler(Vector2 rotation)
+        {
+#ifdef EDITOR
+            SetLocalRotationEuler( {rotation.x, rotation.y, eulerRotation.z} );
+#else
+            SetLocalRotationEuler({ rotation.x, rotation.y, QuaternionToEuler(_rotation).z * RAD2DEG });
+#endif
+        }
         /**
         Set the game object's local rotation in degrees
         */
         void SetLocalRotationEuler(float x, float y, float z) { SetLocalRotationEuler({ x, y, z }); }
-        void SetLocalRotationEuler(float x, float y) { SetLocalRotationEuler({ x, y,  QuaternionToEuler(_rotation).z * RAD2DEG }); }
+        /**
+        Set the game object's local rotation in degrees
+        */
+        void SetLocalRotationEuler(float x, float y) { SetLocalRotationEuler(Vector2(x, y)); }
         /**
         Get the game object's local rotation in degrees
         @return Vector3 euler of the rotation
         */
-        Vector3 GetLocalRotationEuler() { return gameObject->parentGameObject == nullptr ? QuaternionToEuler(_rotation) * RAD2DEG : ((QuaternionToEuler(_rotation) * RAD2DEG) - (QuaternionToEuler(gameObject->parentGameObject->transform._rotation) * RAD2DEG)); }
+        Vector3 GetLocalRotationEuler()
+        {
+            return gameObject->parentGameObject == nullptr
+                ? GetRotationEuler()
+                : (GetRotationEuler() - gameObject->parentGameObject->transform.GetRotationEuler());
+        }
+
+        /**
+        Rotates the game object by the specified Euler angles in degrees.
+        */
+        void Rotate(Vector3 euler)
+        {
+#ifdef EDITOR
+            eulerRotation += euler;
+            NormalizeEuler(eulerRotation);
+#endif
+            for (GameObject* child : gameObject->childGameObjects)
+                child->transform.Rotate(euler);
+
+            _rotation *= EulerToQuaternion(euler.x * DEG2RAD, euler.y * DEG2RAD, euler.z * DEG2RAD);
+            //euler += QuaternionToEuler(_rotation);
+            //_rotation = EulerToQuaternion(euler.x * DEG2RAD, euler.y * DEG2RAD, euler.z * DEG2RAD); // Todo: It would be best to convert euler to a quaternion, then add the two quaternions
+        }
+
+        /**
+        Rotates the game object by the specified Euler angles in degrees.
+        */
+        void Rotate(Vector2 euler) { Rotate({ euler.x, euler.y, 0 }); }
+
+        /**
+        Rotates the game object by the specified Euler angles in degrees.
+        */
+        void Rotate(float x, float y, float z) { Rotate({ x, y, z }); }
+
+        /**
+        Rotates the game object by the specified Euler angles in degrees.
+        */
+        void Rotate(float x, float y) { Rotate(Vector2(x, y)); }
+
 
         void SetScale(Vector3 scale)
         { 
@@ -278,6 +363,7 @@ public:
     private:
         Vector3 _position = { 0,0,0 };
         Quaternion _rotation = Quaternion::Identity();
+        Vector3 eulerRotation = { 0,0,0 }; // Used only in the editor
         Vector3 _scale = { 1,1,1 };
     };
     Transform transform;
