@@ -56,7 +56,10 @@ else()
 endif()
 
 if ("${PLATFORM}" STREQUAL "WEB")
-  target_link_options(${PROJECT_NAME} PUBLIC --preload-file Resources)
+  target_link_options(${PROJECT_NAME} PUBLIC
+    --preload-file Resources
+    --shell-file Template.html
+  )
 endif()
 
 target_link_options(${PROJECT_NAME} PRIVATE "-mwindows")
