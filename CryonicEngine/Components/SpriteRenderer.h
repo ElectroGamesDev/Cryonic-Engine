@@ -65,12 +65,14 @@ public:
 	}
 	// Hide everything from API
 	void Awake() override;
-	void Update() override;
+	void Start() override;
 #if defined(EDITOR)
 	void EditorUpdate() override;
 #endif
 	void Destroy() override;
+	static void Render();
 
+	void SortSpriteRenderers();
 	void SetSprite(Sprite* sprite);
 	Sprite* GetSprite();
 	void SetTint(Color tint);
@@ -95,6 +97,8 @@ private:
 #if defined(EDITOR)
 	bool setup = false;
 #endif
+	static std::vector<SpriteRenderer*> spriteRenderers;
+	static bool sorted;
 	//std::pair<Texture2D, int>* texture = nullptr;
 	//std::filesystem::path texturePath;
 };

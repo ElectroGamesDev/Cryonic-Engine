@@ -502,6 +502,8 @@ void Editor::UpdateViewport()
         }
     }
 
+    SpriteRenderer::Render();
+
     switch (dragData.first)
     {
     case ImageFile:
@@ -2466,6 +2468,8 @@ void Editor::RenderCameraView()
                 component->Update();
         }
     }
+
+    SpriteRenderer::Render();
 
     RaylibWrapper::EndMode3D();
     RaylibWrapper::EndTextureMode();

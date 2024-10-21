@@ -4,6 +4,7 @@
 #include "Scenes/SceneManager.h"
 #include "Components/Component.h"
 #include "Components/CameraComponent.h"
+#include "Components/SpriteRenderer.h"
 #include "AudioClip.h"
 #include "ShaderManager.h"
 #include "RaylibModelWrapper.h"
@@ -260,6 +261,8 @@ void MainLoop()
 				component->RenderGui();
 		}
 	}
+
+	SpriteRenderer::Render();
 
 	ImGui::End();
 
