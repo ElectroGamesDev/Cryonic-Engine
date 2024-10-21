@@ -76,7 +76,7 @@ public:
 	{
 #if defined(EDITOR)
  		// This wont work since some of the code checks GetTexture() to see if a texture is loaded every frame.
-		if (texture->first == nullptr) // Texture will be nullptr if the Sprite gets reloaded.
+		if (texture && !texture->first) // Texture will be nullptr if the Sprite gets reloaded.
 		{
 			auto it = textures.find(relativePath);
 			if (it != textures.end())
@@ -96,7 +96,7 @@ public:
 			}
 		}
 #endif
-		return (texture == nullptr) ? nullptr : texture->first;
+		return texture ? texture->first : nullptr;
 	};
 
 	// Hide in API
