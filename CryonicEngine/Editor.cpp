@@ -3458,9 +3458,9 @@ void Editor::RenderHierarchy()
                 if (objectInHierarchyContextMenu != nullptr)
                 {
                     gameObject->SetParent(objectInHierarchyContextMenu);
-                    gameObject->transform.SetLocalPosition({0,0,0});
+                    gameObject->transform.SetLocalPosition({ 0,0,0 });
                     gameObject->transform.SetLocalRotationEuler({ 0,0,0 });
-                    gameObject->transform.SetLocalScale({ 0,0,0 });
+                    gameObject->transform.SetLocalScale({ 1,1,1 });
                 }
 
                 //if (selectedObject != nullptr)
