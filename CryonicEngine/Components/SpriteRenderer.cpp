@@ -17,7 +17,6 @@ void SpriteRenderer::Awake()
 
 void SpriteRenderer::SortSpriteRenderers()
 {
-    ConsoleLogger::ErrorLog("SORTED");
     std::sort(spriteRenderers.begin(), spriteRenderers.end(), [](const SpriteRenderer* a, const SpriteRenderer* b) {
         return a->GetRenderOrder() < b->GetRenderOrder();
         });
