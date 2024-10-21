@@ -77,23 +77,51 @@ public:
     // Hide In API
     virtual Component* Clone() { return nullptr; };
 
+    // Called once when the game object or component is first created
     virtual void Awake() {}
+
+    // Called after Awake() and before the first frame update
     virtual void Start() {};
+
+    // Called once per frame to update game logic
     virtual void Update() {};
+
+    // Called at fixed time intervals for physics-related game logic
     virtual void FixedUpdate() {};
+
+    // Called once per frame within the editor
     virtual void EditorUpdate() {};
+
+    // Called once per frame to handle GUI rendering
     virtual void RenderGui() {};
+
+    // Called when the game object or component is destroyed, or the scene is unloaded
     virtual void Destroy() {};
+
     // Called when the component or gameobject is enabled/activated
     virtual void Enable() {};
+
     // Called when the component or gameobject is disabled/deactivated
     virtual void Disable() {};
+
+    // Called when the object starts colliding with another 2D collider
     virtual void OnCollisionEnter2D(Collider2D* other) {};
+
+    // Called when the object stops colliding with another 2D collider
     virtual void OnCollisionExit2D(Collider2D* other) {};
+
+    // Called every frame while the object is colliding with another 2D collider
     virtual void OnCollisionStay2D(Collider2D* other) {};
+
+    // Called when the object starts colliding with another 3D collider
     virtual void OnCollisionEnter3D(Collider3D* other) {};
+
+    // Called when the object stops colliding with another 3D collider
     virtual void OnCollisionExit3D(Collider3D* other) {};
+
+    // Called every frame while the object is colliding with another 3D collider
     virtual void OnCollisionStay3D(Collider3D* other) {};
+
 
     GameObject* gameObject;
 };
