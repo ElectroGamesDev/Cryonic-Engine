@@ -100,20 +100,20 @@ void SpriteRenderer::Update()
             { 0, 0, static_cast<float>(texture->width) * xFlip, static_cast<float>(texture->height) * yFlip },
             { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, texture->width * gameObject->transform.GetScale().x / 10, texture->height* gameObject->transform.GetScale().y / 10 },
             { texture->width * gameObject->transform.GetScale().x / 10 / 2, texture->height * gameObject->transform.GetScale().y / 10 / 2 },
-            gameObject->transform.GetRotationEuler().y,
+            gameObject->transform.GetRotationEuler().z,
             { tint.r, tint.g, tint.b, tint.a });
     }
     else if (sprite->GetPath() == "Square")
     {
         Vector3 position = gameObject->transform.GetPosition();
         Vector3 scale = gameObject->transform.GetScale();
-        //DrawRectangleWrapper(position.x, position.y, scale.x, scale.y, gameObject->transform.GetRotationEuler().y, tint.r, tint.g, tint.b, tint.a);
+        //DrawRectangleWrapper(position.x, position.y, scale.x, scale.y, gameObject->transform.GetRotationEuler().z, tint.r, tint.g, tint.b, tint.a);
         RaylibWrapper::DrawRectangleProFlipped({ position.x, position.y, scale.x * 3, scale.y * 3 },
             {
                 scale.x * 3 / 2,
                 scale.y * 3 / 2
             },
-            gameObject->transform.GetRotationEuler().y,
+            gameObject->transform.GetRotationEuler().z,
             { tint.r, tint.g, tint.b, tint.a });
     }
     else if (sprite->GetPath() == "Circle")

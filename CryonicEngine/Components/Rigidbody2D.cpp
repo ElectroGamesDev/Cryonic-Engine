@@ -316,7 +316,7 @@ void Rigidbody2D::Update() // Todo: should this be in the Physics Update?
         else if (DEG2RAD * gameObject->transform.GetRotation().y != body->GetTransform().q.GetAngle())
         {
             body->SetAwake(true);
-            body->SetTransform(body->GetPosition(), DEG2RAD * gameObject->transform.GetRotationEuler().y);
+            body->SetTransform(body->GetPosition(), DEG2RAD * gameObject->transform.GetRotationEuler().z);
         }
     }
     else if (bodyType == Kinematic)
@@ -337,7 +337,7 @@ void Rigidbody2D::Update() // Todo: should this be in the Physics Update?
         //if (gameObject->transform.GetRotation() == lastGameObjectRotation) // Todo: This shouldn't be setting the gameobject's rotation even when the body hasn't changed
         //    gameObject->transform.SetRotationEuler({ 0, body->GetAngle() * RAD2DEG, 0 });
         //else if (DEG2RAD * gameObject->transform.GetRotation().y != body->GetTransform().q.GetAngle())
-        //    body->SetTransform(body->GetPosition(), DEG2RAD * gameObject->transform.GetRotationEuler().y);
+        //    body->SetTransform(body->GetPosition(), DEG2RAD * gameObject->transform.GetRotationEuler().z);
     }
     else if (bodyType == Static)
     {

@@ -150,7 +150,7 @@ void Collider3D::Highlight(Color color, bool highlightChildren)
 	{
 		RaylibWrapper::DrawRectangleOutline({ position.x + offset.x, position.y + offset.y, scale.x * 3 * size.x, scale.y * 3 * size.y },
 			{ scale.x * 3 * size.x / 2, scale.y * 3 * size.y / 2 },
-			gameObject->transform.GetRotationEuler().y,
+			gameObject->transform.GetRotationEuler().z,
 			0.1f,
 			{ color.r, color.g, color.b, color.a });
 	}
