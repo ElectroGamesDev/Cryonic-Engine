@@ -112,7 +112,7 @@ void SpriteRenderer::Render()
     for (SpriteRenderer* spriteRenderer : spriteRenderers)
     {
         if (!spriteRenderer || !spriteRenderer->sprite || !spriteRenderer->gameObject->IsActive() || !spriteRenderer->gameObject->IsGlobalActive() || !spriteRenderer->IsActive())
-            return;
+            continue;
 
         // Todo: I should create an enum to store whether if its a sqaure, circle, etc, if its a shape. It will be faster than comparing strings in an if-else
         if (spriteRenderer->sprite->GetTexture() != nullptr)
