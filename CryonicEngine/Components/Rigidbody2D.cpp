@@ -105,9 +105,7 @@ void Rigidbody2D::Enable()
         Collider2D* collider = dynamic_cast<Collider2D*>(component);
         if (collider)
         {
-#if !defined(EDITOR)
             collider->SetRigidbody(this);
-#endif
             colliders.push_back(collider);
         }
     }
@@ -115,13 +113,13 @@ void Rigidbody2D::Enable()
 
 void Rigidbody2D::Disable()
 {
-#if !defined(EDITOR)
-    body->SetEnabled(false);
-#endif
-
     for (Collider2D* collider : colliders)
         collider->RemoveRigidbody();
     colliders.clear();
+
+#if !defined(EDITOR)
+    body->SetEnabled(false);
+#endif
 }
 
 void Rigidbody2D::SetPosition(Vector2 position)
