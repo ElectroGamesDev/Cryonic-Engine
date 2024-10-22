@@ -2205,6 +2205,41 @@ void Editor::RenderProjectSettings()
             }
         };
 
+        auto renderFileSelector = [](const char* label, std::string type, std::vector<std::string> extensions, std::string& value) {
+            static std::string renderSelector = "";
+
+            ImGui::Text("%s", label);
+            ImGui::SameLine();
+            ImVec2 pos = ImGui::GetCursorPos();
+            if (ImGui::Button((value + "##" + std::string(label)).c_str(), { ImGui::CalcTextSize(value.c_str()).x + 20, 20 }))
+            {
+                renderSelector = label;
+
+                if (ProjectManager::projectData.defaultScenePath != "None" && !std::filesystem::exists(ProjectManager::projectData.path / "Assets" / ProjectManager::projectData.defaultScenePath))
+                {
+                    ProjectManager::projectData.defaultScenePath = "None";
+                    ProjectManager::SaveProjectData(ProjectManager::projectData);
+                }
+            }
+
+            if (renderSelector.empty())
+                return;
+
+            int id = 1;
+            for (char c : std::string(label))
+                id *= 31 + c;
+            std::string selectedFile = RenderFileSelector(id, "Scene", type, extensions, { pos.x + 235, pos.y - 40 });
+            // If NULL was returned, or if None was returned, then close the window with no changes
+            if (selectedFile == "NULL" || selectedFile == "None")
+                renderSelector = "";
+            else if (!selectedFile.empty())
+            {
+                value = selectedFile;
+                ProjectManager::SaveProjectData(ProjectManager::projectData);
+                renderSelector = "";
+            }
+        };
+
         auto RenderComboBox = [](const char* label, int& currentItem, const char* items[], int itemCount, float width = 100.0f) {
             ImGui::Text("%s", label);
             ImGui::SameLine();
@@ -2253,6 +2288,10 @@ void Editor::RenderProjectSettings()
             RenderInputField("Author", authorBuffer, sizeof(authorBuffer), [](const char* value) { ProjectManager::projectData.author = value; }, 100.0f);
             RenderInputField("Version", versionBuffer, sizeof(versionBuffer), [](const char* value) { ProjectManager::projectData.version = value; }, 50.0f);
             RenderInputField("Icon Path", iconPathBuffer, sizeof(iconPathBuffer), [](const char* value) { ProjectManager::projectData.iconPath = value; }, 200.0f);
+            });
+
+        RenderSection("Builds", [&]() {
+            renderFileSelector("Default Scene", "Scene", { ".scene" }, ProjectManager::projectData.defaultScenePath);
             });
 
         RenderSection("Window Settings", [&]() {
@@ -3569,6 +3608,8 @@ void OnBuildFinish(int success, bool debug) // 0 = failed, 1 = success, 2 = canc
         ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
         if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
             window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+        ImGui::SetScrollY(window, window->ContentSize.y);
     }
 }
 

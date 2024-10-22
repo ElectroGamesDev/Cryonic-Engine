@@ -356,7 +356,10 @@ bool ProjectManager::SetGameSettings(std::filesystem::path gameFile)
             }
             outputFile << "RaylibWrapper::SetConfigFlags(" + flags + ");";
         }
-
+        else if (line.find("SceneManager::LoadScene(\"Resources/Assets/Scenes/Default.scene\");") != std::string::npos)
+            outputFile << "SceneManager::LoadScene(\"Resources/Assets/" + projectData.defaultScenePath + "\");";
+        else if (line.find("SceneManager::LoadScene(exeParent / \"Resources\" / \"Assets\" / \"Scenes\" / \"Default.scene\");") != std::string::npos)
+            outputFile << "SceneManager::LoadScene(exeParent / \"Resources\" / \"Assets\" / \"" + projectData.defaultScenePath + "\");";
         else
             outputFile << line << '\n';
     }
@@ -395,6 +398,19 @@ bool IsProgramInstalled(const char* program)
 
 bool ProjectManager::PrepareBuild(std::string platform, std::string& projectName, std::filesystem::path& outputPath, std::filesystem::path& originalPath, std::filesystem::path& buildPath, ProjectData& projectData, bool debug, std::function<void(int, bool)>& callback) // General build function. Used in BuildToWindows() and BuildToWeb()
 {
+    if (projectData.defaultScenePath == "None" || !std::filesystem::exists(projectData.path / "Assets" / projectData.defaultScenePath))
+    {
+        if (projectData.defaultScenePath != "None")
+        {
+            projectData.defaultScenePath = "None";
+            SaveProjectData(projectData);
+        }
+        ConsoleLogger::ErrorLog("Build - Build failed. Invalid default scene. Please set a valid default scene in the Project Settings.");
+        callback(0, debug);
+        return false;
+    }
+
+
     ImGuiPopup::Create("Building to " + platform, "Saving scenes...", { {"Cancel", CancelBuild} }, true);
 
     // Backing up and restoring cmake files is completely useless since when cmake files are moved, it breaks incremental builds. Not sure if this is an issue with CMake, or my code.
@@ -1340,6 +1356,8 @@ void ProjectManager::SaveProjectData(ProjectData projectData) // Todo: Encode Fi
     projectDataJson["author"] = projectData.author;
     projectDataJson["version"] = projectData.version;
 
+    projectDataJson["defaultScene"] = projectData.defaultScenePath;
+
     projectDataJson["resizableWindow"] = projectData.resizableWindow;
     projectDataJson["displayMode"] = projectData.displayMode;
     projectDataJson["minimumResolution"] = nlohmann::json::array();
@@ -1475,6 +1493,14 @@ ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) /
     }
     catch (const std::exception& e) {
         projectData.version = "1.0";
+        saveProjectData = true;
+    }
+
+    try {
+        projectData.defaultScenePath = projectDataJson.at("defaultScene").get<std::string>();
+    }
+    catch (const std::exception& e) {
+        projectData.defaultScenePath = "Scenes/Default.scene";
         saveProjectData = true;
     }
 

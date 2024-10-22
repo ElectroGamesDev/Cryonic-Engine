@@ -35,6 +35,9 @@ struct ProjectData
     bool is3D;
     std::string iconPath;
 
+    // Build
+    std::string defaultScenePath;
+
     // Window Settings
     bool resizableWindow = false;
     int displayMode = 0; // 0 = borderless window, 1 = fullscreen, 2 = windowed
