@@ -1,6 +1,8 @@
 #include "Component.h"
 #include "../ConsoleLogger.h"
 
+std::vector<Component*> Component::markedForDeletion;
+
 Component::Component(GameObject* obj, int id)
     : gameObject(obj), id(id)
 {

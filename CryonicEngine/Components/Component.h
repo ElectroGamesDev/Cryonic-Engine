@@ -122,6 +122,8 @@ public:
     // Called every frame while the object is colliding with another 3D collider
     virtual void OnCollisionStay3D(Collider3D* other) {};
 
+    // Hide in API
+    static std::vector<Component*> markedForDeletion;
 
     GameObject* gameObject;
 };

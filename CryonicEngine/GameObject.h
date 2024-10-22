@@ -368,6 +368,11 @@ public:
     };
     Transform transform;
 
+    // Hide in API
+    static std::vector<GameObject*> markedForDeletion;
+    // Hide in API
+    static bool markForDeletion;
+
 private:
     //Model model;
     //std::filesystem::path modelPath;

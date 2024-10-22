@@ -247,7 +247,7 @@ void MainLoop()
 	ImGui::Begin("##Game", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
 	// Call components Update()
-	// Not sure if I should use a range-based loop since a gameobject or component can be deleted within the loop
+	GameObject::markForDeletion = true;
 	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
 	{
 		if (!gameObject->IsActive()) continue;
@@ -261,7 +261,17 @@ void MainLoop()
 				component->RenderGui();
 		}
 	}
-
+	GameObject::markForDeletion = false;
+	for (GameObject* gameObject : GameObject::markedForDeletion)
+	{
+		if (gameObject)
+			SceneManager::GetActiveScene()->RemoveGameObject(gameObject);
+	}
+	GameObject::markedForDeletion.clear();
+	for (Component* component : Component::markedForDeletion)
+		if (component && component->gameObject)
+			component->gameObject->RemoveComponent(component);
+	Component::markedForDeletion.clear();
 	SpriteRenderer::Render();
 
 	ImGui::End();

@@ -5,6 +5,9 @@
 #include <ctime>
 #include "Components/Component.h"
 
+std::vector<GameObject*> GameObject::markedForDeletion;
+bool GameObject::markForDeletion = false;
+
 GameObject::GameObject(int id)
 {
     //this->model = model;
@@ -227,11 +230,19 @@ int GameObject::GetId() const
 template<typename T>
 bool GameObject::RemoveComponent()
 {
+
     for (auto it = components.begin(); it != components.end(); ++it)
     {
         T* component = dynamic_cast<T*>(*it);
         if (component != nullptr)
         {
+            if (markForDeletion)
+            {
+                Component::markedForDeletion.push_back(component);
+                return true;
+            }
+
+            component->Disable();
             component->Destroy();
             delete component;
             components.erase(it);
@@ -246,9 +257,15 @@ template bool GameObject::RemoveComponent<Component>();
 
 bool GameObject::RemoveComponent(Component* component)
 {
+    if (markForDeletion)
+    {
+        Component::markedForDeletion.push_back(component);
+        return true;
+    }
     auto it = std::find(components.begin(), components.end(), component);
     if (it != components.end())
     {
+        component->Disable();
         component->Destroy();
         delete* it;
         components.erase(it);
