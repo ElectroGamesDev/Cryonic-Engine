@@ -29,7 +29,9 @@ struct ProjectData
     // General
     std::string name;
     std::string version;
-    std::string author;
+    std::string company;
+    std::string description;
+    std::string copyright;
     std::filesystem::path path;
     TemplateData templateData;
     bool is3D;

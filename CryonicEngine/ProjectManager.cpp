@@ -15,6 +15,8 @@
 #include <Windows.h>
 #include <iostream>
 #include <regex>
+#include <chrono>
+#include <ctime>
 
 #include <cstdio>
 
@@ -398,7 +400,7 @@ bool IsProgramInstalled(const char* program)
 
 bool ProjectManager::PrepareBuild(std::string platform, std::string& projectName, std::filesystem::path& outputPath, std::filesystem::path& originalPath, std::filesystem::path& buildPath, ProjectData& projectData, bool debug, std::function<void(int, bool)>& callback) // General build function. Used in BuildToWindows() and BuildToWeb()
 {
-    if (projectData.defaultScenePath == "None" || !std::filesystem::exists(projectData.path / "Assets" / projectData.defaultScenePath))
+    if (projectData.defaultScenePath.empty() || projectData.defaultScenePath == "None" || !std::filesystem::exists(projectData.path / "Assets" / projectData.defaultScenePath))
     {
         if (projectData.defaultScenePath != "None")
         {
@@ -704,6 +706,12 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
         return false;
     }
 
+    if (projectData.iconPath.empty() || projectData.iconPath == "None" || !std::filesystem::exists(projectData.path / "Assets" / projectData.iconPath))
+    {
+        ConsoleLogger::WarningLog("Build - Invalid icon path. Will use the default icon.");
+        projectData.iconPath = "None";
+    }
+
     std::string projectName;
     std::filesystem::path originalPath, buildPath, outputPath;
 
@@ -732,12 +740,35 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
 
     //system(("cmake -G \"MinGW Makefiles\" -DCMAKE_BUILD_TYPE=" + buildType + " .").c_str());
 
+    auto replaceString = [](std::string s, const std::string& from, const std::string& to) {
+        for (size_t pos = 0; (pos = s.find(from, pos)) != std::string::npos; pos += to.length())
+            s.replace(pos, from.length(), to);
+        return s;
+    };
+
+    std::string version2 = replaceString(projectData.version, ".", ",");
+
+    std::time_t now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm now_tm;
+    localtime_s(&now_tm, &now_time_t);
+    std::string copyright = replaceString(projectData.copyright, "{company}", projectData.company);
+    copyright = replaceString(copyright, "{year}", std::to_string(now_tm.tm_year + 1900));
+
     STARTUPINFOA si;
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
-    std::string command = "cmake -G \"MinGW Makefiles\" -DCMAKE_BUILD_TYPE=" + buildType + " -DPLATFORM=WINDOWS .";
+    std::string command = "cmake -G \"MinGW Makefiles\" "
+        "-DCMAKE_BUILD_TYPE=" + buildType + " "
+        "-DPLATFORM=WINDOWS "
+        "-DICON_PATH=\"" +  (projectData.iconPath == "None" ? "Default Cryonic Logo.ico" : projectData.iconPath) + "\" "
+        "-DGAME_VERSION=\"" + projectData.version + "\" "
+        "-DGAME_VERSION_2=\"" + version2 + "\" "
+        "-DCOMPANY_NAME=\"" + projectData.company + "\" "
+        "-DGAME_DESCRIPTION=\"" + projectData.description + "\" "
+        "-DCOPYRIGHT=\"" + copyright + "\" "
+        ".";
 
     if (!CreateProcessA(NULL, const_cast<LPSTR>(command.c_str()), NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi))
     {
@@ -1352,11 +1383,14 @@ void ProjectManager::SaveProjectData(ProjectData projectData) // Todo: Encode Fi
     json projectDataJson;
 
     projectDataJson["name"] = projectData.name;
-    projectDataJson["is3D"] = projectData.is3D;
-    projectDataJson["author"] = projectData.author;
+    projectDataJson["description"] = projectData.description;
+    projectDataJson["company"] = projectData.company;
     projectDataJson["version"] = projectData.version;
+    projectDataJson["copyright"] = projectData.copyright;
+    projectDataJson["is3D"] = projectData.is3D;
 
     projectDataJson["defaultScene"] = projectData.defaultScenePath;
+    projectDataJson["iconPath"] = projectData.iconPath;
 
     projectDataJson["resizableWindow"] = projectData.resizableWindow;
     projectDataJson["displayMode"] = projectData.displayMode;
@@ -1481,10 +1515,18 @@ ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) /
     }
 
     try {
-        projectData.author = projectDataJson.at("author").get<std::string>();
+        projectData.description = projectDataJson.at("description").get<std::string>();
     }
     catch (const std::exception& e) {
-        projectData.author = "Unknown";
+        projectData.description = "";
+        saveProjectData = true;
+    }
+
+    try {
+        projectData.company = projectDataJson.at("company").get<std::string>();
+    }
+    catch (const std::exception& e) {
+        projectData.company = "";
         saveProjectData = true;
     }
 
@@ -1497,10 +1539,26 @@ ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) /
     }
 
     try {
+        projectData.copyright = projectDataJson.at("copyright").get<std::string>();
+    }
+    catch (const std::exception& e) {
+        projectData.copyright = "Copyright {year}, {company}. All rights reserved.";
+        saveProjectData = true;
+    }
+
+    try {
         projectData.defaultScenePath = projectDataJson.at("defaultScene").get<std::string>();
     }
     catch (const std::exception& e) {
         projectData.defaultScenePath = "Scenes/Default.scene";
+        saveProjectData = true;
+    }
+
+    try {
+        projectData.iconPath = projectDataJson.at("iconPath").get<std::string>();
+    }
+    catch (const std::exception& e) {
+        projectData.iconPath = "None";
         saveProjectData = true;
     }
 

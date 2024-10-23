@@ -32,7 +32,14 @@ file(GLOB SOURCE_FILES
     Source/box2d/*.h
 )
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+if("${PLATFORM}" STREQUAL "WINDOWS")
+ # Generate the resource file from the template 
+ configure_file(resource.rc.in resource.rc @ONLY)
+
+ add_executable(${PROJECT_NAME} ${SOURCE_FILES} resource.rc)
+else()
+ add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     #-Werror=implicit-function-declaration
