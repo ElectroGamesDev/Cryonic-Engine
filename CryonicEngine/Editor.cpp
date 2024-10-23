@@ -1654,7 +1654,7 @@ void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnD
     }
 }
 
-std::string RenderFileSelector(int id, std::string type, std::string selectedPath, std::vector<std::string> extensions, ImVec2 position)
+std::string RenderFileSelector(int id, std::string type, std::string selectedPath, std::vector<std::string> extensions, bool hideNoneOption, ImVec2 position)
 {
     static bool open = true;
     static char searchBuffer[256];
@@ -1692,17 +1692,22 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
     // Todo: Order the files in alphabetical order
     // Todo: Make a gap between the bottom of the table and bottom of the window since the nodes make it so the bottom left of the window isn't rounded
 
+    ImGuiTreeNodeFlags flags;
+
     // "None" node
-    ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(0);
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding;
-    if (!selectedPath.empty())
-        flags |= ImGuiTreeNodeFlags_Selected;
-    if (ImGui::TreeNodeEx("None", flags))
+    if (!hideNoneOption)
     {
-        if (ImGui::IsItemClicked())
-            selectedFile = "None";
-        ImGui::TreePop();
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding;
+        if (!selectedPath.empty())
+            flags |= ImGuiTreeNodeFlags_Selected;
+        if (ImGui::TreeNodeEx("None", flags))
+        {
+            if (ImGui::IsItemClicked())
+                selectedFile = "None";
+            ImGui::TreePop();
+        }
     }
 
     std::string search = searchBuffer;
@@ -2082,7 +2087,7 @@ void Editor::RenderAnimationGraph()
                     // Checks if the Sprite File Selector window is open
                     if (openAddSpriteWin != -2)
                     {
-                        std::string selectedFile = RenderFileSelector((*selectedNode)["id"] + openAddSpriteWin, "Sprite", "", { ".png", ".jpeg", ".jpg" }, { spriteWinPos.x - 235, spriteWinPos.y - 40});
+                        std::string selectedFile = RenderFileSelector((*selectedNode)["id"] + openAddSpriteWin, "Sprite", "", { ".png", ".jpeg", ".jpg" }, false, { spriteWinPos.x - 235, spriteWinPos.y - 40});
                         // If NULL was returned, or if None was returned and its adding a new sprite, then close the window with no changes
                         if (selectedFile == "NULL" || (openAddSpriteWin == -1 && selectedFile == "None"))
                             openAddSpriteWin = -2;
@@ -2205,7 +2210,7 @@ void Editor::RenderProjectSettings()
             }
         };
 
-        auto renderFileSelector = [](const char* label, std::string type, std::vector<std::string> extensions, std::string& value) {
+        auto renderFileSelector = [](const char* label, std::string type, std::vector<std::string> extensions, bool hideNoneOption, std::string& value) {
             static std::string renderSelector = "";
 
             ImGui::Text("%s", label);
@@ -2228,7 +2233,7 @@ void Editor::RenderProjectSettings()
             int id = 1;
             for (char c : std::string(label))
                 id *= 31 + c;
-            std::string selectedFile = RenderFileSelector(id, "Scene", type, extensions, { pos.x + 235, pos.y - 40 });
+            std::string selectedFile = RenderFileSelector(id, "Scene", type, extensions, hideNoneOption, { pos.x + 235, pos.y - 40 });
             // If NULL was returned, or if None was returned, then close the window with no changes
             if (selectedFile == "NULL" || selectedFile == "None")
                 renderSelector = "";
@@ -2291,7 +2296,7 @@ void Editor::RenderProjectSettings()
             });
 
         RenderSection("Builds", [&]() {
-            renderFileSelector("Default Scene", "Scene", { ".scene" }, ProjectManager::projectData.defaultScenePath);
+            renderFileSelector("Default Scene", "Scene", { ".scene" }, true, ProjectManager::projectData.defaultScenePath);
             });
 
         RenderSection("Window Settings", [&]() {
@@ -2944,7 +2949,7 @@ void Editor::RenderProperties()
                                         extensions.push_back(extension);
 
                                     std::string currentlySelected = ((*it)[2] == "nullptr") ? "" : (*it)[2];
-                                    std::string selectedFile = RenderFileSelector(componentsNum, name, currentlySelected, extensions, {ImGui::GetCursorScreenPos().x - 100, ImGui::GetCursorScreenPos().y - 40});
+                                    std::string selectedFile = RenderFileSelector(componentsNum, name, currentlySelected, extensions, false, {ImGui::GetCursorScreenPos().x - 100, ImGui::GetCursorScreenPos().y - 40});
                                     if (selectedFile == "NULL")
                                         openSelector = false;
                                     else if (!selectedFile.empty())
