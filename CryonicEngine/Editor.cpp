@@ -111,6 +111,8 @@ std::vector<RaylibWrapper::RenderTexture2D*> tempRenderTextures;
 float cameraSpeed = 1;
 float oneSecondDelay = 1;
 
+ImGuiWindowClass defaultWindowClass;
+
 enum Tool
 {
     Move,
@@ -168,6 +170,7 @@ void Editor::RenderViewport()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     // Todo: Use resize events
 
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     if (ImGui::Begin((ICON_FA_CUBES + std::string(" Viewport")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar))
     {
         ImVec2 contentSize = ImGui::GetContentRegionAvail();
@@ -557,6 +560,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
     float nextX = 310;
     float nextY = 55;
 
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     if (ImGui::Begin((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str(), nullptr, windowFlags))
     {
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
@@ -1677,6 +1681,7 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
     ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 6.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     ImGui::Begin((" Select " + type).c_str(), &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking);
 
     ImGui::SetCursorPos({ 10, 20 });
@@ -1836,6 +1841,7 @@ void Editor::RenderAnimationGraph()
 
     // Todo: Check model to see if it has new animations (or if animations were moved/renamed)
 
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     if (ImGui::Begin((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), &animationGraphWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         bool update = false;
@@ -2172,7 +2178,7 @@ void Editor::RenderProjectSettings()
     if (!projectSettingsWinOpen)
         return;
 
-    static char nameBuffer[256], versionBuffer[256], authorBuffer[256], iconPathBuffer[256];
+    static char nameBuffer[128], descriptionBuffer[128], versionBuffer[128], companyBuffer[128], copyrightBuffer[128];
 
     if (resetProjectSettings)
     {
@@ -2182,13 +2188,15 @@ void Editor::RenderProjectSettings()
         ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - xSize) / 2, (RaylibWrapper::GetScreenHeight() - ySize) / 2));
 
         strcpy_s(nameBuffer, ProjectManager::projectData.name.c_str());
+        strcpy_s(descriptionBuffer, ProjectManager::projectData.description.c_str());
         strcpy_s(versionBuffer, ProjectManager::projectData.version.c_str());
-        strcpy_s(authorBuffer, ProjectManager::projectData.author.c_str());
-        strcpy_s(iconPathBuffer, ProjectManager::projectData.iconPath.c_str());
+        strcpy_s(companyBuffer, ProjectManager::projectData.company.c_str());
+        strcpy_s(copyrightBuffer, ProjectManager::projectData.copyright.c_str());
 
         resetProjectSettings = false;
     }
 
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     if (ImGui::Begin((ICON_FA_GEARS + std::string(" Project Properties")).c_str(), &projectSettingsWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         auto RenderSection = [](const char* title, std::function<void()> content) {
@@ -2227,13 +2235,13 @@ void Editor::RenderProjectSettings()
                 }
             }
 
-            if (renderSelector.empty())
+            if (renderSelector != label)
                 return;
 
             int id = 1;
             for (char c : std::string(label))
                 id *= 31 + c;
-            std::string selectedFile = RenderFileSelector(id, "Scene", type, extensions, hideNoneOption, { pos.x + 235, pos.y - 40 });
+            std::string selectedFile = RenderFileSelector(id, type, value, extensions, hideNoneOption, { pos.x + 235, pos.y - 40 });
             // If NULL was returned, or if None was returned, then close the window with no changes
             if (selectedFile == "NULL" || selectedFile == "None")
                 renderSelector = "";
@@ -2290,13 +2298,22 @@ void Editor::RenderProjectSettings()
 
         RenderSection("General", [&]() {
             RenderInputField("Name", nameBuffer, sizeof(nameBuffer), [](const char* value) { ProjectManager::projectData.name = value; });
-            RenderInputField("Author", authorBuffer, sizeof(authorBuffer), [](const char* value) { ProjectManager::projectData.author = value; }, 100.0f);
-            RenderInputField("Version", versionBuffer, sizeof(versionBuffer), [](const char* value) { ProjectManager::projectData.version = value; }, 50.0f);
-            RenderInputField("Icon Path", iconPathBuffer, sizeof(iconPathBuffer), [](const char* value) { ProjectManager::projectData.iconPath = value; }, 200.0f);
-            });
-
-        RenderSection("Builds", [&]() {
+            RenderInputField("Description", descriptionBuffer, sizeof(descriptionBuffer), [](const char* value) { ProjectManager::projectData.description = value; });
+            RenderInputField("Company", companyBuffer, sizeof(companyBuffer), [](const char* value) { ProjectManager::projectData.company = value; }, 100.0f);
+            RenderInputField("Version", versionBuffer, sizeof(versionBuffer), [](const char* value) {
+                for (char c : std::string(value))
+                {
+                    if (!isdigit(c) && c != '.')
+                    {
+                        value = ProjectManager::projectData.version.c_str();
+                        break;
+                    }
+                }
+                ProjectManager::projectData.version = value;
+                }, 50.0f);
+            RenderInputField("Copyright", copyrightBuffer, sizeof(copyrightBuffer), [](const char* value) { ProjectManager::projectData.copyright = value; }, 300.0f);
             renderFileSelector("Default Scene", "Scene", { ".scene" }, true, ProjectManager::projectData.defaultScenePath);
+            renderFileSelector("Icon Path", "Icon", { ".ico" }, true, ProjectManager::projectData.iconPath);
             });
 
         RenderSection("Window Settings", [&]() {
@@ -2332,6 +2349,7 @@ void Editor::RenderScriptCreateWin()
     ImGui::SetNextWindowSize(ImVec2(180, 180));
     ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 180) / 2, (RaylibWrapper::GetScreenHeight() - 180) / 2));
 
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     if (ImGui::Begin("Create Script", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         ImGui::Text("Script Name");
@@ -2426,6 +2444,7 @@ void Editor::RenderComponentsWin()
         resetComponentsWin = false;
     }
 
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     if (ImGui::Begin("Add Component", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NoCollapse))
     {
         // Internal Components
@@ -2518,6 +2537,7 @@ void Editor::RenderCameraView()
     RaylibWrapper::EndMode3D();
     RaylibWrapper::EndTextureMode();
 
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     if (ImGui::Begin("Camera View", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
         rlImGuiImageRenderTextureFit(&cameraRenderTexture, true);
 
@@ -2536,6 +2556,7 @@ int Editor::RenderColorPicker(std::string name, ImVec2 position, ImVec4& selecte
     ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.12f, 0.12f, 0.12f, 1.00f));
     ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.12f, 0.12f, 0.12f, 1.00f));
 
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     ImGui::Begin(name.c_str(), &open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking);
     if (ImGui::ColorPicker4(("##ColorPicker" + name).c_str(), (float*)&selectedColor, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoLabel, (float*)&previousColor))
         action = 1;
@@ -2556,6 +2577,7 @@ void Editor::RenderProperties()
 {
     static bool show = true;
 
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     if (ImGui::Begin((ICON_FA_GEARS + std::string(" Properties")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar))
     {
         ImGui::BeginGroup();
@@ -3244,6 +3266,7 @@ void Editor::RenderProperties()
 void Editor::RenderConsole()
 {
     static int numberOfLogs = 0;
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     if (ImGui::Begin((ICON_FA_CODE + std::string(" Console")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
     {
         for (std::pair<std::string, ConsoleLogger::ConsoleLogType>& message : ConsoleLogger::logs)
@@ -3351,6 +3374,7 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor, bool&
 void Editor::RenderHierarchy()
 {
     hierarchyObjectClicked = false;
+    ImGui::SetNextWindowClass(&defaultWindowClass);
     ImGui::Begin((ICON_FA_SITEMAP + std::string(" Hierarchy")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse);
 
     if (ImGui::BeginTable("HierarchyTable", 1))
@@ -3647,7 +3671,7 @@ void Editor::Render(void)
         ImGui::DockBuilderDockWindow((ICON_FA_CODE + std::string(" Console")).c_str(), dock_id_bottom);
         ImGui::DockBuilderFinish(dockspaceID);
     }
-    ImGui::DockSpace(dockspaceID);
+    ImGui::DockSpace(dockspaceID, {0,0}, ImGuiDockNodeFlags_NoWindowMenuButton);
     ImGui::End();
     ImGui::PopStyleVar();
 
@@ -4052,6 +4076,8 @@ void Editor::Init()
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     InitStyle();
+
+    defaultWindowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton;
 
     // Setup Platform/Renderer backends
     RaylibWrapper::ImGui_ImplRaylib_Init();
