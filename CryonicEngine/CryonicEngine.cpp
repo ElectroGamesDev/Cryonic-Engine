@@ -12,18 +12,134 @@
 #include <variant>
 #include "ProjectManager.h"
 #include "RaylibWrapper.h"
+#include "json.hpp"
+#include <windows.h>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
 //ProjectData projectData;
 std::filesystem::path projectsPath;
 bool openEditor = false;
 std::string templateName;
 std::string templateDescription;
+std::filesystem::path exeDirectory;
+nlohmann::json engineData;
 
 enum WindowOpened
 {
     MainWin,
     ProjectCreateWin
 }; WindowOpened windowOpened;
+
+void CreateData()
+{
+    std::filesystem::path path = exeDirectory / "CryonicEngine.data";
+    if (std::filesystem::exists(path))
+        return;
+
+    nlohmann::json data;
+    data["projects"] = nlohmann::json::array();
+
+    std::ofstream file(path);
+
+    if (file.is_open())
+    {
+        file << data.dump(4);
+        file.close();
+    }
+
+    engineData = data;
+}
+
+void LoadData()
+{
+    std::filesystem::path path = exeDirectory / "CryonicEngine.data";
+    if (std::filesystem::exists(path))
+    {
+        std::ifstream file(path);
+
+        if (file.is_open())
+        {
+            engineData = nlohmann::json::parse(file);
+            file.close();
+        }
+        else
+            engineData["projects"] = nlohmann::json::array();
+
+        return;
+    }
+
+    CreateData();
+}
+
+void SaveData()
+{
+    std::ofstream file(exeDirectory / "CryonicEngine.data");
+
+    if (file.is_open())
+    {
+        file << engineData.dump(4);
+        file.close();
+    }
+}
+
+void RemoveDeletedProjects()
+{
+    std::vector<nlohmann::json> projectsToKeep;
+    for (auto& project : engineData["projects"])
+        if (std::filesystem::exists(project["path"]))
+            projectsToKeep.push_back(project);
+
+    engineData["projects"] = projectsToKeep;
+    SaveData();
+}
+
+std::string GetCurrentDate()
+{
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    std::tm today;
+    localtime_s(&today, &now_c);
+    std::ostringstream oss;
+    oss << std::put_time(&today, "%m/%d/%Y");
+    return oss.str();
+}
+
+void UpdateProject(std::string projectPath)
+{
+    if (engineData["projects"].size() > 0 && engineData["projects"][0]["path"] == projectPath)
+    {
+        engineData["projects"][0]["date"] = GetCurrentDate();
+        SaveData();
+        return;
+    }
+
+    for (size_t i = 0; i < engineData["projects"].size(); ++i)
+    {
+        if (engineData["projects"][i]["path"] != projectPath)
+            continue;
+
+        // Set the current date
+        engineData["projects"][i]["date"] = GetCurrentDate();
+
+        // Move to top of the container
+        nlohmann::json projectToMove = engineData["projects"][i];
+        engineData["projects"].erase(engineData["projects"].begin() + i);
+        engineData["projects"].insert(engineData["projects"].begin(), projectToMove);
+
+        SaveData();
+        return;
+    }
+
+    // If its not in the projects container
+    nlohmann::json projectObject;
+    projectObject["path"] = projectPath;
+    projectObject["date"] = GetCurrentDate();
+    engineData["projects"].insert(engineData["projects"].begin(), projectObject);
+
+    SaveData();
+}
 
 void RenderMainWin()
 {
@@ -40,21 +156,20 @@ void RenderMainWin()
     ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 30, false));
     ImGui::SetCursorPos(ImVec2(150, 150));
     if (ImGui::Button("Create Project", ImVec2(200, 75)))
-    {
         windowOpened = ProjectCreateWin;
-    }
 
     ImGui::SetCursorPos(ImVec2(440, 150));
     if (ImGui::Button("Open Project", ImVec2(200, 75)))
     {
         std::string path = Utilities::SelectFolderDialog(projectsPath);
         // Todo: Check if path is really a Cryonic Engine project path
-        if (path != "")
+        if (!path.empty())
         {
             openEditor = true;
             ProjectManager::projectData = ProjectManager::LoadProjectData(path);
             ProjectManager::projectData.path = path;
             //projectData.name = projectData.path.stem().string();
+            UpdateProject(path);
         }
     }
     ImGui::PopFont();
@@ -63,6 +178,83 @@ void RenderMainWin()
     ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 40, false));
     ImGui::Text("Recent Projects");
     ImGui::PopFont();
+
+    //ImGui::GetWindowDrawList()->AddRect({ 40,300 }, { ImGui::GetWindowWidth() - 40, 375 }, IM_COL32(75, 75, 75, 255), 5, 0, 1);
+
+    if (engineData["projects"].size() == 0)
+    {
+        ImGui::SetCursorPos({150, 350});
+        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 17, false));
+        ImGui::TextColored({0.8f, 0.8f, 0.8f, 1.0f}, "You have no previous projects. Create a new project or open an existing one.");
+        ImGui::PopFont();
+
+        ImGui::End();
+        return;
+    }
+
+    bool runRemovedDeletedProjects = false;
+    float index = 0;
+    for (auto& project : engineData["projects"])
+    {
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1, 1, 1, 0.1f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.5f, 0.5f, 0.1f));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 10);
+
+        ImGui::SetCursorPos({ 80, 300 });
+        ImGui::BeginChild("Recent Projects", { ImGui::GetWindowWidth() - 160, ImGui::GetWindowHeight() - 320 });
+
+        float offset = 70 * index;
+
+        ImGui::SetCursorPos({ 15, 5 + offset });
+        // Todo: Right click to open a menu to remove the project from the list, delete the project, and go to project directory in explorer
+        if (ImGui::Button(("##" + project["path"].get<std::string>()).c_str(), {ImGui::GetWindowWidth() - 30, 60}))
+        {
+            std::string path = project["path"];
+
+            if (std::filesystem::exists(path))
+            {
+                openEditor = true;
+                ProjectManager::projectData = ProjectManager::LoadProjectData(path);
+                ProjectManager::projectData.path = path;
+            }
+            else
+                runRemovedDeletedProjects = true; // Todo: pop up saying the project no longer exists
+        }
+
+        std::filesystem::path path = project["path"];
+
+        ImGui::SetCursorPos(ImVec2(30, 12 + offset));
+        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 23, false));
+        ImGui::Text(path.stem().string().c_str());
+        ImGui::PopFont();
+
+        ImGui::SetCursorPos(ImVec2(30, 40 + offset));
+        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), path.string().c_str());
+
+        std::string date = project["date"];
+        if (date == GetCurrentDate())
+            date = "       Today";
+
+        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 100, 27 + offset));
+        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 17, false));
+        ImGui::Text(date.c_str());
+        ImGui::PopFont();
+
+        ImGui::EndChild();
+        ImGui::PopStyleVar(2);
+        ImGui::PopStyleColor(4);
+
+        index++;
+    }
+
+    if (openEditor)
+        UpdateProject(ProjectManager::projectData.path.string());
+
+    if (runRemovedDeletedProjects)
+        RemoveDeletedProjects();
 
     ImGui::End();
 }
@@ -182,6 +374,7 @@ void RenderProjectCreateWin() // Todo: Add grayed out button
                 // No error, project creation was a success
                 ProjectManager::projectData.path = ProjectManager::projectData.path / ProjectManager::projectData.name;
                 openEditor = true;
+                UpdateProject(ProjectManager::projectData.path.string());
                 break;
             }
         }
@@ -199,7 +392,7 @@ void RenderProjectCreateWin() // Todo: Add grayed out button
 
 void InitFonts()
 {
-    FontManager::LoadFonts("Familiar-Pro-Bold", { 15, 18, 20, 25, 30, 40 });
+    FontManager::LoadFonts("Familiar-Pro-Bold", { 15, 17, 18, 20, 23, 25, 30, 40 });
     FontManager::LoadFont("BoldMarker", 90);
 }
 
@@ -303,6 +496,12 @@ void main()
     InitFonts();
     InitMisc();
 
+    char path[MAX_PATH];
+    GetModuleFileNameA(nullptr, path, MAX_PATH);
+    exeDirectory = std::filesystem::path(path).parent_path();
+
+    LoadData();
+    RemoveDeletedProjects();
 
     while (!RaylibWrapper::WindowShouldClose() && !openEditor)
     {
