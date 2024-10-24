@@ -520,3 +520,83 @@ void SceneManager::BackupScene(Scene* scene)
 
 // Todo:: Add Backup Cleanup function
 
+
+GameObject* SpawnGameObject(std::string path, Vector3 position, Quaternion rotation)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(path, position, rotation);
+}
+
+static GameObject* SpawnGameObject(std::string path)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(path);
+}
+
+static GameObject* SpawnGameObject(std::string path, Vector3 position)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(path, position);
+}
+
+static GameObject* SpawnGameObject(std::string path, Vector3 position, Vector3 rotation)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(path, position, rotation);
+}
+
+static GameObject* SpawnGameObject(GameObject* gameObject, Vector3 position, Quaternion rotation)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(gameObject, position, rotation);
+}
+
+static GameObject* SpawnGameObject(GameObject* gameObject)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(gameObject);
+}
+
+static GameObject* SpawnGameObject(GameObject* gameObject, Vector3 position)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(gameObject, position);
+}
+
+static GameObject* SpawnGameObject(GameObject* gameObject, Vector3 position, Vector3 rotation)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(gameObject, position, rotation);
+}
+
+static GameObject* SpawnObject(std::string path)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(path);
+}
+
+static GameObject* SpawnObject(std::string path, Vector3 position)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(path, position);
+}
+
+static GameObject* SpawnObject(std::string path, Vector3 position, Quaternion rotation)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(path, position, rotation);
+}
+
+static GameObject* SpawnObject(std::string path, Vector3 position, Vector3 eulerRotation)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(path, position, eulerRotation);
+}
+
+static GameObject* SpawnObject(GameObject* gameObject)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(gameObject);
+}
+
+static GameObject* SpawnObject(GameObject* gameObject, Vector3 position)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(gameObject, position);
+}
+
+static GameObject* SpawnObject(GameObject* gameObject, Vector3 position, Quaternion rotation)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(gameObject, position, rotation);
+}
+
+static GameObject* SpawnObject(GameObject* gameObject, Vector3 position, Vector3 eulerRotation)
+{
+    return SceneManager::GetActiveScene()->SpawnObject(gameObject, position, eulerRotation);
+}
