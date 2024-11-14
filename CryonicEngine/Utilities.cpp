@@ -51,6 +51,23 @@ bool Utilities::HasInternetConnection()
     return isConnected;
 }
 
+bool Utilities::IsProgramInstalled(const char* program)
+{
+    std::array<char, 128> buffer;
+    std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(program, "r"), _pclose);
+
+    if (!pipe)
+    {
+        // Todo: Handle error here
+        return false;
+    }
+
+    if (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)  // If the command does not exist, then it doesnt have an output
+        return true;
+
+    return false;
+}
+
 std::filesystem::path Utilities::CreateUniqueFile(std::filesystem::path directory, std::string name, std::string extension)
 {
     std::filesystem::path filePath(directory);
