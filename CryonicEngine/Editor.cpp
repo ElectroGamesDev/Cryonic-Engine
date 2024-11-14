@@ -41,6 +41,7 @@
 #include "ImGuiPopup.h"
 #include "CanvasEditor.h"
 #include "FileWatcher.h"
+#include "AssetManager.h"
 
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -3642,7 +3643,7 @@ void OnBuildFinish(int success, bool debug) // 0 = failed, 1 = success, 2 = canc
     }
 }
 
-void Editor::Render(void)
+void Editor::Render()
 {
     // Todo: Put this in RenderDockSpace()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -3665,6 +3666,7 @@ void Editor::Render(void)
         ImGui::DockBuilderDockWindow((ICON_FA_SITEMAP + std::string(" Hierarchy")).c_str(), dock_id_left);
         ImGui::DockBuilderDockWindow((ICON_FA_CUBES + std::string(" Viewport")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), dock_main_id);
+        ImGui::DockBuilderDockWindow((ICON_FA_BOX_ARCHIVE + std::string(" Asset Manager")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_GEARS + std::string(" Properties")).c_str(), dock_id_right);
         ImGui::DockBuilderDockWindow((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str(), dock_id_bottom);
@@ -3697,11 +3699,12 @@ void Editor::Render(void)
     RenderAnimationGraph();
     //CanvasEditor::Render();
     RenderProjectSettings();
+    AssetManager::RenderWindow();
     //RenderTopbar();
 
     // Todo: Move this to RenderTitleBar()
     ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(ImVec2(190, 30));
+    ImGui::SetNextWindowSize(ImVec2(310, 30));
     ImGui::SetNextWindowBgAlpha(0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::Begin("##MenuBar", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
@@ -3770,11 +3773,33 @@ void Editor::Render(void)
             if (ImGui::MenuItem("Console", "")) {}
             if (ImGui::MenuItem("Properties", "")) {}
             if (ImGui::MenuItem("Sprite Editor", "")) {}
-            if (ImGui::MenuItem("Animation Graph", "")) { animationGraphWinOpen = true; }
+            if (ImGui::MenuItem("Animation Graph", ""))
+            {
+                animationGraphWinOpen = true;
+                ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
+                if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                    window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+            }
+            if (ImGui::MenuItem("Asset Manager", ""))
+            {
+                AssetManager::open = true;
+                ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_BOX_ARCHIVE + std::string(" Asset Manager")).c_str());
+                if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                    window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+            }
             //if (ImGui::MenuItem("Canvas Editor", "")) { CanvasEditor::windowOpen = true; }
             ImGui::EndMenu();
         }
         ImGui::SetCursorPos(ImVec2(152, 0));
+        if (ImGui::BeginMenu("Asset Manager", !ImGuiPopup::IsActive()))
+        {
+            AssetManager::open = true;
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_BOX_ARCHIVE + std::string(" Asset Manager")).c_str());
+            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+            ImGui::EndMenu();
+        }
+        ImGui::SetCursorPos(ImVec2(263, 0));
         if (ImGui::BeginMenu("Help", !ImGuiPopup::IsActive())) {
             ImGui::EndMenu();
         }
@@ -4019,6 +4044,7 @@ void Editor::Cleanup()
 {
     IconManager::Cleanup();
     ShaderManager::Cleanup();
+    AssetManager::Cleanup();
 
     for (auto& image : tempTextures)
     {
@@ -4090,6 +4116,7 @@ void Editor::Init()
     InitScenes(); // Must go after InitMisc() and ShaderManager::Init()
 
     SetupViewport();
+    AssetManager::Init(&defaultWindowClass);
 
     FileWatcher::Init();
 
