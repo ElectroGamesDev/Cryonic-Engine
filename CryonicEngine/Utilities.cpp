@@ -15,6 +15,7 @@
 #define TINYGLTF_IMPLEMENTATION
 #include "tiny_gltf.h"
 #include <tlhelp32.h>
+#include "curl/curl.h"
 
 void Utilities::HideFile(std::filesystem::path path) // Todo: Figure out why the file isn't being hidden
 {
@@ -32,6 +33,22 @@ int Utilities::GetNumberOfCores()
     GetSystemInfo(&sysInfo);
 
     return sysInfo.dwNumberOfProcessors;
+}
+
+bool Utilities::HasInternetConnection()
+{
+    CURL* curl = curl_easy_init();
+    if (!curl) return false;
+
+    curl_easy_setopt(curl, CURLOPT_URL, "http://httpforever.com"); // Todo: Change this to google.com once Curl is built with SSL support
+    curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
+
+    CURLcode res = curl_easy_perform(curl);
+    bool isConnected = (res == CURLE_OK);
+    curl_easy_cleanup(curl);
+
+    return isConnected;
 }
 
 std::filesystem::path Utilities::CreateUniqueFile(std::filesystem::path directory, std::string name, std::string extension)
