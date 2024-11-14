@@ -618,6 +618,10 @@ namespace RaylibWrapper
     void BeginVrStereoMode(VrStereoConfig config);
     void EndVrStereoMode(void);
 
+    // Image loading functions
+    Image LoadImageFromMemory(const char* fileType, const unsigned char* fileData, int dataSize);
+    void UnloadImage(Image image);
+
     // Texture loading functions
     Texture2D LoadTexture(const char* fileName);
     Texture2D LoadTextureFromImage(Image image);

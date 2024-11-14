@@ -350,6 +350,19 @@ namespace RaylibWrapper {
         ::EndVrStereoMode();
     }
 
+
+    // Image loading functions
+    Image LoadImageFromMemory(const char* fileType, const unsigned char* fileData, int dataSize)
+    {
+        ::Image image = ::LoadImageFromMemory(fileType, fileData, dataSize);
+        return { image.data, image.width, image.height, image.mipmaps, image.format };
+    }
+    void UnloadImage(Image image)
+    {
+        ::UnloadImage({ image.data, image.width, image.height, image.mipmaps, image.format });
+    }
+
+
     // Texture loading functions
     Texture2D LoadTexture(const char* fileName) {
         ::Texture2D texture2D = ::LoadTexture(fileName);
