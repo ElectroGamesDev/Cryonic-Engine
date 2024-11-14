@@ -86,7 +86,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR;PLATFORM_DESKTOP;PLATFORM_DESKTOP;WINDOWS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CURL_STATICLIB;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR;PLATFORM_DESKTOP;PLATFORM_DESKTOP;WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;$(SolutionDir)includes\imnodes;$(SolutionDir)includes\efsw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -95,7 +95,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)libs\raylib;$(SolutionDir)libs</AdditionalLibraryDirectories>
-      <AdditionalDependencies>raylib.lib;winmm.lib;box2d.lib;efsw-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>raylib.lib;winmm.lib;box2d.lib;ws2_32.lib;wldap32.lib;libcurl.lib;efsw-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -104,7 +104,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR;PLATFORM_DESKTOP</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CURL_STATICLIB;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR;PLATFORM_DESKTOP</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;$(SolutionDir)includes\imnodes;$(SolutionDir)includes\efsw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -115,14 +115,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)libs\raylib;$(SolutionDir)libs</AdditionalLibraryDirectories>
-      <AdditionalDependencies>raylib.lib;winmm.lib;box2d.lib;efsw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>raylib.lib;winmm.lib;box2d.lib;ws2_32.lib;wldap32.lib;libcurl.lib;efsw.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR;PLATFORM_DESKTOP;PLATFORM_DESKTOP;WINDOWS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CURL_STATICLIB;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR;PLATFORM_DESKTOP;PLATFORM_DESKTOP;WINDOWS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;$(SolutionDir)includes\imnodes;$(SolutionDir)includes\efsw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -131,7 +131,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)libs\raylib;$(SolutionDir)libs</AdditionalLibraryDirectories>
-      <AdditionalDependencies>raylib.lib;winmm.lib;box2d.lib;efsw-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>raylib.lib;winmm.lib;box2d.lib;ws2_32.lib;wldap32.lib;libcurl.lib;efsw-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -140,7 +140,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR;PLATFORM_DESKTOP</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CURL_STATICLIB;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);EDITOR;PLATFORM_DESKTOP</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)includes;$(SolutionDir)includes\raylib;$(SolutionDir)includes\imgui;$(SolutionDir)includes\box2d;$(SolutionDir)includes\imnodes;$(SolutionDir)includes\efsw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -151,7 +151,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)libs\raylib;$(SolutionDir)libs</AdditionalLibraryDirectories>
-      <AdditionalDependencies>raylib.lib;winmm.lib;box2d.lib;efsw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>raylib.lib;winmm.lib;box2d.lib;ws2_32.lib;wldap32.lib;libcurl.lib;efsw.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -163,6 +163,7 @@
     <ClCompile Include="..\includes\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\includes\imgui\rlImGui.cpp" />
     <ClCompile Include="..\includes\imnodes\imnodes.cpp" />
+    <ClCompile Include="AssetManager.cpp" />
     <ClCompile Include="AudioClip.cpp" />
     <ClCompile Include="CanvasEditor.cpp" />
     <ClCompile Include="CanvasEditor.h" />
@@ -232,6 +233,7 @@
     <ClInclude Include="..\includes\tiny_gltf.h" />
     <ClInclude Include="Animation.h" />
     <ClInclude Include="AnimationGraph.h" />
+    <ClInclude Include="AssetManager.h" />
     <ClInclude Include="AudioClip.h" />
     <ClInclude Include="CollisionListener2D.h" />
     <ClInclude Include="CollisionListener3D.h" />
