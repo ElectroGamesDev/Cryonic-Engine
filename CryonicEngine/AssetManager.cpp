@@ -4,6 +4,7 @@
 #include "ConsoleLogger.h"
 #include "curl/curl.h"
 #include <json.hpp>
+#include <fstream>
 #include <vector>
 #include "RaylibWrapper.h"
 #include "Utilities.h"
@@ -26,6 +27,7 @@ namespace AssetManager
         RaylibWrapper::Texture2D icon;
     };
     std::vector<AssetData> cachedAssets;
+    nlohmann::json installedAssets;
     bool assetsCached = false;
     bool connectedToInternet = true;
 
@@ -83,8 +85,27 @@ namespace AssetManager
                 ImGui::Text(assetData.name.c_str());
 
                 ImGui::SetCursorPos({ 37, 120 });
-                if (ImGui::Button(("Install##" + assetData.url).c_str(), { 75, 25 }))
-                    InstallAsset(assetData.url);
+
+                // Todo: Add Update button
+                // Todo: Display both Update and Uninstall button if there is an update
+
+                bool installed = false;
+                for (auto& asset : installedAssets)
+                {
+                    if (asset["url"] == assetData.url)
+                    {
+                        installed = true;
+                        break;
+                    }
+                }
+
+                if (!installed)
+                {
+                    if (ImGui::Button(("Install##" + assetData.url).c_str(), { 75, 25 }))
+                        InstallAsset(assetData.url, assetData.name);
+                }
+                else if (ImGui::Button(("Uninstall##" + assetData.url).c_str(), { 75, 25 }))
+                    UninstallAsset(assetData.url);
 
                 ImGui::EndChild();
                 ImGui::PopStyleColor(2);
@@ -100,11 +121,19 @@ namespace AssetManager
 
     void CheckForUpdates()
     {
+        if (!Utilities::HasInternetConnection())
+            return;
     }
 
-    bool InstallAsset(std::string url)
+    bool InstallAsset(std::string url, std::string name) // TODO:  name variable is different than github repo such as name uses space while repo doesn't which causes issues. Maybe create in a temp folder, then rename, then move
     {
-        // TODO: Support dependancies
+        // If delete asset within filesystem, check if its a third party asset from manager
+        // When starting up editor, check if any third party assets have been removed
+
+        if (!Utilities::HasInternetConnection())
+            return false;
+
+        // Todo: Check version
 
         // Check if Git is installed
         if (!Utilities::IsProgramInstalled("git --version"))
@@ -122,19 +151,18 @@ namespace AssetManager
             return false;
         }
 
-        if (!std::filesystem::exists(ProjectManager::projectData.path / "Assets" / "Third Party"))
-            std::filesystem::create_directory(ProjectManager::projectData.path / "Assets" / "Third Party");
+        std::filesystem::path tempPath = Utilities::CreateTempFolder(ProjectManager::projectData.path);
 
         STARTUPINFOA si;
         PROCESS_INFORMATION pi;
         ZeroMemory(&si, sizeof(si));
         si.cb = sizeof(si);
         ZeroMemory(&pi, sizeof(pi));
-        std::string command = "cmd.exe /C \"cd /d \"" + std::filesystem::path(ProjectManager::projectData.path / "Assets" / "Third Party").string() + "\" && git clone " + url + "\"";
+        std::string command = "cmd.exe /C \"cd /d \"" + std::filesystem::path(tempPath).string() + "\" && git clone " + url + "\"";
 
         if (!CreateProcessA(NULL, const_cast<LPSTR>(command.c_str()), NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi))
         {
-            ConsoleLogger::ErrorLog("Package Manager - Failed to install asset.");
+            ConsoleLogger::ErrorLog("Package Manager - Failed to install asset. Error code 9000");
 
             ImGuiToast toast(ImGuiToastType::Error, 2500, true);
             toast.setTitle("Package Manager", "");
@@ -150,7 +178,7 @@ namespace AssetManager
                 break;
             else if (waitResult != WAIT_TIMEOUT)
             {
-                ConsoleLogger::ErrorLog("Package Manager - Failed to install asset.");
+                ConsoleLogger::ErrorLog("Package Manager - Failed to install asset. Error code 9001");
 
                 ImGuiToast toast(ImGuiToastType::Error, 2500, true);
                 toast.setTitle("Package Manager", "");
@@ -167,7 +195,8 @@ namespace AssetManager
 
         if (exitCode != 0)
         {
-            ConsoleLogger::ErrorLog("Package Manager - Failed to install asset.");
+            std::filesystem::remove_all(tempPath);
+            ConsoleLogger::ErrorLog("Package Manager - Failed to install asset. Error code 9002");
 
             ImGuiToast toast(ImGuiToastType::Error, 2500, true);
             toast.setTitle("Package Manager", "");
@@ -176,11 +205,464 @@ namespace AssetManager
             return false;
         }
 
+        // Install dependancies
+        auto tempAssetPath = std::filesystem::directory_iterator(tempPath);
+        if (tempAssetPath == std::filesystem::end(tempAssetPath))
+        {
+            std::filesystem::remove_all(tempPath);
+            ConsoleLogger::ErrorLog("Package Manager - Failed to install asset. Error code 90013");
+
+            ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+            toast.setTitle("Package Manager", "");
+            toast.setContent("Failed to install asset.");
+            ImGui::InsertNotification(toast);
+            return false;
+        }
+
+        std::ifstream assetFile(tempAssetPath->path() / "manifest.json");
+        if (!assetFile.is_open())
+        {
+            std::filesystem::remove_all(tempPath);
+            ConsoleLogger::ErrorLog("Package Manager - Failed to install asset. Error code 9003");
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+            ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+            toast.setTitle("Package Manager", "");
+            toast.setContent("Failed to install asset.");
+            ImGui::InsertNotification(toast);
+            return false;
+        }
+
+        nlohmann::json manifestJson;
+        manifestJson = nlohmann::json::parse(assetFile);
+        assetFile.close();
+
+        if (manifestJson.contains("dependencies"))
+        {
+            // Todo: Popup saying the addon requires dependencies to be installed.
+            for (auto& dependency : manifestJson["dependencies"])
+                InstallAsset(dependency["name"].get<std::string>(), dependency["url"].get<std::string>());
+        }
+
+        // Move the asset to the assets/Third Party
+        std::filesystem::path thirdPartyPath = ProjectManager::projectData.path / "Assets" / "Third Party";
+
+        if (!std::filesystem::exists(thirdPartyPath))
+            std::filesystem::create_directory(thirdPartyPath);
+
+        if (std::filesystem::exists(thirdPartyPath / name))
+            std::filesystem::remove_all(thirdPartyPath / name);
+
+        // Rename the asset folder
+        std::filesystem::rename(*tempAssetPath, thirdPartyPath / name);
+        std::filesystem::remove_all(tempPath);
+
+        // Add to the assets.json
+        if (!std::filesystem::exists(ProjectManager::projectData.path / "assets.json"))
+        {
+            std::ofstream file(ProjectManager::projectData.path / "assets.json");
+            if (file.is_open())
+            {
+                file << nlohmann::json::array().dump(4);
+                file.close();
+            }
+        }
+
+        std::ifstream file(ProjectManager::projectData.path / "assets.json");
+        if (!file.is_open())
+        {
+            ConsoleLogger::ErrorLog("Package Manager - Failed to install asset. Error code 9005");
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+            ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+            toast.setTitle("Package Manager", "");
+            toast.setContent("Failed to install asset.");
+            ImGui::InsertNotification(toast);
+            return false;
+        }
+
+        try {
+            installedAssets = nlohmann::json::parse(file);
+            file.close();
+
+            // If the asset is already in the assets.json, remove it
+            for (auto it = installedAssets.begin(); it != installedAssets.end(); )
+            {
+                if (it->contains("url") && it->at("url").get<std::string>() == url)
+                {
+                    it = installedAssets.erase(it);
+                    break;
+                }
+                else 
+                    ++it;
+            }
+
+            manifestJson["path"] = thirdPartyPath / name;
+            installedAssets.push_back(manifestJson);
+
+            std::ofstream outFile(ProjectManager::projectData.path / "assets.json");
+            if (!outFile.is_open())
+            {
+                ConsoleLogger::ErrorLog("Package Manager - Failed to install asset. Error code 9006");
+                ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+                if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                    window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+                ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+                toast.setTitle("Package Manager", "");
+                toast.setContent("Failed to install asset.");
+                ImGui::InsertNotification(toast);
+
+                return false;
+            }
+
+            outFile << installedAssets.dump(4);
+            outFile.close();
+        }
+        catch (const std::exception& e)
+        {
+            // Todo: Handle this
+            //ConsoleLogger::ErrorLog("Error parsing JSON: " + std::string(e.what()));
+
+            ConsoleLogger::ErrorLog("Package Manager - Failed to install asset. Error code 9007");
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+            ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+            toast.setTitle("Package Manager", "");
+            toast.setContent("Failed to update asset.");
+            ImGui::InsertNotification(toast);
+
+            return false;
+        }
+
         return true;
     }
 
-    bool UpdateAsset(std::string url)
+    bool UpdateAsset(std::string name, std::string url)
     {
+        // Todo: Dont assume path
+        // Todo: Add support for new/missing dependancies
+
+        if (!Utilities::HasInternetConnection())
+            return false;
+
+        // Todo: Check version
+
+        // Check if Git is installed
+        if (!Utilities::IsProgramInstalled("git --version"))
+        {
+            ConsoleLogger::ErrorLog("Package Manager - Failed to update asset due to Git not being installed. Try again after installing it.");
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+            ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+            toast.setTitle("Package Manager", "");
+            toast.setContent("Failed to update asset, please install Git first.");
+            ImGui::InsertNotification(toast);
+
+            return false;
+        }
+
+        std::filesystem::path path = ProjectManager::projectData.path / "Assets" / "Third Party" / name;
+
+        if (!std::filesystem::exists(path))
+            std::filesystem::create_directory(path);
+
+        // If its a git repository, then try to pull it
+        if (std::filesystem::exists(path / ".git"))
+        {
+            STARTUPINFOA si;
+            PROCESS_INFORMATION pi;
+            ZeroMemory(&si, sizeof(si));
+            si.cb = sizeof(si);
+            ZeroMemory(&pi, sizeof(pi));
+            std::string command = "cmd.exe /C \"cd /d \"" + std::filesystem::path(ProjectManager::projectData.path / "Assets" / "Third Party").string() + "\" && git pull\"";
+
+            if (!CreateProcessA(NULL, const_cast<LPSTR>(command.c_str()), NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi))
+                return InstallAsset(name, url);
+
+            while (true)
+            {
+                DWORD waitResult = WaitForSingleObject(pi.hProcess, 100);
+                if (waitResult == WAIT_OBJECT_0)
+                    break;
+                else if (waitResult != WAIT_TIMEOUT)
+                    return InstallAsset(name, url);
+            }
+
+            DWORD exitCode;
+            GetExitCodeProcess(pi.hProcess, &exitCode);
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+
+            if (exitCode != 0)
+                return InstallAsset(name, url);
+        }
+        else // If the asset directory is not a repository, then reinstall
+        {
+            // Todo: Download to a temp folder, then move it to the correct directory instead of deleting the old files, and hope it installs with no problems
+            // It will also still appear in the Assets.json so it will think its installed
+            return InstallAsset(name, url);
+        }
+
+        std::ifstream file(ProjectManager::projectData.path / "assets.json");
+        if (!file.is_open())
+        {
+            ConsoleLogger::ErrorLog("Package Manager - Failed to update asset.");
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+            ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+            toast.setTitle("Package Manager", "");
+            toast.setContent("Failed to update asset.");
+            ImGui::InsertNotification(toast);
+            return false;
+        }
+
+        // Update the assets.json
+        if (!std::filesystem::exists(ProjectManager::projectData.path / "assets.json")) // This should already exist, but just in-case
+        {
+            std::ofstream file(ProjectManager::projectData.path / "assets.json");
+            if (file.is_open())
+            {
+                file << nlohmann::json::array().dump(4);
+                file.close();
+            }
+        }
+
+        try {
+            installedAssets = nlohmann::json::parse(file);
+            file.close();
+
+            for (nlohmann::json asset : installedAssets)
+            {
+                if (!asset.contains("url") || asset["url"].get<std::string>() != url)
+                    continue;
+
+                std::ifstream assetFile(path / "manifest.json");
+                if (!assetFile.is_open())
+                {
+                    ConsoleLogger::ErrorLog("Package Manager - Failed to update asset. Error code 9008");
+                    ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+                    if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                        window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+                    ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+                    toast.setTitle("Package Manager", "");
+                    toast.setContent("Failed to update asset.");
+                    ImGui::InsertNotification(toast);
+                    return false;
+                }
+
+                nlohmann::json manifestJson;
+                manifestJson = nlohmann::json::parse(assetFile);
+                assetFile.close();
+
+                manifestJson["path"] = path;
+                asset = manifestJson;
+
+                break;
+            }
+
+            std::ofstream outFile(ProjectManager::projectData.path / "Assets.json");
+            if (!outFile.is_open())
+            {
+                ConsoleLogger::ErrorLog("Package Manager - Failed to update asset. Error code 9009");
+                ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+                if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                    window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+                ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+                toast.setTitle("Package Manager", "");
+                toast.setContent("Failed to update asset.");
+                ImGui::InsertNotification(toast);                
+                
+                return false;
+            }
+
+            outFile << installedAssets.dump(4);
+            outFile.close();
+        }
+        catch (const std::exception& e)
+        {
+            // Todo: Handle this
+            //ConsoleLogger::ErrorLog("Error parsing JSON: " + std::string(e.what()));\
+
+            ConsoleLogger::ErrorLog("Package Manager - Failed to update asset. Error code 9010");
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+            ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+            toast.setTitle("Package Manager", "");
+            toast.setContent("Failed to update asset.");
+            ImGui::InsertNotification(toast);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    bool UninstallAsset(std::string url)
+    {
+        std::ifstream file(ProjectManager::projectData.path / "assets.json");
+        if (!file.is_open())
+        {
+            ConsoleLogger::ErrorLog("Package Manager - Failed to uninstall asset. Error code 9011");
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+            ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+            toast.setTitle("Package Manager", "");
+            toast.setContent("Failed to install asset.");
+            ImGui::InsertNotification(toast);
+            return false;
+        }
+
+        installedAssets = nlohmann::json::parse(file);
+        file.close();
+        installedAssets = installedAssets;
+
+        std::string name;
+        std::string path;
+
+        for (auto it = installedAssets.begin(); it != installedAssets.end(); )
+        {
+            if (it->contains("url") && it->at("url").get<std::string>() == url)
+            {
+                name = it->at("name").get<std::string>();
+                if (it->contains("path"))
+                    path = it->at("path").get<std::string>();
+
+                it = installedAssets.erase(it);
+
+                std::ofstream file(ProjectManager::projectData.path / "assets.json");
+                if (file.is_open())
+                {
+                    file << installedAssets.dump(4);
+                    file.close();
+                }
+
+                break;
+            }
+            else
+                ++it;
+        }
+
+        if (name.empty())
+        {
+            ConsoleLogger::ErrorLog("Package Manager - Failed to uninstall asset. Error code 9012");
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+            ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+            toast.setTitle("Package Manager", "");
+            toast.setContent("Failed to install asset.");
+            ImGui::InsertNotification(toast);
+            return false;
+        }
+
+
+        std::filesystem::path thirdPartyPath = ProjectManager::projectData.path / "Assets" / "Third Party" / name;
+
+        if (path.empty() || !std::filesystem::exists(path)) // Checking the last known path
+        {
+            path = (ProjectManager::projectData.path / "Assets" / "Third Party" / name).string();
+            if (!std::filesystem::exists(path)) // Checking the Third Party folder
+            {
+                // Checking Third Party directory first incase if the user moved it into another folder
+                if (std::filesystem::exists(ProjectManager::projectData.path / "Assets" / "Third Party"))
+                {
+                    path = "";
+                    for (auto it = std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets" / "Third Party"); it != std::filesystem::end(it); ++it)
+                    {
+                        if (!it->is_directory())
+                            continue;
+                        
+                        if (std::filesystem::exists(it->path() / "manifest.json")) // Checking if its an asset and has the manifest.json
+                        {
+                            std::ifstream manifestFile(it->path() / "manifest.json");
+                            if (!manifestFile.is_open())
+                                continue;
+
+                            nlohmann::json manifestJson;
+                            manifestJson = nlohmann::json::parse(manifestFile);
+                            manifestFile.close();
+
+                            if (manifestJson.contains("url") && manifestJson["url"].get<std::string>() == url)
+                            {
+                                path = it->path().string();
+                                break;
+                            }
+                            else
+                                it.disable_recursion_pending(); // Makes it so it stops searching this directory since its assumed an asset wouldnt be within an asset
+                        }
+                    }
+                }
+
+                if (path.empty()) // Checks all directories within /Assets, except /Third Party
+                {
+                    for (auto it = std::filesystem::recursive_directory_iterator(ProjectManager::projectData.path / "Assets"); it != std::filesystem::end(it); ++it)
+                    {
+                        if (!it->is_directory())
+                            continue;
+
+                        if (it->path().filename() == "Third Party")
+                        {
+                            it.disable_recursion_pending();
+                            continue;
+                        }
+
+                        if (std::filesystem::exists(it->path() / "manifest.json")) // Checking if its an asset and has the manifest.json
+                        {
+                            std::ifstream manifestFile(it->path() / "manifest.json");
+                            if (!manifestFile.is_open())
+                                continue;
+
+                            nlohmann::json manifestJson;
+                            manifestJson = nlohmann::json::parse(manifestFile);
+                            manifestFile.close();
+
+                            if (manifestJson.contains("url") && manifestJson["url"].get<std::string>() == url)
+                            {
+                                path = it->path().string();
+                                break;
+                            }
+                            else
+                                it.disable_recursion_pending(); // Makes it so it stops searching this directory since its assumed an asset wouldnt be within an asset
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!path.empty())
+            std::filesystem::remove_all(path);
+        else
+        {
+            ConsoleLogger::ErrorLog("Package Manager - Failed to find asset to uninstall. The asset may already be uninstalled, if not, try to locate and delete it yourself.");
+            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+            ImGuiToast toast(ImGuiToastType::Error, 2500, true);
+            toast.setTitle("Package Manager", "");
+            toast.setContent("Failed to uninstall asset.");
+            ImGui::InsertNotification(toast);
+            return false;
+        }
+
         return true;
     }
 
@@ -188,6 +670,18 @@ namespace AssetManager
     {
         windowClass = winClass;
         curl_global_init(CURL_GLOBAL_ALL); // This would be called in Editor.cpp, but including Curl causes some issues
+
+        std::ifstream file(ProjectManager::projectData.path / "assets.json");
+        if (!file.is_open())
+            return;
+
+        try {
+            installedAssets = nlohmann::json::parse(file);
+            file.close();
+        }
+        catch (const std::exception& e) {
+            return;
+        }
     }
 
     void Cleanup()

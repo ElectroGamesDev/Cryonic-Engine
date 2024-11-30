@@ -6,8 +6,9 @@ namespace AssetManager
 {
 	void RenderWindow();
 	void CheckForUpdates();
-	bool InstallAsset(std::string url);
-	bool UpdateAsset(std::string url);
+	bool InstallAsset(std::string url, std::string name);
+	bool UpdateAsset(std::string name, std::string url);
+	bool UninstallAsset(std::string url);
 	bool FetchAssets();
 	void Init(ImGuiWindowClass* windowClass);
 	void Cleanup();
