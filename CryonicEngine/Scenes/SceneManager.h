@@ -171,3 +171,16 @@ static GameObject* SpawnObject(GameObject* gameObject, Vector3 position, Quatern
  * @return [GameObject*] - A pointer to the created game object.
  */
 static GameObject* SpawnObject(GameObject* gameObject, Vector3 position, Vector3 rotation);
+
+/**
+ * Destroys the specified game object.
+ *
+ * @param gameObject [GameObject*] - A pointer to the game object.
+ */
+static void Destroy(GameObject* gameObject);
+/**
+ * Destroys the specified game component.
+ *
+ * @param component [Component*] - A pointer to the component.
+ */
+static void Destroy(Component* component);

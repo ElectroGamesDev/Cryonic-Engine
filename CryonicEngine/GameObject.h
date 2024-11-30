@@ -139,6 +139,9 @@ public:
 
     bool RemoveComponent(Component* component);
 
+    void Destroy();
+    void Destroy(Component* component);
+
     template<typename T>
     T* GetComponent()
     {

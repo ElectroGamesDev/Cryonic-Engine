@@ -600,3 +600,12 @@ static GameObject* SpawnObject(GameObject* gameObject, Vector3 position, Vector3
 {
     return SceneManager::GetActiveScene()->SpawnObject(gameObject, position, eulerRotation);
 }
+
+void Destroy(GameObject* gameObject)
+{
+    SceneManager::GetActiveScene()->RemoveGameObject(gameObject);
+}
+void Destroy(Component* component)
+{
+    component->gameObject->RemoveComponent(component);
+}

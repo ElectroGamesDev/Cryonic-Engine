@@ -274,6 +274,17 @@ bool GameObject::RemoveComponent(Component* component)
     return false;
 }
 
+void GameObject::Destroy()
+{
+    SceneManager::GetActiveScene()->RemoveGameObject(this); // Todo: This assumes the game object is in the active scene.
+}
+
+// An alias for RemoveComponent()
+void GameObject::Destroy(Component* component)
+{
+    RemoveComponent(component);
+}
+
 std::vector<Component*> GameObject::GetComponents()
 {
     return components;

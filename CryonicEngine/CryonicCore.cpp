@@ -83,7 +83,6 @@ float GetFixedDeltaTime()
     return fixedDeltaTime;
 }
 
-
 //void Draw3DBillboardRec(Camera camera, Texture2D texture, Rectangle source, Vector3 position, Vector2 size, Color tint)
 //{
 //    rlPushMatrix();

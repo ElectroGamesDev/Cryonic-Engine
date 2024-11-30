@@ -71,6 +71,18 @@ void Scene::RemoveGameObject(GameObject* gameObject)
     }
 }
 
+// An alias for RemoveGameObject()
+void Scene::DestroyGameObject(GameObject* gameObject)
+{
+    RemoveGameObject(gameObject);
+}
+
+// An alias for RemoveGameObject()
+void Scene::Destroy(GameObject* gameObject)
+{
+    RemoveGameObject(gameObject);
+}
+
 
 std::deque<GameObject*>& Scene::GetGameObjects()
 {

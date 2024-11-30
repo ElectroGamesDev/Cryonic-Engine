@@ -16,6 +16,8 @@ public:
 
     GameObject* AddGameObject(int id = 0);
     void RemoveGameObject(GameObject* gameObject);
+    void DestroyGameObject(GameObject* gameObject);
+    void Destroy(GameObject* gameObject);
     std::deque<GameObject*>& GetGameObjects();
     GameObject* GetGameObject(const std::string& name); 
 
