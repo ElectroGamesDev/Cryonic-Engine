@@ -101,7 +101,7 @@ int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catc
 
     Utilities::HideFile(projectData.path / "api");
 
-    std::ofstream file("assets.json");
+    std::ofstream file(projectData.path / "assets.json");
     if (file.is_open())
     {
         file << nlohmann::json::array().dump(4);
