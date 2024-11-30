@@ -16,6 +16,7 @@
 #include "tiny_gltf.h"
 #include <tlhelp32.h>
 #include "curl/curl.h"
+#include <random>
 
 void Utilities::HideFile(std::filesystem::path path) // Todo: Figure out why the file isn't being hidden
 {
@@ -40,9 +41,13 @@ bool Utilities::HasInternetConnection()
     CURL* curl = curl_easy_init();
     if (!curl) return false;
 
-    curl_easy_setopt(curl, CURLOPT_URL, "http://httpforever.com"); // Todo: Change this to google.com once Curl is built with SSL support
+    curl_easy_setopt(curl, CURLOPT_URL, "https://google.com");
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
+
+    // Todo: This disables the SSL Verification. For some reason curl_easy_perform fails when it is enabled
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
     CURLcode res = curl_easy_perform(curl);
     bool isConnected = (res == CURLE_OK);
@@ -598,4 +603,20 @@ void Utilities::TerminateProcess(int dwProcessId, int uExitCode)
         ::TerminateProcess(hProcess, uExitCode);
         CloseHandle(hProcess);
     }
+}
+
+std::filesystem::path Utilities::CreateTempFolder(std::filesystem::path projectPath)
+{
+    const std::string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    std::random_device rd;
+    std::mt19937 generator(rd());  
+    std::uniform_int_distribution<> dist(0, characters.size() - 1);
+
+    std::string folderName;
+    for (size_t i = 0; i < 20; ++i)
+        folderName += characters[dist(generator)];
+
+    std::filesystem::create_directories(projectPath / "Internal" / "Temp" / folderName);
+
+    return projectPath / "Internal" / "Temp" / folderName;
 }
