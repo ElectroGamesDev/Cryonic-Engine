@@ -27,13 +27,13 @@
 #include "../Jolt/Core/JobSystemThreadPool.h"
 #include "Component/Rigidbody3D.h"
 JPH_SUPPRESS_WARNINGS
-#else
+#endif
+
 #include "CollisionListener2D.h"
 #include "Physics2DDebugDraw.h"
 
 b2World* world = nullptr;
 CollisionListener2D collisionListener;
-#endif
 
 std::filesystem::path exeParent;
 
@@ -117,14 +117,14 @@ int main(void)
 
 	BodyInterface& bodyInterface = physicsSystem.GetBodyInterface();
 	Rigidbody3D::bodyInterface = physicsSystem.GetBodyInterface();
-#else
+#endif
+
 	b2Vec2 gravity(0.0f, -9.8f);
 	world = new b2World(gravity);
 	world->SetContactListener(&collisionListener);
 	//Physics2DDebugDraw debugDraw;
 	//debugDraw.SetFlags(b2Draw::e_shapeBit);
 	//world->SetDebugDraw(&debugDraw);
-#endif
 
 	// Shaders must be initiated before scenes/gameobjects
 	ShaderManager::Init();
