@@ -18,6 +18,10 @@
 #include "../Components/SpriteRenderer.h"
 #include "../Components/Collider2D.h"
 #include "../Components/Rigidbody2D.h"
+#if defined(IS3D)
+#include "Components/Collider3D.h"
+#include "Components/Rigidbody3D.h"
+#endif
 #include "../Components/AnimationPlayer.h"
 #include "../Components/AudioPlayer.h"
 #include "../Components/Label.h"
@@ -336,6 +340,18 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 Rigidbody2D& component = gameObject->AddComponentInternal<Rigidbody2D>(componentData["id"]);
                 setExposedVariables(component, componentData);
             }
+#if defined(IS3D)
+            else if (componentData["name"] == "Collider3D")
+            {
+                Collider3D& component = gameObject->AddComponentInternal<Collider3D>(componentData["id"]);
+                setExposedVariables(component, componentData);
+            }
+            else if (componentData["name"] == "Rigidbody3D")
+            {
+                Rigidbody3D& component = gameObject->AddComponentInternal<Rigidbody3D>(componentData["id"]);
+                setExposedVariables(component, componentData);
+            }
+#endif
             else if (componentData["name"] == "AnimationPlayer")
             {
                 AnimationPlayer& component = gameObject->AddComponentInternal<AnimationPlayer>(componentData["id"]);

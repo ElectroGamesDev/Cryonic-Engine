@@ -23,6 +23,8 @@
 #include "Components/SpriteRenderer.h"
 #include "Components/Collider2D.h"
 #include "Components/Rigidbody2D.h"
+#include "Components/Collider3D.h"
+#include "Components/Rigidbody3D.h"
 #include "Components/AnimationPlayer.h"
 #include "Components/AudioPlayer.h"
 #include "Components/Label.h"
@@ -2480,6 +2482,17 @@ void Editor::RenderComponentsWin()
                     return;
                 }
                 std::get<GameObject*>(objectInProperties)->AddComponentInternal<Rigidbody2D>();
+            });
+        AddComponentInternalButton("Collider3D", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Collider3D>(); });
+        AddComponentInternalButton("Rigidbody3D", [&]()
+            {
+                if (std::get<GameObject*>(objectInProperties)->GetComponent<Rigidbody3D>())
+                {
+                    // Todo: Add popup?
+                    ConsoleLogger::ErrorLog("Failed to add Rigidbody3D to " + std::get<GameObject*>(objectInProperties)->GetName() + ". This game object already has a Rigidbody3D attached to it.");
+                    return;
+                }
+                std::get<GameObject*>(objectInProperties)->AddComponentInternal<Rigidbody3D>();
             });
         AddComponentInternalButton("SpriteRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<SpriteRenderer>(); });
         AddComponentInternalButton("MeshRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<MeshRenderer>(); });
