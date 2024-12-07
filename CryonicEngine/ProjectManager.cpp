@@ -735,7 +735,11 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
         return s;
     };
 
-    std::string version2 = replaceString(projectData.version, ".", ",");
+    std::string version2;
+    if (projectData.version.empty())
+        version2 = "0,0,0,1";
+    else
+        version2 = replaceString(projectData.version, ".", ",");
 
     std::time_t now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::tm now_tm;
