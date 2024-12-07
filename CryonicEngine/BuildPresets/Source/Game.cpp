@@ -21,11 +21,11 @@
 #include <vector>
 
 #ifdef IS3D
-#include "../Jolt/Jolt.h"
-#include "../Jolt/Core/Factory.h"
-#include "../Jolt/Core/TempAllocator.h"
-#include "../Jolt/Core/JobSystemThreadPool.h"
-#include "Component/Rigidbody3D.h"
+#include "Jolt/Jolt.h"
+#include "Jolt/Core/Factory.h"
+#include "Jolt/Core/TempAllocator.h"
+#include "Jolt/Core/JobSystemThreadPool.h"
+#include "Components/Rigidbody3D.h"
 JPH_SUPPRESS_WARNINGS
 #endif
 
