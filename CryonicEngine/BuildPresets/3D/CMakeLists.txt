@@ -50,6 +50,10 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -w
 )
 
+include_directories(${CMAKE_SOURCE_DIR}/Source) # This is for Jolt since it uses #include <> to include local headers. The code below does not fix this issue.
+#include_directories(${CMAKE_SOURCE_DIR}/Source/Jolt)
+#target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/Source/Jolt)
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE IS3D)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE NAME="${PROJECT_NAME}")
