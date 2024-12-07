@@ -320,7 +320,7 @@ void Collider2D::RemoveRigidbody()
 #endif
 }
 
-Shape Collider2D::GetShape()
+Collider2D::Shape Collider2D::GetShape()
 {
 	return shape;
 }

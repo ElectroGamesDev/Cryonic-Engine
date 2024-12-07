@@ -297,7 +297,7 @@ void Collider3D::RemoveRigidbody()
 #endif
 }
 
-Shape Collider3D::GetShape()
+Collider3D::Shape Collider3D::GetShape()
 {
 	return shape;
 }

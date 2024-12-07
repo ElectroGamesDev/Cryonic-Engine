@@ -17,12 +17,6 @@
 
 class Rigidbody3D;
 
-enum Shape
-{
-    Box,
-    Sphere
-};
-
 class Collider3D : public Component {
 public:
     Collider3D(GameObject* obj, int id);
@@ -30,6 +24,12 @@ public:
     {
         return new Collider3D(gameObject, -1);
     }
+
+    enum Shape
+    {
+        Box,
+        Sphere
+    };
 
     // Hide in API
     void Highlight(Color color, bool highlightChildren);

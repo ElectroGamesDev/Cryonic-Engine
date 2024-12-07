@@ -7,12 +7,6 @@
 
 class Rigidbody2D;
 
-enum Shape
-{
-    Square,
-    Circle
-};
-
 class Collider2D : public Component {
 public:
     Collider2D(GameObject* obj, int id);
@@ -20,6 +14,12 @@ public:
     {
         return new Collider2D(gameObject, -1);
     }
+
+    enum Shape
+    {
+        Square,
+        Circle
+    };
 
     // Hide in API
     void Highlight(Color color, bool highlightChildren);
