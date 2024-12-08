@@ -6,8 +6,8 @@
 
 // Jolt library version
 #define JPH_VERSION_MAJOR 5
-#define JPH_VERSION_MINOR 1
-#define JPH_VERSION_PATCH 1
+#define JPH_VERSION_MINOR 2
+#define JPH_VERSION_PATCH 0
 
 // Determine which features the library was compiled with
 #ifdef JPH_DOUBLE_PRECISION
@@ -587,6 +587,13 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 	#ifdef __SANITIZE_THREAD__
 		#define JPH_TSAN_ENABLED
 	#endif
+#endif
+
+// Attribute to disable Thread Sanitizer for a particular function
+#ifdef JPH_TSAN_ENABLED
+	#define JPH_TSAN_NO_SANITIZE __attribute__((no_sanitize("thread")))
+#else
+	#define JPH_TSAN_NO_SANITIZE
 #endif
 
 JPH_NAMESPACE_END
