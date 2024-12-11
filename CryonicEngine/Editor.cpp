@@ -2909,7 +2909,7 @@ void Editor::RenderProperties()
                             }
                             else if ((*it)[0] == "Vector3")
                             {
-                                width = (ImGui::GetWindowWidth() - (65 + ImGui::CalcTextSize(name.c_str()).x)) / 2;
+                                width = (ImGui::GetWindowWidth() - (98 + ImGui::CalcTextSize(name.c_str()).x)) / 3;
                                 //ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
                                 ImGui::SameLine();
                                 ImGui::Text("X");
