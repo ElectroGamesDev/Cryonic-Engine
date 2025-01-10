@@ -198,6 +198,7 @@
     <ClCompile Include="Components\SpriteRenderer.cpp" />
     <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="Physics2DDebugDraw.cpp" />
+    <ClCompile Include="Physics3DDebugDraw.cpp" />
     <ClCompile Include="ProjectManager.cpp" />
     <ClCompile Include="RaylibCameraWrapper.cpp" />
     <ClCompile Include="RaylibDrawWrapper.cpp" />
@@ -268,6 +269,7 @@
     <ClInclude Include="Components\SpriteRenderer.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="Physics2DDebugDraw.h" />
+    <ClInclude Include="Physics3DDebugDraw.h" />
     <ClInclude Include="ProjectManager.h" />
     <ClInclude Include="RaylibCameraWrapper.h" />
     <ClInclude Include="RaylibDrawWrapper.h" />

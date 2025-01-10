@@ -210,6 +210,9 @@
     <ClCompile Include="AssetManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Physics3DDebugDraw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -415,6 +418,9 @@
     </ClInclude>
     <ClInclude Include="AssetManager.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics3DDebugDraw.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
