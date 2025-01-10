@@ -340,9 +340,11 @@ void Rigidbody2D::Update() // Todo: should this be in the Physics Update?
     else if (bodyType == Static)
     {
         if (gameObject->transform.GetPosition() != lastGameObjectPosition)
-            gameObject->transform.SetPosition(lastGameObjectPosition);
+            body->SetTransform({ gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y }, body->GetAngle());
+            //gameObject->transform.SetPosition(lastGameObjectPosition);
         if (gameObject->transform.GetRotation() != lastGameObjectRotation)
-            gameObject->transform.SetRotation(lastGameObjectRotation);
+            body->SetTransform(body->GetPosition(), DEG2RAD * gameObject->transform.GetRotation().y);
+            //gameObject->transform.SetRotation(lastGameObjectRotation);
     }
 
     lastGameObjectPosition = gameObject->transform.GetPosition();
