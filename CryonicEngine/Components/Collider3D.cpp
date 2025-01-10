@@ -20,7 +20,7 @@ Collider3D::Collider3D(GameObject* obj, int id) : Component(obj, id) {
                 [
                     "Shape",
                     "shape",
-                    "Sphere",
+                    "Box",
                     "Shape",
                     [
                         "Box",
@@ -56,26 +56,27 @@ Collider3D::Collider3D(GameObject* obj, int id) : Component(obj, id) {
 
 
 #if !defined(EDITOR)
-void Collider3D::Createb2Fixture()
+void Collider3D::CreateShape()
 {
 	switch (shape)
 	{
-	default:
-	case Box:
-	{
-		// Would I need to use ScaledShape()? I might not need to
-		JPH::BoxShapeSettings shape({ gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, gameObject->transform.GetScale().z * 3 * size.z / 2 });
-		break;
-	}
-	case Sphere:
-	{
-		b2CircleShape circle;
-		circle.m_p.Set(offset.x, offset.y);
-		circle.m_radius = gameObject->transform.GetScale().x * 1.5f * size.x;
-		fixtureDef.shape = &circle;
-		fixture = body->CreateFixture(&fixtureDef);
-		break;
-	}
+		default:
+		case Box:
+		{
+			// Would I need to use ScaledShape()? I might not need to
+			JPH::BoxShapeSettings shape({ gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, gameObject->transform.GetScale().z * 3 * size.z / 2 });
+			joltShape = shape.Create().Get();
+			break;
+		}
+		case Sphere:
+		{
+			//b2CircleShape circle;
+			//circle.m_p.Set(offset.x, offset.y);
+			//circle.m_radius = gameObject->transform.GetScale().x * 1.5f * size.x;
+			//fixtureDef.shape = &circle;
+			//fixture = body->CreateFixture(&fixtureDef);
+			break;
+		}
 	}
 }
 #endif
@@ -89,21 +90,29 @@ void Collider3D::Start()
 	// Putting this in Start() instead of Awake() to ensure the rigidbody component gets set up first
 
 	Rigidbody3D* rb = gameObject->GetComponent<Rigidbody3D>();
-	if (rb == nullptr || !rb->IsActive() || !rb->gameObject->IsActive() || !rb->gameObject->IsGlobalActive())
+	if (!trigger && rb != nullptr && rb->IsActive() && rb->gameObject->IsActive() && rb->gameObject->IsGlobalActive())
 		SetRigidbody(rb);
 	else
 	{
 		//fixtureDef.density = rb->GetMass();
 		//fixtureDef.friction = 0.3f;
-		body = rb->body;
-		rb->colliders.push_back(this);
-		rb->AddShape();
+		CreateShape();
+		Vector3 goPosition = gameObject->transform.GetPosition() + offset;
+		Quaternion goRotation = gameObject->transform.GetRotation();
+		if (joltShape == nullptr)
+		{
+			ConsoleLogger::ErrorLog("SHAPE NULLIFIED", false);
+			return;
+		}
+		JPH::BodyCreationSettings bodySettings(joltShape, { goPosition.x, goPosition.y, goPosition.z }, { goRotation.x, goRotation.y, goRotation.z, goRotation.w }, JPH::EMotionType::Static, 0); // Last parameter is the layer
+		bodySettings.mGravityFactor = 0;
+		bodySettings.mIsSensor = trigger;
+		bodySettings.mMotionQuality = (continuousDetection ? JPH::EMotionQuality::LinearCast : JPH::EMotionQuality::Discrete);
+		bodySettings.mUserData = reinterpret_cast<uint64_t>(this);
+		body = Rigidbody3D::bodyInterface->CreateBody(bodySettings);
+		Rigidbody3D::bodyInterface->AddBody(body->GetID(), JPH::EActivation::Activate);
+		ownBody = true;
 	}
-
-	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
-	Createb2Fixture();
-	//fixture = body->CreateFixture(&fixtureDef);
-
 	SetTrigger(trigger);
 
 
@@ -124,7 +133,29 @@ void Collider3D::Start()
 	//	});
 
 	//EventSystem::Subscribe("ObjectSelected", [](GameObject* gameObject) {});
+}
 
+void Collider3D::Update() // Todo: Should this be in PhysicsUpdate()???
+{
+#if !defined(EDITOR)
+	if (!ownBody)
+		return;
+
+	// Todo: Use SetPositionAndRotation() when possible
+	Vector3 position = gameObject->transform.GetPosition();
+	if (lastPosition != position)
+	{
+		Rigidbody3D::bodyInterface->SetPosition(body->GetID(), { position.x + offset.x, position.y + offset.y, position.z + offset.z }, JPH::EActivation::DontActivate);
+		lastPosition = position;
+	}
+
+	Quaternion rotation = gameObject->transform.GetRotation();
+	if (lastRotation != rotation)
+	{
+		Rigidbody3D::bodyInterface->SetPosition(body->GetID(), { rotation.x, rotation.y, rotation.z }, JPH::EActivation::DontActivate);
+		lastRotation = rotation;
+	}
+#endif
 }
 
 void Collider3D::Highlight(Color color, bool highlightChildren)
@@ -204,54 +235,61 @@ void Collider3D::Destroy()
 	if (!body)
 		return;
 
-	if (ownBody)
-		world->DestroyBody(body);
-	else
-		body->DestroyFixture(fixture);
+	const JPH::BodyID& bodyID = ownBody ? body->GetID() : rb->body->GetID();
+
+	Rigidbody3D::bodyInterface->RemoveBody(bodyID);
+	Rigidbody3D::bodyInterface->DestroyBody(bodyID);
 #endif
 }
 
 void Collider3D::Enable()
 {
 #if !defined(EDITOR)
-	if (!fixture) // This is needed since the fixture is setup in Start(), and Enable() runs before Start()
+	if (!body) // This is needed since the body is set in Start(), and Enable() runs before Start()
 		return;
-	b2Filter filter = fixture->GetFilterData();
-	filter.categoryBits = 0x0001;
-	filter.maskBits = 0xFFFF;
-	fixture->SetFilterData(filter);
+
+	if (ownBody)
+		Rigidbody3D::bodyInterface->AddBody(body->GetID(), JPH::EActivation::Activate);
+	else
+		rb->AddCollider(this);
 #endif
 }
 
 void Collider3D::Disable()
 {
 #if !defined(EDITOR)
-	b2Filter filter = fixture->GetFilterData();
-	filter.categoryBits = 0x8000;
-	filter.maskBits = 0x0000;
-	fixture->SetFilterData(filter);
+	if (ownBody)
+		Rigidbody3D::bodyInterface->RemoveBody(body->GetID());
+	else
+		rb->RemoveCollider(this);
 #endif
 }
 
-void Collider3D::SetRigidbody(Rigidbody3D* rb)
+void Collider3D::SetRigidbody(Rigidbody3D* rigidbody)
 {
 #if !defined(EDITOR)
 	if (body)
 	{
 		if (ownBody)
 		{
-			bodyInterface.RemoveBody(rb->body->GetID());
-			bodyInterface.DestroyBody(rb->body->GetID());
+			Rigidbody3D::bodyInterface->RemoveBody(body->GetID());
+			Rigidbody3D::bodyInterface->DestroyBody(body->GetID());
 			ownBody = false;
 		}
 		else
-			rb->body->DestroyFixture(fixture);
+		{
+			rb->RemoveCollider(this);
+			rb = nullptr;
+		}
 	}
+	CreateShape();
+	rb = rigidbody;
 	body = rb->body;
-	fixtureDef.density = rb->GetMass();
-	fixtureDef.friction = 0.3f;
-	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
-	Createb2Fixture();
+	rb->AddCollider(this);
+	//fixtureDef.density = rb->GetMass();
+	//fixtureDef.friction = 0.3f;
+	//fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
+	//Createb2Fixture();
 #endif
 }
 
@@ -263,26 +301,40 @@ void Collider3D::RemoveRigidbody()
 
 	if (ownBody)
 	{
-		world->DestroyBody(body);
+		Rigidbody3D::bodyInterface->RemoveBody(body->GetID());
+		Rigidbody3D::bodyInterface->DestroyBody(body->GetID());
 		ownBody = false;
 	}
 	else
-		body->DestroyFixture(fixture);
-
+	{
+		rb->RemoveCollider(this);
+		rb = nullptr;
+	}
 	// Tries to find a new body, if it fails to find one, then create one
 	// Removed this code because only one Rigidbody can be attached to a gameobjerct. If this function is called, then its assumed its called by the only rigidbody component
 	//Rigidbody3D* rb = gameObject->GetComponent<Rigidbody3D>();
 	//if (rb == nullptr || !rb->IsActive() || !rb->gameObject->IsActive() || !rb->gameObject->IsGlobalActive())
 	//{
-	b2BodyDef bodyDef;
-	bodyDef.type = b2_staticBody;
-	bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
-	body = world->CreateBody(&bodyDef);
+
+	CreateShape();
+	//b2BodyDef bodyDef;
+	//bodyDef.type = b2_staticBody;
+	//bodyDef.position.Set(gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y);
+	//body = world->CreateBody(&bodyDef);
+	Vector3 goPosition = gameObject->transform.GetPosition() + offset;
+	Quaternion goRotation = gameObject->transform.GetRotation();
+	JPH::BodyCreationSettings bodySettings(joltShape, { goPosition.x, goPosition.y, goPosition.z }, { goRotation.x, goRotation.y, goRotation.z, goRotation.w }, JPH::EMotionType::Static, 0); // Last parameter is the layer
+	bodySettings.mGravityFactor = 0;
+	bodySettings.mIsSensor = trigger;
+	bodySettings.mMotionQuality = (continuousDetection ? JPH::EMotionQuality::LinearCast : JPH::EMotionQuality::Discrete);
+	bodySettings.mUserData = reinterpret_cast<uint64_t>(this);
+	body = Rigidbody3D::bodyInterface->CreateBody(bodySettings);
+	Rigidbody3D::bodyInterface->AddBody(body->GetID(), JPH::EActivation::Activate);
 	ownBody = true;
 
 	// Setting the density and friction in case a Rigidbody3D is added to the game object
-	fixtureDef.density = 1.0f;
-	fixtureDef.friction = 0.3f;
+	//fixtureDef.density = 1.0f;
+	//fixtureDef.friction = 0.3f;
 	//}
 	//else
 	//{
@@ -292,8 +344,8 @@ void Collider3D::RemoveRigidbody()
 	//	rb->colliders.push_back(this);
 	//}
 
-	fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
-	Createb2Fixture();
+	//fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(this);
+	//Createb2Fixture();
 #endif
 }
 
@@ -306,7 +358,13 @@ void Collider3D::SetTrigger(bool value)
 {
 	trigger = value;
 #if !defined(EDITOR)
-	fixture->SetSensor(value);
+	if (!body)
+		return;
+
+	if (ownBody)
+		body->SetIsSensor(trigger);
+	else
+		RemoveRigidbody();
 #endif
 }
 
@@ -321,11 +379,16 @@ bool Collider3D::IsTrigger()
 
 void Collider3D::SetOffset(Vector3 offset)
 {
-	// Todo: Fix for Collider2D too. I don't think this need to recrate the body. Also, make sure its even using the offset when using like SetPosition(). Also check how the offset is even set currently
 	this->offset = offset;
 #if !defined(EDITOR)
-	body->DestroyFixture(fixture);
-	Createb2Fixture();
+	CreateShape();
+	if (ownBody)
+	{
+		Vector3 goPosition = gameObject->transform.GetPosition();
+		Rigidbody3D::bodyInterface->SetPosition(body->GetID(), { goPosition.x + offset.x, goPosition.y + offset.y, goPosition.z + offset.z }, JPH::EActivation::DontActivate);
+	}
+	else
+		rb->UpdateShape(this, true);
 #endif
 }
 
@@ -336,11 +399,13 @@ Vector3 Collider3D::GetOffset()
 
 void Collider3D::SetSize(Vector3 size)
 {
-	// Is this the only way? Check for box2d and jolt
 	this->size = size;
 #if !defined(EDITOR)
-	body->DestroyFixture(fixture);
-	Createb2Fixture();
+	CreateShape();
+	if (ownBody)
+		Rigidbody3D::bodyInterface->SetShape(body->GetID(), joltShape, true, JPH::EActivation::DontActivate);
+	else
+		rb->UpdateShape(this);
 #endif
 }
 

@@ -34,11 +34,12 @@ public:
     // Hide in API
     void Highlight(Color color, bool highlightChildren);
     // Hide in API
-    void SetRigidbody(Rigidbody3D* rb);
+    void SetRigidbody(Rigidbody3D* rigidbody);
     // Hide in API
     void RemoveRigidbody();
 
     void Start() override;
+    void Update() override;
     void EditorUpdate() override;
     void Destroy() override;
     void Enable() override;
@@ -54,19 +55,23 @@ public:
 
     // Hide in API
     bool highlight = false;
+    Rigidbody3D* rb;
+#if !defined(EDITOR)
+    JPH::RefConst<JPH::Shape> joltShape;
+#endif
 private:
     Shape shape;
     bool trigger;
     Vector3 offset;
     Vector3 size = { 1, 1 };
-
+    bool continuousDetection;
+    Vector3 lastPosition;
+    Quaternion lastRotation;
 
 #if !defined(EDITOR)
-    void Createb2Fixture();
+    void CreateShape();
 
-    //b2FixtureDef fixtureDef;
     JPH::Body* body = nullptr;
-    //b2Fixture* fixture = nullptr;
     bool ownBody = false;
 #endif
 };
