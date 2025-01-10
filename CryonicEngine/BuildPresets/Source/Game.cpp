@@ -20,17 +20,30 @@
 #include "FontManager.h"
 #include <vector>
 
+#include "CollisionListener2D.h"
+#include "Physics2DDebugDraw.h"
+
 #ifdef IS3D
+#define JPH_DEBUG_RENDERER
+#include <thread>
 #include "Jolt/Jolt.h"
 #include "Jolt/Core/Factory.h"
 #include "Jolt/Core/TempAllocator.h"
 #include "Jolt/Core/JobSystemThreadPool.h"
+#include "Jolt/Renderer/DebugRenderer.h"
+#include "Jolt/Physics/Body/BodyManager.h"
 #include "Components/Rigidbody3D.h"
+#include "Physics3DDebugDraw.h"
+#include "CollisionListener3D.h"
 JPH_SUPPRESS_WARNINGS
-#endif
 
-#include "CollisionListener2D.h"
-#include "Physics2DDebugDraw.h"
+JPH::PhysicsSystem physicsSystem;
+CollisionListener3D collisionListener3D;
+JPH::TempAllocatorMalloc* tempAllocator;
+Physics3DDebugDraw* debugRenderer;
+JPH::JobSystemThreadPool jobSystem;
+JPH::BodyManager::DrawSettings bodyDrawSettings;
+#endif
 
 b2World* world = nullptr;
 CollisionListener2D collisionListener;
@@ -40,9 +53,107 @@ std::filesystem::path exeParent;
 // Todo: Get this from project settings
 // These are global so the MainLoop() can access them
 float timeStep = 1.0f / 60.0f;
-int32 velocityIterations = 8;
-int32 positionIterations = 3;
+int32 velocityIterations = 8; // For 2D physics
+int32 positionIterations = 3; // For 2D physics
+int physicsIterations = 5; // For 3D physics
 float timeSinceLastUpdate = 0.0f;
+
+// Move out of Game.cpp. This is all default JoltPhysics implementation of these classes
+namespace Layers
+{
+	static constexpr JPH::ObjectLayer NON_MOVING = 0;
+	static constexpr JPH::ObjectLayer MOVING = 1;
+	static constexpr JPH::ObjectLayer NUM_LAYERS = 2;
+};
+
+/// Class that determines if two object layers can collide
+class ObjectLayerPairFilterImpl : public JPH::ObjectLayerPairFilter
+{
+public:
+	virtual bool					ShouldCollide(JPH::ObjectLayer inObject1, JPH::ObjectLayer inObject2) const override
+	{
+		switch (inObject1)
+		{
+		case Layers::NON_MOVING:
+			return inObject2 == Layers::MOVING; // Non moving only collides with moving
+		case Layers::MOVING:
+			return true; // Moving collides with everything
+		default:
+			JPH_ASSERT(false);
+			return false;
+		}
+	}
+};
+
+// Each broadphase layer results in a separate bounding volume tree in the broad phase. You at least want to have
+// a layer for non-moving and moving objects to avoid having to update a tree full of static objects every frame.
+// You can have a 1-on-1 mapping between object layers and broadphase layers (like in this case) but if you have
+// many object layers you'll be creating many broad phase trees, which is not efficient. If you want to fine tune
+// your broadphase layers define JPH_TRACK_BROADPHASE_STATS and look at the stats reported on the TTY.
+namespace BroadPhaseLayers
+{
+	static constexpr JPH::BroadPhaseLayer NON_MOVING(0);
+	static constexpr JPH::BroadPhaseLayer MOVING(1);
+	static constexpr unsigned int NUM_LAYERS(2);
+};
+
+// BroadPhaseLayerInterface implementation
+// This defines a mapping between object and broadphase layers.
+class BPLayerInterfaceImpl final : public JPH::BroadPhaseLayerInterface
+{
+public:
+	BPLayerInterfaceImpl()
+	{
+		// Create a mapping table from object to broad phase layer
+		mObjectToBroadPhase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
+		mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
+	}
+
+	virtual unsigned int					GetNumBroadPhaseLayers() const override
+	{
+		return BroadPhaseLayers::NUM_LAYERS;
+	}
+
+	virtual JPH::BroadPhaseLayer			GetBroadPhaseLayer(JPH::ObjectLayer inLayer) const override
+	{
+		JPH_ASSERT(inLayer < Layers::NUM_LAYERS);
+		return mObjectToBroadPhase[inLayer];
+	}
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	virtual const char* GetBroadPhaseLayerName(JPH::BroadPhaseLayer inLayer) const override
+	{
+		switch ((JPH::BroadPhaseLayer::Type)inLayer)
+		{
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
+		default:													JPH_ASSERT(false); return "INVALID";
+		}
+	}
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+
+private:
+	JPH::BroadPhaseLayer					mObjectToBroadPhase[Layers::NUM_LAYERS];
+};
+
+/// Class that determines if an object layer can collide with a broadphase layer
+class ObjectVsBroadPhaseLayerFilterImpl : public JPH::ObjectVsBroadPhaseLayerFilter
+{
+public:
+	virtual bool				ShouldCollide(JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2) const override
+	{
+		switch (inLayer1)
+		{
+		case Layers::NON_MOVING:
+			return inLayer2 == BroadPhaseLayers::MOVING;
+		case Layers::MOVING:
+			return true;
+		default:
+			JPH_ASSERT(false);
+			return false;
+		}
+	}
+};
 
 void MainLoop();
 
@@ -91,32 +202,39 @@ int main(void)
 
 	// Physics setup. Must go before scene loading
 #ifdef IS3D
-	RegisterDefaultAllocator();
-	Factory::sInstance = new Factory();
-	RegisterTypes();
-	TempAllocatorImpl temp_allocator(10 * 1024 * 1024);
-	JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, thread::hardware_concurrency() - 1);
+	JPH::RegisterDefaultAllocator();
+	JPH::Factory::sInstance = new JPH::Factory();
+	JPH::RegisterTypes();
 
-	const uint cMaxBodies = 65536;
-	const uint cNumBodyMutexes = 0;
-	const uint cMaxBodyPairs = 65536;
-	const uint cMaxContactConstraints = 10240;
+	const unsigned int cMaxBodies = 65536;
+	const unsigned int cNumBodyMutexes = 0;
+	const unsigned int cMaxBodyPairs = 65536;
+	const unsigned int cMaxContactConstraints = 20480;
 
 	BPLayerInterfaceImpl broadPhaseLayerInterface;
-	ObjectVsBroadPhaseLayerFilterImplObjectVsBroadphaseLayerFilter;
+	ObjectVsBroadPhaseLayerFilterImpl objectVsBroadphaseLayerFilter;
 	ObjectLayerPairFilterImpl objectVsObjectLayerFilter;
 
-	PhysicsSystem physicsSystem;
 	physicsSystem.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, broadPhaseLayerInterface, objectVsBroadphaseLayerFilter, objectVsObjectLayerFilter);
 
 	//MyBodyActivationListener bodyActivationListener;
 	//physicsSystem.SetBodyActivationListener(&body_activationListener);
 
-	MyContactListener contactListener;
-	physicsSystem.SetContactListener(&contactListener);
+	physicsSystem.SetContactListener(&collisionListener3D);
 
-	BodyInterface& bodyInterface = physicsSystem.GetBodyInterface();
-	Rigidbody3D::bodyInterface = physicsSystem.GetBodyInterface();
+	JPH::BodyInterface& bodyInterface = physicsSystem.GetBodyInterface();
+	Rigidbody3D::bodyInterface = &physicsSystem.GetBodyInterface();
+
+	Rigidbody3D::bodyLockInterface = &physicsSystem.GetBodyLockInterface();
+
+	debugRenderer = new Physics3DDebugDraw();
+	JPH::DebugRenderer::sInstance = debugRenderer;
+	bodyDrawSettings.mDrawGetSupportFunction = true;
+	bodyDrawSettings.mDrawShape = true;
+	bodyDrawSettings.mDrawShapeWireframe = true;
+	jobSystem.Init(2048, 16, std::thread::hardware_concurrency());
+	//JPH::TempAllocatorImpl tempAllocator(100 * 1024 * 1024);
+	tempAllocator = new JPH::TempAllocatorMalloc();
 #endif
 
 	b2Vec2 gravity(0.0f, -9.8f);
@@ -158,9 +276,11 @@ int main(void)
 	ShaderManager::Cleanup();
     RaylibWrapper::CloseWindow();
 #ifdef IS3D
-	UnregisterTypes();
-	delete Factory::sInstance;
-	Factory::sInstance = nullptr;
+	delete debugRenderer;
+	delete tempAllocator;
+	JPH::UnregisterTypes();
+	delete JPH::Factory::sInstance;
+	JPH::Factory::sInstance = nullptr;
 #else
 	delete world;
 #endif
@@ -173,7 +293,7 @@ void MainLoop()
 	while (timeSinceLastUpdate >= timeStep)
 	{
 #ifdef IS3D
-		physicsSystem.Update(timeStep, cCollisionSteps, &temp_allocator, &job_system);
+		physicsSystem.Update(timeStep, physicsIterations, tempAllocator, &jobSystem);
 #else
 		world->Step(timeStep, velocityIterations, positionIterations);
 		collisionListener.ContinueContact(); // Todo: Should this go after the loop?
@@ -279,6 +399,8 @@ void MainLoop()
 #ifdef IS2D
 	//world->DebugDraw();
 #endif
+
+	physicsSystem.DrawBodies(bodyDrawSettings, debugRenderer);
 
 	RaylibWrapper::EndMode3D();
 
