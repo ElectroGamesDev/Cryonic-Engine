@@ -248,6 +248,8 @@ struct Vector3
     static Vector3 Down() { return { 0.0f, -1.0f, 0.0f }; }
     static Vector3 Right() { return { 1.0f, 0.0f, 0.0f }; }
     static Vector3 Left() { return { -1.0f, 0.0f, 0.0f }; }
+
+    bool Zero() { return x == 0.0f && y == 0.0f && z == 0.0f; }
 };
 
 struct Vector4 {
@@ -255,6 +257,8 @@ struct Vector4 {
     float y;
     float z;
     float w;
+
+    Vector4(float x = 0.0f, float y = 0.0f, float z = 0.0f, float w = 0.0f) : x(x), y(y), z(z), w(w) {}
 
     Vector4 operator+(const Vector4& other) const {
         return { x + other.x, y + other.y, z + other.z, w + other.w };
@@ -364,6 +368,11 @@ struct Vector4 {
     static Vector4 Identity()
     {
         return { 0.0f, 0.0f, 0.0f, 1.0f };
+    }
+
+    bool Zero()
+    {
+        return x == 0.0f && y == 0.0f && z == 0.0f && w == 0.0f;
     }
 };
 
