@@ -1,13 +1,24 @@
 #include "CollisionListener3D.h"
 #include "Components/Collider3D.h"
+#include "Components/Rigidbody3D.h"
 
 // BodyID hashing doesn't seem to work
 //std::unordered_map<std::pair<JPH::BodyID, JPH::BodyID>, std::pair<Collider3D*, Collider3D*>> contactMap;
 
 void CollisionListener3D::OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
 {
-    Collider3D* colliderA = reinterpret_cast<Collider3D*>(inBody1.GetUserData());
-    Collider3D* colliderB = reinterpret_cast<Collider3D*>(inBody2.GetUserData());
+    Collider3D* colliderA;
+    Collider3D* colliderB;
+
+    if (inBody1.GetUserData() != 0)
+        colliderA = reinterpret_cast<Collider3D*>(inBody1.GetUserData());
+    else
+        colliderA = Rigidbody3D::colliderMap[inBody1.GetShape()->GetSubShapeUserData(inManifold.mSubShapeID1)];
+
+    if (inBody2.GetUserData() != 0)
+        colliderB = reinterpret_cast<Collider3D*>(inBody2.GetUserData());
+    else
+        colliderB = Rigidbody3D::colliderMap[inBody2.GetShape()->GetSubShapeUserData(inManifold.mSubShapeID2)];
 
     //contactMap[std::make_pair(inBody1.GetID(), inBody2.GetID())] = std::make_pair(colliderA, colliderB);
 
@@ -22,8 +33,18 @@ void CollisionListener3D::OnContactAdded(const JPH::Body& inBody1, const JPH::Bo
 
 void CollisionListener3D::OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
 {
-    Collider3D* colliderA = reinterpret_cast<Collider3D*>(inBody1.GetUserData());
-    Collider3D* colliderB = reinterpret_cast<Collider3D*>(inBody2.GetUserData());
+    Collider3D* colliderA;
+    Collider3D* colliderB;
+
+    if (inBody1.GetUserData() != 0)
+        colliderA = reinterpret_cast<Collider3D*>(inBody1.GetUserData());
+    else
+        colliderA = Rigidbody3D::colliderMap[inBody1.GetShape()->GetSubShapeUserData(inManifold.mSubShapeID1)];
+
+    if (inBody2.GetUserData() != 0)
+        colliderB = reinterpret_cast<Collider3D*>(inBody2.GetUserData());
+    else
+        colliderB = Rigidbody3D::colliderMap[inBody2.GetShape()->GetSubShapeUserData(inManifold.mSubShapeID2)];
 
     if (colliderA && colliderB)
     {
