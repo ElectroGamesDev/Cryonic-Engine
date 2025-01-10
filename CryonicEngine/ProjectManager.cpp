@@ -30,7 +30,10 @@ void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem:
     std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "Scenes", "ConsoleLogger", "FontManager", "Font", "Sprite", "GameObject", "Components", "ShaderManager", "InputSystem", "CollisionListener2D", "EventSystem", "Animation", "AnimationGraph", "AudioClip", "Physics2DDebugDraw", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
     
     if (projectData.is3D)
+    {
         filesToCopy.push_back("CollisionListener3D");
+        filesToCopy.push_back("Physics3DDebugDraw"); // Todo: Remove this
+    }
 
     if (!std::filesystem::exists(destination))
         std::filesystem::create_directories(destination);
