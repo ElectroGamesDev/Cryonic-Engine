@@ -115,7 +115,7 @@ void Collider2D::Start()
 	}
 	else
 	{
-		ConsoleLogger::ErrorLog("???");
+		// Todo: Why not call SetRigidbody() here?
 		fixtureDef.density = rb->GetMass();
 		fixtureDef.friction = 0.3f;
 		body = rb->body;
@@ -126,7 +126,7 @@ void Collider2D::Start()
 	Createb2Fixture();
 	//fixture = body->CreateFixture(&fixtureDef);
 
-	std::cout << "Fixture created for body: " << fixture->GetBody() << std::endl;
+	//std::cout << "Fixture created for body: " << fixture->GetBody() << std::endl;
 
 	SetTrigger(trigger);
 
@@ -344,6 +344,7 @@ bool Collider2D::IsTrigger()
 
 void Collider2D::SetOffset(Vector2 offset)
 {
+	// Todo: Do I need to recreate the fixture for this?
 	this->offset = offset;
 #if !defined(EDITOR)
 	body->DestroyFixture(fixture);
@@ -358,6 +359,7 @@ Vector2 Collider2D::GetOffset()
 
 void Collider2D::SetSize(Vector2 size)
 {
+	// Todo: Do I need to recreate the fixture for this?
 	this->size = size;
 #if !defined(EDITOR)
 	body->DestroyFixture(fixture);
