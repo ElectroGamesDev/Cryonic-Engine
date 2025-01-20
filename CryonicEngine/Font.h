@@ -20,6 +20,7 @@ public:
 //			return;
 //		}
 
+		this->relativePath = path;
 		this->path = path;
 	}
 
@@ -29,7 +30,9 @@ public:
 	 * @return [string] The relative path to the font file.
 	 */
 	std::string GetPath() const { return path; };
+	std::string GetRelativePath() const { return relativePath; }
 
 private:
 	std::string path = "";
+	std::string relativePath = "";
 };

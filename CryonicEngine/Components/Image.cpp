@@ -77,7 +77,7 @@ void Image::EditorUpdate()
     color.b = exposedVariables[1][1][2][2].get<int>();
     color.a = exposedVariables[1][1][2][3].get<int>();
 
-    if (sprite->GetPath() != exposedVariables[1][0][2])
+    if (sprite->GetRelativePath() != exposedVariables[1][0][2])
     {
         SetSprite(new Sprite(exposedVariables[1][0][2].get<std::string>()));
         // Todo: Should it unload the old sprite?

@@ -167,7 +167,7 @@ void Button::EditorUpdate()
 
     text = exposedVariables[1][6][2].get<std::string>();
 
-    if (image->GetPath() != exposedVariables[1][0][2])
+    if (image->GetRelativePath() != exposedVariables[1][0][2])
     {
         SetImage(new Sprite(exposedVariables[1][0][2].get<std::string>()));
         // Todo: Should it unload the old sprite?
@@ -178,7 +178,7 @@ void Button::EditorUpdate()
         if (fontSize != exposedVariables[1][10][2].get<int>())
             SetFontSize(exposedVariables[1][10][2].get<int>());
 
-        if (!font || font->GetPath() != exposedVariables[1][9][2])
+        if (!font || font->GetRelativePath() != exposedVariables[1][9][2])
         {
             SetFont(new Font(exposedVariables[1][9][2].get<std::string>()));
             // Todo: Should it unload the old font?
