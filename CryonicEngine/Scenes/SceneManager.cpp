@@ -24,6 +24,7 @@
 #endif
 #include "../Components/AnimationPlayer.h"
 #include "../Components/AudioPlayer.h"
+#include "../Components/TilemapRenderer.h"
 #include "../Components/Label.h"
 #include "../Components/Image.h"
 #include "../Components/Button.h"
@@ -360,6 +361,11 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
             else if (componentData["name"] == "AudioPlayer")
             {
                 AudioPlayer& component = gameObject->AddComponentInternal<AudioPlayer>(componentData["id"]);
+                setExposedVariables(component, componentData);
+            }
+            else if (componentData["name"] == "TilemapRenderer")
+            {
+                TilemapRenderer& component = gameObject->AddComponentInternal<TilemapRenderer>(componentData["id"]);
                 setExposedVariables(component, componentData);
             }
             else if (componentData["name"] == "Label")

@@ -2,8 +2,8 @@
 #include "../RaylibDrawWrapper.h"
 #include "../RaylibWrapper.h"
 
-std::vector<SpriteRenderer*> SpriteRenderer::spriteRenderers;
-bool SpriteRenderer::sorted = true;
+//std::vector<SpriteRenderer*> SpriteRenderer::spriteRenderers;
+//bool SpriteRenderer::sorted = true;
 
 void SpriteRenderer::Awake()
 {
@@ -11,15 +11,8 @@ void SpriteRenderer::Awake()
     sprite = new Sprite(exposedVariables[1][0][2].get<std::string>()); // Todo: Handle if the path no longer exists
 #endif
 
-    spriteRenderers.push_back(this);
+    textures.push_back(this);
     sorted = false;
-}
-
-void SpriteRenderer::SortSpriteRenderers()
-{
-    std::sort(spriteRenderers.begin(), spriteRenderers.end(), [](const SpriteRenderer* a, const SpriteRenderer* b) {
-        return a->GetRenderOrder() < b->GetRenderOrder();
-        });
 }
 
 void SpriteRenderer::Start()
@@ -27,7 +20,7 @@ void SpriteRenderer::Start()
     if (sorted)
         return;
 
-    SortSpriteRenderers();
+    RenderableTexture::SortTextures();
     sorted = true;
 }
 
@@ -79,7 +72,7 @@ void SpriteRenderer::SetRenderOrder(int order)
 {
     renderOrder = order;
 
-    SortSpriteRenderers();
+    SortTextures();
 }
 
 int SpriteRenderer::GetRenderOrder() const
@@ -109,50 +102,48 @@ bool SpriteRenderer::GetFlipY() const
 
 void SpriteRenderer::Render()
 {
-    for (SpriteRenderer* spriteRenderer : spriteRenderers)
+    if (!sprite || !gameObject->IsActive() || !gameObject->IsGlobalActive() || !IsActive())
+        return;
+
+    // Todo: I should create an enum to store whether if its a sqaure, circle, etc, if its a shape. It will be faster than comparing strings in an if-else
+    if (sprite->GetTexture() != nullptr)
     {
-        if (!spriteRenderer || !spriteRenderer->sprite || !spriteRenderer->gameObject->IsActive() || !spriteRenderer->gameObject->IsGlobalActive() || !spriteRenderer->IsActive())
-            continue;
+        int xFlip = flipX ? -1 : 1;
+        int yFlip = flipY ? 1 : -1; // The Y is already flipped
 
-        // Todo: I should create an enum to store whether if its a sqaure, circle, etc, if its a shape. It will be faster than comparing strings in an if-else
-        if (spriteRenderer->sprite->GetTexture() != nullptr)
-        {
-            int xFlip = spriteRenderer->flipX ? -1 : 1;
-            int yFlip = spriteRenderer->flipY ? 1 : -1; // The Y is already flipped
+        RaylibWrapper::Texture2D* texture = sprite->GetTexture();
 
-            RaylibWrapper::Texture2D* texture = spriteRenderer->sprite->GetTexture();
-
-            RaylibWrapper::DrawTextureProFlipped({ texture->id, texture->width, texture->height, texture->mipmaps, texture->format },
-                { 0, 0, static_cast<float>(texture->width) * xFlip, static_cast<float>(texture->height) * yFlip },
-                { spriteRenderer->gameObject->transform.GetPosition().x, spriteRenderer->gameObject->transform.GetPosition().y, texture->width * spriteRenderer->gameObject->transform.GetScale().x / 10, texture->height * spriteRenderer->gameObject->transform.GetScale().y / 10 },
-                { texture->width * spriteRenderer->gameObject->transform.GetScale().x / 10 / 2, texture->height * spriteRenderer->gameObject->transform.GetScale().y / 10 / 2 },
-                spriteRenderer->gameObject->transform.GetRotationEuler().z,
-                { spriteRenderer->tint.r, spriteRenderer->tint.g, spriteRenderer->tint.b, spriteRenderer->tint.a });
-        }
-        else if (spriteRenderer->sprite->GetPath() == "Square")
-        {
-            Vector3 position = spriteRenderer->gameObject->transform.GetPosition();
-            Vector3 scale = spriteRenderer->gameObject->transform.GetScale();
-            //DrawRectangleWrapper(position.x, position.y, scale.x, scale.y, gameObject->transform.GetRotationEuler().z, tint.r, tint.g, tint.b, tint.a);
-            RaylibWrapper::DrawRectangleProFlipped({ position.x, position.y, scale.x * 3, scale.y * 3 },
+        RaylibWrapper::DrawTextureProFlipped({ texture->id, texture->width, texture->height, texture->mipmaps, texture->format },
+            { 0, 0, static_cast<float>(texture->width) * xFlip, static_cast<float>(texture->height) * yFlip },
+            { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, texture->width * gameObject->transform.GetScale().x / 10, texture->height * gameObject->transform.GetScale().y / 10 },
+            { texture->width * gameObject->transform.GetScale().x / 10 / 2, texture->height * gameObject->transform.GetScale().y / 10 / 2 },
+            gameObject->transform.GetRotationEuler().z,
+            { tint.r, tint.g, tint.b, tint.a });
+    }
+    else if (sprite->GetPath() == "Square")
+    {
+        Vector3 position = gameObject->transform.GetPosition();
+        Vector3 scale = gameObject->transform.GetScale();
+        //DrawRectangleWrapper(position.x, position.y, scale.x, scale.y, gameObject->transform.GetRotationEuler().z, tint.r, tint.g, tint.b, tint.a);
+        RaylibWrapper::DrawRectangleProFlipped({ position.x, position.y, scale.x * 3, scale.y * 3 },
             {
                 scale.x * 3 / 2,
                 scale.y * 3 / 2
             },
-                spriteRenderer->gameObject->transform.GetRotationEuler().z,
-                { spriteRenderer->tint.r, spriteRenderer->tint.g, spriteRenderer->tint.b, spriteRenderer->tint.a });
-        }
-        else if (spriteRenderer->sprite->GetPath() == "Circle")
-        {
-            Vector3 position = spriteRenderer->gameObject->transform.GetPosition();
-            //DrawCircleWrapper(position.x, position.y, gameObject->transform.GetScale().x, tint.r, tint.g, tint.b, tint.a);
-            RaylibWrapper::DrawCircleSectorFlipped({ position.x, position.y }, spriteRenderer->gameObject->transform.GetScale().x * 1.5f, 0, 360, 36, { spriteRenderer->tint.r, spriteRenderer->tint.g, spriteRenderer->tint.b, spriteRenderer->tint.a });
-        }
-        else
-        {
-            // Todo: Invalid texture path
-        }
+            gameObject->transform.GetRotationEuler().z,
+            { tint.r, tint.g, tint.b, tint.a });
     }
+    else if (sprite->GetPath() == "Circle")
+    {
+        Vector3 position = gameObject->transform.GetPosition();
+        //DrawCircleWrapper(position.x, position.y, gameObject->transform.GetScale().x, tint.r, tint.g, tint.b, tint.a);
+        RaylibWrapper::DrawCircleSectorFlipped({ position.x, position.y }, gameObject->transform.GetScale().x * 1.5f, 0, 360, 36, { tint.r, tint.g, tint.b, tint.a });
+    }
+    else
+    {
+        // Todo: Invalid texture path
+    }
+
 }
 
 #if defined(EDITOR)
@@ -164,11 +155,12 @@ void SpriteRenderer::EditorUpdate()
         setup = true;
     }
 
-    if (sprite && sprite->GetPath() != exposedVariables[1][0][2])
+    if (sprite && sprite->GetRelativePath() != exposedVariables[1][0][2])
     {
         SetSprite(new Sprite(exposedVariables[1][0][2].get<std::string>()));
         // Todo: Should it unload the old sprite?
     }
+
     tint.r = exposedVariables[1][1][2][0].get<int>();
     tint.g = exposedVariables[1][1][2][1].get<int>();
     tint.b = exposedVariables[1][1][2][2].get<int>();
@@ -177,7 +169,7 @@ void SpriteRenderer::EditorUpdate()
     if (renderOrder != exposedVariables[1][2][2].get<int>())
     {
         renderOrder = exposedVariables[1][2][2].get<int>();
-        SortSpriteRenderers();
+        SortTextures();
     }
 
     flipX = exposedVariables[1][3][2].get<bool>();
@@ -187,11 +179,11 @@ void SpriteRenderer::EditorUpdate()
 
 void SpriteRenderer::Destroy()
 {
-    auto it = std::find(spriteRenderers.begin(), spriteRenderers.end(), this);
-    if (it != spriteRenderers.end())
+    auto it = std::find(textures.begin(), textures.end(), this);
+    if (it != textures.end())
     {
-        spriteRenderers.erase(it);
-        SortSpriteRenderers();
+        textures.erase(it);
+        SortTextures();
     }
 //    if (texture == nullptr)
 //        return;

@@ -49,11 +49,15 @@ GameObject* Scene::AddGameObject(int id)
 
 void Scene::RemoveGameObject(GameObject* gameObject)
 {
+    if (!gameObject) // In case the gameObject has already been removed
+        return;
+
     if (GameObject::markForDeletion)
     {
         GameObject::markedForDeletion.push_back(gameObject);
         return;
     }
+
     for (GameObject* child : gameObject->GetChildren())
         RemoveGameObject(child);
 

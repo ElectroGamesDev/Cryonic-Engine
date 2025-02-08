@@ -17,9 +17,7 @@
 #include <regex>
 #include <chrono>
 #include <ctime>
-
 #include <cstdio>
-
 
 using json = nlohmann::json;
 
@@ -27,7 +25,7 @@ ProjectData ProjectManager::projectData;
 
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
-    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "Scenes", "ConsoleLogger", "FontManager", "Font", "Sprite", "GameObject", "Components", "ShaderManager", "InputSystem", "CollisionListener2D", "EventSystem", "Animation", "AnimationGraph", "AudioClip", "Physics2DDebugDraw", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
+    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "Scenes", "ConsoleLogger", "FontManager", "Font", "Sprite", "GameObject", "Components", "ShaderManager", "RenderableTexture", "InputSystem", "CollisionListener2D", "EventSystem", "Animation", "AnimationGraph", "AudioClip", "Physics2DDebugDraw", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
     
     if (projectData.is3D)
     {

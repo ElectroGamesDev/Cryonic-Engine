@@ -27,6 +27,7 @@
 #include "Components/Rigidbody3D.h"
 #include "Components/AnimationPlayer.h"
 #include "Components/AudioPlayer.h"
+#include "Components/TilemapRenderer.h"
 #include "Components/Label.h"
 #include "Components/Image.h"
 #include "Components/Button.h"
@@ -44,6 +45,7 @@
 #include "CanvasEditor.h"
 #include "FileWatcher.h"
 #include "AssetManager.h"
+#include "RenderableTexture.h"
 
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -508,7 +510,9 @@ void Editor::UpdateViewport()
         }
     }
 
-    SpriteRenderer::Render();
+    for (RenderableTexture* texture : RenderableTexture::textures) // Renders Sprites and Tilemaps
+        if (texture)
+            texture->Render();
 
     switch (dragData.first)
     {
@@ -851,6 +855,106 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                                     std::ifstream jsonFile(dataFile.path);
                                     dataFile.json = nlohmann::json::parse(jsonFile);
                                 }
+
+                                objectInProperties = dataFile;
+                            }
+                        }
+                    }
+                }
+                else if (extension == ".ldtk")
+                {
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["LDtkIcon"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    if (ImGui::IsItemHovered())
+                    {
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        {
+                            dragData.first = Other;
+                            dragData.second["Path"] = entry.path();
+                        }
+                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        {
+                            // Puts the data into objectInProperties so it is displayed in the properties window
+                            if (!std::holds_alternative<DataFile>(objectInProperties) || std::filesystem::path(std::get<DataFile>(objectInProperties).path) != (entry.path().string() + ".data"))
+                            {
+                                if (!std::filesystem::exists(entry.path().string() + ".data"))
+                                {
+                                    Utilities::CreateDataFile(entry.path());
+
+                                    std::ofstream file(entry.path().string() + ".data");
+                                    if (file.is_open()) // Todo: handle if the file doesn't open
+                                    {
+                                        nlohmann::json jsonData = {
+                                            {"public",
+                                                nlohmann::json::object()
+                                            },
+                                            {"private", {
+                                                {"version", 1.0f}
+                                            }}
+                                        };
+
+                                        // Opens the LDtk file, reads the tilesets, then adds the tilesets to File
+                                        std::ifstream ldtkFile(entry.path());
+                                        if (ldtkFile.is_open())
+                                        {
+                                            nlohmann::json data = nlohmann::json::parse(ldtkFile);
+                                            for (int i = 0; i < data["defs"]["tilesets"].size(); i++)
+                                                jsonData["public"][data["defs"]["tilesets"][i]["identifier"]] = { "file", { ".png", ".jpeg", ".jpg" }, "nullptr"};
+                                        }
+                                        else
+                                            ConsoleLogger::ErrorLog("Failed to open " + entry.path().filename().string());
+
+                                        file << std::setw(4) << jsonData << std::endl;
+                                        file.close();
+                                    }
+                                    else
+                                        ConsoleLogger::ErrorLog("Failed to open " + entry.path().filename().string());
+                                }
+                                else
+                                {
+                                    // Updates the data with the up-to-date LDtk data if needed
+                                    std::ifstream fileR(entry.path().string() + ".data");
+                                    nlohmann::json jsonData = nlohmann::json::parse(fileR);
+                                    if (fileR.is_open()) // Todo: handle if the file doesn't open
+                                    {
+                                        fileR.close();
+                                        std::ifstream ldtkFile(entry.path());
+                                        if (ldtkFile.is_open())
+                                        {
+                                            nlohmann::json data = nlohmann::json::parse(ldtkFile);
+                                            ldtkFile.close();
+
+                                            for (int i = 0; i < data["defs"]["tilesets"].size(); i++)
+                                            {
+                                                nlohmann::json id = data["defs"]["tilesets"][i]["identifier"];
+                                                if (jsonData["public"].contains(id))
+                                                    jsonData["public"][id] = { "file", { ".png", ".jpeg", ".jpg" }, jsonData["public"][id][2]};
+                                                else
+                                                    jsonData["public"][id] = { "file", { ".png", ".jpeg", ".jpg" }, "nullptr"};
+                                            }
+
+                                            std::ofstream fileW(entry.path().string() + ".data");
+                                            if (fileW.is_open())
+                                            {
+                                                fileW << std::setw(4) << jsonData << std::endl;
+                                                fileW.close();
+                                            }
+                                            else // Todo: Handle this
+                                                ConsoleLogger::ErrorLog("Failed to open " + entry.path().filename().string());
+                                        }
+                                        else
+                                            ConsoleLogger::ErrorLog("Failed to open " + entry.path().filename().string());
+                                    }
+                                    else
+                                        ConsoleLogger::ErrorLog("Failed to open " + entry.path().filename().string());
+                                }
+
+                                DataFile dataFile;
+                                dataFile.path = entry.path().string() + ".data";
+                                dataFile.type = DataFileTypes::Tilemap;
+
+                                std::ifstream jsonFile(dataFile.path);
+                                dataFile.json = nlohmann::json::parse(jsonFile);
+                                jsonFile.close();
 
                                 objectInProperties = dataFile;
                             }
@@ -2494,8 +2598,9 @@ void Editor::RenderComponentsWin()
                 }
                 std::get<GameObject*>(objectInProperties)->AddComponentInternal<Rigidbody3D>();
             });
-        AddComponentInternalButton("SpriteRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<SpriteRenderer>(); });
-        AddComponentInternalButton("MeshRenderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<MeshRenderer>(); });
+        AddComponentInternalButton("Sprite Renderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<SpriteRenderer>(); });
+        AddComponentInternalButton("Mesh Renderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<MeshRenderer>(); });
+        AddComponentInternalButton("Tilemap Renderer", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<TilemapRenderer>(); });
         AddComponentInternalButton("Animation Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<AnimationPlayer>(); });
         AddComponentInternalButton("Audio Player", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<AudioPlayer>(); });
         AddComponentInternalButton("Label", [&]() { std::get<GameObject*>(objectInProperties)->AddComponentInternal<Label>(); });
@@ -2554,7 +2659,9 @@ void Editor::RenderCameraView()
         }
     }
 
-    SpriteRenderer::Render();
+    for (RenderableTexture* texture : RenderableTexture::textures) // Renders Sprites and Tilemaps
+        if (texture)
+            texture->Render();
 
     RaylibWrapper::EndMode3D();
     RaylibWrapper::EndTextureMode();
@@ -3145,6 +3252,11 @@ void Editor::RenderProperties()
                 RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["SoundIcon"], { 25, 25 });
                 offset = 35;
                 break;
+            case DataFileTypes::Tilemap:
+                ImGui::SetCursorPos({ 10, 30 });
+                RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["LDtkIcon"], { 25, 25 });
+                offset = 35;
+                break;
             }
 
             std::string fileName = std::filesystem::path(std::get<DataFile>(objectInProperties).path).stem().string();
@@ -3180,30 +3292,6 @@ void Editor::RenderProperties()
                         value = tempValue;
                         updateJson = true;
                     }
-                }
-                else if (value.is_string())
-                {
-                    ImGui::Text(newKey.c_str());
-                    ImGui::SameLine();
-
-                    int inputWidth = ImGui::CalcTextSize(value.get<std::string>().c_str()).x + ImGui::CalcTextSize("a").x + 10;
-                    if (inputWidth < 130)
-                        inputWidth = 130;
-                    else if (inputWidth > (ImGui::GetWindowWidth() - ImGui::CalcTextSize(newKey.c_str()).x - 45))
-                        inputWidth = ImGui::GetWindowWidth() - ImGui::CalcTextSize(newKey.c_str()).x - 45;
-
-                    ImGui::SetNextItemWidth(inputWidth);
-                    ImGui::SetCursorPos({ ImGui::CalcTextSize(newKey.c_str()).x + 30, ImGui::GetCursorPosY() - 3 });
-                    std::string inputText = value.get<std::string>();
-                    char buffer[256];
-                    strcpy_s(buffer, sizeof(buffer), inputText.c_str());
-                    if (ImGui::InputText(("##" + key).c_str(), buffer, sizeof(buffer)))
-                    {
-                        value = buffer;
-                        updateJson = true;
-                    }
-
-                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
                 }
                 else if (value.is_number_integer())
                 {
@@ -3256,6 +3344,76 @@ void Editor::RenderProperties()
                     }
 
                     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
+                }
+                else if (value.is_string())
+                {
+                    ImGui::Text(newKey.c_str());
+                    ImGui::SameLine();
+
+                    int inputWidth = ImGui::CalcTextSize(value.get<std::string>().c_str()).x + ImGui::CalcTextSize("a").x + 10;
+                    if (inputWidth < 130)
+                        inputWidth = 130;
+                    else if (inputWidth > (ImGui::GetWindowWidth() - ImGui::CalcTextSize(newKey.c_str()).x - 45))
+                        inputWidth = ImGui::GetWindowWidth() - ImGui::CalcTextSize(newKey.c_str()).x - 45;
+
+                    ImGui::SetNextItemWidth(inputWidth);
+                    ImGui::SetCursorPos({ ImGui::CalcTextSize(newKey.c_str()).x + 30, ImGui::GetCursorPosY() - 3 });
+                    std::string inputText = value.get<std::string>();
+                    char buffer[256];
+                    strcpy_s(buffer, sizeof(buffer), inputText.c_str());
+                    if (ImGui::InputText(("##" + key).c_str(), buffer, sizeof(buffer)))
+                    {
+                        value = buffer;
+                        updateJson = true;
+                    }
+
+                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
+                }
+                else if (value.is_array())
+                {
+                    // Todo: Add support for drag and drop
+                    if (value[0] == "file") // File Selector
+                    {
+                        // Value[0] = "file", Value[1] = extensions array, Value[2] = value
+                        ImGui::Text(newKey.c_str());
+                        ImGui::SameLine();
+
+                        static bool openSelector = false;
+                        ImGui::SetCursorPos({ ImGui::CalcTextSize(newKey.c_str()).x + 30, ImGui::GetCursorPosY() - 3 });
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.17f, 0.18f, 1.00f));
+                        std::string selectedFile = "None Selected";
+                        if (!value[2].is_null() && value[2].get<std::string>() != "nullptr")
+                        {
+                            if (value[1].size() > 1) // Checking if there is more than one extension that can be selected
+                                selectedFile = std::filesystem::path(value[2].get<std::string>()).filename().string();
+                            else
+                                selectedFile = std::filesystem::path(value[2].get<std::string>()).stem().string();
+                        }
+                        ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
+                        if (ImGui::Button(selectedFile.c_str(), { ImGui::GetWindowWidth() - 130, 20 }))
+                            openSelector = true;
+
+                        ImGui::PopStyleColor();
+
+                        if (openSelector)
+                        {
+                            std::string currentlySelected = (value[2] == "nullptr") ? "" : value[2];
+                            selectedFile = RenderFileSelector(85623, key, currentlySelected, value[1], false, {ImGui::GetCursorScreenPos().x - 100, ImGui::GetCursorScreenPos().y - 40});
+                            if (selectedFile == "NULL")
+                                openSelector = false;
+                            else if (!selectedFile.empty())
+                            {
+                                if (selectedFile == "None")
+                                    value[2] = "nullptr";
+                                else
+                                    value[2] = selectedFile;
+                                openSelector = false;
+                                updateJson = true;
+                            }
+                        }
+                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
+                    }
+
                 }
                 else
                     continue;
@@ -3445,6 +3603,7 @@ void Editor::RenderHierarchy()
                 {"Create Light", "Light", 3, Custom},
                 {"Create Square", "Square", 2, Custom},
                 {"Create Circle", "Circle", 2, Custom},
+                {"Create Tilemap", "Tilemap", 2, Custom},
                 {"Create Camera", "Camera", 1, Custom}
             };
 
@@ -3521,6 +3680,10 @@ void Editor::RenderHierarchy()
                 }
                 else if (objectToCreate.name == "Light")
                     gameObject->AddComponentInternal<Lighting>();
+                else if (objectToCreate.name == "Tilemap")
+                {
+                    gameObject->AddComponentInternal<TilemapRenderer>();
+                }
                 else if (objectToCreate.name != "GameObject" && guiObjectToCreate.name == "")
                 {
                     if (ProjectManager::projectData.is3D)

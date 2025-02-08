@@ -4,9 +4,9 @@
 #include "../CryonicCore.h"
 #include <unordered_map>
 #include "../Sprite.h"
+#include "../RenderableTexture.h"
 
-
-class SpriteRenderer : public Component
+class SpriteRenderer : public Component, public RenderableTexture
 {
 public:
 	SpriteRenderer(GameObject* obj, int id) : Component(obj, id)
@@ -70,15 +70,14 @@ public:
 	void EditorUpdate() override;
 #endif
 	void Destroy() override;
-	static void Render();
+	void Render() override;
 
-	void SortSpriteRenderers();
 	void SetSprite(Sprite* sprite);
 	Sprite* GetSprite();
 	void SetTint(Color tint);
 	Color GetTint() const;
 	void SetRenderOrder(int order);
-	int GetRenderOrder() const;
+	int GetRenderOrder() const override;
 	void SetFlipX(bool flip);
 	bool GetFlipX() const;
 	void SetFlipY(bool flip);
@@ -97,8 +96,8 @@ private:
 #if defined(EDITOR)
 	bool setup = false;
 #endif
-	static std::vector<SpriteRenderer*> spriteRenderers;
-	static bool sorted;
+	//static std::vector<SpriteRenderer*> spriteRenderers;
+	//static bool sorted;
 	//std::pair<Texture2D, int>* texture = nullptr;
 	//std::filesystem::path texturePath;
 };

@@ -8,6 +8,7 @@
 enum class DataFileTypes
 {
 	Sprite,
+	Tilemap,
 	Sound,
 	Other
 };

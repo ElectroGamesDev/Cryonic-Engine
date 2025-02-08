@@ -9,6 +9,7 @@
 #include "ShaderManager.h"
 #include "RaylibModelWrapper.h"
 #include "RaylibWrapper.h"
+#include "RenderableTexture.h"
 #ifdef WINDOWS
 #include <windows.h>
 #elif WEB
@@ -392,7 +393,10 @@ void MainLoop()
 		if (component && component->gameObject)
 			component->gameObject->RemoveComponent(component);
 	Component::markedForDeletion.clear();
-	SpriteRenderer::Render();
+
+	for (RenderableTexture* texture : RenderableTexture::textures) // Renders Sprites and Tilemaps
+		if (texture)
+			texture->Render();
 
 	ImGui::End();
 
