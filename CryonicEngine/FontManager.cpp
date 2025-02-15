@@ -26,7 +26,7 @@ namespace FontManager
 #else
 		//defaultFont = ImGui::GetIO().Fonts->AddFontFromFileTTF("resources/fonts/Roboto-Medium.ttf", 16); // A default font shouldn't be needed
 #endif
-		RaylibWrapper::Imgui_ImplRaylib_BuildFontAtlas();
+		RaylibWrapper::rlImGuiReloadFonts();
 	}
 
 	ImFont* LoadFont(std::string font, int size, bool iconFont, bool checkIfExists)
@@ -53,14 +53,14 @@ namespace FontManager
 			ImGuiIO& io = ImGui::GetIO();
 			io.Fonts->AddFontFromFileTTF(("resources/fonts/" + font + ".ttf").c_str(), size, &config, icon_ranges);
 			//io.Fonts->Build();
-			RaylibWrapper::Imgui_ImplRaylib_BuildFontAtlas();
+			RaylibWrapper::rlImGuiReloadFonts();
 			//ConsoleLogger::InfoLog(font + " font created at size " + std::to_string(size));
 #endif
 		}
 		else
 		{
 			//fonts[font][size] = io.Fonts->AddFontFromFileTTF(("resources/fonts/" + font +".ttf").c_str(), size);
-			//Imgui_ImplRaylib_BuildFontAtlas();
+			//rlImGuiReloadFonts();
 			unloadedFonts.push_back(std::make_pair(font, size));
 			//ConsoleLogger::InfoLog(font + " font created at size " + std::to_string(size));
 			//return fonts[font][size];
@@ -133,6 +133,6 @@ namespace FontManager
 		}
 		unloadedFonts.clear();
 
-		RaylibWrapper::Imgui_ImplRaylib_BuildFontAtlas();
+		RaylibWrapper::rlImGuiReloadFonts();
 	}
 }

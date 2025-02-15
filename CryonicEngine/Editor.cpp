@@ -531,7 +531,7 @@ void Editor::UpdateViewport()
             mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
             mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
 
-            RaylibWrapper::Vector3 position = RaylibWrapper::GetMouseRay(mousePosition, camera).position;
+            RaylibWrapper::Vector3 position = RaylibWrapper::GetScreenToWorldRay(mousePosition, camera).position;
             RaylibWrapper::Texture2D texture = std::any_cast<RaylibWrapper::Texture2D>(dragData.second["Texture"]);
             float centerWidth = texture.width / 2.0f;
             float centerHeight = texture.height / 2.0f;
@@ -1239,7 +1239,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
                     mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
                     mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
-                    RaylibWrapper::Vector3 position = RaylibWrapper::GetMouseRay(mousePosition, camera).position;
+                    RaylibWrapper::Vector3 position = RaylibWrapper::GetScreenToWorldRay(mousePosition, camera).position;
 
                     std::filesystem::path texturePath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
 
@@ -1332,7 +1332,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
                         mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
                         mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
-                        RaylibWrapper::Vector3 position = RaylibWrapper::GetMouseRay(mousePosition, camera).position;
+                        RaylibWrapper::Vector3 position = RaylibWrapper::GetScreenToWorldRay(mousePosition, camera).position;
 
                         // Todo: Properly set the Z position
 
@@ -1399,7 +1399,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
                             mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
                             mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
-                            RaylibWrapper::Vector3 position = RaylibWrapper::GetMouseRay(mousePosition, camera).position;
+                            RaylibWrapper::Vector3 position = RaylibWrapper::GetScreenToWorldRay(mousePosition, camera).position;
 
                             // Todo: Place the nodes at the mouse position
 
