@@ -222,6 +222,12 @@
     <ClCompile Include="RenderableTexture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EventSheetEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -438,6 +444,15 @@
       <Filter>Header Files\Components</Filter>
     </ClInclude>
     <ClInclude Include="RenderableTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EventSheetEditor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EventSheetSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

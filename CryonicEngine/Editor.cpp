@@ -46,6 +46,8 @@
 #include "FileWatcher.h"
 #include "AssetManager.h"
 #include "RenderableTexture.h"
+#include "EditorWindow.h"
+#include "EventSheetEditor.h"
 
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -100,6 +102,8 @@ bool resetHierarchy = true;
 bool resetCameraView = true;
 bool resetProjectSettings = true;
 
+std::vector<EditorWindow*> windows;
+
 bool guiVisible = false;
 
 std::string focusContentBrowserFile = "";
@@ -115,8 +119,6 @@ std::vector<RaylibWrapper::RenderTexture2D*> tempRenderTextures;
 
 float cameraSpeed = 1;
 float oneSecondDelay = 1;
-
-ImGuiWindowClass defaultWindowClass;
 
 enum Tool
 {
@@ -173,9 +175,10 @@ void Editor::RenderViewport()
         return;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.10f, 0.11f, 0.12f, 1.00f));
     // Todo: Use resize events
 
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin((ICON_FA_CUBES + std::string(" Viewport")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar))
     {
         ImVec2 contentSize = ImGui::GetContentRegionAvail();
@@ -393,6 +396,7 @@ void Editor::RenderViewport()
 
     ImGui::End();
     ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
 }
 
 void Editor::UpdateViewport()
@@ -567,7 +571,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
     float nextX = 310;
     float nextY = 55;
 
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str(), nullptr, windowFlags))
     {
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
@@ -1005,37 +1009,92 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             // Todo: Send error message
                         }
                     }
-                    else if (extension == ".canvas")
+
+                    if (ImGui::IsItemHovered())
                     {
-                        RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CanvasIcon"], ImVec2(32, 32));
-                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
                         {
-                            // Todo: If something is already in the Canvas Editor window and its not saved, popup asking to save, don't save, or cancel
+                            dragData.first = Other;
+                            dragData.second["Path"] = entry.path();
+                        }
+                    }
+                }
+                else if (extension == ".es")
+                {
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["EventSheetIcon"], ImVec2(32, 32));
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                    {
+                        std::ifstream dataFile(entry.path());
+                        if (dataFile.is_open())
+                        {
+                            bool foundWindow = false;
+                            for (EditorWindow* window : windows)
+                            {
+                                if (window->windowName == "EventSheet Editor" && window->windowID == entry.path().string())
+                                {
+                                    ImGuiWindow* imGuiWindow = ImGui::FindWindowByName((window->fullWindowName).c_str());
+                                    if (imGuiWindow != NULL && imGuiWindow->DockNode != NULL && imGuiWindow->DockNode->TabBar != NULL)
+                                        imGuiWindow->DockNode->TabBar->NextSelectedTabId = imGuiWindow->TabId;
+                                    foundWindow = true;
+                                    break;
+                                }
+                            }
 
-                            //std::ifstream dataFile(entry.path());
-                            //if (dataFile.is_open())
-                            //{
-                            //    // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
-                            //    dataFile >> CanvasEditor::canvasData;
-                            //    CanvasEditor::canvasData["path"] = entry.path(); // Updating the path incase it changed.
-
-                            //    if (CanvasEditor::windowOpen) // If the canvas editor is open, focus it
-                            //    {
-                            //        ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str());
-                            //        if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
-                            //            window->DockNode->TabBar->NextSelectedTabId = window->TabId;
-                            //    }
-                            //    else
-                            //        CanvasEditor::windowOpen = true; // This should focus the canvas editor window
-                            //}
-                            //else
-                            //{
-                            //    // Todo: Send error message
-                            //}
+                            if (!foundWindow)
+                            {
+                                windows.push_back(new EventSheetEditor());
+                                windows.back()->Init("EventSheet Editor", entry.path().string(), true, ICON_FA_TABLE_COLUMNS, ImVec4(0.10f, 0.11f, 0.12f, 1.00f));
+                                // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
+                                nlohmann::json data;
+                                dataFile >> data;
+                                static_cast<EventSheetEditor*>(windows.back())->LoadData(data, entry.path().string());
+                            }
+                        }
+                        else
+                        {
+                            // Todo: Send error message
                         }
                     }
 
-                    if (ImGui::IsItemHovered())
+                    if (ImGui::IsItemHovered()) // Todo: Stop duplicating for each one
+                    {
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        {
+                            dragData.first = Other;
+                            dragData.second["Path"] = entry.path();
+                        }
+                    }
+                }
+                else if (extension == ".canvas")
+                {
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CanvasIcon"], ImVec2(32, 32));
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                    {
+                        // Todo: If something is already in the Canvas Editor window and its not saved, popup asking to save, don't save, or cancel
+
+                        //std::ifstream dataFile(entry.path());
+                        //if (dataFile.is_open())
+                        //{
+                        //    // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
+                        //    dataFile >> CanvasEditor::canvasData;
+                        //    CanvasEditor::canvasData["path"] = entry.path(); // Updating the path incase it changed.
+
+                        //    if (CanvasEditor::windowOpen) // If the canvas editor is open, focus it
+                        //    {
+                        //        ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str());
+                        //        if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                        //            window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+                        //    }
+                        //    else
+                        //        CanvasEditor::windowOpen = true; // This should focus the canvas editor window
+                        //}
+                        //else
+                        //{
+                        //    // Todo: Send error message
+                        //}
+                    }
+
+                    if (ImGui::IsItemHovered()) // Todo: Stop duplicating for each one
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
                         {
@@ -1522,6 +1581,43 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     explorerContextMenuOpen = false;
                     scriptCreateWinOpen = true;
                 }
+                if (ImGui::BeginMenu("Visual Scripting"))
+                {
+                    if (ImGui::MenuItem("Create EventSheet"))
+                    {
+                        explorerContextMenuOpen = false;
+                        std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "EventSheet", "es");
+                        if (filePath != "")
+                        {
+                            std::ofstream file(filePath);
+                            if (file.is_open())
+                            {
+                                nlohmann::json jsonData = {
+                                    {"version", 1},
+                                    {"path", filePath},
+                                    {"events", nlohmann::json::array()}
+                                };
+
+                                file << std::setw(4) << jsonData << std::endl;
+                                file.close();
+                            }
+                            else
+                            {
+                                // Todo: Properly handle if the file couldn't be opened. Maybe retry a few times, then popup with a message and delete the file.
+                                std::filesystem::remove(filePath);
+                            }
+
+
+                            renamingFile = filePath;
+                            strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
+                        }
+                        else
+                        {
+                            // Todo: Handle if it wasn't created
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
                 if (ImGui::MenuItem("Create Scene"))
                 {
                     explorerContextMenuOpen = false;
@@ -1588,7 +1684,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 //    else
                 //    {
                 //        // Todo: Handle if it wasn't created
-                //    }
+                //    }1
                 //}
                 if (ImGui::MenuItem("Create Animation Graph"))
                 {
@@ -1796,7 +1892,7 @@ std::string RenderFileSelector(int id, std::string type, std::string selectedPat
     ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 6.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     ImGui::Begin((" Select " + type).c_str(), &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking);
 
     ImGui::SetCursorPos({ 10, 20 });
@@ -1956,7 +2052,7 @@ void Editor::RenderAnimationGraph()
 
     // Todo: Check model to see if it has new animations (or if animations were moved/renamed)
 
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), &animationGraphWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         bool update = false;
@@ -2311,7 +2407,7 @@ void Editor::RenderProjectSettings()
         resetProjectSettings = false;
     }
 
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin((ICON_FA_GEARS + std::string(" Project Properties")).c_str(), &projectSettingsWinOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         auto RenderSection = [](const char* title, std::function<void()> content) {
@@ -2464,7 +2560,7 @@ void Editor::RenderScriptCreateWin()
     ImGui::SetNextWindowSize(ImVec2(180, 180));
     ImGui::SetNextWindowPos(ImVec2((RaylibWrapper::GetScreenWidth() - 180) / 2, (RaylibWrapper::GetScreenHeight() - 180) / 2));
 
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin("Create Script", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         ImGui::Text("Script Name");
@@ -2559,7 +2655,7 @@ void Editor::RenderComponentsWin()
         resetComponentsWin = false;
     }
 
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin("Add Component", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NoCollapse))
     {
         // Internal Components
@@ -2666,7 +2762,7 @@ void Editor::RenderCameraView()
     RaylibWrapper::EndMode3D();
     RaylibWrapper::EndTextureMode();
 
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin("Camera View", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
         rlImGuiImageRenderTextureFit(&cameraRenderTexture, true);
 
@@ -2685,7 +2781,7 @@ int Editor::RenderColorPicker(std::string name, ImVec2 position, ImVec4& selecte
     ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.12f, 0.12f, 0.12f, 1.00f));
     ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.12f, 0.12f, 0.12f, 1.00f));
 
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     ImGui::Begin(name.c_str(), &open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking);
     if (ImGui::ColorPicker4(("##ColorPicker" + name).c_str(), (float*)&selectedColor, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoLabel, (float*)&previousColor))
         action = 1;
@@ -2706,7 +2802,7 @@ void Editor::RenderProperties()
 {
     static bool show = true;
 
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin((ICON_FA_GEARS + std::string(" Properties")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar))
     {
         ImGui::BeginGroup();
@@ -3446,7 +3542,7 @@ void Editor::RenderProperties()
 void Editor::RenderConsole()
 {
     static int numberOfLogs = 0;
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin((ICON_FA_CODE + std::string(" Console")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
     {
         for (std::pair<std::string, ConsoleLogger::ConsoleLogType>& message : ConsoleLogger::logs)
@@ -3554,7 +3650,7 @@ bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor, bool&
 void Editor::RenderHierarchy()
 {
     hierarchyObjectClicked = false;
-    ImGui::SetNextWindowClass(&defaultWindowClass);
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     ImGui::Begin((ICON_FA_SITEMAP + std::string(" Hierarchy")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse);
 
     if (ImGui::BeginTable("HierarchyTable", 1))
@@ -3838,7 +3934,7 @@ void Editor::Render()
     dockspaceID = ImGui::GetID("DockSpace"); // Todo: Do this in the init so it only sets the ID once
     if (ImGui::DockBuilderGetNode(dockspaceID) == NULL)
     {
-        ImGui::DockBuilderRemoveNode(dockspaceID);
+        //ImGui::DockBuilderRemoveNode(dockspaceID);
         ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoCloseButton);
         ImGui::DockBuilderSetNodeSize(dockspaceID, ImGui::GetWindowSize());
 
@@ -3872,6 +3968,7 @@ void Editor::Render()
     ImGui::End();
     ImGui::PopStyleColor();
 
+    // Todo: All the windows below should be changed to a EditorWindow
     RenderViewport();
     RenderHierarchy();
     RenderProperties();
@@ -3881,6 +3978,35 @@ void Editor::Render()
     RenderComponentsWin();
     RenderScriptCreateWin();
     RenderAnimationGraph();
+    for (auto it = windows.begin(); it != windows.end(); ) // Not using a range-based loop so we can remove a window from the vector
+    {
+        EditorWindow* window = *it;
+
+        ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
+        ImGui::SetNextWindowDockID(dockspaceID, ImGuiCond_Once);
+
+        if (window->windowColor.z != -1)
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, window->windowColor);
+
+        ImGui::Begin((window->fullWindowName).c_str(), &window->windowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        window->Render();
+        ImGui::End();
+
+        if (window->windowColor.z != -1)
+            ImGui::PopStyleColor();
+
+        if (!window->windowOpen)
+            window->OnClose();
+
+        if (!window->windowOpen) // Checking again in case it got changed in OnClose()
+        {
+            delete window;
+            it = windows.erase(it);
+        }
+        else
+            ++it;
+    }
+
     //CanvasEditor::Render();
     RenderProjectSettings();
     AssetManager::RenderWindow();
@@ -4244,6 +4370,10 @@ void Editor::Cleanup()
     }
     tempRenderTextures.clear();
 
+    for (EditorWindow* window : windows)
+        delete window;
+    windows.clear();
+
     for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
     {
         for (Component* component : gameObject->GetComponents())
@@ -4287,7 +4417,7 @@ void Editor::Init()
     ImGui::StyleColorsDark();
     InitStyle();
 
-    defaultWindowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton;
+    EditorWindow::defaultWindowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton;
 
     // Setup Platform/Renderer backends
     RaylibWrapper::ImGui_ImplRaylib_Init();
@@ -4300,7 +4430,7 @@ void Editor::Init()
     InitScenes(); // Must go after InitMisc() and ShaderManager::Init()
 
     SetupViewport();
-    AssetManager::Init(&defaultWindowClass);
+    AssetManager::Init(&EditorWindow::defaultWindowClass);
 
     FileWatcher::Init();
 
@@ -4346,6 +4476,9 @@ void Editor::Init()
         if (oneSecondDelay <= 0)
             oneSecondDelay = 1;
     }
+
+    for (EditorWindow* window : windows)
+        window->OnClose();
 
     Cleanup();
     RaylibWrapper::CloseWindow();

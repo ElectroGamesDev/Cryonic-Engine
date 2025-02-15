@@ -191,6 +191,8 @@
     <ClCompile Include="CryonicCore.cpp" />
     <ClCompile Include="CryonicEngine.cpp" />
     <ClCompile Include="Editor.cpp" />
+    <ClCompile Include="EditorWindow.cpp" />
+    <ClCompile Include="EventSheetEditor.cpp" />
     <ClCompile Include="EventSystem.cpp" />
     <ClCompile Include="FileWatcher.cpp" />
     <ClCompile Include="FontManager.cpp" />
@@ -263,6 +265,9 @@
     <ClInclude Include="CryonicAPI.h" />
     <ClInclude Include="CryonicCore.h" />
     <ClInclude Include="Editor.h" />
+    <ClInclude Include="EditorWindow.h" />
+    <ClInclude Include="EventSheetEditor.h" />
+    <ClInclude Include="EventSheetSystem.h" />
     <ClInclude Include="EventSystem.h" />
     <ClInclude Include="FileWatcher.h" />
     <ClInclude Include="Font.h" />
