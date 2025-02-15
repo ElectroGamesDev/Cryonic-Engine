@@ -577,7 +577,7 @@ namespace RaylibWrapper
     void SetConfigFlags(unsigned int flags);
 
     // Screen-space-related functions
-    Ray GetMouseRay(Vector2 mousePosition, Camera camera);
+    Ray GetScreenToWorldRay(Vector2 mousePosition, Camera camera);
     Matrix GetCameraMatrix(Camera camera);
     Matrix GetCameraMatrix2D(Camera2D camera);
     Vector2 GetWorldToScreen(Vector3 position, Camera camera);
@@ -627,9 +627,9 @@ namespace RaylibWrapper
     Texture2D LoadTextureFromImage(Image image);
     TextureCubemap LoadTextureCubemap(Image image, int layout);
     RenderTexture2D LoadRenderTexture(int width, int height);
-    bool IsTextureReady(Texture2D texture);
+    bool IsTextureValid(Texture2D texture);
     void UnloadTexture(Texture2D texture);
-    bool IsRenderTextureReady(RenderTexture2D target);
+    bool IsRenderTextureValid(RenderTexture2D target);
     void UnloadRenderTexture(RenderTexture2D target);
     void UpdateTexture(Texture2D texture, const void* pixels);
     void UpdateTextureRec(Texture2D texture, Rectangle rec, const void* pixels);
@@ -807,5 +807,4 @@ namespace RaylibWrapper
     bool rlImGuiImageButton(const char* name, const Texture* image);
     bool rlImGuiImageButtonSize(const char* name, const Texture* image, ImVec2 size);
     bool rlImGuiImageButtonSizeTint(const char* name, const Texture* image, ImVec2 size, ImVec4 tint);
-    void Imgui_ImplRaylib_BuildFontAtlas();
 }

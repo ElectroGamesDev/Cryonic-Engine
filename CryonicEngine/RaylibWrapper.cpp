@@ -204,8 +204,8 @@ namespace RaylibWrapper {
     }
 
     // Screen-space-related functions
-    Ray GetMouseRay(Vector2 mousePosition, Camera camera) {
-        ::Ray ray = ::GetMouseRay({ mousePosition.x, mousePosition.y }, { {camera.position.x, camera.position.y, camera.position.z}, {camera.target.x, camera.target.y, camera.target.z}, {camera.up.x, camera.up.y, camera.up.z}, camera.fovy, camera.projection });
+    Ray GetScreenToWorldRay(Vector2 mousePosition, Camera camera) {
+        ::Ray ray = ::GetScreenToWorldRay({ mousePosition.x, mousePosition.y }, { {camera.position.x, camera.position.y, camera.position.z}, {camera.target.x, camera.target.y, camera.target.z}, {camera.up.x, camera.up.y, camera.up.z}, camera.fovy, camera.projection });
         return { {ray.position.x, ray.position.y, ray.position.z}, {ray.direction.x, ray.direction.y, ray.direction.z} };
     }
 
@@ -384,16 +384,16 @@ namespace RaylibWrapper {
         return { renderTexture2D.id, { renderTexture2D.texture.id, renderTexture2D.texture.width, renderTexture2D.texture.height, renderTexture2D.texture.mipmaps, renderTexture2D.texture.format }, { renderTexture2D.depth.id, renderTexture2D.depth.width, renderTexture2D.depth.height, renderTexture2D.depth.mipmaps, renderTexture2D.depth.format } };
     }
 
-    bool IsTextureReady(Texture2D texture) {
-        return ::IsTextureReady({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
+    bool IsTextureValid(Texture2D texture) {
+        return ::IsTextureValid({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
     }
 
     void UnloadTexture(Texture2D texture) {
         ::UnloadTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
     }
 
-    bool IsRenderTextureReady(RenderTexture2D target) {
-        return ::IsRenderTextureReady({ target.id, { target.texture.id, target.texture.width, target.texture.height, target.texture.mipmaps, target.texture.format }, { target.depth.id, target.depth.width, target.depth.height, target.depth.mipmaps, target.depth.format } });
+    bool IsRenderTextureValid(RenderTexture2D target) {
+        return ::IsRenderTextureValid({ target.id, { target.texture.id, target.texture.width, target.texture.height, target.texture.mipmaps, target.texture.format }, { target.depth.id, target.depth.width, target.depth.height, target.depth.mipmaps, target.depth.format } });
     }
 
     void UnloadRenderTexture(RenderTexture2D target) {
@@ -1383,9 +1383,5 @@ namespace RaylibWrapper {
 
     bool rlImGuiImageButtonSizeTint(const char* name, const Texture* image, ImVec2 size, ImVec4 tint) {
         return ImGui::ImageButton(name, (ImTextureID)image, size, { 0,0 }, {1, 1}, { 0,0,0,0 }, tint);
-    }
-
-    void Imgui_ImplRaylib_BuildFontAtlas() {
-        ::Imgui_ImplRaylib_BuildFontAtlas();
     }
 }
