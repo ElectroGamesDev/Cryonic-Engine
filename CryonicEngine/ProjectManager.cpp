@@ -778,7 +778,6 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
             "-DCMAKE_CXX_COMPILER=\"C:/MinGW/bin/g++.exe\" "
             "-DCMAKE_BUILD_TYPE=" + buildType + " "
             "-DPLATFORM=WINDOWS "
-            //"-DCMAKE_CXX_FLAGS=\"-DPLATFORM_DESKTOP\" "
             "-DICON_PATH=\"" + (projectData.iconPath == "None" ? "Default Cryonic Logo.ico" : projectData.iconPath) + "\" "
             "-DGAME_VERSION=\"" + projectData.version + "\" "
             "-DGAME_VERSION_2=\"" + version2 + "\" "
