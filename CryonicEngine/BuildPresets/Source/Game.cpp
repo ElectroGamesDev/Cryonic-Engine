@@ -162,13 +162,14 @@ void MainLoop();
 
 int main(void)
 {
+	// Todo: Is this even running? There was an error in the code and it didn't give off any errors. I might have fixed it with the ninja command by using "-DCMAKE_CXX_FLAGS=-DWINDOWS "?
 #ifdef WINDOWS
 	// Sets executable path to a variable
 	HMODULE hModule = GetModuleHandle(NULL);
 	if (hModule != NULL)
 	{
 		char exePath[MAX_PATH];
-		GetModuleFileName(hModule, exePath, (sizeof(exePath)));
+		GetModuleFileNameA(hModule, exePath, (sizeof(exePath)));
 		std::string temp = exePath;
 		exeParent = temp;
 		exeParent = exeParent.parent_path();
@@ -367,7 +368,7 @@ void MainLoop()
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowSize(ImVec2(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight()));
-	ImGui::Begin("##Game", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus);
+	ImGui::Begin("##Game", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
 	// Call components Update()
 	GameObject::markForDeletion = true;
