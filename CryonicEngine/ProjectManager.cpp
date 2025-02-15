@@ -422,46 +422,46 @@ bool ProjectManager::PrepareBuild(std::string platform, std::string& projectName
 
     outputPath = projectData.path / "Builds" / platform;
 
-    if (!std::filesystem::exists(outputPath))
-        std::filesystem::create_directories(outputPath);
-
-    if (debug)
-        buildPath = projectData.path / "Internal" / "Builds" / platform / "Debug";
-    else
-        buildPath = projectData.path / "Internal" / "Builds" / platform / "Release";
-
-    if (!std::filesystem::exists(buildPath))
-        std::filesystem::create_directories(buildPath);
-
-    // Todo: Removing folders to prevent crash although this shouldn't be handled here.
-    if (std::filesystem::exists(buildPath / "Resources"))
-        std::filesystem::remove_all(buildPath / "Resources");
-    if (std::filesystem::exists(buildPath / "Source"))
-        std::filesystem::remove_all(buildPath / "Source");
-    // Iterating to remove exe's incase the project name changed
-    for (const auto& file : std::filesystem::directory_iterator(buildPath))
-        if (file.path().has_extension() && file.path().extension() == ".exe")
-            std::filesystem::remove(file.path());
-
-    //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
-
-    projectName = projectData.name; // Project name with underscores instead of spaces
-    std::replace(projectName.begin(), projectName.end(), ' ', '_');
-
-    if (ImGuiPopup::IsCancelled())
-    {
-        ImGuiPopup::SetActive(false);
-        callback(2, debug);
-        return false;
-    }
-    else
-    {
-        ImGuiPopup::SetContent("Copying files...");
-        ImGuiPopup::SetProgress(10);
-    }
-
     try
     {
+        if (!std::filesystem::exists(outputPath))
+            std::filesystem::create_directories(outputPath);
+
+        if (debug)
+            buildPath = projectData.path / "Internal" / "Builds" / platform / "Debug";
+        else
+            buildPath = projectData.path / "Internal" / "Builds" / platform / "Release";
+
+        if (!std::filesystem::exists(buildPath))
+            std::filesystem::create_directories(buildPath);
+
+        // Todo: Removing folders to prevent crash although this shouldn't be handled here.
+        if (std::filesystem::exists(buildPath / "Resources"))
+            std::filesystem::remove_all(buildPath / "Resources");
+        if (std::filesystem::exists(buildPath / "Source"))
+            std::filesystem::remove_all(buildPath / "Source");
+        // Iterating to remove exe's incase the project name changed
+        for (const auto& file : std::filesystem::directory_iterator(buildPath))
+            if (file.path().has_extension() && file.path().extension() == ".exe")
+                std::filesystem::remove(file.path());
+
+        //RestoreCMakeFiles(buildPath, buildPath / "CMakeFilesBackup");
+
+        projectName = projectData.name; // Project name with underscores instead of spaces
+        std::replace(projectName.begin(), projectName.end(), ' ', '_');
+
+        if (ImGuiPopup::IsCancelled())
+        {
+            ImGuiPopup::SetActive(false);
+            callback(2, debug);
+            return false;
+        }
+        else
+        {
+            ImGuiPopup::SetContent("Copying files...");
+            ImGuiPopup::SetProgress(10);
+        }
+
         // Todo: Using __FILE__ won't work on other computers
 
         // Copying presets
@@ -696,6 +696,9 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
         return false;
     }
 
+    // Todo: Check if ninja and ccache is installed, if not, prompt for an install. Same with the ones above
+    bool useNinja = true;
+
     if (projectData.iconPath.empty() || projectData.iconPath == "None" || !std::filesystem::exists(projectData.path / "Assets" / projectData.iconPath))
     {
         ConsoleLogger::WarningLog("Build - Invalid icon path. Will use the default icon.");
@@ -753,16 +756,51 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
-    std::string command = "cmake -G \"MinGW Makefiles\" "
-        "-DCMAKE_BUILD_TYPE=" + buildType + " "
-        "-DPLATFORM=WINDOWS "
-        "-DICON_PATH=\"" +  (projectData.iconPath == "None" ? "Default Cryonic Logo.ico" : projectData.iconPath) + "\" "
-        "-DGAME_VERSION=\"" + projectData.version + "\" "
-        "-DGAME_VERSION_2=\"" + version2 + "\" "
-        "-DCOMPANY_NAME=\"" + projectData.company + "\" "
-        "-DGAME_DESCRIPTION=\"" + projectData.description + "\" "
-        "-DCOPYRIGHT=\"" + copyright + "\" "
-        ".";
+    std::string command;
+
+    //std::string generator = useNinja ? "Ninja" : "MinGW Makefiles";
+    //std::string command = "cmake -G \"" + generator + "\" "
+    //    "-DCMAKE_BUILD_TYPE=" + buildType + " "
+    //    "-DPLATFORM=WINDOWS "
+    //    "-DICON_PATH=\"" + (projectData.iconPath == "None" ? "Default Cryonic Logo.ico" : projectData.iconPath) + "\" "
+    //    "-DGAME_VERSION=\"" + projectData.version + "\" "
+    //    "-DGAME_VERSION_2=\"" + version2 + "\" "
+    //    "-DCOMPANY_NAME=\"" + projectData.company + "\" "
+    //    "-DGAME_DESCRIPTION=\"" + projectData.description + "\" "
+    //    "-DCOPYRIGHT=\"" + copyright + "\" "
+    //    ".";
+
+    if (useNinja)
+    {
+        command = "cmake -G \"Ninja\" "
+            "-DCMAKE_MAKE_PROGRAM=\"" + Utilities::GetExePath().parent_path().string() + "/tools/ninja.exe\" "
+            "-DCMAKE_C_COMPILER=\"C:/MinGW/bin/gcc.exe\" "
+            "-DCMAKE_CXX_COMPILER=\"C:/MinGW/bin/g++.exe\" "
+            "-DCMAKE_BUILD_TYPE=" + buildType + " "
+            "-DPLATFORM=WINDOWS "
+            //"-DCMAKE_CXX_FLAGS=\"-DPLATFORM_DESKTOP\" "
+            "-DICON_PATH=\"" + (projectData.iconPath == "None" ? "Default Cryonic Logo.ico" : projectData.iconPath) + "\" "
+            "-DGAME_VERSION=\"" + projectData.version + "\" "
+            "-DGAME_VERSION_2=\"" + version2 + "\" "
+            "-DCOMPANY_NAME=\"" + projectData.company + "\" "
+            "-DGAME_DESCRIPTION=\"" + projectData.description + "\" "
+            "-DCOPYRIGHT=\"" + copyright + "\" "
+            ".";
+    }
+    else
+    {
+        // Todo: Do I need "-DCMAKE_CXX_FLAGS=-DWINDOWS " like I do when using ninja?
+        command = "cmake -G \"MinGW Makefiles\" "
+            "-DCMAKE_BUILD_TYPE=" + buildType + " "
+            "-DPLATFORM=WINDOWS "
+            "-DICON_PATH=\"" + (projectData.iconPath == "None" ? "Default Cryonic Logo.ico" : projectData.iconPath) + "\" "
+            "-DGAME_VERSION=\"" + projectData.version + "\" "
+            "-DGAME_VERSION_2=\"" + version2 + "\" "
+            "-DCOMPANY_NAME=\"" + projectData.company + "\" "
+            "-DGAME_DESCRIPTION=\"" + projectData.description + "\" "
+            "-DCOPYRIGHT=\"" + copyright + "\" "
+            ".";
+    }
 
     if (!CreateProcessA(NULL, const_cast<LPSTR>(command.c_str()), NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi))
     {
@@ -864,7 +902,11 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
         si.dwFlags |= STARTF_USESTDHANDLES;
     }
 
-    command = "mingw32-make -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1))) + " PLATFORM=PLATFORM_DESKTOP"; // Todo: Make the number of cores configurable, and default at 75%. Also make sure its at least 1.
+    // Todo: Make the number of cores configurable.
+    if (useNinja)
+        command = "ninja -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1)));
+    else
+        command = "mingw32-make -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1))) + " PLATFORM=PLATFORM_DESKTOP";
 
     if (!CreateProcessA(NULL, const_cast<LPSTR>(command.c_str()), NULL, NULL, TRUE, NULL, NULL, NULL, &si, &pi))
     {
@@ -932,8 +974,16 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
                 ImGuiPopup::SetContent("Linking executable...");
                 ImGuiPopup::SetProgress(90);
             }
-            else if (std::regex_search(line, match, std::regex(R"(\[(\s?\d{1,3})%\])")))
-                ImGuiPopup::SetProgress(50 + ((std::stoi(match[1]) * 40) / 100)); // MinGW compile is only worth 40% of the total build progress which is why it multiplies by 40 and divides by 100
+            else
+            {
+                if (useNinja)
+                {
+                    if (std::regex_search(line, match, std::regex(R"(\[(\d+)/(\d+)\])")))
+                        ImGuiPopup::SetProgress(50 + ((std::stoi(match[1]) * 49) / (std::stoi(match[2])))); // MinGW compile is only worth 49% of the total build progress which is why it multiplies by 49 and divides by the total amount
+                }
+                else if (std::regex_search(line, match, std::regex(R"(\[(\s?\d{1,3})%\])")))
+                    ImGuiPopup::SetProgress(50 + ((std::stoi(match[1]) * 49) / 100)); // MinGW compile is only worth 49% of the total build progress which is why it multiplies by 49 and divides by 100
+            }
 
             if (ConsoleLogger::showDebugMessages)
                 std::cout << buffer;
@@ -971,7 +1021,7 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
     else
     {
         ImGuiPopup::SetContent("Finishing up...");
-        ImGuiPopup::SetProgress(95);
+        ImGuiPopup::SetProgress(99);
     }
 
     ConsoleLogger::InfoLog("Build - Renaming executable", false);
