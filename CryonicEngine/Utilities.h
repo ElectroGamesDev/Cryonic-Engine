@@ -19,4 +19,5 @@ namespace Utilities
     bool ImportFile(std::filesystem::path filePath, std::filesystem::path importPath);
     void TerminateProcess(int dwProcessId, int uExitCode); // A TerminateProcess function that actually works unlike Window's TermianteProcess()
     std::filesystem::path CreateTempFolder(std::filesystem::path projectPath);
+    std::filesystem::path GetExePath();
 };

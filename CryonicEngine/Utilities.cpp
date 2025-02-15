@@ -620,3 +620,19 @@ std::filesystem::path Utilities::CreateTempFolder(std::filesystem::path projectP
 
     return projectPath / "Internal" / "Temp" / folderName;
 }
+
+std::filesystem::path Utilities::GetExePath()
+{
+    HMODULE hModule = GetModuleHandle(NULL);
+    if (hModule != NULL)
+    {
+        char exePath[MAX_PATH];
+        GetModuleFileNameA(hModule, exePath, (sizeof(exePath)));
+        return exePath;
+    }
+    else
+    {
+        ConsoleLogger::WarningLog("Failed to get the exe path. There may be issues.", false);
+        return std::filesystem::current_path();
+    }
+}
