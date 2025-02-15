@@ -4,6 +4,8 @@
 #include <fstream>
 #include <filesystem>
 #include "json.hpp"
+#include "CryonicCore.h"
+#include "ConsoleLogger.h"
 #include "RaylibWrapper.h"
 #if defined (EDITOR)
 #include "ProjectManager.h"
