@@ -6,7 +6,7 @@
 *
 *   LICENSE: ZLIB
 *
-*   Copyright (c) 2024 Jeffery Myers
+*   Copyright (c) 2020 Jeffery Myers
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a copy
 *   of this software and associated documentation files (the "Software"), to deal
@@ -38,10 +38,5 @@ namespace rlImGuiColors
     inline ImVec4 Convert(::Color color)
     {
         return ImVec4(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
-    }
-
-    inline ::Color Convert(ImVec4 color)
-    {
-        return ::Color{ (unsigned char)(color.x * 255.0f), (unsigned char)(color.y * 255.0f), (unsigned char)(color.z * 255.0f), (unsigned char)(color.w * 255.0f) };
     }
 }
