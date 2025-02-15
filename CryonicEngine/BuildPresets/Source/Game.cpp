@@ -59,6 +59,7 @@ int32 positionIterations = 3; // For 2D physics
 int physicsIterations = 5; // For 3D physics
 float timeSinceLastUpdate = 0.0f;
 
+#ifdef IS3D
 // Move out of Game.cpp. This is all default JoltPhysics implementation of these classes
 namespace Layers
 {
@@ -155,6 +156,7 @@ public:
 		}
 	}
 };
+#endif
 
 void MainLoop();
 
@@ -402,9 +404,9 @@ void MainLoop()
 
 #ifdef IS2D
 	//world->DebugDraw();
-#endif
-
+#else
 	physicsSystem.DrawBodies(bodyDrawSettings, debugRenderer);
+#endif
 
 	RaylibWrapper::EndMode3D();
 
