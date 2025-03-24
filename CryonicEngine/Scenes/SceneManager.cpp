@@ -475,7 +475,8 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
 
 void SceneManager::UnloadScene(Scene* scene)
 {
-    for (GameObject* gameObject : m_activeScene->GetGameObjects())
+    std::deque<GameObject*> gameObjectsCopy = m_activeScene->GetGameObjects();
+    for (GameObject* gameObject : gameObjectsCopy)
         scene->RemoveGameObject(gameObject);
 
     auto it = std::find_if(m_scenes.begin(), m_scenes.end(), [scene](const Scene& s) { return *scene == s; });

@@ -58,7 +58,8 @@ void Scene::RemoveGameObject(GameObject* gameObject)
         return;
     }
 
-    for (GameObject* child : gameObject->GetChildren())
+    std::deque<GameObject*> childrenCopy = gameObject->GetChildren();
+    for (GameObject* child : childrenCopy)
         RemoveGameObject(child);
 
     for (Component* component : gameObject->GetComponents())

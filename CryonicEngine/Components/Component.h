@@ -12,6 +12,9 @@ class Collider3D;
 
 #define Expose
 #define Hide
+#define PUBLIC  
+#define PRIVATE
+#define PROTECTED
 
 class Component
 {

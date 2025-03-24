@@ -1,5 +1,6 @@
 #include "Component.h"
 #include "../ConsoleLogger.h"
+#include <ctime>
 
 std::vector<Component*> Component::markedForDeletion;
 
