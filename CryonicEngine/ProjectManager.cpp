@@ -683,7 +683,7 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
     // Check if cmake is installed
     if (!Utilities::IsProgramInstalled("cmake --version"))
     {
-        ConsoleLogger::ErrorLog("Build - Failed due to not having cmake installed. Please install cmake or add it to your environment variables.");
+        ConsoleLogger::ErrorLog("Build - Failed due to not having cmake installed. Please install cmake or add it to your environment variables.", false);
         callback(0, debug);
         return false;
     }
@@ -691,13 +691,30 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
     // Check if MinGW32 is installed
     if (!Utilities::IsProgramInstalled("mingw32-make --version"))
     {
-        ConsoleLogger::ErrorLog("Build - Failed due to not having mingw32-make installed. Please install mingw32-make or add it to your environment variables.");
+        ConsoleLogger::ErrorLog("Build - Failed due to not having mingw32-make installed. Please install mingw32-make or add it to your environment variables.", false);
         callback(0, debug);
         return false;
     }
 
-    // Todo: Check if ninja and ccache is installed, if not, prompt for an install. Same with the ones above
+    std::filesystem::path exeParent = Utilities::GetExePath().parent_path();
+
+    // Check if ninja is installed
     bool useNinja = true;
+    if (!std::filesystem::exists(exeParent / "tools" / "ninja.exe"))
+    {
+        // Todo: Prompt to install it via git. Ensure they have git installed.
+        useNinja = false;
+        ConsoleLogger::WarningLog("Build - It is highly recommended to have Ninja installed. This will allow builds to be quicker.");
+    }
+
+    // Check if ccache is installed
+    bool useCcache = true;
+    if (!std::filesystem::exists(exeParent / "tools" / "ccache.exe"))
+    {
+        // Todo: Prompt to install it via git. Ensure they have git installed.
+        useCcache = false;
+        ConsoleLogger::WarningLog("Build - It is highly recommended to have Ccache installed. This will allow builds to be quicker.");
+    }
 
     if (projectData.iconPath.empty() || projectData.iconPath == "None" || !std::filesystem::exists(projectData.path / "Assets" / projectData.iconPath))
     {
@@ -770,12 +787,12 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
     //    "-DCOPYRIGHT=\"" + copyright + "\" "
     //    ".";
 
+    // Todo: Instead, try to merge the two commands below and just have a string for the top cmake line. 
+
     if (useNinja)
     {
         command = "cmake -G \"Ninja\" "
             "-DCMAKE_MAKE_PROGRAM=\"" + Utilities::GetExePath().parent_path().string() + "/tools/ninja.exe\" "
-            "-DCMAKE_C_COMPILER=\"C:/MinGW/bin/gcc.exe\" "
-            "-DCMAKE_CXX_COMPILER=\"C:/MinGW/bin/g++.exe\" "
             "-DCMAKE_BUILD_TYPE=" + buildType + " "
             "-DPLATFORM=WINDOWS "
             "-DICON_PATH=\"" + (projectData.iconPath == "None" ? "Default Cryonic Logo.ico" : projectData.iconPath) + "\" "
@@ -784,12 +801,12 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
             "-DCOMPANY_NAME=\"" + projectData.company + "\" "
             "-DGAME_DESCRIPTION=\"" + projectData.description + "\" "
             "-DCOPYRIGHT=\"" + copyright + "\" "
-            ".";
+            "-DCMAKE_C_COMPILER=\"C:/Program Files/LLVM/bin/clang.exe\" "
+            "-DCMAKE_CXX_COMPILER=\"C:/Program Files/LLVM/bin/clang++.exe\" ";
     }
     else
     {
-        // Todo: Do I need "-DCMAKE_CXX_FLAGS=-DWINDOWS " like I do when using ninja?
-        command = "cmake -G \"MinGW Makefiles\" "
+        command = "cmake -G \"MinGW Makefiles\" " // Should this be "MinGW Makefiles" if its using clang?
             "-DCMAKE_BUILD_TYPE=" + buildType + " "
             "-DPLATFORM=WINDOWS "
             "-DICON_PATH=\"" + (projectData.iconPath == "None" ? "Default Cryonic Logo.ico" : projectData.iconPath) + "\" "
@@ -797,9 +814,14 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
             "-DGAME_VERSION_2=\"" + version2 + "\" "
             "-DCOMPANY_NAME=\"" + projectData.company + "\" "
             "-DGAME_DESCRIPTION=\"" + projectData.description + "\" "
-            "-DCOPYRIGHT=\"" + copyright + "\" "
-            ".";
+            "-DCOPYRIGHT=\"" + copyright + "\" ";
     }
+
+    if (useCcache)
+        command += "-DCCACHE_PATH=" + (useCcache ? "\"" + Utilities::GetExePath().parent_path().string() + "/tools/ccache.exe\" " : "\"\"") + " ";
+    
+    command += ".";
+
 
     if (!CreateProcessA(NULL, const_cast<LPSTR>(command.c_str()), NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi))
     {
@@ -903,7 +925,8 @@ bool ProjectManager::BuildToWindows(ProjectData projectData, bool debug, std::fu
 
     // Todo: Make the number of cores configurable.
     if (useNinja)
-        command = "ninja -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1)));
+        //command = "ninja -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1))); // Both this line and the one below seems to offer the same speeds?
+        command = "cmake --build . -- -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1)));
     else
         command = "mingw32-make -j" + std::to_string(static_cast<int>(std::round(Utilities::GetNumberOfCores() * 1))) + " PLATFORM=PLATFORM_DESKTOP";
 
@@ -1106,7 +1129,7 @@ bool ProjectManager::BuildToWeb(ProjectData projectData, std::function<void(int,
     // Check if EMSDK is installed
     if (!std::filesystem::exists("C:\\emsdk")) // Todo: Needs to be changed when emsdk is moved to a path relative to Cryonic Engine
     {
-        ConsoleLogger::ErrorLog("Build - Failed due to not having emsdk installed. Please install emsdk at \"C:\\emsdk\".");
+        ConsoleLogger::ErrorLog("Build - Failed due to not having emsdk installed. Please install emsdk at \"C:\\emsdk\".", false);
         callback(0, false);
         return false;
     }
@@ -1114,7 +1137,7 @@ bool ProjectManager::BuildToWeb(ProjectData projectData, std::function<void(int,
     // Check if EMSDK environment bat exists
     if (!std::filesystem::exists("C:\\emsdk\\emsdk_env.bat")) // Todo: Needs to be changed when emsdk is moved to a path relative to Cryonic Engine
     {
-        ConsoleLogger::ErrorLog("Build - Failed due to not having emsdk's environment bat installed. Please reinstall emsdk at \"C:\\emsdk\".");
+        ConsoleLogger::ErrorLog("Build - Failed due to not having emsdk's environment bat installed. Please reinstall emsdk at \"C:\\emsdk\".", false);
         callback(0, false);
         return false;
     }
