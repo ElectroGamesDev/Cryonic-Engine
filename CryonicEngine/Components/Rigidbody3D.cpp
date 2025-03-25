@@ -81,18 +81,22 @@ void Rigidbody3D::Awake()
     lastGameObjectPosition = gameObject->transform.GetPosition();
     lastGameObjectRotation = gameObject->transform.GetRotation();
     oldBodyType = bodyType;
+    JPH::ObjectLayer layer;
 
     JPH::EMotionType eMotionType;
 
     switch (bodyType) {
         case Dynamic:
             eMotionType = JPH::EMotionType::Dynamic;
+            layer = Layers::MOVING;
             break;
         case Kinematic:
             eMotionType = JPH::EMotionType::Kinematic;
+            layer = Layers::MOVING;
             break;
         default:
             eMotionType = JPH::EMotionType::Static;
+            layer = Layers::NON_MOVING;
             break;
     }
 
@@ -102,7 +106,7 @@ void Rigidbody3D::Awake()
     JPH::EmptyShapeSettings emptyShape;
     compoundSettings.AddShape({ 0,0,0 }, { 0,0,0,1 }, emptyShape.Create().Get());
     compoundShape = static_cast<JPH::MutableCompoundShape*>(compoundSettings.Create().Get().GetPtr());
-    JPH::BodyCreationSettings bodySettings(compoundShape, { goPosition.x, goPosition.y, goPosition.z }, { goRotation.x, goRotation.y, goRotation.z, goRotation.w }, eMotionType, 0); // Last parameter is the layer
+    JPH::BodyCreationSettings bodySettings(compoundShape, { goPosition.x, goPosition.y, goPosition.z }, { goRotation.x, goRotation.y, goRotation.z, goRotation.w }, eMotionType, layer); // Last parameter is the layer
     bodySettings.mGravityFactor = gravityScale;
     bodySettings.mFriction = friction;
     bodySettings.mMotionQuality = (continuousDetection ? JPH::EMotionQuality::LinearCast : JPH::EMotionQuality::Discrete);
@@ -292,11 +296,20 @@ void Rigidbody3D::SetBodyType(BodyType bodyType)
     this->bodyType = bodyType;
 
     if (bodyType == Dynamic)
+    {
         bodyInterface->SetMotionType(body->GetID(), JPH::EMotionType::Dynamic, JPH::EActivation::DontActivate);
+        bodyInterface->SetObjectLayer(body->GetID(), Layers::MOVING);
+    }
     else if (bodyType == Kinematic)
+    {
         bodyInterface->SetMotionType(body->GetID(), JPH::EMotionType::Kinematic, JPH::EActivation::DontActivate);
+        bodyInterface->SetObjectLayer(body->GetID(), Layers::MOVING);
+    }
     else
+    {
         bodyInterface->SetMotionType(body->GetID(), JPH::EMotionType::Static, JPH::EActivation::DontActivate);
+        bodyInterface->SetObjectLayer(body->GetID(), Layers::NON_MOVING);
+    }
 #endif
 }
 

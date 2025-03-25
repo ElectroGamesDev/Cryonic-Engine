@@ -8,6 +8,14 @@
 #include "../Jolt/Jolt.h"
 #include "Jolt/Physics/Collision/Shape/MutableCompoundShape.h"
 #include "../Jolt/Physics/PhysicsSystem.h"
+
+// Put in here so they can be accessed by Rigidbody3D.cpp and Game.cpp
+namespace Layers
+{
+    static constexpr JPH::ObjectLayer NON_MOVING = 0;
+    static constexpr JPH::ObjectLayer MOVING = 1;
+    static constexpr JPH::ObjectLayer NUM_LAYERS = 2;
+};
 #endif
 
 class Rigidbody3D : public Component {

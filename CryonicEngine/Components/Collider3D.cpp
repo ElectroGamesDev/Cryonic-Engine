@@ -323,7 +323,7 @@ void Collider3D::RemoveRigidbody()
 	//body = world->CreateBody(&bodyDef);
 	Vector3 goPosition = gameObject->transform.GetPosition() + offset;
 	Quaternion goRotation = gameObject->transform.GetRotation();
-	JPH::BodyCreationSettings bodySettings(joltShape, { goPosition.x, goPosition.y, goPosition.z }, { goRotation.x, goRotation.y, goRotation.z, goRotation.w }, JPH::EMotionType::Static, 0); // Last parameter is the layer
+	JPH::BodyCreationSettings bodySettings(joltShape, { goPosition.x, goPosition.y, goPosition.z }, { goRotation.x, goRotation.y, goRotation.z, goRotation.w }, JPH::EMotionType::Static, Layers::NON_MOVING);
 	bodySettings.mGravityFactor = 0;
 	bodySettings.mIsSensor = trigger;
 	bodySettings.mMotionQuality = (continuousDetection ? JPH::EMotionQuality::LinearCast : JPH::EMotionQuality::Discrete);
