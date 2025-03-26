@@ -37,14 +37,14 @@
 #include "Jolt/Renderer/DebugRenderer.h"
 #include "Jolt/Physics/Body/BodyManager.h"
 #include "Components/Rigidbody3D.h"
-//#include "Physics3DDebugDraw.h"
+#include "Physics3DDebugDraw.h"
 #include "CollisionListener3D.h"
 JPH_SUPPRESS_WARNINGS
 
 JPH::PhysicsSystem physicsSystem;
 CollisionListener3D collisionListener3D;
 JPH::TempAllocatorMalloc* tempAllocator;
-//Physics3DDebugDraw* debugRenderer;
+Physics3DDebugDraw* debugRenderer;
 JPH::JobSystemThreadPool jobSystem;
 JPH::BodyManager::DrawSettings bodyDrawSettings;
 #endif
@@ -227,11 +227,12 @@ int main(void)
 
 	Rigidbody3D::bodyLockInterface = &physicsSystem.GetBodyLockInterface();
 
-	//debugRenderer = new Physics3DDebugDraw();
+	debugRenderer = new Physics3DDebugDraw();
 	//JPH::DebugRenderer::sInstance = debugRenderer;
-	//bodyDrawSettings.mDrawGetSupportFunction = true;
-	//bodyDrawSettings.mDrawShape = true;
-	//bodyDrawSettings.mDrawShapeWireframe = true;
+	bodyDrawSettings.mDrawGetSupportFunction = true;
+	bodyDrawSettings.mDrawShape = true;
+	bodyDrawSettings.mDrawShapeWireframe = true;
+	bodyDrawSettings.mDrawBoundingBox = true;
 	jobSystem.Init(2048, 16, std::thread::hardware_concurrency());
 	//JPH::TempAllocatorImpl tempAllocator(100 * 1024 * 1024);
 	tempAllocator = new JPH::TempAllocatorMalloc();
@@ -276,7 +277,7 @@ int main(void)
 	ShaderManager::Cleanup();
     RaylibWrapper::CloseWindow();
 #ifdef IS3D
-	//delete debugRenderer;
+	delete debugRenderer;
 	delete tempAllocator;
 	JPH::UnregisterTypes();
 	delete JPH::Factory::sInstance;
@@ -402,7 +403,14 @@ void MainLoop()
 #ifdef IS2D
 	//world->DebugDraw();
 #else
-	//physicsSystem.DrawBodies(bodyDrawSettings, debugRenderer); // Not working
+	if (CameraComponent::main != nullptr)
+		debugRenderer->SetCameraPos(JPH::RVec3(
+			CameraComponent::main->gameObject->transform.GetPosition().x,
+			CameraComponent::main->gameObject->transform.GetPosition().y,
+			CameraComponent::main->gameObject->transform.GetPosition().z
+		));
+
+	physicsSystem.DrawBodies(bodyDrawSettings, debugRenderer); // Not working
 #endif
 
 	RaylibWrapper::EndMode3D();
