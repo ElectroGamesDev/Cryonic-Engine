@@ -28,8 +28,8 @@ public:
 
 	RVec3					mBaseOffset;						///< Offset to which all the contact points are relative
 	Vec3					mWorldSpaceNormal;					///< Normal for this manifold, direction along which to move body 2 out of collision along the shortest path
-	float					mPenetrationDepth;					///< Penetration depth (move shape 2 by this distance to resolve the collision)
-	SubShapeID				mSubShapeID1;						///< Sub shapes that formed this manifold (note that when multiple manifolds are combined because they're coplanar, we lose some information here because we only keep track of one sub shape pair that we encounter)
+	float					mPenetrationDepth;					///< Penetration depth (move shape 2 by this distance to resolve the collision). If this value is negative, this is a speculative contact point and may not actually result in a velocity change as during solving the bodies may not actually collide.
+	SubShapeID				mSubShapeID1;						///< Sub shapes that formed this manifold (note that when multiple manifolds are combined because they're coplanar, we lose some information here because we only keep track of one sub shape pair that we encounter, see description at Body::SetUseManifoldReduction)
 	SubShapeID				mSubShapeID2;
 	ContactPoints			mRelativeContactPointsOn1;			///< Contact points on the surface of shape 1 relative to mBaseOffset.
 	ContactPoints			mRelativeContactPointsOn2;			///< Contact points on the surface of shape 2 relative to mBaseOffset. If there's no penetration, this will be the same as mRelativeContactPointsOn1. If there is penetration they will be different.
@@ -61,9 +61,10 @@ enum class ValidateResult
 	RejectAllContactsForThisBodyPair							///< Rejects this and any further contact points for this body pair
 };
 
-/// A listener class that receives collision contact events events.
+/// A listener class that receives collision contact events.
 /// It can be registered with the ContactConstraintManager (or PhysicsSystem).
 /// Note that contact listener callbacks are called from multiple threads at the same time when all bodies are locked, you're only allowed to read from the bodies and you can't change physics state.
+/// During OnContactRemoved you cannot access the bodies at all, see the comments at that function.
 class ContactListener
 {
 public:
@@ -71,13 +72,13 @@ public:
 	virtual					~ContactListener() = default;
 
 	/// Called after detecting a collision between a body pair, but before calling OnContactAdded and before adding the contact constraint.
-	/// If the function returns false, the contact will not be added and any other contacts between this body pair will not be processed.
+	/// If the function rejects the contact, the contact will not be added and any other contacts between this body pair will not be processed.
 	/// This function will only be called once per PhysicsSystem::Update per body pair and may not be called again the next update
 	/// if a contact persists and no new contact pairs between sub shapes are found.
 	/// This is a rather expensive time to reject a contact point since a lot of the collision detection has happened already, make sure you
 	/// filter out the majority of undesired body pairs through the ObjectLayerPairFilter that is registered on the PhysicsSystem.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
-	/// The order of body 1 and 2 is undefined, but when one of the two bodies is dynamic it will be body 1.
+	/// Body 1 will have a motion type that is larger or equal than body 2's motion type (order from large to small: dynamic -> kinematic -> static). When motion types are equal, they are ordered by BodyID.
 	/// The collision result (inCollisionResult) is reported relative to inBaseOffset.
 	virtual ValidateResult	OnContactValidate([[maybe_unused]] const Body &inBody1, [[maybe_unused]] const Body &inBody2, [[maybe_unused]] RVec3Arg inBaseOffset, [[maybe_unused]] const CollideShapeResult &inCollisionResult) { return ValidateResult::AcceptAllContactsForThisBodyPair; }
 
@@ -102,8 +103,12 @@ public:
 	virtual void			OnContactPersisted([[maybe_unused]] const Body &inBody1, [[maybe_unused]] const Body &inBody2, [[maybe_unused]] const ContactManifold &inManifold, [[maybe_unused]] ContactSettings &ioSettings) { /* Do nothing */ }
 
 	/// Called whenever a contact was detected last update but is not detected anymore.
-	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
-	/// Note that we're using BodyID's since the bodies may have been removed at the time of callback.
+	/// You cannot access the bodies at the time of this callback because:
+	/// - All bodies are locked at the time of this callback.
+	/// - Some properties of the bodies are being modified from another thread at the same time.
+	/// - The body may have been removed and destroyed (you'll receive an OnContactRemoved callback in the PhysicsSystem::Update after the body has been removed).
+	/// Cache what you need in the OnContactAdded and OnContactPersisted callbacks and store it in a separate structure to use during this callback.
+	/// Alternatively, you could just record that the contact was removed and process it after PhysicsSimulation::Update.
 	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic.
 	/// The sub shape ID were created in the previous simulation step too, so if the structure of a shape changes (e.g. by adding/removing a child shape of a compound shape),
 	/// the sub shape ID may not be valid / may not point to the same sub shape anymore.

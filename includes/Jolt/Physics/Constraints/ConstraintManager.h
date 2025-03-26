@@ -32,11 +32,9 @@ public:
 #endif // JPH_ENABLE_ASSERTS
 
 	/// Add a new constraint. This is thread safe.
-	/// Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
 	void					Add(Constraint **inConstraints, int inNumber);
 
 	/// Remove a constraint. This is thread safe.
-	/// Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
 	void					Remove(Constraint **inConstraint, int inNumber);
 
 	/// Get a list of all constraints
@@ -58,19 +56,14 @@ public:
 	static void				sSetupVelocityConstraints(Constraint **inActiveConstraints, uint32 inNumActiveConstraints, float inDeltaTime);
 
 	/// Apply last frame's impulses, must be called prior to SolveVelocityConstraints
-	static void				sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio);
-
-	/// Same as above but also calculates the number of velocity steps
-	static void				sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, int &ioNumVelocitySteps);
+	template <class ConstraintCallback>
+	static void				sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, ConstraintCallback &ioCallback);
 
 	/// This function is called multiple times to iteratively come to a solution that meets all velocity constraints
 	static bool				sSolveVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime);
 
 	/// This function is called multiple times to iteratively come to a solution that meets all position constraints
 	static bool				sSolvePositionConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime, float inBaumgarte);
-
-	/// Same as above but also calculates the number of position steps
-	static bool				sSolvePositionConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime, float inBaumgarte, int &ioNumPositionSteps);
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw all constraints

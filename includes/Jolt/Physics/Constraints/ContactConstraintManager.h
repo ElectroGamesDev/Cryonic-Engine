@@ -169,7 +169,8 @@ public:
 	}
 
 	/// Apply last frame's impulses as an initial guess for this frame's impulses
-	void						WarmStartVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio);
+	template <class MotionPropertiesCallback>
+	void						WarmStartVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, MotionPropertiesCallback &ioCallback);
 
 	/// Solve velocity constraints, when almost nothing changes this should only apply very small impulses
 	/// since we're warm starting with the total impulse applied in the last frame above.
@@ -250,7 +251,7 @@ public:
 	void						SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const;
 
 	/// Restoring state for replay. Returns false when failed.
-	bool						RestoreState(StateRecorder &inStream);
+	bool						RestoreState(StateRecorder &inStream, const StateRecorderFilter *inFilter);
 
 private:
 	/// Local space contact point, used for caching impulses
@@ -392,7 +393,7 @@ private:
 
 		/// Saving / restoring state for replay
 		void					SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const;
-		bool					RestoreState(const ManifoldCache &inReadCache, StateRecorder &inStream);
+		bool					RestoreState(const ManifoldCache &inReadCache, StateRecorder &inStream, const StateRecorderFilter *inFilter);
 
 	private:
 		/// Block size used when allocating new blocks in the contact cache
