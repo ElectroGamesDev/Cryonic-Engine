@@ -78,8 +78,8 @@ Rigidbody3D::Rigidbody3D(GameObject* obj, int id) : Component(obj, id) {
 void Rigidbody3D::Awake()
 {
 #if !defined(EDITOR)
-    lastGameObjectPosition = gameObject->transform.GetPosition();
-    lastGameObjectRotation = gameObject->transform.GetRotation();
+    lastGOPosition = gameObject->transform.GetPosition();
+    lastGORotation = gameObject->transform.GetRotation();
     oldBodyType = bodyType;
     JPH::ObjectLayer layer;
 
@@ -114,7 +114,32 @@ void Rigidbody3D::Awake()
     //bodySettings.mLinearVelocity = angularDamping;
     body = bodyInterface->CreateBody(bodySettings);
     bodyInterface->AddBody(body->GetID(), JPH::EActivation::Activate);
+
+    // Commenting this code since it doesn't work and the hacky fix is in the FixedUpdate()
+    //bodyInterface->SetPosition(body->GetID(), { goPosition.x, goPosition.y, goPosition.z }, JPH::EActivation::DontActivate);
+    //bodyInterface->SetRotation(body->GetID(), { goRotation.x, goRotation.y, goRotation.z, goRotation.w }, JPH::EActivation::DontActivate);
+
+    //JPH::Vec3 physicsPosition = Rigidbody3D::bodyInterface->GetPosition(body->GetID());
+    //printf("RigidBody Position: (%f, %f, %f)\n", physicsPosition.GetX(), physicsPosition.GetY(), physicsPosition.GetZ());
+    //printf("GameObject Position: (%f, %f, %f)\n", goPosition.x, goPosition.y, goPosition.z);
+
+
+    lastPhysicsPosition = body->GetPosition();
+    lastPhysicsRotation = body->GetRotation();
 #endif
+}
+
+void Rigidbody3D::Start()
+{
+    // For some reason the body's transform resets at 0,0,0 after creating it, even though I set it within the body settings and after the body is added to the physics world 
+#if !defined(EDITOR)
+    Vector3 goPosition = gameObject->transform.GetPosition();
+    Quaternion goRotation = gameObject->transform.GetRotation();
+
+    bodyInterface->SetPosition(body->GetID(), { goPosition.x, goPosition.y, goPosition.z }, JPH::EActivation::DontActivate);
+    bodyInterface->SetRotation(body->GetID(), { goRotation.x, goRotation.y, goRotation.z, goRotation.w }, JPH::EActivation::DontActivate);
+
+#endif();
 }
 
 void Rigidbody3D::Enable()
@@ -149,66 +174,82 @@ void Rigidbody3D::Disable()
     colliders.clear();
 }
 
-void Rigidbody3D::Update() // Todo: should this be in the Physics Update?
+void Rigidbody3D::FixedUpdate()
 {
-    // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive()
 #if !defined(EDITOR)
+    // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive()
     if (bodyType != oldBodyType)
         SetBodyType(bodyType);
 
-    // Todo: Change this to a switch case
-    if (bodyType == Dynamic)
+    // Use switch-case for body type logic
+    switch (bodyType)
     {
-        // Todo: Change this to if-else and make one checking if they were both changed
-        // Todo: This will update the body's rotation and position when it doesn't need to.
-        if (gameObject->transform.GetPosition() == lastGameObjectPosition) // Todo: This shouldn't be setting the gameobject's position even when the body hasn't changed
-            gameObject->transform.SetPosition({ body->GetPosition().GetX(), body->GetPosition().GetY(), body->GetPosition().GetZ() });
-        else if (gameObject->transform.GetPosition().x != body->GetPosition().GetX() || gameObject->transform.GetPosition().y != body->GetPosition().GetY() || gameObject->transform.GetPosition().z != body->GetPosition().GetZ())
+    case Dynamic:
+    {
+        // Update position if the game object has moved
+        Vector3 position = gameObject->transform.GetPosition();
+        if (lastGOPosition != position)
+        {
+            // Update physics body position (with offset if needed)
+            Rigidbody3D::bodyInterface->SetPosition(body->GetID(), { position.x, position.y, position.z }, JPH::EActivation::DontActivate);
+            lastGOPosition = position;
+        }
+
+        // Update rotation if the game object has rotated
+        Quaternion rotation = gameObject->transform.GetRotation();
+        if (lastGORotation != rotation)
+        {
+            // Update physics body rotation (correct method: SetRotation)
+            Rigidbody3D::bodyInterface->SetRotation(body->GetID(), { rotation.x, rotation.y, rotation.z, rotation.w }, JPH::EActivation::DontActivate);
+            lastGORotation = rotation;
+        }
+
+        // Update the game object's position if the physics body moved
+        JPH::Vec3 physicsPosition = Rigidbody3D::bodyInterface->GetPosition(body->GetID());
+        if (lastPhysicsPosition != physicsPosition)
+        {
+            gameObject->transform.SetPosition({ physicsPosition.GetX(), physicsPosition.GetY(), physicsPosition.GetZ() });
+            lastPhysicsPosition = physicsPosition;
+        }
+
+        // Update the game object's rotation if the physics body rotated
+        JPH::Quat physicsRotation = Rigidbody3D::bodyInterface->GetRotation(body->GetID());
+        if (lastPhysicsRotation != physicsRotation)
+        {
+            gameObject->transform.SetRotation({ physicsRotation.GetX(), physicsRotation.GetY(), physicsRotation.GetZ(), physicsRotation.GetW() });
+            lastPhysicsRotation = physicsRotation;
+        }
+        break;
+    }
+
+    case Kinematic:
+    case Static:
+    {
+        // Update body if the game object has moved or rotated
+        if (gameObject->transform.GetPosition() != lastGOPosition)
+        {
             bodyInterface->SetPosition(body->GetID(), { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z }, JPH::EActivation::DontActivate);
-
-        if (gameObject->transform.GetRotation() == lastGameObjectRotation) // Todo: This shouldn't be setting the gameobject's rotation even when the body hasn't changed
-        {
-            //JPH::Vec3 rotation = bodyInterface->GetRotation(body->GetID()).GetEulerAngles();
-            JPH::Quat rotation = body->GetRotation();
-            gameObject->transform.SetRotation({ rotation.GetX(), rotation.GetY(), rotation.GetZ(), rotation.GetW() });
         }
-        else if (gameObject->transform.GetRotation().x != body->GetRotation().GetX() || gameObject->transform.GetRotation().y != body->GetRotation().GetY() || gameObject->transform.GetRotation().z != body->GetRotation().GetZ() || gameObject->transform.GetRotation().w != body->GetRotation().GetW())
+
+        if (gameObject->transform.GetRotation() != lastGORotation)
         {
             Quaternion rotation = gameObject->transform.GetRotation();
             bodyInterface->SetRotation(body->GetID(), { rotation.x, rotation.y, rotation.z, rotation.w }, JPH::EActivation::DontActivate);
         }
-    }
-    else if (bodyType == Kinematic)
-    {
-        // Todo: Change this to if-else and make one checking if they were both changed
-        if (gameObject->transform.GetPosition() != lastGameObjectPosition) // Todo: This shouldn't be setting the gameobject's position even when the body hasn't changed
-            bodyInterface->SetPosition(body->GetID(), { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z }, JPH::EActivation::DontActivate);
-
-        if (gameObject->transform.GetRotation() != lastGameObjectRotation)
-        {
-            Quaternion rotation = gameObject->transform.GetRotation();
-            bodyInterface->SetRotation(body->GetID(), { rotation.x, rotation.y, rotation.z, rotation.w }, JPH::EActivation::DontActivate);
-        }
-    }
-    else if (bodyType == Static)
-    {
-        if (gameObject->transform.GetPosition() != lastGameObjectPosition)
-        {
-            Vector3 position = gameObject->transform.GetPosition();
-            bodyInterface->SetPosition(body->GetID(), { position.x, position.y, position.z }, JPH::EActivation::DontActivate);
-            //gameObject->transform.SetPosition(lastGameObjectPosition);
-        }
-        if (gameObject->transform.GetRotation() != lastGameObjectRotation)
-        {
-            Quaternion rotation = gameObject->transform.GetRotation();
-            bodyInterface->SetRotation(body->GetID(), { rotation.x, rotation.y, rotation.z, rotation.w }, JPH::EActivation::DontActivate);
-            //gameObject->transform.SetRotation(lastGameObjectRotation);
-        }
+        break;
     }
 
-    lastGameObjectPosition = gameObject->transform.GetPosition();
-    lastGameObjectRotation = gameObject->transform.GetRotation();
+    default:
+        break;
+    }
 
+    // Update last states after all changes
+    lastGOPosition = gameObject->transform.GetPosition();
+    lastGORotation = gameObject->transform.GetRotation();
+    lastPhysicsPosition = body->GetPosition();
+    lastPhysicsRotation = body->GetRotation();
+
+    // Update the oldBodyType after the checks
     oldBodyType = bodyType;
 #endif
 }
@@ -430,10 +471,11 @@ void Rigidbody3D::AddCollider(Collider3D* collider)
     if (body)
         JPH::BodyLockWrite lock(*bodyLockInterface, body->GetID()); // This is needed for multi-threading
 
-    Vector3 position = gameObject->transform.GetPosition() + collider->GetOffset();
-    Quaternion rotation = gameObject->transform.GetRotation();
+    //Vector3 position = gameObject->transform.GetPosition() + collider->GetOffset();
+    //Quaternion rotation = gameObject->transform.GetRotation();
+    
     ////JPH::MutableCompoundShape* compoundShape = dynamic_cast<JPH::MutableCompoundShape*>(const_cast<JPH::Shape*>(body->GetShape()));
-    compoundShape->AddShape({ position.x, position.y, position.z }, { rotation.x, rotation.y, rotation.z, rotation.w }, collider->joltShape, collider->id);
+    compoundShape->AddShape({ collider->GetOffset().x, collider->GetOffset().y, collider->GetOffset().z }, { 0, 0, 0, 1 }, collider->joltShape, collider->id);
     // Todo: Do I need to fix the IDs from the other shapes now?
     colliderMap[collider->id] = collider;
     if (body)

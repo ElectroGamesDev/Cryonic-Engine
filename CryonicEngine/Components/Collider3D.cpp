@@ -3,7 +3,6 @@
 #include "../EventSystem.h"
 #if !defined(EDITOR)
 #include "../Game.h"
-#include "../Jolt/Physics/Collision/Shape/ScaledShape.h"
 #else
 #include "../Editor.h"
 #endif
@@ -24,7 +23,10 @@ Collider3D::Collider3D(GameObject* obj, int id) : Component(obj, id) {
                     "Shape",
                     [
                         "Box",
-                        "Sphere"
+                        "Sphere",
+						"Plane",
+						"Cylinder",
+						"Cone"
                     ]
                 ],
                 [
@@ -54,32 +56,56 @@ Collider3D::Collider3D(GameObject* obj, int id) : Component(obj, id) {
 
 // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive(). Also check if Rigidbody3D is destroyed, if it is then look for a new one, or create one. (Check when its destroyed in the Rigidbody3D Destroy() )
 
-
-#if !defined(EDITOR)
 void Collider3D::CreateShape()
 {
+#if !defined(EDITOR)
 	switch (shape)
 	{
 		default:
 		case Box:
 		{
-			// Would I need to use ScaledShape()? I might not need to
-			JPH::BoxShapeSettings shape({ gameObject->transform.GetScale().x * 3 * size.x / 2, gameObject->transform.GetScale().y * 3 * size.y / 2, gameObject->transform.GetScale().z * 3 * size.z / 2 });
+			JPH::BoxShapeSettings shape({ (gameObject->transform.GetScale().x * 3 * size.x / 2) / 3, (gameObject->transform.GetScale().y * 3 * size.y / 2) / 3, (gameObject->transform.GetScale().z * 3 * size.z / 2) / 3 });
 			joltShape = shape.Create().Get();
 			break;
 		}
 		case Sphere:
 		{
-			//b2CircleShape circle;
-			//circle.m_p.Set(offset.x, offset.y);
-			//circle.m_radius = gameObject->transform.GetScale().x * 1.5f * size.x;
-			//fixtureDef.shape = &circle;
-			//fixture = body->CreateFixture(&fixtureDef);
+			JPH::SphereShapeSettings shape((gameObject->transform.GetScale().x * size.x) / 2.0f);
+			joltShape = shape.Create().Get();
+			break;
+		}
+		case Plane:
+		{
+			JPH::BoxShapeSettings shape({ (gameObject->transform.GetScale().x * 3 * size.x / 2) / 3, 0.06f, (gameObject->transform.GetScale().z * 3 * size.z / 2) / 3 });
+			joltShape = shape.Create().Get();
+			// Todo: Implementan actual plane
+			//JPH::Plane plane({ 0.0f, 1.0f, 0.0f }, distanceFromOrigin); // First parameter is the plane normal, the second parameter is confusing
+			//plane = plane.Scaled({ (gameObject->transform.GetScale().x * 3 * size.x / 2) / 3, 1, (gameObject->transform.GetScale().z * 3 * size.z / 2) / 3 });
+			//JPH::PlaneShapeSettings shape(plane, nullptr); // Can set physics material instead of nullptr
+			//joltShape = shape.Create().Get();
+			break;
+		}
+		case Cylinder:
+		{
+			float radius = (gameObject->transform.GetScale().x * size.x) / 2;
+			float height = gameObject->transform.GetScale().y * size.y;
+
+			JPH::CylinderShapeSettings shape(height, radius);
+			joltShape = shape.Create().Get();
+			break;
+		}
+		case Cone: // Todo: This needs to be changed to use a mesh shape
+		{
+			float radius = (gameObject->transform.GetScale().x * size.x) / 2;
+			float height = gameObject->transform.GetScale().y * size.y / 2; 
+
+			JPH::CylinderShapeSettings shape(height, radius);
+			joltShape = shape.Create().Get();
 			break;
 		}
 	}
-}
 #endif
+}
 
 void Collider3D::Start()
 {
@@ -100,10 +126,8 @@ void Collider3D::Start()
 		Vector3 goPosition = gameObject->transform.GetPosition() + offset;
 		Quaternion goRotation = gameObject->transform.GetRotation();
 		if (joltShape == nullptr)
-		{
-			ConsoleLogger::ErrorLog("SHAPE NULLIFIED", false);
 			return;
-		}
+
 		JPH::BodyCreationSettings bodySettings(joltShape, { goPosition.x, goPosition.y, goPosition.z }, { goRotation.x, goRotation.y, goRotation.z, goRotation.w }, JPH::EMotionType::Static, 0); // Last parameter is the layer
 		bodySettings.mGravityFactor = 0;
 		bodySettings.mIsSensor = trigger;
@@ -111,14 +135,14 @@ void Collider3D::Start()
 		bodySettings.mUserData = reinterpret_cast<uint64_t>(this);
 		body = Rigidbody3D::bodyInterface->CreateBody(bodySettings);
 		Rigidbody3D::bodyInterface->AddBody(body->GetID(), JPH::EActivation::Activate);
+
 		ownBody = true;
 	}
 	SetTrigger(trigger);
-
+#endif
 
 	// Subscribes to the ObjectSelected and ObjectDeselected editor events
 
-#endif
 	//EventSystem::Subscribe("ObjectSelected", Test);
 	// Todo: Move this to the above if defined, and handle if the object is selected, deslected, changed, moved, or if this object moves.
 	//EventSystem::Subscribe("ObjectSelected", [](GameObject* gameObject) {
@@ -135,25 +159,46 @@ void Collider3D::Start()
 	//EventSystem::Subscribe("ObjectSelected", [](GameObject* gameObject) {});
 }
 
-void Collider3D::Update() // Todo: Should this be in PhysicsUpdate()???
+void Collider3D::FixedUpdate()
 {
 #if !defined(EDITOR)
 	if (!ownBody)
 		return;
 
 	// Todo: Use SetPositionAndRotation() when possible
+	
+	// Update position if the game object has moved
 	Vector3 position = gameObject->transform.GetPosition();
-	if (lastPosition != position)
+	if (lastGOPosition != position)
 	{
+		// Update physics body position (with offset if needed)
 		Rigidbody3D::bodyInterface->SetPosition(body->GetID(), { position.x + offset.x, position.y + offset.y, position.z + offset.z }, JPH::EActivation::DontActivate);
-		lastPosition = position;
+		lastGOPosition = position;
 	}
 
+	// Update rotation if the game object has rotated
 	Quaternion rotation = gameObject->transform.GetRotation();
-	if (lastRotation != rotation)
+	if (lastGORotation != rotation)
 	{
-		Rigidbody3D::bodyInterface->SetPosition(body->GetID(), { rotation.x, rotation.y, rotation.z }, JPH::EActivation::DontActivate);
-		lastRotation = rotation;
+		// Update physics body rotation (correct method: SetRotation)
+		Rigidbody3D::bodyInterface->SetRotation(body->GetID(), { rotation.x, rotation.y, rotation.z, rotation.w }, JPH::EActivation::DontActivate);
+		lastGORotation = rotation;
+}
+
+	// Update the game object's position if the physics body moved
+	JPH::Vec3 physicsPosition = Rigidbody3D::bodyInterface->GetPosition(body->GetID());
+	if (lastPhysicsPosition != physicsPosition)
+	{
+		gameObject->transform.SetPosition({ physicsPosition.GetX() - offset.x, physicsPosition.GetY() - offset.y, physicsPosition.GetZ() - offset.z});
+		lastPhysicsPosition = physicsPosition;
+	}
+
+	// Update the game object's rotation if the physics body rotated
+	JPH::Quat physicsRotation = Rigidbody3D::bodyInterface->GetRotation(body->GetID());
+	if (lastPhysicsRotation != physicsRotation)
+	{
+		gameObject->transform.SetRotation({ physicsRotation.GetX(), physicsRotation.GetY(), physicsRotation.GetZ(), physicsRotation.GetW() });
+		lastPhysicsRotation = physicsRotation;
 	}
 #endif
 }
@@ -349,6 +394,14 @@ void Collider3D::RemoveRigidbody()
 #endif
 }
 
+#if defined(EDITOR)
+void Collider3D::SetShapeInternal(std::string shape)
+{
+	exposedVariables[1][0][2] = shape;
+}
+#endif
+
+
 Collider3D::Shape Collider3D::GetShape()
 {
 	return shape;
@@ -380,7 +433,9 @@ bool Collider3D::IsTrigger()
 void Collider3D::SetOffset(Vector3 offset)
 {
 	this->offset = offset;
-#if !defined(EDITOR)
+#if defined(EDITOR)
+	exposedVariables[1][2][2] = { offset.x, offset.y, offset.z };
+#else
 	CreateShape();
 	if (ownBody)
 	{

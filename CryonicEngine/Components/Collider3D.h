@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Component.h"
-#if !defined(EDITOR)
 #include "../Jolt/Jolt.h"
 #include "../Jolt/RegisterTypes.h"
 #include "../Jolt/RegisterTypes.h"
@@ -10,10 +9,12 @@
 #include "../Jolt/Physics/Collision/Shape/BoxShape.h"
 #include "../Jolt/Physics/Collision/Shape/SphereShape.h"
 #include "../Jolt/Physics/Collision/Shape/CapsuleShape.h"
+#include "../Jolt/Physics/Collision/Shape/CylinderShape.h"
 #include "../Jolt/Physics/Collision/Shape/CompoundShape.h"
+#include "../Jolt/Geometry/Plane.h"
+#include "../Jolt/Physics/Collision/Shape/PlaneShape.h"
 #include "../Jolt/Physics/Body/BodyCreationSettings.h"
 #include "../Jolt/Physics/Body/BodyActivationListener.h"
-#endif
 
 class Rigidbody3D;
 
@@ -28,7 +29,10 @@ public:
     enum Shape
     {
         Box,
-        Sphere
+        Sphere,
+        Plane,
+        Cylinder,
+        Cone
     };
 
     // Hide in API
@@ -39,7 +43,7 @@ public:
     void RemoveRigidbody();
 
     void Start() override;
-    void Update() override;
+    void FixedUpdate() override;
     void EditorUpdate() override;
     void Destroy() override;
     void Enable() override;
@@ -54,24 +58,26 @@ public:
     Vector3 GetSize();
 
     // Hide in API
+#if defined(EDITOR)
+    void SetShapeInternal(std::string shape);
+#endif
+
     bool highlight = false;
     Rigidbody3D* rb;
-#if !defined(EDITOR)
     JPH::RefConst<JPH::Shape> joltShape;
-#endif
 private:
     Shape shape;
     bool trigger;
     Vector3 offset;
     Vector3 size = { 1, 1 };
     bool continuousDetection;
-    Vector3 lastPosition;
-    Quaternion lastRotation;
+    Vector3 lastGOPosition;
+    Quaternion lastGORotation;
+    JPH::Vec3 lastPhysicsPosition;
+    JPH::Quat lastPhysicsRotation;
 
-#if !defined(EDITOR)
     void CreateShape();
 
     JPH::Body* body = nullptr;
     bool ownBody = false;
-#endif
 };

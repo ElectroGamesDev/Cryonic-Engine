@@ -4,9 +4,8 @@
 #include "Collider3D.h"
 #include <deque>
 #include <unordered_map>
-#if !defined(EDITOR)
 #include "../Jolt/Jolt.h"
-#include "Jolt/Physics/Collision/Shape/MutableCompoundShape.h"
+#include "../Jolt/Physics/Collision/Shape/MutableCompoundShape.h"
 #include "../Jolt/Physics/PhysicsSystem.h"
 
 // Put in here so they can be accessed by Rigidbody3D.cpp and Game.cpp
@@ -16,7 +15,6 @@ namespace Layers
     static constexpr JPH::ObjectLayer MOVING = 1;
     static constexpr JPH::ObjectLayer NUM_LAYERS = 2;
 };
-#endif
 
 class Rigidbody3D : public Component {
 public:
@@ -52,7 +50,8 @@ public:
 
     Rigidbody3D(GameObject* obj, int id);
     void Awake() override;
-    void Update() override;
+    void Start() override;
+    void FixedUpdate() override;
     void Destroy() override;
     void Enable() override;
     void Disable() override;
@@ -67,7 +66,6 @@ public:
     void UpdateShape(Collider3D* collider, bool updateOnlyTransform = false);
 
     // Hide in API
-#if !defined(EDITOR)
     //void AddShape(int id, JPH::ShapeSettings* shape); // Should this be moved to Collider??
     //void RemoveShape(int id); // Should this be moved to Collider??
 
@@ -85,9 +83,12 @@ private:
     float friction = 0.2f;
     float linearDamping = 0.0f;
     float angularDamping = 0.0f;
+    bool firstUpdate = true;
 
-    Vector3 lastGameObjectPosition;
-    Quaternion lastGameObjectRotation;
+    Vector3 lastGOPosition;
+    Quaternion lastGORotation;
+    JPH::Vec3 lastPhysicsPosition;
+    JPH::Quat lastPhysicsRotation;
+
     BodyType oldBodyType;
-#endif
 };
