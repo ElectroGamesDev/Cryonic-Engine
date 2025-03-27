@@ -3787,6 +3787,22 @@ void Editor::RenderHierarchy()
                         MeshRenderer& meshRenderer = gameObject->AddComponentInternal<MeshRenderer>();
                         meshRenderer.SetModelPath(objectToCreate.name);
                         meshRenderer.SetModel(objectToCreate.model, objectToCreate.name, LitStandard);
+
+                        Collider3D& collider = gameObject->AddComponentInternal<Collider3D>();
+                        if (objectToCreate.model == Cube)
+                            collider.SetShapeInternal("Box");
+                        else if (objectToCreate.model == Cylinder)
+                        {
+                            collider.SetShapeInternal(objectToCreate.name);
+                            collider.SetOffset({0, 1, 0});
+                        }
+                        else if (objectToCreate.model == Cone)
+                        {
+                            collider.SetShapeInternal(objectToCreate.name);
+                            collider.SetOffset({ 0, 0.5f , 0 });
+                        }
+                        else
+                            collider.SetShapeInternal(objectToCreate.name);
                     }
                     else
                     {
