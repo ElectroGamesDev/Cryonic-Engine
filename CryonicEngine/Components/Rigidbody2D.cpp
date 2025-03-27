@@ -289,7 +289,7 @@ float Rigidbody2D::GetAngularDamping()
 #endif
 }
 
-void Rigidbody2D::Update() // Todo: should this be in the Physics Update?
+void Rigidbody2D::FixedUpdate() // Todo: This most likely needs to be updated like Rigidbody3D to ensure physics & setting the game object's transform work together. This needs to be done in Collider2D too
 {
     // Todo: Check if the game object or component is enabled/disabled, if it is then body->SetActive()
 #if !defined(EDITOR)

@@ -39,7 +39,7 @@ public:
 
     Rigidbody2D(GameObject* obj, int id);
     void Awake() override;
-    void Update() override;
+    void FixedUpdate() override;
     void Destroy() override;
     void Enable() override;
     void Disable() override;
