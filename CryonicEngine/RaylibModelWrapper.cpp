@@ -53,7 +53,7 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
         }
         else
         {
-            primitiveModels[Sphere] = std::make_pair(LoadModelFromMesh(GenMeshSphere(1, 1, 1)), 1);
+            primitiveModels[Sphere] = std::make_pair(LoadModelFromMesh(GenMeshSphere(1, 32, 32)), 1);
             model = &primitiveModels[Sphere];
         }
         primitiveModel = true;
@@ -79,7 +79,7 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
         }
         else
         {
-            primitiveModels[Cylinder] = std::make_pair(LoadModelFromMesh(GenMeshCylinder(1, 1, 1)), 1);
+            primitiveModels[Cylinder] = std::make_pair(LoadModelFromMesh(GenMeshCylinder(0.5f, 2, 32)), 1);
             model = &primitiveModels[Cylinder];
         }
         primitiveModel = true;
@@ -92,7 +92,7 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
         }
         else
         {
-            primitiveModels[Cone] = std::make_pair(LoadModelFromMesh(GenMeshCone(1, 1, 1)), 1);
+            primitiveModels[Cone] = std::make_pair(LoadModelFromMesh(GenMeshCone(1, 1, 32)), 1);
             model = &primitiveModels[Cone];
         }
         primitiveModel = true;
