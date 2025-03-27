@@ -410,7 +410,7 @@ void MainLoop()
 			CameraComponent::main->gameObject->transform.GetPosition().z
 		));
 
-	physicsSystem.DrawBodies(bodyDrawSettings, debugRenderer); // Not working
+	//physicsSystem.DrawBodies(bodyDrawSettings, debugRenderer);
 #endif
 
 	RaylibWrapper::EndMode3D();
