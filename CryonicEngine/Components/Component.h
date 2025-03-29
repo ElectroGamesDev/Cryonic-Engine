@@ -98,6 +98,9 @@ public:
     // Called once per frame to handle GUI rendering
     virtual void RenderGui() {};
 
+    // Called once per frame to handle mesh rendering
+    virtual void Render(bool renderShadows = false) {};
+
     // Called when the game object or component is destroyed, or the scene is unloaded
     virtual void Destroy() {};
 
