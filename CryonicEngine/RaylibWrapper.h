@@ -349,6 +349,34 @@ namespace RaylibWrapper
         FLAG_INTERLACED_HINT = 0x00010000    // Set to try enabling interlaced video format (for V3D)
     };
 
+    // rlgl
+    // Framebuffer attachment type
+    // NOTE: By default up to 8 color channels defined, but it can be more
+    typedef enum {
+        RL_ATTACHMENT_COLOR_CHANNEL0 = 0,       // Framebuffer attachment type: color 0
+        RL_ATTACHMENT_COLOR_CHANNEL1 = 1,       // Framebuffer attachment type: color 1
+        RL_ATTACHMENT_COLOR_CHANNEL2 = 2,       // Framebuffer attachment type: color 2
+        RL_ATTACHMENT_COLOR_CHANNEL3 = 3,       // Framebuffer attachment type: color 3
+        RL_ATTACHMENT_COLOR_CHANNEL4 = 4,       // Framebuffer attachment type: color 4
+        RL_ATTACHMENT_COLOR_CHANNEL5 = 5,       // Framebuffer attachment type: color 5
+        RL_ATTACHMENT_COLOR_CHANNEL6 = 6,       // Framebuffer attachment type: color 6
+        RL_ATTACHMENT_COLOR_CHANNEL7 = 7,       // Framebuffer attachment type: color 7
+        RL_ATTACHMENT_DEPTH = 100,              // Framebuffer attachment type: depth
+        RL_ATTACHMENT_STENCIL = 200,            // Framebuffer attachment type: stencil
+    } rlFramebufferAttachType;
+
+    // Framebuffer texture attachment type
+    typedef enum {
+        RL_ATTACHMENT_CUBEMAP_POSITIVE_X = 0,   // Framebuffer texture attachment type: cubemap, +X side
+        RL_ATTACHMENT_CUBEMAP_NEGATIVE_X = 1,   // Framebuffer texture attachment type: cubemap, -X side
+        RL_ATTACHMENT_CUBEMAP_POSITIVE_Y = 2,   // Framebuffer texture attachment type: cubemap, +Y side
+        RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y = 3,   // Framebuffer texture attachment type: cubemap, -Y side
+        RL_ATTACHMENT_CUBEMAP_POSITIVE_Z = 4,   // Framebuffer texture attachment type: cubemap, +Z side
+        RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z = 5,   // Framebuffer texture attachment type: cubemap, -Z side
+        RL_ATTACHMENT_TEXTURE2D = 100,          // Framebuffer texture attachment type: texture2d
+        RL_ATTACHMENT_RENDERBUFFER = 200,       // Framebuffer texture attachment type: renderbuffer
+    } rlFramebufferAttachTextureType;
+
     // Keyboard keys (US keyboard layout)
 // NOTE: Use GetKeyPressed() to allow redefining
 // required keys for alternative layouts
@@ -527,6 +555,118 @@ namespace RaylibWrapper
         GAMEPAD_AXIS_RIGHT_TRIGGER = 5      // Gamepad back trigger right, pressure level: [1..-1]
     } GamepadAxis;
 
+    // Shader location index
+    typedef enum {
+        SHADER_LOC_VERTEX_POSITION = 0, // Shader location: vertex attribute: position
+        SHADER_LOC_VERTEX_TEXCOORD01,   // Shader location: vertex attribute: texcoord01
+        SHADER_LOC_VERTEX_TEXCOORD02,   // Shader location: vertex attribute: texcoord02
+        SHADER_LOC_VERTEX_NORMAL,       // Shader location: vertex attribute: normal
+        SHADER_LOC_VERTEX_TANGENT,      // Shader location: vertex attribute: tangent
+        SHADER_LOC_VERTEX_COLOR,        // Shader location: vertex attribute: color
+        SHADER_LOC_MATRIX_MVP,          // Shader location: matrix uniform: model-view-projection
+        SHADER_LOC_MATRIX_VIEW,         // Shader location: matrix uniform: view (camera transform)
+        SHADER_LOC_MATRIX_PROJECTION,   // Shader location: matrix uniform: projection
+        SHADER_LOC_MATRIX_MODEL,        // Shader location: matrix uniform: model (transform)
+        SHADER_LOC_MATRIX_NORMAL,       // Shader location: matrix uniform: normal
+        SHADER_LOC_VECTOR_VIEW,         // Shader location: vector uniform: view
+        SHADER_LOC_COLOR_DIFFUSE,       // Shader location: vector uniform: diffuse color
+        SHADER_LOC_COLOR_SPECULAR,      // Shader location: vector uniform: specular color
+        SHADER_LOC_COLOR_AMBIENT,       // Shader location: vector uniform: ambient color
+        SHADER_LOC_MAP_ALBEDO,          // Shader location: sampler2d texture: albedo (same as: SHADER_LOC_MAP_DIFFUSE)
+        SHADER_LOC_MAP_METALNESS,       // Shader location: sampler2d texture: metalness (same as: SHADER_LOC_MAP_SPECULAR)
+        SHADER_LOC_MAP_NORMAL,          // Shader location: sampler2d texture: normal
+        SHADER_LOC_MAP_ROUGHNESS,       // Shader location: sampler2d texture: roughness
+        SHADER_LOC_MAP_OCCLUSION,       // Shader location: sampler2d texture: occlusion
+        SHADER_LOC_MAP_EMISSION,        // Shader location: sampler2d texture: emission
+        SHADER_LOC_MAP_HEIGHT,          // Shader location: sampler2d texture: height
+        SHADER_LOC_MAP_CUBEMAP,         // Shader location: samplerCube texture: cubemap
+        SHADER_LOC_MAP_IRRADIANCE,      // Shader location: samplerCube texture: irradiance
+        SHADER_LOC_MAP_PREFILTER,       // Shader location: samplerCube texture: prefilter
+        SHADER_LOC_MAP_BRDF,            // Shader location: sampler2d texture: brdf
+        SHADER_LOC_VERTEX_BONEIDS,      // Shader location: vertex attribute: boneIds
+        SHADER_LOC_VERTEX_BONEWEIGHTS,  // Shader location: vertex attribute: boneWeights
+        SHADER_LOC_BONE_MATRICES        // Shader location: array of matrices uniform: boneMatrices
+    } ShaderLocationIndex;
+
+    // Shader uniform data type
+    typedef enum {
+        SHADER_UNIFORM_FLOAT = 0,       // Shader uniform type: float
+        SHADER_UNIFORM_VEC2,            // Shader uniform type: vec2 (2 float)
+        SHADER_UNIFORM_VEC3,            // Shader uniform type: vec3 (3 float)
+        SHADER_UNIFORM_VEC4,            // Shader uniform type: vec4 (4 float)
+        SHADER_UNIFORM_INT,             // Shader uniform type: int
+        SHADER_UNIFORM_IVEC2,           // Shader uniform type: ivec2 (2 int)
+        SHADER_UNIFORM_IVEC3,           // Shader uniform type: ivec3 (3 int)
+        SHADER_UNIFORM_IVEC4,           // Shader uniform type: ivec4 (4 int)
+        SHADER_UNIFORM_SAMPLER2D        // Shader uniform type: sampler2d
+    } ShaderUniformDataType;
+
+    // Shader attribute data types
+    typedef enum {
+        SHADER_ATTRIB_FLOAT = 0,        // Shader attribute type: float
+        SHADER_ATTRIB_VEC2,             // Shader attribute type: vec2 (2 float)
+        SHADER_ATTRIB_VEC3,             // Shader attribute type: vec3 (3 float)
+        SHADER_ATTRIB_VEC4              // Shader attribute type: vec4 (4 float)
+    } ShaderAttributeDataType;
+
+    // Pixel formats
+    // NOTE: Support depends on OpenGL version and platform
+    typedef enum {
+        PIXELFORMAT_UNCOMPRESSED_GRAYSCALE = 1, // 8 bit per pixel (no alpha)
+        PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA,    // 8*2 bpp (2 channels)
+        PIXELFORMAT_UNCOMPRESSED_R5G6B5,        // 16 bpp
+        PIXELFORMAT_UNCOMPRESSED_R8G8B8,        // 24 bpp
+        PIXELFORMAT_UNCOMPRESSED_R5G5B5A1,      // 16 bpp (1 bit alpha)
+        PIXELFORMAT_UNCOMPRESSED_R4G4B4A4,      // 16 bpp (4 bit alpha)
+        PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,      // 32 bpp
+        PIXELFORMAT_UNCOMPRESSED_R32,           // 32 bpp (1 channel - float)
+        PIXELFORMAT_UNCOMPRESSED_R32G32B32,     // 32*3 bpp (3 channels - float)
+        PIXELFORMAT_UNCOMPRESSED_R32G32B32A32,  // 32*4 bpp (4 channels - float)
+        PIXELFORMAT_UNCOMPRESSED_R16,           // 16 bpp (1 channel - half float)
+        PIXELFORMAT_UNCOMPRESSED_R16G16B16,     // 16*3 bpp (3 channels - half float)
+        PIXELFORMAT_UNCOMPRESSED_R16G16B16A16,  // 16*4 bpp (4 channels - half float)
+        PIXELFORMAT_COMPRESSED_DXT1_RGB,        // 4 bpp (no alpha)
+        PIXELFORMAT_COMPRESSED_DXT1_RGBA,       // 4 bpp (1 bit alpha)
+        PIXELFORMAT_COMPRESSED_DXT3_RGBA,       // 8 bpp
+        PIXELFORMAT_COMPRESSED_DXT5_RGBA,       // 8 bpp
+        PIXELFORMAT_COMPRESSED_ETC1_RGB,        // 4 bpp
+        PIXELFORMAT_COMPRESSED_ETC2_RGB,        // 4 bpp
+        PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA,   // 8 bpp
+        PIXELFORMAT_COMPRESSED_PVRT_RGB,        // 4 bpp
+        PIXELFORMAT_COMPRESSED_PVRT_RGBA,       // 4 bpp
+        PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA,   // 8 bpp
+        PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA    // 2 bpp
+    } PixelFormat;
+
+    // Texture parameters: filter mode
+    // NOTE 1: Filtering considers mipmaps if available in the texture
+    // NOTE 2: Filter is accordingly set for minification and magnification
+    typedef enum {
+        TEXTURE_FILTER_POINT = 0,               // No filter, just pixel approximation
+        TEXTURE_FILTER_BILINEAR,                // Linear filtering
+        TEXTURE_FILTER_TRILINEAR,               // Trilinear filtering (linear with mipmaps)
+        TEXTURE_FILTER_ANISOTROPIC_4X,          // Anisotropic filtering 4x
+        TEXTURE_FILTER_ANISOTROPIC_8X,          // Anisotropic filtering 8x
+        TEXTURE_FILTER_ANISOTROPIC_16X,         // Anisotropic filtering 16x
+    } TextureFilter;
+
+    // Texture parameters: wrap mode
+    typedef enum {
+        TEXTURE_WRAP_REPEAT = 0,                // Repeats texture in tiled mode
+        TEXTURE_WRAP_CLAMP,                     // Clamps texture to edge pixel in tiled mode
+        TEXTURE_WRAP_MIRROR_REPEAT,             // Mirrors and repeats the texture in tiled mode
+        TEXTURE_WRAP_MIRROR_CLAMP               // Mirrors and clamps to border the texture in tiled mode
+    } TextureWrap;
+
+    // Cubemap layouts
+    typedef enum {
+        CUBEMAP_LAYOUT_AUTO_DETECT = 0,         // Automatically detect layout type
+        CUBEMAP_LAYOUT_LINE_VERTICAL,           // Layout is defined by a vertical line with faces
+        CUBEMAP_LAYOUT_LINE_HORIZONTAL,         // Layout is defined by a horizontal line with faces
+        CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR,     // Layout is defined by a 3x4 cross with cubemap faces
+        CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE     // Layout is defined by a 4x3 cross with cubemap faces
+    } CubemapLayout;
+
     void InitWindow(int width, int height, const char* title);
     bool WindowShouldClose();
     void CloseWindow();
@@ -617,6 +757,14 @@ namespace RaylibWrapper
     void EndScissorMode(void);
     void BeginVrStereoMode(VrStereoConfig config);
     void EndVrStereoMode(void);
+
+    // Shaders
+    Shader LoadShader(const char* vsFileName, const char* fsFileName);
+    void UnloadShader(Shader shader);
+    void SetShaderValue(Shader shader, int locIndex, const void* value, int uniformType);
+    void SetShaderValueTexture(Shader shader, int locIndex, Texture2D texture);
+    int GetShaderLocation(Shader shader, const char* uniformName);
+    void SetShaderValueMatrix(Shader shader, int locIndex, Matrix matrix);
 
     // Image loading functions
     Image LoadImageFromMemory(const char* fileType, const unsigned char* fileData, int dataSize);
@@ -781,6 +929,42 @@ namespace RaylibWrapper
     float GetMusicTimeLength(Music music);                          // Get music time length (in seconds)
     float GetMusicTimePlayed(Music music);                          // Get current music time played (in seconds)
 
+    // Color functions
+    Vector4 ColorNormalize(Color color); // Todo: Move to Color struct
+
+    // rlgl functions
+    void rlSetMatrixProjection(Matrix matrix);
+    Matrix rlGetMatrixModelview();
+    Matrix rlGetMatrixProjection();
+    void rlSetUniform(int locIndex, const void* value, int uniformType, int count);
+    unsigned int rlLoadFramebuffer();
+    void rlUnloadFramebuffer(unsigned int id);
+    void rlEnableFramebuffer(unsigned int id);
+    void rlDisableFramebuffer();
+    void rlFramebufferAttach(unsigned int fboId, unsigned int texId, int attachType, int texType, int mipLevel);
+    bool rlFramebufferComplete(unsigned int id);
+    unsigned int rlLoadTexture(const void* data, int width, int height, int format, int mipmapCount);
+    unsigned int rlLoadTextureDepth(int width, int height, bool useRenderBuffer);
+    void rlEnableTexture(unsigned int id);
+    void rlDisableTexture();
+    void rlEnableShader(unsigned int id);
+    void rlDisableShader();
+    void rlActiveTextureSlot(int slot);
+    void rlSetUniformSampler(int locIndex, unsigned int textureId);
+    void rlSetUniformMatrix(int locIndex, Matrix matrix);
+    void rlClearScreenBuffers();
+    void rlDisableColorBlend();
+    void rlDisableColorBlend();
+    void rlBegin(int mode);
+    void rlEnd();
+    void rlVertex3f(float x, float y, float z);
+
+    // raymath functions
+    Matrix MatrixOrtho(double left, double right, double bottom, double top, double nearPlane, double farPlane);
+    Matrix MatrixMultiply(Matrix left, Matrix right);
+    Vector3 Vector3Normalize(Vector3 v);
+    Matrix MatrixRotateXYZ(Vector3 angle);
+    Vector3 Vector3Transform(Vector3 v, Matrix matrix);
 
     // ImGui Raylib
     bool ImGui_ImplRaylib_Init();

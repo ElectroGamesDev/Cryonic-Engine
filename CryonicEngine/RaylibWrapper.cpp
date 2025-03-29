@@ -351,6 +351,33 @@ namespace RaylibWrapper {
     }
 
 
+    // Shaders
+    Shader LoadShader(const char* vsFileName, const char* fsFileName) {
+        ::Shader shader = ::LoadShader(vsFileName, fsFileName);
+        return { shader.id, shader.locs };
+    }
+
+    void UnloadShader(Shader shader) {
+        ::UnloadShader({ shader.id, shader.locs });
+    }
+
+    void SetShaderValue(Shader shader, int locIndex, const void* value, int uniformType) {
+        ::SetShaderValue({ shader.id, shader.locs }, locIndex, value, uniformType);
+    }
+
+    void SetShaderValueTexture(Shader shader, int locIndex, Texture2D texture) {
+        return ::SetShaderValueTexture({ shader.id, shader.locs }, locIndex, { texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
+    }
+
+    int GetShaderLocation(Shader shader, const char* uniformName) {
+        return ::GetShaderLocation({ shader.id, shader.locs }, uniformName);
+    }
+
+    void SetShaderValueMatrix(Shader shader, int locIndex, Matrix matrix) {
+        ::SetShaderValueMatrix({ shader.id, shader.locs }, locIndex, { matrix.m0, matrix.m1, matrix.m2, matrix.m3, matrix.m4, matrix.m5, matrix.m6, matrix.m7, matrix.m8, matrix.m9, matrix.m10, matrix.m11, matrix.m12, matrix.m13, matrix.m14, matrix.m15 });
+    }
+
+
     // Image loading functions
     Image LoadImageFromMemory(const char* fileType, const unsigned char* fileData, int dataSize)
     {
@@ -1244,6 +1271,165 @@ namespace RaylibWrapper {
     //    return ::GetMusicTimePlayed(music);
     //}
 
+    // Color functions
+    Vector4 ColorNormalize(Color color) {
+        ::Vector4 vector = ::ColorNormalize({ color.r, color.g, color.b, color.a });
+        return { vector.x, vector.y, vector.z, vector.w };
+    }
+
+    // rlgl functions
+
+    void rlSetMatrixProjection(Matrix matrix) {
+        return ::rlSetMatrixProjection({ matrix.m0, matrix.m1, matrix.m2, matrix.m3, matrix.m4, matrix.m5, matrix.m6, matrix.m7, matrix.m8, matrix.m9, matrix.m10, matrix.m11, matrix.m12, matrix.m13, matrix.m14, matrix.m15 });
+    }
+
+    Matrix rlGetMatrixModelview() {
+        ::Matrix matrix = ::rlGetMatrixModelview();
+        return { matrix.m0, matrix.m1, matrix.m2, matrix.m3, matrix.m4, matrix.m5, matrix.m6, matrix.m7, matrix.m8, matrix.m9, matrix.m10, matrix.m11, matrix.m12, matrix.m13, matrix.m14, matrix.m15 };
+    }
+
+    Matrix rlGetMatrixProjection() {
+        ::Matrix matrix = ::rlGetMatrixProjection();
+        return { matrix.m0, matrix.m1, matrix.m2, matrix.m3, matrix.m4, matrix.m5, matrix.m6, matrix.m7, matrix.m8, matrix.m9, matrix.m10, matrix.m11, matrix.m12, matrix.m13, matrix.m14, matrix.m15 };
+    }
+
+    void rlSetUniform(int locIndex, const void* value, int uniformType, int count) {
+        ::rlSetUniform(locIndex, value, uniformType, count);
+    }
+
+    unsigned int rlLoadFramebuffer() {
+        return ::rlLoadFramebuffer();
+    }
+
+    void rlUnloadFramebuffer(unsigned int id) {
+        ::rlUnloadFramebuffer(id);
+    }
+
+    void rlEnableFramebuffer(unsigned int id) {
+        ::rlEnableFramebuffer(id);
+    }
+
+    void rlDisableFramebuffer() {
+        ::rlDisableFramebuffer();
+    }
+
+    void rlFramebufferAttach(unsigned int fboId, unsigned int texId, int attachType, int texType, int mipLevel) {
+        ::rlFramebufferAttach(fboId, texId, attachType, texType, mipLevel);
+    }
+
+    bool rlFramebufferComplete(unsigned int id) {
+        return ::rlFramebufferComplete(id);
+    }
+
+    unsigned int rlLoadTexture(const void* data, int width, int height, int format, int mipmapCount) {
+        return ::rlLoadTexture(data, width, height, format, mipmapCount);
+    }
+
+    unsigned int rlLoadTextureDepth(int width, int height, bool useRenderBuffer) {
+        return ::rlLoadTextureDepth(width, height, useRenderBuffer);
+    }
+
+    void rlEnableTexture(unsigned int id) {
+        ::rlEnableTexture(id);
+    }
+
+    void rlDisableTexture() {
+        ::rlDisableTexture();
+    }
+
+    void rlEnableShader(unsigned int id) {
+        ::rlEnableShader(id);
+    }
+
+    void rlDisableShader() {
+        ::rlDisableShader();
+    }
+
+    void rlActiveTextureSlot(int slot) {
+        ::rlActiveTextureSlot(slot);
+    }
+
+    void rlSetUniformSampler(int locIndex, unsigned int textureId) {
+        ::rlSetUniformSampler(locIndex, textureId);
+    }
+
+    void rlSetUniformMatrix(int locIndex, Matrix matrix) {
+        ::rlSetUniformMatrix(locIndex, { matrix.m0, matrix.m1, matrix.m2, matrix.m3, matrix.m4, matrix.m5, matrix.m6, matrix.m7, matrix.m8, matrix.m9, matrix.m10, matrix.m11, matrix.m12, matrix.m13, matrix.m14, matrix.m15 });
+    }
+
+    void rlClearScreenBuffers() {
+        ::rlClearScreenBuffers();
+    }
+
+    void rlDisableColorBlend() {
+        ::rlDisableColorBlend();
+    }
+
+    void rlBegin(int mode) {
+        ::rlBegin(mode);
+    }
+
+    void rlEnd() {
+        ::rlEnd();
+    }
+
+    void rlVertex3f(float x, float y, float z) {
+        ::rlVertex3f(x, y, z);
+    }
+
+    // raymath functions
+
+    Matrix MatrixOrtho(double left, double right, double bottom, double top, double nearPlane, double farPlane) {
+        ::Matrix matrix = ::MatrixOrtho(left, right, bottom, top, nearPlane, farPlane);
+        return { matrix.m0, matrix.m1, matrix.m2, matrix.m3, matrix.m4, matrix.m5, matrix.m6, matrix.m7, matrix.m8, matrix.m9, matrix.m10, matrix.m11, matrix.m12, matrix.m13, matrix.m14, matrix.m15 };
+    }
+
+    Matrix MatrixMultiply(Matrix left, Matrix right) {
+        ::Matrix matrix = ::MatrixMultiply(
+            { left.m0, left.m1, left.m2, left.m3, left.m4, left.m5, left.m6, left.m7, left.m8, left.m9, left.m10, left.m11, left.m12, left.m13, left.m14, left.m15 },
+            { right.m0, right.m1, right.m2, right.m3, right.m4, right.m5, right.m6, right.m7, right.m8, right.m9, right.m10, right.m11, right.m12, right.m13, right.m14, right.m15 });
+        return { matrix.m0, matrix.m1, matrix.m2, matrix.m3, matrix.m4, matrix.m5, matrix.m6, matrix.m7, matrix.m8, matrix.m9, matrix.m10, matrix.m11, matrix.m12, matrix.m13, matrix.m14, matrix.m15 };
+    }
+
+    Vector3 Vector3Normalize(Vector3 v) {
+        ::Vector3 vector = ::Vector3Normalize({ v.x, v.y, v.z });
+        return { vector.x, vector.y, vector.z };
+    }
+
+    Matrix MatrixRotateXYZ(Vector3 angle)
+    {
+        Matrix result = { 1.0f, 0.0f, 0.0f, 0.0f,
+                          0.0f, 1.0f, 0.0f, 0.0f,
+                          0.0f, 0.0f, 1.0f, 0.0f,
+                          0.0f, 0.0f, 0.0f, 1.0f };
+
+        float cosz = cosf(-angle.z);
+        float sinz = sinf(-angle.z);
+        float cosy = cosf(-angle.y);
+        float siny = sinf(-angle.y);
+        float cosx = cosf(-angle.x);
+        float sinx = sinf(-angle.x);
+
+        result.m0 = cosz * cosy;
+        result.m1 = (cosz * siny * sinx) - (sinz * cosx);
+        result.m2 = (cosz * siny * cosx) + (sinz * sinx);
+
+        result.m4 = sinz * cosy;
+        result.m5 = (sinz * siny * sinx) + (cosz * cosx);
+        result.m6 = (sinz * siny * cosx) - (cosz * sinx);
+
+        result.m8 = -siny;
+        result.m9 = cosy * sinx;
+        result.m10 = cosy * cosx;
+
+        return result;
+    }
+
+    Vector3 Vector3Transform(Vector3 v, Matrix matrix) {
+        ::Vector3 result = ::Vector3Transform({ v.x, v.y, v.z },
+            { matrix.m0, matrix.m1, matrix.m2, matrix.m3, matrix.m4, matrix.m5, matrix.m6, matrix.m7, matrix.m8, matrix.m9, matrix.m10, matrix.m11, matrix.m12, matrix.m13, matrix.m14, matrix.m15 });
+        return { result.x, result.y, result.z };
+    }
 
     // ImGui Raylib
     bool ImGui_ImplRaylib_Init() {
