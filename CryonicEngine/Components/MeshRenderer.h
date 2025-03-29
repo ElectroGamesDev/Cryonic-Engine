@@ -11,6 +11,23 @@ public:
 		runInEditor = true;
 		name = "MeshRenderer";
 		iconUnicode = "\xef\x86\xb2";
+
+#if defined(EDITOR)
+		std::string variables = R"(
+        [
+            0,
+            [
+                [
+                    "bool",
+                    "castShadows",
+                    true,
+                    "Cast Shadows"
+                ]
+            ]
+        ]
+    )";
+		exposedVariables = nlohmann::json::parse(variables);
+#endif
 	}
 	MeshRenderer* Clone() override
 	{
@@ -18,7 +35,10 @@ public:
 	}
 	/// Hide everything in this in the API
 	void Start() override {};
-	void Update() override;
+	void Render(bool renderShadows) override;
+#if defined(EDITOR)
+	void EditorUpdate() override;
+#endif
 	void Destroy() override;
 
 	RaylibModel& GetModel();
@@ -31,4 +51,6 @@ private:
 	RaylibModel raylibModel;
 	bool modelSet = false;
 	std::filesystem::path modelPath;
+
+	bool castShadows;
 };

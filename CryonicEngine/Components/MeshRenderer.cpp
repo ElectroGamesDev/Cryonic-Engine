@@ -36,15 +36,23 @@ void MeshRenderer::SetModelPath(std::filesystem::path path)
     this->modelPath = path;
 }
 
-void MeshRenderer::Update()
+void MeshRenderer::Render(bool renderShadows)
 {
-    if (!modelSet)
+    if (!modelSet || (renderShadows && !castShadows))
         return;
+
     Vector3 position = gameObject->transform.GetPosition();
     Quaternion rotation = gameObject->transform.GetRotation();
     Vector3 scale = gameObject->transform.GetScale();
     raylibModel.DrawModelWrapper(position.x, position.y, position.z, scale.x, scale.y, scale.z, rotation.x, rotation.y, rotation.z, rotation.w, 255, 255, 255, 255);
 }
+
+#if defined(EDITOR)
+void MeshRenderer::EditorUpdate()
+{
+    castShadows = exposedVariables[1][0][2].get<bool>();
+}
+#endif
 
 void MeshRenderer::Destroy()
 {
