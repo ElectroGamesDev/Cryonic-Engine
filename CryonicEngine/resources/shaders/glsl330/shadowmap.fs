@@ -14,7 +14,7 @@ out vec4 finalColor;
 uniform vec3 lightPos[MAX_LIGHTS]; // For point and spot lights
 uniform vec3 lightDir[MAX_LIGHTS]; // For directional and spotlights
 uniform vec4 lightColor[MAX_LIGHTS];
-uniform int lightType[MAX_LIGHTS]; // 0 = Directional, 1 = Point, 2 = Spot
+uniform int lightType[MAX_LIGHTS]; // 0 = Point, 1 = Spot, 2 = Directional
 
 uniform vec4 ambient;
 uniform vec3 viewPos;
@@ -64,7 +64,7 @@ void main() {
         vec3 lightDirNorm;
         float attenuation = 1.0;
         
-        if (lightType[i] == 0) { // Directional Light
+        if (lightType[i] == 3) { // Directional Light
             lightDirNorm = normalize(-lightDir[i]);
             shadow = CalculateShadow(i, fragPosition, normal);
         }
@@ -73,10 +73,10 @@ void main() {
             float dist = length(lightVec);
             lightDirNorm = normalize(lightVec);
             
-            if (lightType[i] == 1) { // Point Light
+            if (lightType[i] == 0) { // Point Light
                 attenuation = 1.0 / (1.0 + 0.09 * dist + 0.032 * (dist * dist));
             }
-            else if (lightType[i] == 2) { // Spot Light
+            else if (lightType[i] == 1) { // Spot Light
                 float theta = dot(lightDirNorm, normalize(-lightDir[i]));
                 float epsilon = spotInnerCutoff[i] - spotOuterCutoff[i];
                 float intensity = clamp((theta - spotOuterCutoff[i]) / epsilon, 0.0, 1.0);

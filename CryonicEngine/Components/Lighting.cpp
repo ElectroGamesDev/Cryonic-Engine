@@ -40,14 +40,14 @@ void Lighting::Destroy()
 void Lighting::Enable()
 {
     // Enabling the light in the shader // Todo: Make sure this actually works
-    RaylibWrapper::Vector4 lightColorNormalized = RaylibWrapper::ColorNormalize({ 255, 255, 255, 255 });
+    RaylibWrapper::Vector4 lightColorNormalized = RaylibWrapper::ColorNormalize({ color.r, color.g, color.b, 255 });
     RaylibWrapper::SetShaderValue(shadowManager.shader, shadowManager.lightColLoc, &lightColorNormalized, RaylibWrapper::SHADER_UNIFORM_VEC4);
 }
 
 void Lighting::Disable()
 {
     // Disabling the light in the shader // Todo: Make sure this actually works
-    RaylibWrapper::Vector4 lightColorNormalized = RaylibWrapper::ColorNormalize({ 255, 255, 255, 0 });
+    RaylibWrapper::Vector4 lightColorNormalized = RaylibWrapper::ColorNormalize({ color.r, color.g, color.b, 0 });
     RaylibWrapper::SetShaderValue(shadowManager.shader, shadowManager.lightColLoc, &lightColorNormalized, RaylibWrapper::SHADER_UNIFORM_VEC4);
 }
 
@@ -88,7 +88,7 @@ void Lighting::RenderLight(int index)
     RaylibWrapper::SetShaderValue(ShadowManager::shader, ShadowManager::shader.locs[RaylibWrapper::SHADER_LOC_VECTOR_VIEW], &CameraComponent::main, RaylibWrapper::SHADER_UNIFORM_VEC3);
 #endif
 
-    if (lastRotation != gameObject->transform.GetRotation())
+    if (lastRotation != gameObject->transform.GetRotation() && (shadowManager.lightType == 0 || shadowManager.lightType == 1)) // Rotation doesn't affect point lights
     {
         Vector3 rotation = gameObject->transform.GetRotationEuler() * DEG2RAD;
         RaylibWrapper::Matrix rotationMatrix = RaylibWrapper::MatrixRotateXYZ({ rotation.x, rotation.y, rotation.z });
@@ -100,9 +100,12 @@ void Lighting::RenderLight(int index)
     {
         lastPosition = gameObject->transform.GetPosition();
         shadowManager.camera.position = RaylibWrapper::Vector3Add({ lastPosition.x, lastPosition.y, lastPosition.z }, RaylibWrapper::Vector3Scale(shadowManager.lightDir, -15.0f)); // Todo: Remove the scale for point light
+        shadowManager.lightPos = { lastPosition.x, lastPosition.y, lastPosition.z };
+        RaylibWrapper::SetShaderValue(shadowManager.shader, shadowManager.lightPosLoc, &shadowManager.lightPos, RaylibWrapper::SHADER_UNIFORM_VEC3);
     }
 
     RaylibWrapper::SetShaderValue(ShadowManager::shader, shadowManager.lightDirLoc, &shadowManager.lightDir, RaylibWrapper::SHADER_UNIFORM_VEC3);
+    RaylibWrapper::SetShaderValue(ShadowManager::shader, shadowManager.lightPosLoc, &shadowManager.lightPos, RaylibWrapper::SHADER_UNIFORM_VEC3);
 
     RaylibWrapper::Matrix lightView;
     RaylibWrapper::Matrix lightProj;
@@ -148,6 +151,48 @@ void Lighting::EditorUpdate()
 
         wasLastActive = isNowActive;
     }
+
+
+    if (color.r != exposedVariables[1][0][2][0].get<int>() ||
+        color.g != exposedVariables[1][0][2][1].get<int>() ||
+        color.b != exposedVariables[1][0][2][2].get<int>() ||
+        color.a != exposedVariables[1][0][2][3].get<int>())
+    {
+        color.r = exposedVariables[1][0][2][0].get<int>();
+        color.g = exposedVariables[1][0][2][1].get<int>();
+        color.b = exposedVariables[1][0][2][2].get<int>();
+        color.a = exposedVariables[1][0][2][3].get<int>();
+
+        unsigned char alpha = 255;
+        if (!isNowActive)
+            alpha = 0;
+
+        RaylibWrapper::Vector4 lightColorNormalized = RaylibWrapper::ColorNormalize({ color.r, color.g, color.b, alpha });
+        RaylibWrapper::SetShaderValue(shadowManager.shader, shadowManager.lightColLoc, &lightColorNormalized, RaylibWrapper::SHADER_UNIFORM_VEC4);
+    }
+
+
+    std::string typeString = "Point";
+    if (type == Spot)
+        typeString = "Spot";
+    else if (type == Directional)
+        typeString = "Directional";
+
+    std::string currentTypeString = exposedVariables[1][1][2].get<std::string>();
+
+    if (typeString != currentTypeString)
+    {
+        if (currentTypeString == "Point")
+            type = Point;
+        else if (currentTypeString == "Spot")
+            type = Spot;
+        else
+            type = Directional;
+
+        int value = static_cast<int>(type);
+        RaylibWrapper::SetShaderValue(shadowManager.shader, shadowManager.lightTypeLoc, &value, RaylibWrapper::SHADER_UNIFORM_INT);
+    }
+
 
 	//Draw3DBillboard(Editor::camera, *IconManager::imageTextures["LightGizmoIcon"], gameObject->transform.GetPosition(), 2.0f, { 255, 255, 255, 150 }); // Todo: Re-add this
 	//if (!setMain)

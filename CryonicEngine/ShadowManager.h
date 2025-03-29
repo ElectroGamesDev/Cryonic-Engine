@@ -19,8 +19,12 @@ public:
     static RaylibWrapper::Shader shader;
     RaylibWrapper::Camera camera;
     RaylibWrapper::Vector3 lightDir;
+    RaylibWrapper::Vector3 lightPos;
+    int lightType;
     int lightDirLoc;
     int lightColLoc;
+    int lightPosLoc;
+    int lightTypeLoc;
     int lightVPLoc;
     int shadowMapLoc;
 private:

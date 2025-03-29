@@ -14,7 +14,41 @@ public:
 		iconUnicode = "\xef\x83\xab";
 		runInEditor = true;
 		Awake();
+
+		std::string variables = R"(
+        [
+            0,
+            [
+                [
+                    "Color",
+                    "color",
+                    [ 255, 255, 255, 255 ],
+                    "Color"
+                ],
+                [
+                    "Type",
+                    "type",
+                    "Point",
+                    "Type",
+                    [
+                        "Point",
+                        "Spot",
+						"Directional"
+                    ]
+                ]
+            ]
+        ]
+    )";
+		exposedVariables = nlohmann::json::parse(variables);
 	}
+
+	enum Type
+	{
+		Point,
+		Spot,
+		Directional
+	};
+
 	Lighting* Clone() override
 	{
 		return new Lighting(gameObject, -1);
@@ -42,4 +76,7 @@ private:
 	ShadowManager shadowManager;
 	Vector3 lastPosition;
 	Quaternion lastRotation;
+
+	Color color;
+	Type type;
 };

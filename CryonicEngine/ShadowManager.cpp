@@ -53,8 +53,10 @@ void ShadowManager::Init(int id, int width, int height)
 
     shader.locs[RaylibWrapper::SHADER_LOC_VECTOR_VIEW] = RaylibWrapper::GetShaderLocation(shader, "viewPos");
 
+    lightPosLoc = RaylibWrapper::GetShaderLocation(shader, ("lightPos[" + std::to_string(id - 1) + "]").c_str());
     lightDirLoc = RaylibWrapper::GetShaderLocation(shader, ("lightDir[" + std::to_string(id - 1) + "]").c_str());
     lightColLoc = RaylibWrapper::GetShaderLocation(shader, ("lightColor[" + std::to_string(id - 1) + "]").c_str());
+    lightTypeLoc = RaylibWrapper::GetShaderLocation(shader, ("lightType[" + std::to_string(id - 1) + "]").c_str());
     lightVPLoc = RaylibWrapper::GetShaderLocation(shader, ("lightVP[" + std::to_string(id - 1) + "]").c_str());
     shadowMapLoc = RaylibWrapper::GetShaderLocation(shader, ("shadowMap[" + std::to_string(id - 1) + "]").c_str());
 
@@ -62,10 +64,15 @@ void ShadowManager::Init(int id, int width, int height)
 
     // Set light properties
     lightDir = RaylibWrapper::Vector3Normalize({ 0.35f, -1.0f, -0.35f });
+    lightPos = { 0.0f, 0.0f, 0.0f }; // Default position for point/spotlights
+    lightType = 0; // 0 = Point, 1 = Spot, 2 = Directional
+
     RaylibWrapper::Vector4 lightColorNormalized = RaylibWrapper::ColorNormalize({ 255, 255, 255, 0 });
 
     RaylibWrapper::SetShaderValue(shader, lightDirLoc, &lightDir, RaylibWrapper::SHADER_UNIFORM_VEC3);
+    RaylibWrapper::SetShaderValue(shader, lightPosLoc, &lightPos, RaylibWrapper::SHADER_UNIFORM_VEC3);
     RaylibWrapper::SetShaderValue(shader, lightColLoc, &lightColorNormalized, RaylibWrapper::SHADER_UNIFORM_VEC4);
+    RaylibWrapper::SetShaderValue(shader, lightTypeLoc, &lightType, RaylibWrapper::SHADER_UNIFORM_INT);
 
     int ambientLoc = RaylibWrapper::GetShaderLocation(shader, "ambient");
     float ambient[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
