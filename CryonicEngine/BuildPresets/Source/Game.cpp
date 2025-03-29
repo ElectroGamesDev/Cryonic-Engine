@@ -5,11 +5,13 @@
 #include "Components/Component.h"
 #include "Components/CameraComponent.h"
 #include "Components/SpriteRenderer.h"
+#include "Components/Lighting.h"
 #include "AudioClip.h"
 #include "ShaderManager.h"
 #include "RaylibModelWrapper.h"
 #include "RaylibWrapper.h"
 #include "RenderableTexture.h"
+#include "ShadowManager.h"
 #ifdef WINDOWS
 // Prevent Windows from defining conflicting functions
 #define NOGDI
@@ -157,6 +159,11 @@ void MainLoop();
 
 int main(void)
 {
+	// TODO: Init() shadow manager, and make sure to pass in parameters
+	// Todo: and UnloadShader()
+	// Make sure to check if its 3d before rendering, init, and cleanup shadows
+
+
 	// Todo: Is this even running? There was an error in the code and it didn't give off any errors. I might have fixed it with the ninja command by using "-DCMAKE_CXX_FLAGS=-DWINDOWS "?
 #ifdef WINDOWS
 	// Sets executable path to a variable
@@ -275,6 +282,7 @@ int main(void)
 	ImGui::DestroyContext();
 
 	ShaderManager::Cleanup();
+	ShadowManager::UnloadShader();
     RaylibWrapper::CloseWindow();
 #ifdef IS3D
 	delete debugRenderer;
@@ -311,6 +319,7 @@ void MainLoop()
 			{
 				if (!component->IsActive())
 					continue;
+
 				component->FixedUpdate();
 				fixedDeltaTime = timeStep; // Setting this here and before the loop incase if a component changes the fixed delta time
 			}
@@ -348,15 +357,45 @@ void MainLoop()
 //	}
 //#endif
 
+	// Shadows
+	//if (CameraComponent::main != nullptr)
+	//{
+	//	Vector3 mainCameraPos = CameraComponent::main->gameObject->transform.GetPosition();
+	//	shadowManager.camera.position = { mainCameraPos.x + Lighting::main->gameObject->transform.GetPosition().x,
+	//		mainCameraPos.y + Lighting::main->gameObject->transform.GetPosition().y,
+	//		mainCameraPos.z + Lighting::main->gameObject->transform.GetPosition().z };
+	//}
+	//RaylibWrapper::Matrix matLightVP = shadowManager.RenderShadowPass();
+
 	RaylibWrapper::BeginDrawing();
 
 #ifdef IS3D
+	RaylibWrapper::rlEnableShader(ShadowManager::shader.id);
+
+	int index = 1;
+	for (Lighting* light : Lighting::lights)
+	{
+		if (light->IsActive() && light->gameObject->IsGlobalActive() && light->gameObject->IsActive())
+		{
+			light->RenderLight(index);
+			index++;
+		}
+	}
+
 	RaylibWrapper::ClearBackground({ 135, 206, 235, 255 });
 #else
 	RaylibWrapper::ClearBackground({ 128, 128, 128, 255 });
 #endif
 
 	CameraComponent::main->raylibCamera.BeginMode3D();
+
+	// Shadows
+	//RaylibWrapper::rlEnableShader(shadowManager.shader.id);
+	//RaylibWrapper::rlSetUniformMatrix(RaylibWrapper::GetShaderLocation(shadowManager.shader, "matLightVP"), matLightVP);
+	//RaylibWrapper::SetShaderValueTexture(shadowManager.shader, RaylibWrapper::GetShaderLocation(shadowManager.shader, "texture_shadowmap"), shadowManager.shadowMapTexture.texture);
+	// or RaylibWrapper::rlSetUniformSampler(GetShaderLocation(shader_shadowmap, "texture_shadowmap"), shadowmap.texture.id);
+	// RaylibWrapper::rlActiveTextureSlot(1);
+	// RaylibWrapper::rlEnableTexture(shadowManager.shadowMapTexture.id);
 
 	// Update CollisionSystem
 
@@ -380,6 +419,10 @@ void MainLoop()
 
 			if (gameObject && component) // Component/Gameobject may get deleted in the Update(). I could also check if the gameobject and component is still active here although most likely useless overhead
 				component->RenderGui();
+
+#ifdef IS3D
+			component->Render();
+#endif
 		}
 	}
 	GameObject::markForDeletion = false;
@@ -411,6 +454,11 @@ void MainLoop()
 		));
 
 	//physicsSystem.DrawBodies(bodyDrawSettings, debugRenderer);
+#endif
+
+#ifdef IS3D
+	RaylibWrapper::rlDisableShader();
+	RaylibWrapper::rlActiveTextureSlot(0);
 #endif
 
 	RaylibWrapper::EndMode3D();

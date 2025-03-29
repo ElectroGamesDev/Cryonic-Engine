@@ -5,6 +5,7 @@
 //#include "../IconManager.h"
 //#include "../Editor.h"
 #endif
+#include "../ShadowManager.h"
 
 CameraComponent* CameraComponent::main = nullptr;
 
@@ -46,7 +47,10 @@ void CameraComponent::Start()
 void CameraComponent::Update()
 {
 	if (main == nullptr)
+	{
 		main = this;
+		//ShadowManager::SetCamera(raylibCamera);
+	}
 
 	Vector3 pos = gameObject->transform.GetPosition();
 	raylibCamera.SetPosition(pos.x, pos.y, pos.z);
@@ -56,7 +60,7 @@ void CameraComponent::Update()
     //camera.target = Vector3Add(gameObject->transform.GetPosition(), Vector3RotateByQuaternion({0,0,1}, gameObject->transform.GetRotation()));
 }
 
-void CameraComponent::Destroy()
+void CameraComponent::Destroy() // TOdo: This doesn't run in the edtitor
 {
 	if (main == this)
 		main = nullptr;
@@ -67,8 +71,9 @@ void CameraComponent::EditorUpdate()
 {
     if (!setMain)
     {
-        setMain = false;
+        setMain = true;
         main = this;
+		//ShadowManager::SetCamera(raylibCamera);
     }
     // Draw3DBillboard(Editor::camera, *IconManager::imageTextures["CameraGizmoIcon"], gameObject->transform.GetPosition(), 2.0f, { 255, 255, 255, 150 }); // Todo: Re-add this
 }

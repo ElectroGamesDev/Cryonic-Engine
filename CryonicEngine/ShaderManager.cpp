@@ -32,9 +32,13 @@ void ShaderManager::Init()
     RaylibShader::shaders[LitStandard].Load((std::filesystem::path(__FILE__).parent_path() / "Resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
 #else
     if (exeParent.empty())
+    {
         RaylibShader::shaders[LitStandard].Load("Resources/shaders/glsl330/lighting.vs", "Resources/shaders/glsl330/lighting.fs");
+    }
     else
+    {
         RaylibShader::shaders[LitStandard].Load((std::filesystem::path(exeParent) / "Resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(exeParent) / "Resources/shaders/glsl330/lighting.fs").string().c_str());
+    }
 #endif
     //std::string currentDirectory = GetWorkingDirectory();
     //std::string relativePath = "resources/shaders/glsl330/lighting.vs";

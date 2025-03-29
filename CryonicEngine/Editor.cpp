@@ -34,6 +34,7 @@
 #include "Components/CanvasRenderer.h"
 #include "IconManager.h"
 #include "ShaderManager.h"
+#include "ShadowManager.h"
 #include "ProjectManager.h"
 #include "RaylibModelWrapper.h"
 #include "RaylibDrawWrapper.h"
@@ -71,6 +72,7 @@ bool rmbDown = false;
 RaylibWrapper::RenderTexture ViewTexture;
 RaylibWrapper::RenderTexture cameraRenderTexture;
 RaylibWrapper::Texture2D GridTexture = { 0 };
+//ShadowManager shadowManager;
 
 bool viewportOpened = true;
 Vector4 Editor::viewportPosition;
@@ -283,7 +285,7 @@ void Editor::RenderViewport()
             //DisableCursor();
 
             if (ProjectManager::projectData.is3D)
-                RaylibWrapper::UpdateCamera(&camera, RaylibWrapper::CAMERA_PERSPECTIVE);
+                RaylibWrapper::UpdateCamera(&camera, RaylibWrapper::CAMERA_FREE);
             else
             {
                 RaylibWrapper::Vector2 deltaMouse = RaylibWrapper::Vector2Subtract(RaylibWrapper::GetMousePosition(), lastMousePosition);
@@ -486,9 +488,45 @@ void Editor::UpdateViewport()
 
     //camera.position.x = (float)(sinf((float)GetTime() / period) * magnitude);
 
+    // Shadows
+    //if (CameraComponent::main != nullptr)
+    //{
+    //    Vector3 mainCameraPos = CameraComponent::main->gameObject->transform.GetPosition();
+    //    shadowManager.camera.position = { mainCameraPos.x + Lighting::main->gameObject->transform.GetPosition().x,
+    //        mainCameraPos.y + Lighting::main->gameObject->transform.GetPosition().y,
+    //        mainCameraPos.z + Lighting::main->gameObject->transform.GetPosition().z };
+    //}
+
+    // Shadows
+    if (ProjectManager::projectData.is3D)
+    {
+        RaylibWrapper::rlEnableShader(ShadowManager::shader.id);
+
+        int index = 1;
+        for (Lighting* light : Lighting::lights)
+        {
+            if (index > 15) // OpenGL only supports upto 16 active textures. 0 is reserved, so 1-15 can be used for lighting. The rest of the lights do not get rendered
+                break;
+
+            if (light->IsActive() && light->gameObject->IsGlobalActive() && light->gameObject->IsActive())
+            {
+                light->RenderLight(index);
+                index++;
+            }
+            else
+                light->EditorUpdate(); // This is needed so when the light gets disabled, it can run Disable()
+        }
+    }
+
     RaylibWrapper::BeginTextureMode(ViewTexture);
 
     RaylibWrapper::ClearBackground(ProjectManager::projectData.is3D ? RaylibWrapper::Color{ 135, 206, 235, 255 } : RaylibWrapper::Color{ 128, 128, 128, 255 });
+
+
+    // Todo: For all shadow code, check if its 3D (rendering, init, and cleanup)
+
+    //RaylibWrapper::rlSetUniformMatrix(RaylibWrapper::GetShaderLocation(shadowManager.shader, "matLightVP"), matLightVP);
+    //RaylibWrapper::SetShaderValueTexture(shadowManager.shader, RaylibWrapper::GetShaderLocation(shadowManager.shader, "texture_shadowmap"), shadowManager.shadowMapTexture.depth); // Todo: should the last be depth or texture
 
     RaylibWrapper::BeginMode3D(camera);
 
@@ -511,6 +549,8 @@ void Editor::UpdateViewport()
 
             if (component->runInEditor)
                 component->Update();
+
+            component->Render();
         }
     }
 
@@ -544,6 +584,13 @@ void Editor::UpdateViewport()
                 { 255, 255, 255, 255 });
         }
         break;
+    }
+
+    // Shadows
+    if (ProjectManager::projectData.is3D)
+    {
+        RaylibWrapper::rlDisableShader();
+        RaylibWrapper::rlActiveTextureSlot(0);
     }
 
     RaylibWrapper::EndMode3D();
@@ -4371,6 +4418,7 @@ void Editor::Cleanup()
     IconManager::Cleanup();
     ShaderManager::Cleanup();
     AssetManager::Cleanup();
+    ShadowManager::UnloadShader();
 
     for (auto& image : tempTextures)
     {
@@ -4442,6 +4490,7 @@ void Editor::Init()
     //InitImages();
     IconManager::Init();
     ShaderManager::Init();
+    //shadowManager.Init();
     InitMisc();
     InitScenes(); // Must go after InitMisc() and ShaderManager::Init()
 

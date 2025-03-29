@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 //void Draw3DBillboardRec(Camera camera, Texture2D texture, Rectangle source, Vector3 position, Vector2 size, Color tint);
 
 //void Draw3DBillboard(Camera camera, Texture2D texture, Vector3 position, float size, Color tint);
@@ -63,6 +65,21 @@ struct Vector2
     float y;
 
     Vector2(float x = 0.0f, float y = 0.0f) : x(x), y(y) {}
+
+    Vector2 Normalize()
+    {
+        float magnitudeSquared = x * x + y * y; 
+
+        if (magnitudeSquared < 1e-6f)
+            return { 0, 0 };
+
+        float invMagnitude = 1.0f / sqrt(magnitudeSquared); // Todo: Consider using rsqrt as it's faster
+
+        x *= invMagnitude;
+        y *= invMagnitude;
+
+        return { x, y };
+    }
 
     Vector2 operator+(const Vector2& other) const {
         return { x + other.x, y + other.y };
@@ -156,6 +173,22 @@ struct Vector3
     float z;
 
     Vector3(float x = 0.0f, float y = 0.0f, float z = 0.0f) : x(x), y(y), z(z) {}
+
+    Vector3 Normalize()
+    {
+        float magnitudeSquared = x * x + y * y + z * z;
+
+        if (magnitudeSquared < 1e-6f)
+            return { 0, 0, 0 };
+
+        float invMagnitude = 1.0f / sqrt(magnitudeSquared); // Todo: Consider using rsqrt as it's faster
+
+        x *= invMagnitude;
+        y *= invMagnitude;
+        z *= invMagnitude;
+
+        return { x, y, z };
+    }
 
     Vector3 operator+(const Vector3& other) const {
         return { x + other.x, y + other.y, z + other.z };

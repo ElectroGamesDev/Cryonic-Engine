@@ -36,6 +36,11 @@ void RaylibCamera::SetPositionZ(int z)
 	camera.position.z = z;
 }
 
+std::array<float, 3> RaylibCamera::GetPosition()
+{
+	return { camera.position.x, camera.position.y, camera.position.z };
+}
+
 void RaylibCamera::SetTarget(float x, float y, float z)
 {
 	camera.target.x = x;

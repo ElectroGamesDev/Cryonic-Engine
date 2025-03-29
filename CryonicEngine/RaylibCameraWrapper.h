@@ -11,6 +11,7 @@ public:
 	void SetPositionX(int x);
 	void SetPositionY(int y);
 	void SetPositionZ(int z);
+	std::array<float, 3> GetPosition();
 	void SetTarget(float x, float y, float z);
 	// 0 = Perspective, 1 = Orthographic
 	void SetProjection(int projection);

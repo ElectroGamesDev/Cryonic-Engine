@@ -8,6 +8,7 @@
 
 static std::unordered_map<std::filesystem::path, std::pair<Model, int>> models;
 static std::unordered_map<ModelType, std::pair<Model, int>> primitiveModels;
+std::pair<unsigned int, int*> RaylibModel::shadowShader;
 
 bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders shader, std::filesystem::path projectPath)
 {
@@ -103,7 +104,9 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
 
     modelShader = shader;
     for (size_t i = 0; i < model->first.materialCount; ++i)
-        model->first.materials[i].shader = RaylibShader::shaders[modelShader].shader;
+        //model->first.materials[i].shader = RaylibShader::shaders[modelShader].shader;
+        model->first.materials[i].shader = { shadowShader.first, shadowShader.second };
+
     return true;
 }
 
@@ -152,6 +155,12 @@ void RaylibModel::DeleteInstance()
 
 void RaylibModel::DrawModelWrapper(float posX, float posY, float posZ, float sizeX, float sizeY, float sizeZ, float rotationX, float rotationY, float rotationZ, float rotationW, unsigned char colorR, unsigned char colorG, unsigned char colorB, unsigned char colorA)
 {
+    if (model->first.meshCount < 1)
+    {
+        ConsoleLogger::ErrorLog("Error drawing model");
+        return;
+
+    }
     rlPushMatrix();
 
     // build up the transform
@@ -166,10 +175,21 @@ void RaylibModel::DrawModelWrapper(float posX, float posY, float posZ, float siz
 
     //BeginShaderMode(ShaderManager::shaders[_shader]); // Todo: I think I can remove this since I'm setting the shader in Create()
 
+    //if (renderShadow)
+    //    BeginShaderMode({ shadowShader.first, shadowShader.second });
+
     // Draw model
     DrawModel(model->first, Vector3Zero(), 1, { colorR, colorG, colorB, colorA });
+
+    //if (renderShadow)
+    //    EndShaderMode();
 
     //EndShaderMode();
 
     rlPopMatrix();   
+}
+
+void RaylibModel::SetShadowShader(unsigned int id, int* locs)
+{
+    shadowShader = { id, locs };
 }
