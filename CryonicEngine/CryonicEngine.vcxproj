@@ -186,6 +186,7 @@
     <ClCompile Include="Components\ScriptComponent.cpp" />
     <ClCompile Include="Components\ScriptLoader.cpp" />
     <ClCompile Include="Components\Skybox.cpp" />
+    <ClCompile Include="Components\Spline.cpp" />
     <ClCompile Include="Components\TilemapRenderer.cpp" />
     <ClCompile Include="ConsoleLogger.cpp" />
     <ClCompile Include="CryonicCore.cpp" />
@@ -200,6 +201,7 @@
     <ClCompile Include="IconManager.cpp" />
     <ClCompile Include="Components\SpriteRenderer.cpp" />
     <ClCompile Include="InputSystem.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Physics2DDebugDraw.cpp" />
     <ClCompile Include="Physics3DDebugDraw.cpp" />
     <ClCompile Include="ProjectManager.cpp" />
@@ -261,6 +263,7 @@
     <ClInclude Include="Components\ScriptComponent.h" />
     <ClInclude Include="Components\ScriptLoader.h" />
     <ClInclude Include="Components\Skybox.h" />
+    <ClInclude Include="Components\Spline.h" />
     <ClInclude Include="Components\TilemapRenderer.h" />
     <ClInclude Include="ConsoleLogger.h" />
     <ClInclude Include="CryonicAPI.h" />
@@ -278,6 +281,8 @@
     <ClInclude Include="IconManager.h" />
     <ClInclude Include="Components\SpriteRenderer.h" />
     <ClInclude Include="InputSystem.h" />
+    <ClInclude Include="MainThreadQueue.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="Physics2DDebugDraw.h" />
     <ClInclude Include="Physics3DDebugDraw.h" />
     <ClInclude Include="ProjectManager.h" />
