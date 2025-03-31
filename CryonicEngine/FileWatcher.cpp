@@ -1,14 +1,19 @@
 #include "FileWatcher.h"
 #include "ProjectManager.h"
+#include "MainThreadQueue.h"
 #include <thread>
 #include <chrono>
 #include <iostream>
 #include <filesystem>
 #include "Sprite.h"
+#include <shared_mutex>
+#include <future>
 
 namespace FileWatcher
 {
     static std::unordered_map<std::string, std::filesystem::path> deletedFiles; // file name, old path
+    static std::shared_mutex deletedFilesMutex; // Needed for so deletedFiles is thread safe and wont crash from race conditions
+    static std::mutex texturesMutex;
 
     void Init()
     {
@@ -24,6 +29,7 @@ namespace FileWatcher
         switch (action) {
         case efsw::Actions::Add:
         {
+            std::unique_lock<std::shared_mutex> lock(deletedFilesMutex);
             auto it = deletedFiles.find(filename);
             if (it != deletedFiles.end())
             {
@@ -33,9 +39,13 @@ namespace FileWatcher
             break;
         }
         case efsw::Actions::Delete:
+        {
+            std::unique_lock<std::shared_mutex> writeLock(deletedFilesMutex);
             deletedFiles[filename] = std::filesystem::path(dir + "\\" + filename);
-            std::thread(CheckIfFileMoved, std::filesystem::path(dir + "\\" + filename)).detach();
+            //std::thread(CheckIfFileMoved, std::filesystem::path(dir + "\\" + filename)).detach();
+            std::async(std::launch::async, CheckIfFileMoved, std::filesystem::path(dir + "\\" + filename)); // The commented code above could result in a race condition, this should fix it
             break;
+        }
         case efsw::Actions::Modified: // Gets called when a file is modifiued, or something gets changed in a folder
             FileModified(dir + "\\" + filename);
             break;
@@ -51,6 +61,7 @@ namespace FileWatcher
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
+        std::unique_lock<std::shared_mutex> lock(deletedFilesMutex);
         auto it = deletedFiles.find(path.filename().string());
         if (it != deletedFiles.end())
         {
@@ -70,6 +81,7 @@ namespace FileWatcher
         if (std::filesystem::exists(oldPath.string() + ".data"))
             std::filesystem::rename(oldPath.string() + ".data", (newPath.parent_path() / (newPath.stem().string() + newPath.extension().string() + ".data")));
     }
+
     void FileModified(std::filesystem::path filePath) // Todo: Since we have sleeps, after the sleep, we should check if there are any newer modifications. Applications like Gimp when saving/overwriting, it modifies the file 3 times. Having this would prevent it from being loaded and unloaded 3 times.
     {
         if (std::filesystem::is_directory(filePath) || filePath.extension() == ".data") // file types like .animgraph shouldn't be added here?
@@ -83,13 +95,15 @@ namespace FileWatcher
             std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Its possible that the file is still being written and unable to be read. I assume this is because programs like gimp modify the files 3 times, or it just takes a bit to be readable.
 
             std::string relativePath = std::filesystem::relative(filePath, ProjectManager::projectData.path / "Assets").string();
+
+            std::unique_lock<std::mutex> lock(texturesMutex);
             auto it = Sprite::textures.find(relativePath);
             if (it == Sprite::textures.end())
                 return;
 
-            ConsoleLogger::ErrorLog("TeSt");
-            // For some reason it fails to load the texture. In discord, JeffM resonding to someone else said it shouldn't be called within another thread, but this was happening before too. Also otherS said its not thread safe
-            RaylibWrapper::UnloadTexture(*it->second.first); // This doesn't seem to be actually unloading the texture since I can still use it???
+            MainThreadQueue::Add([it]() {
+                RaylibWrapper::UnloadTexture(*it->second.first); // This doesn't seem to be actually unloading the texture since I can still use it?
+                });
             //delete it->second.first;
             //it->second.first = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(filePath.string().c_str()));
         }
