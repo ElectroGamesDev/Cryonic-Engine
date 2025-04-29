@@ -100,7 +100,10 @@ void MeshRenderer::EditorUpdate()
     if ((!material && !(exposedVariables[1][0][2] == "Default") && defaultMaterial) || (material && material->GetPath() != exposedVariables[1][0][2])) // Todo: This will run continuously if the material is deleted and the file is deleted/moved.
     {
         if (exposedVariables[1][0][2] == "Default")
+        {
             defaultMaterial = true;
+            SetMaterial(nullptr);
+        }
         else
             SetMaterial(Material::GetMaterial(exposedVariables[1][0][2]));
     }
