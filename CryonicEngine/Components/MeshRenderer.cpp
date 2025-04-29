@@ -54,6 +54,7 @@ void MeshRenderer::SetMaterial(Material* mat)
 
     if (modelSet)
     {
+        // Todo: This will not work properly if a model has multiple materials
         if (material == nullptr || material->GetPath() == "Default")
         {
             raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ALBEDO, Material::whiteTexture, { 220, 220, 220, 255 }, 1);
@@ -92,6 +93,9 @@ void MeshRenderer::Render(bool renderShadows)
 #if defined(EDITOR)
 void MeshRenderer::EditorUpdate()
 {
+    if (exposedVariables[1][0][2] == "None")
+        exposedVariables[1][0][2] = "Default";
+
     // Set material
     if ((!material && !(exposedVariables[1][0][2] == "Default") && defaultMaterial) || (material && material->GetPath() != exposedVariables[1][0][2])) // Todo: This will run continuously if the material is deleted and the file is deleted/moved.
     {
