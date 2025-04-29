@@ -83,7 +83,7 @@ public:
 				texture->first = it->second.first;
 			else
 			{
-				if (std::filesystem::exists(path))
+				if (std::filesystem::exists(path) && (std::filesystem::path(path).extension().string() == ".png") || std::filesystem::path(path).extension().string() == ".jpg" || std::filesystem::path(path).extension().string() == ".jpeg")
 				{
 					textures[path].first = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(path.c_str()));
 					texture->first = textures[path].first;
