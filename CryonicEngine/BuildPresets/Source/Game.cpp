@@ -254,6 +254,7 @@ int main(void)
 
 	// Shaders must be initiated before scenes/gameobjects
 	ShaderManager::Init();
+	ShadowManager::LoadShaders();
 
 	// Todo: This assumes the default scene path and name
 	if (exeParent.empty())
@@ -282,7 +283,7 @@ int main(void)
 	ImGui::DestroyContext();
 
 	ShaderManager::Cleanup();
-	ShadowManager::UnloadShader();
+	ShadowManager::UnloadShaders();
     RaylibWrapper::CloseWindow();
 #ifdef IS3D
 	delete debugRenderer;

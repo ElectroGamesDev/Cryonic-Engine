@@ -204,7 +204,7 @@ namespace CanvasEditor
     //                    {
     //                        MeshRenderer& meshRenderer = gameObject->AddComponentInternal<MeshRenderer>();
     //                        meshRenderer.SetModelPath(objectToCreate.name);
-    //                        meshRenderer.SetModel(objectToCreate.model, objectToCreate.name, LitStandard);
+    //                        meshRenderer.SetModel(objectToCreate.model, objectToCreate.name, ShaderManager::LitStandard);
     //                    }
     //                    else
     //                    {

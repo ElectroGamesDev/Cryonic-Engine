@@ -12,5 +12,5 @@ public:
 	void Unload();
 
 	Shader shader;
-	static std::unordered_map<Shaders, RaylibShader> shaders;
+	static std::unordered_map<ShaderManager::Shaders, RaylibShader> shaders;
 };

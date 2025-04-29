@@ -151,8 +151,10 @@ namespace RaylibWrapper
         // Animation vertex data
         float* animVertices;    // Animated vertex positions (after bones transformations)
         float* animNormals;     // Animated normals (after bones transformations)
-        unsigned char* boneIds; // Vertex bone ids, max 255 bone ids, up to 4 bones influence by vertex (skinning)
-        float* boneWeights;     // Vertex bone weight, up to 4 bones influence by vertex (skinning)
+        unsigned char* boneIds; // Vertex bone ids, max 255 bone ids, up to 4 bones influence by vertex (skinning) (shader-location = 6)
+        float* boneWeights;     // Vertex bone weight, up to 4 bones influence by vertex (skinning) (shader-location = 7)
+        Matrix* boneMatrices;   // Bones animated transformation matrices
+        int boneCount;          // Number of bones
 
         // OpenGL identifiers
         unsigned int vaoId;     // OpenGL Vertex Array Object id
@@ -667,6 +669,21 @@ namespace RaylibWrapper
         CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE     // Layout is defined by a 4x3 cross with cubemap faces
     } CubemapLayout;
 
+    // Material map index
+    typedef enum {
+        MATERIAL_MAP_ALBEDO = 0,        // Albedo material (same as: MATERIAL_MAP_DIFFUSE)
+        MATERIAL_MAP_METALNESS,         // Metalness material (same as: MATERIAL_MAP_SPECULAR)
+        MATERIAL_MAP_NORMAL,            // Normal material
+        MATERIAL_MAP_ROUGHNESS,         // Roughness material
+        MATERIAL_MAP_OCCLUSION,         // Ambient occlusion material
+        MATERIAL_MAP_EMISSION,          // Emission material
+        MATERIAL_MAP_HEIGHT,            // Heightmap material
+        MATERIAL_MAP_CUBEMAP,           // Cubemap material (NOTE: Uses GL_TEXTURE_CUBE_MAP)
+        MATERIAL_MAP_IRRADIANCE,        // Irradiance material (NOTE: Uses GL_TEXTURE_CUBE_MAP)
+        MATERIAL_MAP_PREFILTER,         // Prefilter material (NOTE: Uses GL_TEXTURE_CUBE_MAP)
+        MATERIAL_MAP_BRDF               // Brdf material
+    } MaterialMapIndex;
+
     void InitWindow(int width, int height, const char* title);
     bool WindowShouldClose();
     void CloseWindow();
@@ -965,6 +982,13 @@ namespace RaylibWrapper
     Vector3 Vector3Normalize(Vector3 v);
     Matrix MatrixRotateXYZ(Vector3 angle);
     Vector3 Vector3Transform(Vector3 v, Matrix matrix);
+
+    // Model functions
+    Model LoadModelFromMesh(Mesh mesh);
+
+    // Image functions
+    Image GenImageColor(int width, int height, Color color);
+    void UnloadImage(Image image);
 
     // ImGui Raylib
     bool ImGui_ImplRaylib_Init();

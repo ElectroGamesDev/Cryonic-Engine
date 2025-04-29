@@ -289,17 +289,17 @@ bool SceneManager::LoadScene(std::filesystem::path filePath)
                 setExposedVariables(component, componentData);
 
                 if (component.GetModelPath().string() == "Cube")
-                    component.SetModel(Cube, component.GetModelPath().string(), LitStandard);
+                    component.SetModel(Cube, component.GetModelPath().string(), ShaderManager::LitStandard);
                 else if (component.GetModelPath().string() == "Plane")
-                    component.SetModel(Plane, component.GetModelPath().string(), LitStandard);
+                    component.SetModel(Plane, component.GetModelPath().string(), ShaderManager::LitStandard);
                 else if (component.GetModelPath().string() == "Sphere")
-                    component.SetModel(Sphere, component.GetModelPath().string(), LitStandard);
+                    component.SetModel(Sphere, component.GetModelPath().string(), ShaderManager::LitStandard);
                 else if (component.GetModelPath().string() == "Cylinder")
-                    component.SetModel(Cylinder, component.GetModelPath().string(), LitStandard);
+                    component.SetModel(Cylinder, component.GetModelPath().string(), ShaderManager::LitStandard);
                 else if (component.GetModelPath().string() == "Cone")
-                    component.SetModel(Cone, component.GetModelPath().string(), LitStandard);
+                    component.SetModel(Cone, component.GetModelPath().string(), ShaderManager::LitStandard);
                 else
-                    component.SetModel(Custom, component.GetModelPath().string(), LitStandard);
+                    component.SetModel(Custom, component.GetModelPath().string(), ShaderManager::LitStandard);
             }
             else if (componentData["name"] == "SpriteRenderer")
             {

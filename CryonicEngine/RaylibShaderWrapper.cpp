@@ -3,7 +3,7 @@
 #include "raymath.h"
 #include "rlgl.h"
 
-std::unordered_map<Shaders, RaylibShader> RaylibShader::shaders;
+std::unordered_map<ShaderManager::Shaders, RaylibShader> RaylibShader::shaders;
 
 void RaylibShader::Load(const char* vertexPath, const char* fragmentPath)
 {

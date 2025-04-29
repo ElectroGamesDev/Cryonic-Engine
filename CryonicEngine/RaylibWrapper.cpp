@@ -10,6 +10,8 @@
 #define SMOOTH_CIRCLE_ERROR_RATE    0.5f      // Circle error rate
 #endif
 
+// Todo: create functions to convert bigger structs like model, mesh, bone, etc.
+
 namespace RaylibWrapper {
     void InitWindow(int width, int height, const char* title) {
         ::InitWindow(width, height, title);
@@ -378,12 +380,18 @@ namespace RaylibWrapper {
     }
 
 
-    // Image loading functions
+    // Image functions
+    Image GenImageColor(int width, int height, Color color) {
+        ::Image image = ::GenImageColor(width, height, { color.r, color.g, color.b, color.a });
+        return { image.data, image.width, image.height, image.mipmaps, image.format };
+    }
+
     Image LoadImageFromMemory(const char* fileType, const unsigned char* fileData, int dataSize)
     {
         ::Image image = ::LoadImageFromMemory(fileType, fileData, dataSize);
         return { image.data, image.width, image.height, image.mipmaps, image.format };
     }
+
     void UnloadImage(Image image)
     {
         ::UnloadImage({ image.data, image.width, image.height, image.mipmaps, image.format });
@@ -1430,6 +1438,70 @@ namespace RaylibWrapper {
             { matrix.m0, matrix.m1, matrix.m2, matrix.m3, matrix.m4, matrix.m5, matrix.m6, matrix.m7, matrix.m8, matrix.m9, matrix.m10, matrix.m11, matrix.m12, matrix.m13, matrix.m14, matrix.m15 });
         return { result.x, result.y, result.z };
     }
+
+    // Models
+    Model LoadModelFromMesh(Mesh mesh) { // This is unfinished as there is a lot needed to convert everything
+        ::Model model;
+        ::Matrix matrix = { mesh.boneMatrices->m0, mesh.boneMatrices->m1, mesh.boneMatrices->m2, mesh.boneMatrices->m3, mesh.boneMatrices->m4, mesh.boneMatrices->m5, mesh.boneMatrices->m6, mesh.boneMatrices->m7,
+            mesh.boneMatrices->m8, mesh.boneMatrices->m9, mesh.boneMatrices->m10, mesh.boneMatrices->m11, mesh.boneMatrices->m12, mesh.boneMatrices->m13, mesh.boneMatrices->m14, mesh.boneMatrices->m15 };
+        // Todo: The code above wont work. boneMatrices is a container
+
+        model = ::LoadModelFromMesh({ mesh.vertexCount, mesh.triangleCount, mesh.vertices, mesh.texcoords, mesh.texcoords2, mesh.normals, mesh.tangents, mesh.colors, mesh.indices, mesh.animVertices,
+            mesh.animNormals, mesh.boneIds, mesh.boneWeights, &matrix, mesh.boneCount, mesh.vaoId, mesh.vboId });
+
+        Mesh* modelMeshes = (Mesh*)RL_MALLOC(model.meshCount * sizeof(Mesh));
+
+        for (size_t i = 0; i < model.meshCount; i++)
+        {
+            ::Mesh& mesh = model.meshes[i];
+
+            Matrix* boneMatrices = nullptr;
+            if (mesh.boneCount > 0 && mesh.boneMatrices != nullptr)
+            {
+                boneMatrices = (Matrix*)RL_MALLOC(model.boneCount * sizeof(Matrix));
+
+                memcpy(boneMatrices, mesh.boneMatrices, mesh.boneCount * sizeof(Matrix));
+
+                //for (size_t j = 0; j < mesh.boneCount; j++) {
+                //    boneMatrices[j] = { mesh.boneMatrices[j].m0, mesh.boneMatrices[j].m1, mesh.boneMatrices[j].m2, mesh.boneMatrices[j].m3, mesh.boneMatrices[j].m4, mesh.boneMatrices[j].m5,
+                //        mesh.boneMatrices[j].m6, mesh.boneMatrices[j].m7, mesh.boneMatrices[j].m8, mesh.boneMatrices[j].m9, mesh.boneMatrices[j].m10, mesh.boneMatrices[j].m11,
+                //        mesh.boneMatrices[j].m12, mesh.boneMatrices[j].m13, mesh.boneMatrices[j].m14, mesh.boneMatrices[j].m15 };
+                //}
+            }
+
+            modelMeshes[i] = {
+                mesh.vertexCount,
+                mesh.triangleCount,
+                mesh.vertices,
+                mesh.texcoords,
+                mesh.texcoords2,
+                mesh.normals,
+                mesh.tangents,
+                mesh.colors,
+                mesh.indices,
+                mesh.animVertices,
+                mesh.animNormals,
+                mesh.boneIds,
+                mesh.boneWeights,
+                boneMatrices,
+                mesh.boneCount,
+                mesh.vaoId,
+                mesh.vboId
+            };
+        }
+
+        //return { { model.transform.m0, model.transform.m1, model.transform.m2, model.transform.m3, model.transform.m4, model.transform.m5, model.transform.m6, model.transform.m7, model.transform.m8, model.transform.m9,model.transform.m10, model.transform.m11, model.transform.m12, model.transform.m13, model.transform.m14, model.transform.m15 },
+        //    model.meshCount, model.materialCount,
+        //    modelMeshes,
+        //    model.materials,
+        //    model.meshMaterial, model.boneCount,
+        //    model.bones,
+        //    model.bindPose 
+        //};
+
+        return {};
+    }
+
 
     // ImGui Raylib
     bool ImGui_ImplRaylib_Init() {

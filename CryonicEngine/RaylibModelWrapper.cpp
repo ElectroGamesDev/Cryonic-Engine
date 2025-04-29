@@ -9,8 +9,9 @@
 static std::unordered_map<std::filesystem::path, std::pair<Model, int>> models;
 static std::unordered_map<ModelType, std::pair<Model, int>> primitiveModels;
 std::pair<unsigned int, int*> RaylibModel::shadowShader;
+std::pair<unsigned int, int*> RaylibModel::materialPreviewShadowShader;
 
-bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders shader, std::filesystem::path projectPath)
+bool RaylibModel::Create(ModelType type, std::filesystem::path path, ShaderManager::Shaders shader, std::filesystem::path projectPath)
 {
     // Todo: Don't create new meshes for primitives
     switch (type)
@@ -103,9 +104,18 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, Shaders sha
     }
 
     modelShader = shader;
-    for (size_t i = 0; i < model->first.materialCount; ++i)
-        //model->first.materials[i].shader = RaylibShader::shaders[modelShader].shader;
-        model->first.materials[i].shader = { shadowShader.first, shadowShader.second };
+
+    if (path == "MaterialPreview" && projectPath == "MaterialPreview")
+    {
+        for (size_t i = 0; i < model->first.materialCount; ++i)
+            model->first.materials[i].shader = { materialPreviewShadowShader.first, materialPreviewShadowShader.second };
+    }
+    else if (shader != ShaderManager::None)
+    {
+        for (size_t i = 0; i < model->first.materialCount; ++i)
+            //model->first.materials[i].shader = RaylibShader::shaders[modelShader].shader;
+            model->first.materials[i].shader = { shadowShader.first, shadowShader.second };
+    }
 
     return true;
 }
@@ -155,12 +165,13 @@ void RaylibModel::DeleteInstance()
 
 void RaylibModel::DrawModelWrapper(float posX, float posY, float posZ, float sizeX, float sizeY, float sizeZ, float rotationX, float rotationY, float rotationZ, float rotationW, unsigned char colorR, unsigned char colorG, unsigned char colorB, unsigned char colorA)
 {
-    if (model->first.meshCount < 1)
+    if (model == nullptr || model->first.meshCount < 1)
     {
         ConsoleLogger::ErrorLog("Error drawing model");
         return;
 
     }
+
     rlPushMatrix();
 
     // build up the transform
@@ -186,10 +197,43 @@ void RaylibModel::DrawModelWrapper(float posX, float posY, float posZ, float siz
 
     //EndShaderMode();
 
-    rlPopMatrix();   
+    rlPopMatrix();
 }
 
 void RaylibModel::SetShadowShader(unsigned int id, int* locs)
 {
     shadowShader = { id, locs };
+}
+
+void RaylibModel::SetMaterialPreviewShader(unsigned int id, int* locs)
+{
+    materialPreviewShadowShader = { id, locs };
+}
+
+void RaylibModel::SetShaderValue(int materialIndex, int locIndex, const void* value, int uniformType)
+{
+    ::SetShaderValue(model->first.materials[materialIndex].shader, locIndex, value, uniformType);
+}
+
+int RaylibModel::GetShaderLocation(int materialIndex, std::string uniformName)
+{
+    return ::GetShaderLocation(model->first.materials[materialIndex].shader, uniformName.c_str());
+}
+
+void RaylibModel::SetShader(int materialIndex, ShaderManager::Shaders shader)
+{
+    modelShader = shader;
+    if (shader == ShaderManager::LitStandard)
+        model->first.materials[materialIndex].shader = { shadowShader.first, shadowShader.second };
+    else if (shader == ShaderManager::None)
+        model->first.materials[materialIndex].shader = {};
+}
+
+void RaylibModel::SetMaterial(int materialIndex, int mapIndex, RaylibWrapper::Texture2D texture, RaylibWrapper::Color color, float intensity)
+{
+    model->first.materials[materialIndex].maps[mapIndex] = {
+        { texture.id, texture.width, texture.height, texture.mipmaps, texture.format },
+        { color.r, color.g, color.b, 255 },
+        intensity
+    };
 }

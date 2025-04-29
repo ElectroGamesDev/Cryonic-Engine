@@ -57,7 +57,7 @@ void Lighting::RenderLight(int index)
 	//{
 	//	setup = true;
 	//	Vector3 pos = gameObject->transform.GetPosition();
-	//	raylibLight.Create(0, pos.x, pos.y, pos.z, 0, 0, 0, 255, 255, 255, 255, LitStandard);
+	//	raylibLight.Create(0, pos.x, pos.y, pos.z, 0, 0, 0, 255, 255, 255, 255, ShaderManager::LitStandard);
 	//}
 
 	//if (gameObject->transform.GetPosition() != lastPosition)

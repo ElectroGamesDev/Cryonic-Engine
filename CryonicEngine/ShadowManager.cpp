@@ -7,6 +7,7 @@
 
 //RaylibWrapper::Camera ShadowManager::camera = {0};
 RaylibWrapper::Shader ShadowManager::shader;
+RaylibWrapper::Shader ShadowManager::materialPreviewShader;
 //RaylibWrapper::RenderTexture2D ShadowManager::shadowMapTexture;
 //RaylibWrapper::Vector3 ShadowManager::lightDir;
 //int ShadowManager::lightDirLoc;
@@ -18,22 +19,6 @@ RaylibWrapper::Shader ShadowManager::shader;
 void ShadowManager::Init(int id, int width, int height)
 {
     size = { (float)width, (float)height };
-
-    if (shader.id == 0)
-    {
-#if defined (EDITOR)
-        // Todo: This won't work for PC's other than mine
-        shader = RaylibWrapper::LoadShader((std::filesystem::path(__FILE__).parent_path() / "Resources/shaders/glsl330/shadowmap.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/shadowmap.fs").string().c_str());
-#else
-        //shader = RaylibWrapper::LoadShader((path + ".vs").c_str(), (path + ".fs").c_str());
-        if (exeParent.empty())
-            shader = RaylibWrapper::LoadShader("Resources/shaders/glsl330/shadowmap.vs", "Resources/shaders/glsl330/shadowmap.fs");
-        else
-            shader = RaylibWrapper::LoadShader((std::filesystem::path(exeParent) / "Resources/shaders/glsl330/shadowmap.vs").string().c_str(), (std::filesystem::path(exeParent) / "Resources/shaders/glsl330/shadowmap.fs").string().c_str());
-#endif
-    }
-
-    RaylibModel::SetShadowShader(shader.id, shader.locs);
 
     //shader.locs[RaylibWrapper::SHADER_LOC_VECTOR_VIEW] = RaylibWrapper::GetShaderLocation(shader, "viewPos");
     //lightDir = RaylibWrapper::Vector3Normalize({ 0.35f, -1.0f, -0.35f });
@@ -94,11 +79,6 @@ ShadowManager::~ShadowManager()
 
     // rlUnloadFramebuffer should unload the render texture?
     //RaylibWrapper::UnloadRenderTexture(shadowMapTexture);
-}
-
-void ShadowManager::UnloadShader()
-{
-    RaylibWrapper::UnloadShader(shader);
 }
 
 RaylibWrapper::Matrix ShadowManager::RenderShadowPass()
@@ -199,4 +179,29 @@ void ShadowManager::SetCamera() // Todo: Set the correct position and target. ta
     camera.up = {0,1,0};
     camera.projection = RaylibWrapper::CAMERA_ORTHOGRAPHIC; // Todo: Use CAMERA_PERSPECTIVE for point lights and spotlights. Maybe even look into using it for sun. Apparently they recommend using it for the sun since the sun should be far away so perspective is irrelevant
     camera.fovy = 20;
+}
+
+void ShadowManager::LoadShaders()
+{
+#if defined (EDITOR)
+    // Todo: This won't work for PC's other than mine
+    shader = RaylibWrapper::LoadShader((std::filesystem::path(__FILE__).parent_path() / "Resources/shaders/glsl330/shadowmap.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/shadowmap.fs").string().c_str());
+
+    materialPreviewShader = RaylibWrapper::LoadShader((std::filesystem::path(__FILE__).parent_path() / "Resources/shaders/glsl330/shadowmap.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/shadowmap.fs").string().c_str());
+    RaylibModel::SetMaterialPreviewShader(shader.id, shader.locs);
+#else
+    //shader = RaylibWrapper::LoadShader((path + ".vs").c_str(), (path + ".fs").c_str());
+    if (exeParent.empty())
+        shader = RaylibWrapper::LoadShader("Resources/shaders/glsl330/shadowmap.vs", "Resources/shaders/glsl330/shadowmap.fs");
+    else
+        shader = RaylibWrapper::LoadShader((std::filesystem::path(exeParent) / "Resources/shaders/glsl330/shadowmap.vs").string().c_str(), (std::filesystem::path(exeParent) / "Resources/shaders/glsl330/shadowmap.fs").string().c_str());
+#endif
+
+    RaylibModel::SetShadowShader(shader.id, shader.locs);
+}
+
+void ShadowManager::UnloadShaders()
+{
+    RaylibWrapper::UnloadShader(shader);
+    RaylibWrapper::UnloadShader(materialPreviewShader);
 }

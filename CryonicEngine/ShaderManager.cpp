@@ -24,20 +24,20 @@ void ShaderManager::Cleanup()
 
 void ShaderManager::Init()
 {
-    //shaders[LitStandard] = LoadShader(("resources/shaders/glsl" + std::to_string(GLSL_VERSION) + "/lighting.vs").c_str(), ("resources/shaders/glsl" + std::to_string(GLSL_VERSION) + "/lighting.fs").c_str());
+    //shaders[ShaderManager::LitStandard] = LoadShader(("resources/shaders/glsl" + std::to_string(GLSL_VERSION) + "/lighting.vs").c_str(), ("resources/shaders/glsl" + std::to_string(GLSL_VERSION) + "/lighting.fs").c_str());
 
     // Todo: Replace glsl330 to GLSL_VERSION. I will need to define the platform though
 #if defined (EDITOR)
     // Todo: This won't work for PC's other than mine
-    RaylibShader::shaders[LitStandard].Load((std::filesystem::path(__FILE__).parent_path() / "Resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
+    RaylibShader::shaders[ShaderManager::LitStandard].Load((std::filesystem::path(__FILE__).parent_path() / "Resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(__FILE__).parent_path() / "resources/shaders/glsl330/lighting.fs").string().c_str());
 #else
     if (exeParent.empty())
     {
-        RaylibShader::shaders[LitStandard].Load("Resources/shaders/glsl330/lighting.vs", "Resources/shaders/glsl330/lighting.fs");
+        RaylibShader::shaders[ShaderManager::LitStandard].Load("Resources/shaders/glsl330/lighting.vs", "Resources/shaders/glsl330/lighting.fs");
     }
     else
     {
-        RaylibShader::shaders[LitStandard].Load((std::filesystem::path(exeParent) / "Resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(exeParent) / "Resources/shaders/glsl330/lighting.fs").string().c_str());
+        RaylibShader::shaders[ShaderManager::LitStandard].Load((std::filesystem::path(exeParent) / "Resources/shaders/glsl330/lighting.vs").string().c_str(), (std::filesystem::path(exeParent) / "Resources/shaders/glsl330/lighting.fs").string().c_str());
     }
 #endif
     //std::string currentDirectory = GetWorkingDirectory();

@@ -11,12 +11,14 @@ class ShadowManager
 public:
     void Init(int id, int width = 1024, int height = 1024);
     ~ShadowManager();
-    static void UnloadShader();
     RaylibWrapper::Matrix RenderShadowPass();
     void SetCamera();
+    static void LoadShaders();
+    static void UnloadShaders();
 
     RaylibWrapper::RenderTexture2D shadowMapTexture;
     static RaylibWrapper::Shader shader;
+    static RaylibWrapper::Shader materialPreviewShader;
     RaylibWrapper::Camera camera;
     RaylibWrapper::Vector3 lightDir;
     RaylibWrapper::Vector3 lightPos;

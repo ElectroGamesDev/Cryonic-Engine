@@ -25,7 +25,7 @@ ProjectData ProjectManager::projectData;
 
 void ProjectManager::CopyApiFiles(std::filesystem::path source, std::filesystem::path destination)
 {
-    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "Scenes", "ConsoleLogger", "FontManager", "Font", "Sprite", "GameObject", "Components", "ShaderManager", "RenderableTexture", "InputSystem", "CollisionListener2D", "EventSystem", "Animation", "AnimationGraph", "AudioClip", "Tilemap", "Physics2DDebugDraw", "ShadowManager", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
+    std::vector<std::string> filesToCopy = { "CryonicAPI", "CryonicCore", "Scenes", "ConsoleLogger", "FontManager", "Font", "Sprite", "GameObject", "Components", "ShaderManager", "RenderableTexture", "InputSystem", "CollisionListener2D", "EventSystem", "Animation", "AnimationGraph", "AudioClip", "Tilemap", "Material", "Physics2DDebugDraw", "ShadowManager", "RaylibInputWrapper", "Wrappers", "RaylibCameraWrapper", "RaylibDrawWrapper", "RaylibLightWrapper", "RaylibModelWrapper", "RaylibShaderWrapper", "RaylibWrapper"};
     
     if (projectData.is3D)
     {
@@ -99,6 +99,7 @@ int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catc
     std::filesystem::create_directory(projectData.path / "Assets");
     std::filesystem::create_directory(projectData.path / "Assets" / "Scripts");
     std::filesystem::create_directory(projectData.path / "Assets" / "Scenes");
+    std::filesystem::create_directory(projectData.path / "Assets" / "Audio");
 
     Utilities::HideFile(projectData.path / "api");
 
@@ -118,6 +119,9 @@ int ProjectManager::CreateProject(ProjectData projectData) // Todo: Add try-catc
     case Sidescroller3D:
     case Blank3D:
         std::filesystem::create_directory(projectData.path / "Assets" / "Models");
+        std::filesystem::create_directory(projectData.path / "Assets" / "Materials");
+        std::filesystem::create_directory(projectData.path / "Assets" / "Textures");
+        std::filesystem::create_directory(projectData.path / "Assets" / "Animations");
         break;
     case Blank2D:
         std::filesystem::create_directory(projectData.path / "Assets" / "Sprites");

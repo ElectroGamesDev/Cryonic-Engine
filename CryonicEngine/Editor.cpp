@@ -49,6 +49,7 @@
 #include "RenderableTexture.h"
 #include "EditorWindow.h"
 #include "EventSheetEditor.h"
+#include "MainThreadQueue.h"
 
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -122,6 +123,8 @@ std::vector<RaylibWrapper::RenderTexture2D*> tempRenderTextures;
 float cameraSpeed = 1;
 float oneSecondDelay = 1;
 
+RaylibModel materialPreviewMesh;
+
 enum Tool
 {
     Move,
@@ -129,6 +132,7 @@ enum Tool
     Scale
 }; Tool toolSelected = Move;
 
+// Todo: Move this to another class
 RaylibWrapper::RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path modelPath, int textureSize)
 {
     // Todo: Don't load and unload the models every frame if the file path is the same
@@ -136,7 +140,7 @@ RaylibWrapper::RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path
     // Load the 3D model
 
     RaylibModel model;
-    model.Create(Custom, modelPath.string().c_str(), LitStandard, ProjectManager::projectData.path);
+    model.Create(Custom, modelPath.string().c_str(), ShaderManager::LitStandard, ProjectManager::projectData.path);
 
     // Set up camera
     RaylibWrapper::Camera modelCamera = {
@@ -168,6 +172,105 @@ RaylibWrapper::RenderTexture2D* Editor::CreateModelPreview(std::filesystem::path
     //UnloadRenderTexture(target);
 
     // Return the generated texture
+    return tempRenderTextures.back();
+}
+
+// Todo: Move this to another class
+RaylibWrapper::RenderTexture2D* Editor::CreateMaterialPreview(std::filesystem::path materialPath, int textureSize)
+{
+    // Todo: make sure to show melatic, roughness, opacity, emission, etc.
+
+    nlohmann::json jsonData;
+    std::ifstream file;
+
+    try {
+        file.open(materialPath);
+        file >> jsonData;
+    }
+    catch (const std::exception& e)
+    {
+        file.close();
+        std::filesystem::path corruptedFilePath = materialPath.parent_path() / (materialPath.stem().string() + " Corrupted.mat");
+        std::filesystem::copy(materialPath, corruptedFilePath); // Todo: Will this crash if a file with that name already exists?
+        if (Utilities::CreateDataFile(materialPath))
+        {
+            try {
+                std::ifstream file(materialPath);
+                file >> jsonData;
+                ConsoleLogger::WarningLog("Your material " + materialPath.stem().string() + " was corrupted. A new material has been made and we backed up the corrupted file to " + corruptedFilePath.stem().string() + ".");
+            }
+            catch (const std::exception& e) {
+                // If the new material file fails to open, we can assume its an issue other than corruption. Since we can create the file, we can also assume its not a permissions issue.
+                ConsoleLogger::WarningLog("Your material " + materialPath.stem().string() + " failed to open. This is not a corruption or permission issue. Try restarting the game engine and if the issue continues then try to update to a newer engine version if one is available.");
+                std::filesystem::copy(corruptedFilePath, materialPath);
+                std::filesystem::remove(corruptedFilePath);
+                return nullptr;
+            }
+        }
+        else
+        {
+            ConsoleLogger::WarningLog("Your material " + materialPath.stem().string() + " was corrupted and we failed to create a new one. Your project may be in a directory the engine can't access without proper permissions. We recommend having the engine in the Documents directory.");
+            //std::filesystem::copy(corruptedFilePath, materialPath);
+            std::filesystem::remove(corruptedFilePath);
+            return nullptr;
+        }
+    }
+
+    auto& publicData = jsonData["public"];
+
+    // Extract material properties
+    RaylibWrapper::Color albedoColor = {
+        static_cast<unsigned char>(publicData["albedoColor"][0]),
+        static_cast<unsigned char>(publicData["albedoColor"][1]),
+        static_cast<unsigned char>(publicData["albedoColor"][2]),
+        static_cast<unsigned char>(publicData["albedoColor"][3])
+    };
+
+    float metallic = publicData.value("metallic", 0.0f);
+    float roughness = publicData.value("roughness", 0.5f);
+    float emission = publicData.value("emission", 0.0f);
+
+    // Load textures
+    auto loadTexture = [](const std::string& path) -> RaylibWrapper::Texture2D* {
+        if (path.empty() || !std::filesystem::exists(path))
+            return &Material::whiteTexture;
+
+        return new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(path.c_str())); // Todo: The textures need to be deleted if its not using the whiteTexture
+    };
+
+    RaylibWrapper::Texture2D* albedoTexture = loadTexture(publicData["albedoTexture"]);
+    RaylibWrapper::Texture2D* normalTexture = loadTexture(publicData["normalTexture"]);
+    RaylibWrapper::Texture2D* metallicTexture = loadTexture(publicData["metallicTexture"]);
+    RaylibWrapper::Texture2D* roughnessTexture = loadTexture(publicData["roughnessTexture"]);
+    RaylibWrapper::Texture2D* emissionTexture = loadTexture(publicData["emissionTexture"]);
+
+    // Set material properties
+    materialPreviewMesh.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ALBEDO, *albedoTexture, albedoColor, 1);
+    materialPreviewMesh.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_NORMAL, *normalTexture, { 128, 128, 255 }, 1); // { 128, 128, 255 } is "flat" for normal maps
+    materialPreviewMesh.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ROUGHNESS, *roughnessTexture, RaylibWrapper::WHITE, roughness);
+    materialPreviewMesh.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_METALNESS, *metallicTexture, RaylibWrapper::WHITE, metallic);
+    materialPreviewMesh.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_EMISSION, *emissionTexture, RaylibWrapper::WHITE, emission);
+
+    // Set up camera
+    RaylibWrapper::Camera previewCamera = {
+        {0.0f, 0.0f, 2.0f},  // position
+        {0.0f, 0.0f, 0.0f},  // target
+        {0.0f, 1.0f, 0.0f},  // up
+        45.0f,               // fovy
+        RaylibWrapper::CAMERA_PERSPECTIVE // projection
+    };
+
+    // Create a render texture
+    tempRenderTextures.push_back(new RaylibWrapper::RenderTexture2D(RaylibWrapper::LoadRenderTexture(textureSize, textureSize)));
+
+    // Render model to texture
+    BeginTextureMode(*tempRenderTextures.back());
+    RaylibWrapper::ClearBackground(RaylibWrapper::Color{ 63, 63, 63, 255 });
+    RaylibWrapper::BeginMode3D(previewCamera);
+    materialPreviewMesh.DrawModelWrapper(0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 255, 255, 255, 255);
+    RaylibWrapper::EndMode3D();
+    RaylibWrapper::EndTextureMode();
+
     return tempRenderTextures.back();
 }
 
@@ -878,6 +981,43 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         }
                     }
                 }
+                else if (extension == ".mat")
+                {
+                    RaylibWrapper::RenderTexture2D* materialIcon = CreateMaterialPreview(entry.path(), 32);
+                    RaylibWrapper::Texture2D* texture;
+                    if (materialIcon == nullptr)
+                        texture = IconManager::imageTextures["SoundIcon"]; // Todo: CHANGE THIS
+                    else
+                        texture = &materialIcon->texture;
+
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), texture, ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    //RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["SoundIcon"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    if (ImGui::IsItemHovered())
+                    {
+                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        {
+                            dragData.first = Other;
+                            dragData.second["Path"] = entry.path();
+                        }
+                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        {
+                            // Puts the data into objectInProperties so it is displayed in the properties window
+                            if (!std::holds_alternative<DataFile>(objectInProperties) || std::filesystem::path(std::get<DataFile>(objectInProperties).path) != (entry.path().string()))
+                            {
+                                Utilities::CreateDataFile(entry.path());
+
+                                DataFile dataFile;
+                                dataFile.path = entry.path().string();
+                                dataFile.type = DataFileTypes::Material;
+
+                                std::ifstream jsonFile(dataFile.path);
+                                dataFile.json = nlohmann::json::parse(jsonFile);
+
+                                objectInProperties = dataFile;
+                            }
+                        }
+                    }
+                }
                 else if (extension == ".ttf" || extension == ".otf")
                 {
                     RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FontIcon"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
@@ -1425,7 +1565,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                         MeshRenderer& meshRenderer = gameObject->AddComponentInternal<MeshRenderer>();
                         meshRenderer.SetModelPath(modelPath);
-                        meshRenderer.SetModel(ModelType::Custom, modelPath, LitStandard);
+                        meshRenderer.SetModel(ModelType::Custom, modelPath, ShaderManager::LitStandard);
 
                         for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
                             component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
@@ -1690,6 +1830,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "New Material", "mat");
                     if (filePath != "")
                     {
+                        Utilities::CreateDataFile(filePath);
                         renamingFile = filePath;
                         strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
                     }
@@ -3833,7 +3974,7 @@ void Editor::RenderHierarchy()
                     {
                         MeshRenderer& meshRenderer = gameObject->AddComponentInternal<MeshRenderer>();
                         meshRenderer.SetModelPath(objectToCreate.name);
-                        meshRenderer.SetModel(objectToCreate.model, objectToCreate.name, LitStandard);
+                        meshRenderer.SetModel(objectToCreate.model, objectToCreate.name, ShaderManager::LitStandard);
 
                         Collider3D& collider = gameObject->AddComponentInternal<Collider3D>();
                         if (objectToCreate.model == Cube)
@@ -4413,12 +4554,35 @@ void Editor::InitScenes()
     //else SceneManager::SetActiveScene(&SceneManager::GetScenes()->back()); // The scene is already getting set to active in the LoadScene() above
 }
 
+void Editor::InitMaterialPreview()
+{
+    Material::LoadWhiteTexture();
+
+    materialPreviewMesh.Create(ModelType::Sphere, "MaterialPreview", ShaderManager::LitStandard, "MaterialPreview");
+
+    // Setup lighting shader
+
+    float lightPositions[3] = { 0.0f, 0.0f, 0.0f };
+    float lightColors[3] = { 1.0f, 1.0f, 1.0f };
+    int lightType[1] = { 0 }; // 0 = Point, 1 = Spot, 2 = Directional
+    float ambient[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
+    int enableShadows = 0;
+
+    materialPreviewMesh.SetShaderValue(0, materialPreviewMesh.GetShaderLocation(0, "lightPos"), lightPositions, RaylibWrapper::SHADER_UNIFORM_VEC3);
+    materialPreviewMesh.SetShaderValue(0, materialPreviewMesh.GetShaderLocation(0, "lightColor"), lightColors, RaylibWrapper::SHADER_UNIFORM_VEC4);
+    materialPreviewMesh.SetShaderValue(0, materialPreviewMesh.GetShaderLocation(0, "lightType"), &lightType, RaylibWrapper::SHADER_UNIFORM_INT);
+    materialPreviewMesh.SetShaderValue(0, materialPreviewMesh.GetShaderLocation(0, "ambient"),ambient, RaylibWrapper::SHADER_UNIFORM_VEC4);
+    materialPreviewMesh.SetShaderValue(0, materialPreviewMesh.GetShaderLocation(0, "enableShadows"), &enableShadows, RaylibWrapper::SHADER_UNIFORM_INT);
+}
+
 void Editor::Cleanup()
 {
     IconManager::Cleanup();
     ShaderManager::Cleanup();
     AssetManager::Cleanup();
-    ShadowManager::UnloadShader();
+    ShadowManager::UnloadShaders();
+    materialPreviewMesh.Unload();
+    Material::UnloadWhiteTexture();
 
     for (auto& image : tempTextures)
     {
@@ -4490,7 +4654,8 @@ void Editor::Init()
     //InitImages();
     IconManager::Init();
     ShaderManager::Init();
-    //shadowManager.Init();
+    ShadowManager::LoadShaders();
+    InitMaterialPreview();
     InitMisc();
     InitScenes(); // Must go after InitMisc() and ShaderManager::Init()
 
@@ -4501,6 +4666,8 @@ void Editor::Init()
 
     while (!closeEditor)
     {
+        MainThreadQueue::Process();
+
         oneSecondDelay -= RaylibWrapper::GetFrameTime();
         FontManager::UpdateFonts();
         if (CameraComponent::main != nullptr)

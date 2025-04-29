@@ -10,6 +10,7 @@ enum class DataFileTypes
 	Sprite,
 	Tilemap,
 	Sound,
+	Material,
 	Other
 };
 
@@ -24,6 +25,7 @@ class Editor
 {
 public:
 	RaylibWrapper::RenderTexture2D* CreateModelPreview(std::filesystem::path modelPath, int textureSize);
+	RaylibWrapper::RenderTexture2D* CreateMaterialPreview(std::filesystem::path materialPath, int textureSize);
 
 	void InitFonts();
 	void InitStyle();
@@ -31,6 +33,7 @@ public:
 	void InitScenes();
 	void InitImages();
 	void Init();
+	void InitMaterialPreview();
 
 	void RenderViewport();
 	void RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnDefault);

@@ -15,6 +15,7 @@ public:
 		runInEditor = true;
 		Awake();
 
+#if defined(EDITOR)
 		std::string variables = R"(
         [
             0,
@@ -38,8 +39,9 @@ public:
                 ]
             ]
         ]
-    )";
+		)";
 		exposedVariables = nlohmann::json::parse(variables);
+#endif
 	}
 
 	enum Type

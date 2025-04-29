@@ -2,6 +2,8 @@
 
 #define MAX_LIGHTS 15
 
+uniform bool enableShadows = true;
+
 in vec3 fragPosition;
 in vec2 fragTexCoord;
 in vec3 fragNormal;
@@ -29,6 +31,8 @@ uniform float spotInnerCutoff[MAX_LIGHTS]; // Cosine of inner cutoff angle
 uniform float spotOuterCutoff[MAX_LIGHTS]; // Cosine of outer cutoff angle
 
 float CalculateShadow(int lightIdx, vec3 fragPos, vec3 normal) {
+	if (!enableShadows) return 0.0;
+
     vec4 fragPosLightSpace = lightVP[lightIdx] * vec4(fragPos, 1.0);
     fragPosLightSpace.xyz /= fragPosLightSpace.w;
     vec3 projCoords = fragPosLightSpace.xyz * 0.5 + 0.5;
