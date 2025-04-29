@@ -93,6 +93,8 @@ std::filesystem::path Utilities::CreateUniqueFile(std::filesystem::path director
             file.close();
             return filePath;
         }
+
+        CreateDataFile(filePath);
     }
     else // If its a directory
     {
@@ -415,49 +417,81 @@ std::vector<std::string> Utilities::GetGltfAnimationNames(std::filesystem::path 
 
 bool Utilities::CreateDataFile(std::filesystem::path path)
 {
-    std::filesystem::path newPath = path.parent_path() / (path.filename().string() + ".data");
-    if (!std::filesystem::exists(path) || !path.has_extension() || std::filesystem::exists(newPath))
+    if (!std::filesystem::exists(path) || !path.has_extension())
         return false;
 
-    std::ofstream file(newPath);
-    if (file.is_open())
+    if (path.extension() == ".mp3" || path.extension() == ".wav" || path.extension() == ".ogg" || path.extension() == ".flac" || path.extension() == ".qoa" || path.extension() == ".xm" || path.extension() == ".mod")
     {
-        if (path.extension() == ".mp3" || path.extension() == ".wav" || path.extension() == ".ogg" || path.extension() == ".flac" || path.extension() == ".qoa" || path.extension() == ".xm" || path.extension() == ".mod")
-        {
-            bool loadInMemory = false;
-            try
-            {
-                // If the audio file is less than 1MB, set it to load in memory on default
-                if (std::filesystem::file_size(path) < 1048576)
-                    loadInMemory = true;
-            }
-            catch (std::filesystem::filesystem_error& error)
-            {
-                ConsoleLogger::WarningLog("Failed to check the size of the audio file \"" + path.stem().string() + "\" when creating the data file. Error: " + error.what(), true);
-            }
-            nlohmann::json jsonData = {
-                {"public", {
-                    {"loadInMemory", loadInMemory}
-                }},
-                {"private", {
-                    {"version", 1.0f}
-                }}
-            };
-            file << std::setw(4) << jsonData << std::endl;
-        }
-        else
-        {
-            file.close();
-            std::filesystem::remove(newPath);
-            return false;
-        }
+        std::filesystem::path newPath = path.parent_path() / (path.filename().string() + ".data");
 
-        file.close();
+        if (std::filesystem::exists(newPath))
+            return false;
+
+        std::ofstream file(newPath);
+
+        bool loadInMemory = false;
+        try
+        {
+            // If the audio file is less than 1MB, set it to load in memory on default
+            if (std::filesystem::file_size(path) < 1048576)
+                loadInMemory = true;
+        }
+        catch (std::filesystem::filesystem_error& error)
+        {
+            ConsoleLogger::WarningLog("Failed to check the size of the audio file \"" + path.stem().string() + "\" when creating the data file. Error: " + error.what(), true);
+        }
+        nlohmann::json jsonData = {
+            {"public", {
+                {"loadInMemory", loadInMemory}
+            }},
+            {"private", {
+                {"version", 1.0f}
+            }}
+        };
+        file << std::setw(4) << jsonData << std::endl;
 
         return true;
     }
-    else if (std::filesystem::exists(newPath))
-        std::filesystem::remove(newPath);
+    else if (path.extension() == ".mat")
+    {
+        std::ifstream infile(path);
+        nlohmann::json existingData;
+
+        if (infile.is_open()) {
+            try {
+                infile >> existingData;
+            }
+            catch (const std::exception& e) {
+                existingData.clear();
+            }
+        }
+
+        if (existingData.contains("public") && existingData.contains("private")) // Checks if the file has some integrity
+            return false;
+
+        std::ofstream file(path, std::ios::trunc);
+
+        nlohmann::json jsonData = {
+            {"public", {
+                {"albedoColor", {255, 255, 255, 255}},
+                {"metallic", 0.0f},
+                {"roughness", 0.5f},
+                {"emission", 0.0f},
+                {"albedoTexture", ""},
+                {"normalTexture", ""},
+                {"metallicTexture", ""},
+                {"roughnessTexture", ""},
+                {"emissionTexture", ""}
+            }},
+            {"private", {
+                {"version", 1.0f}
+            }}
+        };
+
+        file << std::setw(4) << jsonData << std::endl;
+
+        return true;
+    }
 
     return false;
 }
