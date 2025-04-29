@@ -62,11 +62,41 @@ public:
         }
 
         // Loads textures/sprites // Todo: If a Sprite already exists for a texture, then dont create a new one
-        albedoSprite = new Sprite(albedoTexturePath);
-        normalSprite = new Sprite(normalTexturePath);
-        metallicSprite = new Sprite(metallicTexturePath);
-        roughnessSprite = new Sprite(roughnessTexturePath);
-        emissionSprite = new Sprite(emissionTexturePath);
+        auto setSprite = [](Sprite* var, std::string& p) -> void {
+            if (p == "")
+                var == nullptr;
+
+            for (char& c : p) // Reformat the path for unix.
+            {
+                if (c == '\\')
+                    c = '/';
+            }
+
+#if defined(EDITOR)
+            p = ProjectManager::projectData.path.string() + "/Assets/" + p;
+#else
+            if (exeParent.empty())
+                p = "Resources/Assets/" + p;
+            else
+                p = exeParent.string() + "/Resources/Assets/" + p;
+#endif
+            if (std::filesystem::exists(p))
+                var = new Sprite(p);
+            else
+                var = nullptr;
+        };
+
+        setSprite(albedoSprite, albedoTexturePath);
+        setSprite(normalSprite, normalTexturePath);
+        setSprite(metallicSprite, metallicTexturePath);
+        setSprite(roughnessSprite, roughnessTexturePath);
+        setSprite(emissionSprite, emissionTexturePath);
+
+        //albedoSprite = new Sprite(albedoTexturePath);
+        //normalSprite = new Sprite(normalTexturePath);
+        //metallicSprite = new Sprite(metallicTexturePath);
+        //roughnessSprite = new Sprite(roughnessTexturePath);
+        //emissionSprite = new Sprite(emissionTexturePath);
 
         materials[path] = this;
 

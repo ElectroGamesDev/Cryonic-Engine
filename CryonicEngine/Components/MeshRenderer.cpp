@@ -65,11 +65,30 @@ void MeshRenderer::SetMaterial(Material* mat)
         }
         else
         {
-            raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ALBEDO, *material->GetAlbedoSprite()->GetTexture(), { material->GetAlbedoColor().r, material->GetAlbedoColor().g, material->GetAlbedoColor().b, material->GetAlbedoColor().a }, 1);
-            raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_NORMAL, *material->GetNormalSprite()->GetTexture(), { 128, 128, 255 }, 1); // { 128, 128, 255 } is "flat" for normal maps
-            raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ROUGHNESS, *material->GetRoughnessSprite()->GetTexture(), { 255, 255, 255, 255 }, material->GetRoughness());
-            raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_METALNESS, *material->GetMetallicSprite()->GetTexture(), { 255, 255, 255, 255 }, material->GetMetallic());
-            raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_EMISSION, *material->GetEmissionSprite()->GetTexture(), { 255, 255, 255, 255 }, material->GetEmission());
+            if (material->GetAlbedoSprite() != nullptr)
+                raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ALBEDO, *material->GetAlbedoSprite()->GetTexture(), { material->GetAlbedoColor().r, material->GetAlbedoColor().g, material->GetAlbedoColor().b, material->GetAlbedoColor().a }, 1);
+            else
+                raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ALBEDO, Material::whiteTexture, { 220, 220, 220, 255 }, 1);
+
+            if (material->GetNormalSprite() != nullptr)
+                raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_NORMAL, *material->GetNormalSprite()->GetTexture(), { 255, 255, 255 }, 1);
+            else
+                raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_NORMAL, Material::whiteTexture, { 128, 128, 255 }, 1); // { 128, 128, 255 } is "flat" for normal maps
+
+            if (material->GetRoughnessSprite() != nullptr)
+                raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ROUGHNESS, *material->GetRoughnessSprite()->GetTexture(), { 255, 255, 255, 255 }, material->GetRoughness());
+            else
+                raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ROUGHNESS, Material::whiteTexture, { 255, 255, 255, 255 }, 0.5f);
+
+            if (material->GetMetallicSprite() != nullptr)
+                raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_METALNESS, *material->GetMetallicSprite()->GetTexture(), { 255, 255, 255, 255 }, material->GetMetallic());
+            else
+                raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_METALNESS, Material::whiteTexture, { 255, 255, 255, 255 }, 0);
+
+            if (material->GetEmissionSprite() != nullptr)
+                raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_EMISSION, *material->GetEmissionSprite()->GetTexture(), { 255, 255, 255, 255 }, material->GetEmission());
+            else
+                raylibModel.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_EMISSION, Material::whiteTexture, { 255, 255, 255, 255 }, 0);
         }
     }
 }
