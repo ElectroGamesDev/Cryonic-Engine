@@ -1152,7 +1152,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         }
                     }
                 }
-                else if (extension == ".gltf" || extension == ".glb")
+                else if (extension == ".gltf" || extension == ".glb" || extension == ".obj" || extension == ".m3d")
                 {
                     // Todo: This is causing errors if there are game objects with a MeshRenderer
                     //if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(32, 32)))
