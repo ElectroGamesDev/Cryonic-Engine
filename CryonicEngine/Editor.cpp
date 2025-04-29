@@ -3154,7 +3154,7 @@ void Editor::RenderProperties()
                     component->iconUnicode + " " + component->name;
 
                 ImGui::SetNextItemWidth(buttonWidth);
-                if (ImGui::CollapsingHeader((name + "##" + std::to_string(ImGui::GetCursorPosY())).c_str())) // Todo: Figure out why the width isn't being set on this
+                if (ImGui::CollapsingHeader((name + "##" + std::to_string(component->id)).c_str())) // Todo: Figure out why the width isn't being set on this
                 {
                     if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
                     {
