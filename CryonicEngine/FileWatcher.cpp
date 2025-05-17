@@ -19,9 +19,9 @@ namespace FileWatcher
     static std::unordered_map<std::string, std::function<void(const std::string oldPath, const std::string newPath)>> moveCallbacks;
     static std::unordered_map<std::string, std::function<void()>> deleteCallbacks;
 
-    static std::unordered_map<std::string, std::function<void(const std::string&)>> globalModifyCallbacks;
-    static std::unordered_map<std::string, std::function<void(const std::string&, const std::string&)>> globalMoveCallbacks;
-    static std::unordered_map<std::string, std::function<void(const std::string&)>> globalDeleteCallbacks;
+    static std::unordered_map<std::string, std::function<void(const std::filesystem::path&)>> globalModifyCallbacks;
+    static std::unordered_map<std::string, std::function<void(const std::filesystem::path&, const std::filesystem::path&)>> globalMoveCallbacks;
+    static std::unordered_map<std::string, std::function<void(const std::filesystem::path&)>> globalDeleteCallbacks;
 
     void Init()
     {
@@ -86,7 +86,7 @@ namespace FileWatcher
             }
 
             for (auto& [id, callback] : globalDeleteCallbacks)
-                callback(path.string());
+                callback(path);
         }
     }
 
@@ -112,7 +112,7 @@ namespace FileWatcher
         }
 
         for (auto& [id, callback] : globalMoveCallbacks)
-            callback(oldPath.string(), newPath.string());
+            callback(oldPath, newPath);
     }
 
     void FileModified(std::filesystem::path filePath) // Todo: Since we have sleeps, after the sleep, we should check if there are any newer modifications. Applications like Gimp when saving/overwriting, it modifies the file 3 times. Having this would prevent it from being loaded and unloaded 3 times.
@@ -147,7 +147,7 @@ namespace FileWatcher
             modifyCallbacks[relativePath]();
 
         for (auto& [id, callback] : globalModifyCallbacks)
-            callback(filePath.string());
+            callback(filePath);
     }
 
     // Specific file Callbacks
@@ -182,7 +182,7 @@ namespace FileWatcher
     }
 
     // Global 
-    void AddGlobalModifyCallback(std::string id, std::function<void(const std::string path)> callback)
+    void AddGlobalModifyCallback(std::string id, std::function<void(const std::filesystem::path path)> callback)
     {
         globalModifyCallbacks[id] = callback;
     }
@@ -192,7 +192,7 @@ namespace FileWatcher
         globalModifyCallbacks.erase(relativePath);
     }
 
-    void AddGlobalMoveCallback(std::string id, std::function<void(const std::string oldPath, const std::string newPath)> callback)
+    void AddGlobalMoveCallback(std::string id, std::function<void(std::filesystem::path oldPath, const std::filesystem::path newPath)> callback)
     {
         globalMoveCallbacks[id] = callback;
     }
@@ -202,7 +202,7 @@ namespace FileWatcher
         globalMoveCallbacks.erase(id);
     }
 
-    void AddGlobalDeletedCallback(std::string id, std::function<void(const std::string path)> callback)
+    void AddGlobalDeletedCallback(std::string id, std::function<void(const std::filesystem::path path)> callback)
     {
         globalDeleteCallbacks[id] = callback;
     }
