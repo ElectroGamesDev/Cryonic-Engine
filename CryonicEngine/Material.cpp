@@ -1,7 +1,28 @@
 #include "Material.h"
+#include "ShaderManager.h"
 
 std::unordered_map<std::filesystem::path, Material*> Material::materials;
+RaylibWrapper::Material Material::defaultMaterial;
 RaylibWrapper::Texture2D Material::whiteTexture;
+
+void Material::LoadDefaultMaterial()
+{
+    std::pair<unsigned int, int*> shader = ShaderManager::GetShader(ShaderManager::LitStandard); // Todo: Change this to get the shader in the material
+    defaultMaterial.shader.id = shader.first;
+    defaultMaterial.shader.locs = shader.second;
+
+    defaultMaterial.maps = new RaylibWrapper::MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
+    defaultMaterial.maps[RaylibWrapper::MATERIAL_MAP_ALBEDO] = { Material::whiteTexture , { 220, 220, 220, 255 }, 1 };
+    defaultMaterial.maps[RaylibWrapper::MATERIAL_MAP_NORMAL] = { Material::whiteTexture , { 128, 128, 255 }, 1 }; // { 128, 128, 255 } is "flat" for normal map
+    defaultMaterial.maps[RaylibWrapper::MATERIAL_MAP_ROUGHNESS] = { Material::whiteTexture , { 255, 255, 255, 255 }, 0.5 };
+    defaultMaterial.maps[RaylibWrapper::MATERIAL_MAP_METALNESS] = { Material::whiteTexture , { 255, 255, 255, 255 }, 0 };
+    defaultMaterial.maps[RaylibWrapper::MATERIAL_MAP_EMISSION] = { Material::whiteTexture , { 255, 255, 255, 255 }, 0 };
+}
+
+void Material::UnloadDefaultMaterial()
+{
+    RaylibWrapper::UnloadMaterial(defaultMaterial);
+}
 
 void Material::LoadWhiteTexture()
 {
@@ -21,4 +42,9 @@ Material* Material::GetMaterial(std::string path)
         return it->second;
     else
         return new Material(path); // Material's constructor handles everything. Todo: This material isn't deleted if it fails in the constructor
+}
+
+RaylibWrapper::Material* Material::GetRaylibMaterial()
+{
+    return &raylibMaterial;
 }

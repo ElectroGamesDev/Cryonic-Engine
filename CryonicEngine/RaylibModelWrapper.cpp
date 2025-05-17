@@ -212,11 +212,17 @@ void RaylibModel::SetMaterialPreviewShader(unsigned int id, int* locs)
 
 void RaylibModel::SetShaderValue(int materialIndex, int locIndex, const void* value, int uniformType)
 {
+    if (!model)
+        return;
+
     ::SetShaderValue(model->first.materials[materialIndex].shader, locIndex, value, uniformType);
 }
 
 int RaylibModel::GetShaderLocation(int materialIndex, std::string uniformName)
 {
+    if (!model)
+        return -1;
+
     return ::GetShaderLocation(model->first.materials[materialIndex].shader, uniformName.c_str());
 }
 
@@ -229,11 +235,110 @@ void RaylibModel::SetShader(int materialIndex, ShaderManager::Shaders shader)
         model->first.materials[materialIndex].shader = {};
 }
 
-void RaylibModel::SetMaterial(int materialIndex, int mapIndex, RaylibWrapper::Texture2D texture, RaylibWrapper::Color color, float intensity)
+bool RaylibModel::IsPrimitive()
 {
+    return primitiveModel;
+}
+
+void RaylibModel::SetMaterialMap(int materialIndex, int mapIndex, RaylibWrapper::Texture2D texture, RaylibWrapper::Color color, float intensity)
+{
+    if (!model)
+        return;
+
     model->first.materials[materialIndex].maps[mapIndex] = {
         { texture.id, texture.width, texture.height, texture.mipmaps, texture.format },
         { color.r, color.g, color.b, 255 },
         intensity
     };
+}
+
+void RaylibModel::SetMaterials(std::vector<RaylibWrapper::Material*> mats) // Todo: There is a memory leak here
+{
+    if (!model)
+        return;
+
+    // Materials should never be modified or unloaded in here
+
+    // Deallocate the materials' maps
+    //if (model->first.materials)
+    //{
+    //    for (int i = 0; i < model->first.materialCount; ++i)
+    //    {
+    //        if (model->first.materials[i].maps)
+    //            delete[] model->first.materials[i].maps;
+    //    }
+    //}
+
+    //// If the material count is not the same, then resize the array
+    //if (model->first.materialCount != mats.size())
+    //{
+    //    // Todo: Should old materials be unloaded?
+
+    //    delete[] model->first.materials; // Deallocate the materials array
+    //    model->first.materials = new Material[mats.size()]; // Allocate the materials array with the new size
+    //    model->first.materialCount = mats.size();
+    //}
+
+    //delete[] model->first.materials; // Todo: Should I delete the old materials array? When I was testing this, when I modified this array, all of my models (all cubes) changed materials too. They may be
+    // sharing this array. Although then there will be a memory leak for objects with a materials array not in use. Should I also delete the materials.maps array?
+
+    model->first.materialCount = mats.size();
+    model->first.materials = new Material[mats.size()];
+    model->first.materials->maps = new MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
+
+    for (size_t i = 0; i < mats.size(); ++i)
+    {
+        RaylibWrapper::Material& mat = *mats[i];
+        Material& material = model->first.materials[i];
+
+        // Set shader
+        material.shader.id = mat.shader.id;
+        material.shader.locs = mat.shader.locs;
+
+        // Set params
+        material.params[0] = mat.params[0];
+        material.params[1] = mat.params[1];
+        material.params[2] = mat.params[2];
+        material.params[3] = mat.params[3];
+
+        // Set maps
+        for (int j = 0; j < RaylibWrapper::MAX_MATERIAL_MAPS; ++j)
+            SetMaterialMap(i, j, mat.maps[j].texture, mat.maps[j].color, mat.maps[j].value);
+    }
+}
+
+RaylibWrapper::Material RaylibModel::GetMaterial(int index)
+{
+    if (!model)
+        return {};
+
+    Material* material = &model->first.materials[index];
+    RaylibWrapper::Material mat;
+
+    // Set maps
+    mat.maps = new RaylibWrapper::MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
+
+    for (int i = 0; i < RaylibWrapper::MAX_MATERIAL_MAPS; ++i)
+    {
+        RaylibWrapper::MaterialMap map;
+        MaterialMap& raylibMap = material->maps[i];
+
+        map.texture = { raylibMap.texture.id, raylibMap.texture.width, raylibMap.texture.height, raylibMap.texture.mipmaps, raylibMap.texture.format };
+        map.color = { raylibMap.color.r, raylibMap.color.g, raylibMap.color.b, raylibMap.color.a };
+        map.value = raylibMap.value;
+
+        mat.maps[i] = map;
+    }
+
+    // Set shader
+    mat.shader.id = material->shader.id;
+    mat.shader.locs = material->shader.locs;
+
+    // Set params
+    mat.params[0] = material->params[0];
+    mat.params[1] = material->params[1];
+    mat.params[2] = material->params[2];
+    mat.params[3] = material->params[3];
+
+    return mat;
 }

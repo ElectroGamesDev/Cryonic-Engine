@@ -11,6 +11,8 @@
 #endif
 #include "CryonicCore.h"
 #include "Sprite.h"
+#include "FileWatcher.h"
+#include "ShaderManager.h"
 
 class Material
 {
@@ -23,8 +25,75 @@ public:
                 c = '/';
         }
 
+        this->path = path;
+
+        LoadData();
+
+#ifdef EDITOR
+        FileWatcher::AddFileMoveCallback(path, [this](const std::string& oldPath, const std::string& newPath) {
+            this->OnFileMoved(oldPath, newPath);
+            });
+
+        FileWatcher::AddFileModifyCallback(path, [this]() {
+            this->OnFileModified();
+            });
+#endif
+
+        materials[path] = this;
+    }
+
+    ~Material()
+    {
+        RaylibWrapper::UnloadMaterial(raylibMaterial);
+    }
+
+    void OnFileMoved(const std::string oldPath, const std::string newPath)
+    {
+        path = newPath;
+        materials[newPath] = this;
+        materials.erase(oldPath);
+
+        // Todo: Update all components using this material (or the components should find the new path themself. Maybe in FileWatcher for 10-15 seconds I could have a recentlyMoved vector which they can search though)
+    }
+
+    void OnFileModified()
+    {
+        ResetData();
+        LoadData();
+    }
+
+    void ResetData()
+    {
+        // Todo: The Sprite is not being unloaded. Unload it if its not being used anywhere else.
+
+        albedoColor = { 255, 255, 255, 255 };
+        metallic = 0.0f;
+        roughness = 0.5f;
+        emission = 0.0f;
+
+        albedoTexturePath = "";
+        normalTexturePath = "";
+        metallicTexturePath = "";
+        roughnessTexturePath = "";
+        emissionTexturePath = "";
+
+        albedoSprite = nullptr;
+        normalSprite = nullptr;
+        metallicSprite = nullptr;
+        roughnessSprite = nullptr;
+        emissionSprite = nullptr;
+
+        RaylibWrapper::UnloadMaterial(raylibMaterial); // Most likely the same material is going to be loaded again, but in case it isn't (different material or the material fails to load), I'll unload it. This shouldn't really add any overhead.
+
+        raylibMaterial = {};
+    }
+
+    void LoadData()
+    {
         std::ifstream file;
-#ifndef EDITOR
+#ifdef EDITOR
+        file.open(ProjectManager::projectData.path.string() + "/Assets/" + path);
+#else
         if (exeParent.empty())
             file.open("Resources/Assets/" + path);
         else
@@ -64,7 +133,10 @@ public:
         // Loads textures/sprites // Todo: If a Sprite already exists for a texture, then dont create a new one
         auto setSprite = [](Sprite* var, std::string& p) -> void {
             if (p == "")
+            {
                 var == nullptr;
+                return;
+            }
 
             for (char& c : p) // Reformat the path for unix.
             {
@@ -72,15 +144,16 @@ public:
                     c = '/';
             }
 
+            std::string absolutePath = p;
 #if defined(EDITOR)
-            p = ProjectManager::projectData.path.string() + "/Assets/" + p;
+            absolutePath = ProjectManager::projectData.path.string() + "/Assets/" + p;
 #else
             if (exeParent.empty())
-                p = "Resources/Assets/" + p;
+                absolutePath = "Resources/Assets/" + p;
             else
-                p = exeParent.string() + "/Resources/Assets/" + p;
+                absolutePath = exeParent.string() + "/Resources/Assets/" + p;
 #endif
-            if (std::filesystem::exists(p))
+            if (std::filesystem::exists(absolutePath))
                 var = new Sprite(p);
             else
                 var = nullptr;
@@ -98,14 +171,33 @@ public:
         //roughnessSprite = new Sprite(roughnessTexturePath);
         //emissionSprite = new Sprite(emissionTexturePath);
 
-        materials[path] = this;
+        raylibMaterial.maps = new RaylibWrapper::MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
 
-        this->path = path;
-    }
+        // Todo: If sprites ot default texture isn't loaded yet then they won't be set in the material
+        auto setMaterialMap = [this](int mapIndex, Sprite* sprite, const Color& color, float value)
+        {
+            RaylibWrapper::Texture2D* texture;
 
-    ~Material()
-    {
-        // Textures are unloaded in Game.cpp
+            if (sprite)
+                texture = sprite->GetTexture();
+            else
+                texture = &whiteTexture;
+
+            if (!texture)
+                return;
+
+            raylibMaterial.maps[mapIndex] = { *texture , { color.r, color.g, color.b, color.a }, value };
+        };
+
+        setMaterialMap(RaylibWrapper::MATERIAL_MAP_ALBEDO, albedoSprite, albedoColor, 1);
+        setMaterialMap(RaylibWrapper::MATERIAL_MAP_NORMAL, normalSprite, normalSprite ? Color{ 255, 255, 255 } : Color{ 128, 128, 255 }, 1);
+        setMaterialMap(RaylibWrapper::MATERIAL_MAP_ROUGHNESS, roughnessSprite, { 255, 255, 255, 255 }, roughness);
+        setMaterialMap(RaylibWrapper::MATERIAL_MAP_METALNESS, metallicSprite, { 255, 255, 255, 255 }, metallic);
+        setMaterialMap(RaylibWrapper::MATERIAL_MAP_EMISSION, emissionSprite, { 255, 255, 255, 255 }, emission);
+
+        std::pair<unsigned int, int*> shader = ShaderManager::GetShader(ShaderManager::LitStandard); // Todo: Change this to get the material's shader
+        raylibMaterial.shader.id = shader.first;
+        raylibMaterial.shader.locs = shader.second;
     }
 
     /**
@@ -148,6 +240,9 @@ public:
     // Hide in API
     static std::unordered_map<std::filesystem::path, Material*> materials;
 
+    static void LoadDefaultMaterial();
+    static void UnloadDefaultMaterial();
+
     static void LoadWhiteTexture();
     static void UnloadWhiteTexture();
 
@@ -156,13 +251,14 @@ public:
      */
     static Material* GetMaterial(std::string path);
 
+    static RaylibWrapper::Material defaultMaterial;
     static RaylibWrapper::Texture2D whiteTexture;
 
 private:
     std::string path = "";
     Color albedoColor = { 255, 255, 255, 255 };
     float metallic = 0.0f;
-    float roughness = 1.0f;
+    float roughness = 0.5f;
     float emission = 0.0f;
 
     std::string albedoTexturePath = "";
@@ -176,4 +272,6 @@ private:
     Sprite* metallicSprite = nullptr;
     Sprite* roughnessSprite = nullptr;
     Sprite* emissionSprite = nullptr;
+
+    RaylibWrapper::Material raylibMaterial;
 };

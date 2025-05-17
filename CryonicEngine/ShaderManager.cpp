@@ -55,3 +55,8 @@ void ShaderManager::UpdateShaders(float cameraPosX, float cameraPosY, float came
     for (auto it = RaylibShader::shaders.begin(); it != RaylibShader::shaders.end(); ++it)
         it->second.Update(cameraPosX, cameraPosY, cameraPosZ);
 }
+
+std::pair<unsigned int, int*> ShaderManager::GetShader(Shaders shader)
+{
+    return RaylibShader::shaders[ShaderManager::LitStandard].GetShader();
+}

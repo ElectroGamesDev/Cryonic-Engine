@@ -473,15 +473,15 @@ bool Utilities::CreateDataFile(std::filesystem::path path)
 
         nlohmann::json jsonData = {
             {"public", {
-                {"albedoColor", {255, 255, 255, 255}},
-                {"metallic", 0.0f},
-                {"roughness", 0.5f},
-                {"emission", 0.0f},
                 {"albedoTexture", ""},
+                {"albedoColor", {255, 255, 255, 255}},
                 {"normalTexture", ""},
                 {"metallicTexture", ""},
+                {"metallic", 0.0f},
                 {"roughnessTexture", ""},
-                {"emissionTexture", ""}
+                {"roughness", 0.5f},
+                {"emissionTexture", ""},
+                {"emission", 0.0f}
             }},
             {"private", {
                 {"version", 1.0f}

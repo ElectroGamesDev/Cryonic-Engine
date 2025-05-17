@@ -1100,6 +1100,19 @@ namespace RaylibWrapper {
         return ::GetWorkingDirectory();
     }
 
+    // Materials
+    //Material LoadMaterial() {
+    // // This function is not needed
+    //}
+
+    void UnloadMaterial(Material material) {
+        // Not using Raylib's UnloadMaterial() since it will unload the textures
+
+        delete[] material.maps;
+    }
+
+    // Audio
+
     void InitAudioDevice(void) {
         ::InitAudioDevice();
     }

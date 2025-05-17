@@ -66,6 +66,7 @@ private:
 	std::filesystem::path modelPath;
 	Material* material = nullptr;
 	bool defaultMaterial = false;
+	std::vector<RaylibWrapper::Material> embededMaterials;
 
 	bool castShadows;
 };

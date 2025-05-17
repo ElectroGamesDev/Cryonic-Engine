@@ -29,3 +29,8 @@ void RaylibShader::Unload()
 {
 	UnloadShader(shader);
 }
+
+std::pair<unsigned int, int*> RaylibShader::GetShader()
+{
+    return {shader.id, shader.locs};
+}

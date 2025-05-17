@@ -12,6 +12,7 @@
 #include "RaylibWrapper.h"
 #include "RenderableTexture.h"
 #include "ShadowManager.h"
+#include "Material.h"
 #ifdef WINDOWS
 // Prevent Windows from defining conflicting functions
 #define NOGDI
@@ -252,8 +253,11 @@ int main(void)
 	//debugDraw.SetFlags(b2Draw::e_shapeBit);
 	//world->SetDebugDraw(&debugDraw);
 
+	Material::LoadWhiteTexture();
+
 	// Shaders must be initiated before scenes/gameobjects
 	ShaderManager::Init();
+	Material::LoadDefaultMaterial();
 	ShadowManager::LoadShaders();
 
 	// Todo: This assumes the default scene path and name
@@ -281,6 +285,9 @@ int main(void)
 	RaylibWrapper::CloseAudioDevice();
 	RaylibWrapper::ImGui_ImplRaylib_Shutdown();
 	ImGui::DestroyContext();
+
+	Material::UnloadWhiteTexture();
+	Material::UnloadDefaultMaterial();
 
 	ShaderManager::Cleanup();
 	ShadowManager::UnloadShaders();

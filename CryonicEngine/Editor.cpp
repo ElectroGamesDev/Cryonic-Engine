@@ -238,18 +238,25 @@ RaylibWrapper::RenderTexture2D* Editor::CreateMaterialPreview(std::filesystem::p
         return new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(path.c_str())); // Todo: The textures need to be deleted if its not using the whiteTexture
     };
 
+    // Todo: This will have issues if some of the maps arent set or valid. We're also loading the texture even if its already loaded as a Sprite
+
+    // Todo: These textures may already be loaded if a model in-scene is using them. Once I do this, make sure not to unload the textures at the end of the function
     RaylibWrapper::Texture2D* albedoTexture = loadTexture(publicData["albedoTexture"]);
     RaylibWrapper::Texture2D* normalTexture = loadTexture(publicData["normalTexture"]);
     RaylibWrapper::Texture2D* metallicTexture = loadTexture(publicData["metallicTexture"]);
     RaylibWrapper::Texture2D* roughnessTexture = loadTexture(publicData["roughnessTexture"]);
     RaylibWrapper::Texture2D* emissionTexture = loadTexture(publicData["emissionTexture"]);
 
+    RaylibWrapper::Color normalColor = normalTexture == &Material::whiteTexture
+        ? RaylibWrapper::Color{ 128, 128, 255 }
+        : RaylibWrapper::Color{ 255, 255, 255 };
+
     // Set material properties
-    materialPreviewMesh.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ALBEDO, *albedoTexture, albedoColor, 1);
-    materialPreviewMesh.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_NORMAL, *normalTexture, { 128, 128, 255 }, 1); // { 128, 128, 255 } is "flat" for normal maps
-    materialPreviewMesh.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_ROUGHNESS, *roughnessTexture, RaylibWrapper::WHITE, roughness);
-    materialPreviewMesh.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_METALNESS, *metallicTexture, RaylibWrapper::WHITE, metallic);
-    materialPreviewMesh.SetMaterial(0, RaylibWrapper::MATERIAL_MAP_EMISSION, *emissionTexture, RaylibWrapper::WHITE, emission);
+    materialPreviewMesh.SetMaterialMap(0, RaylibWrapper::MATERIAL_MAP_ALBEDO, *albedoTexture, albedoColor, 1);
+    materialPreviewMesh.SetMaterialMap(0, RaylibWrapper::MATERIAL_MAP_NORMAL, *normalTexture, normalColor, 1);
+    materialPreviewMesh.SetMaterialMap(0, RaylibWrapper::MATERIAL_MAP_ROUGHNESS, *roughnessTexture, RaylibWrapper::WHITE, roughness);
+    materialPreviewMesh.SetMaterialMap(0, RaylibWrapper::MATERIAL_MAP_METALNESS, *metallicTexture, RaylibWrapper::WHITE, metallic);
+    materialPreviewMesh.SetMaterialMap(0, RaylibWrapper::MATERIAL_MAP_EMISSION, *emissionTexture, RaylibWrapper::WHITE, emission);
 
     // Set up camera
     RaylibWrapper::Camera previewCamera = {
@@ -270,6 +277,12 @@ RaylibWrapper::RenderTexture2D* Editor::CreateMaterialPreview(std::filesystem::p
     materialPreviewMesh.DrawModelWrapper(0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 255, 255, 255, 255);
     RaylibWrapper::EndMode3D();
     RaylibWrapper::EndTextureMode();
+
+    RaylibWrapper::UnloadTexture(*albedoTexture);
+    RaylibWrapper::UnloadTexture(*normalTexture);
+    RaylibWrapper::UnloadTexture(*metallicTexture);
+    RaylibWrapper::UnloadTexture(*roughnessTexture);
+    RaylibWrapper::UnloadTexture(*emissionTexture);
 
     return tempRenderTextures.back();
 }
@@ -3697,6 +3710,7 @@ void Editor::RenderProperties()
                         }
                         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
                     }
+                    // TODO: Add vector3
 
                 }
                 else
@@ -4556,8 +4570,6 @@ void Editor::InitScenes()
 
 void Editor::InitMaterialPreview()
 {
-    Material::LoadWhiteTexture();
-
     materialPreviewMesh.Create(ModelType::Sphere, "MaterialPreview", ShaderManager::LitStandard, "MaterialPreview");
 
     // Setup lighting shader
@@ -4580,6 +4592,7 @@ void Editor::Cleanup()
     IconManager::Cleanup();
     ShaderManager::Cleanup();
     AssetManager::Cleanup();
+    Material::UnloadDefaultMaterial();
     ShadowManager::UnloadShaders();
     materialPreviewMesh.Unload();
     Material::UnloadWhiteTexture();
@@ -4655,6 +4668,8 @@ void Editor::Init()
     IconManager::Init();
     ShaderManager::Init();
     ShadowManager::LoadShaders();
+    Material::LoadWhiteTexture();
+    Material::LoadDefaultMaterial();
     InitMaterialPreview();
     InitMisc();
     InitScenes(); // Must go after InitMisc() and ShaderManager::Init()

@@ -4,6 +4,8 @@
 
 namespace RaylibWrapper
 {
+    constexpr int MAX_MATERIAL_MAPS = 12; // Defined "12" in raylib's config.h
+
     // Vector2, 2 components
     typedef struct Vector2 {
         float x;                // Vector x component
@@ -899,6 +901,10 @@ namespace RaylibWrapper
     //bool IsModelAnimationValid(Model model, ModelAnimation anim);                         // Check model animation skeleton match --- Moved to RaylibModelWrapper
 
     const char* GetWorkingDirectory(void);                      // Get current working directory (uses static string)
+
+    // Materials
+    //Material LoadMaterial();
+    void UnloadMaterial(Material material);
 
 
     // Audio

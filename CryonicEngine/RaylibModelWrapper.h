@@ -22,12 +22,15 @@ public:
 	void Unload();
 	void DeleteInstance();
 	void DrawModelWrapper(float posX, float posY, float posZ, float sizeX, float sizeY, float sizeZ, float rotationX, float rotationY, float rotationZ, float rotationW, unsigned char colorR, unsigned char colorG, unsigned char colorB, unsigned char colorA);
-	void SetMaterial(int materialIndex, int mapIndex, RaylibWrapper::Texture2D texture, RaylibWrapper::Color color, float intesity);
+	void SetMaterialMap(int materialIndex, int mapIndex, RaylibWrapper::Texture2D texture, RaylibWrapper::Color color, float intesity);
+	void SetMaterials(std::vector<RaylibWrapper::Material*> mats);
+	RaylibWrapper::Material GetMaterial(int index);
 	void SetShaderValue(int materialIndex, int locIndex, const void* value, int uniformType);
 	int GetShaderLocation(int materialIndex, std::string uniformName);
 	void SetShader(int materialIndex, ShaderManager::Shaders shader);
 	static void SetShadowShader(unsigned int id, int* locs);
 	static void SetMaterialPreviewShader(unsigned int id, int* locs);
+	bool IsPrimitive();
 
 private:
 	std::pair<Model, int>* model;
