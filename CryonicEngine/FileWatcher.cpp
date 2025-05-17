@@ -14,6 +14,9 @@ namespace FileWatcher
     static std::unordered_map<std::string, std::filesystem::path> deletedFiles; // file name, old path
     static std::shared_mutex deletedFilesMutex; // Needed for so deletedFiles is thread safe and wont crash from race conditions
     static std::mutex texturesMutex;
+    static std::unordered_map<std::string, std::function<void()>> modifyCallbacks;
+    static std::unordered_map<std::string, std::function<void(const std::string oldPath, const std::string newPath)>> moveCallbacks;
+    static std::unordered_map<std::string, std::function<void()>> deleteCallbacks;
 
     void Init()
     {
@@ -68,6 +71,14 @@ namespace FileWatcher
             // File was not added, and therefore assumed to not have been moved. Handle deleted files here
             deletedFiles.erase(it);
             std::cout << path.string() + " Has been deleted" << std::endl;
+
+            // Callbacks
+            std::string relativePath = std::filesystem::relative(path, ProjectManager::projectData.path / "Assets").string();
+            if (deleteCallbacks.count(relativePath))
+            {
+                deleteCallbacks[relativePath]();
+                deleteCallbacks.erase(relativePath);
+            }
         }
     }
 
@@ -80,6 +91,17 @@ namespace FileWatcher
 
         if (std::filesystem::exists(oldPath.string() + ".data"))
             std::filesystem::rename(oldPath.string() + ".data", (newPath.parent_path() / (newPath.stem().string() + newPath.extension().string() + ".data")));
+
+        // Callbacks
+        std::string relativeOldPath = std::filesystem::relative(oldPath, ProjectManager::projectData.path / "Assets").string();
+        if (moveCallbacks.count(relativeOldPath))
+        {
+            moveCallbacks[relativeOldPath](oldPath.string(), newPath.string());
+
+            // Change the callback path
+            moveCallbacks[std::filesystem::relative(newPath, ProjectManager::projectData.path / "Assets").string()] = moveCallbacks[oldPath.string()];
+            moveCallbacks.erase(relativeOldPath);
+        }
     }
 
     void FileModified(std::filesystem::path filePath) // Todo: Since we have sleeps, after the sleep, we should check if there are any newer modifications. Applications like Gimp when saving/overwriting, it modifies the file 3 times. Having this would prevent it from being loaded and unloaded 3 times.
@@ -107,5 +129,40 @@ namespace FileWatcher
             //delete it->second.first;
             //it->second.first = new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(filePath.string().c_str()));
         }
+
+        // Callbacks
+        std::string relativePath = std::filesystem::relative(filePath, ProjectManager::projectData.path / "Assets").string();
+        if (modifyCallbacks.count(relativePath))
+            modifyCallbacks[relativePath]();
+    }
+
+    void AddFileModifyCallback(std::string relativePath, std::function<void()> callback)
+    {
+        modifyCallbacks[relativePath] = callback;
+    }
+
+    void RemoveFileModifyCallback(std::string relativePath)
+    {
+        modifyCallbacks.erase(relativePath);
+    }
+
+    void AddFileMoveCallback(std::string relativePath, std::function<void(const std::string oldPath, const std::string newPath)> callback)
+    {
+        moveCallbacks[relativePath] = callback;
+    }
+
+    void RemoveFileMoveCallback(std::string relativePath)
+    {
+        moveCallbacks.erase(relativePath);
+    }
+
+    void AddFileDeletedCallback(std::string relativePath, std::function<void()> callback)
+    {
+        deleteCallbacks[relativePath] = callback;
+    }
+
+    void RemoveFileDeletedCallback(std::string relativePath)
+    {
+        deleteCallbacks.erase(relativePath);
     }
 };
