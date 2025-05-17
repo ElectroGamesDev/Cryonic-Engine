@@ -14,9 +14,14 @@ namespace FileWatcher
     static std::unordered_map<std::string, std::filesystem::path> deletedFiles; // file name, old path
     static std::shared_mutex deletedFilesMutex; // Needed for so deletedFiles is thread safe and wont crash from race conditions
     static std::mutex texturesMutex;
+
     static std::unordered_map<std::string, std::function<void()>> modifyCallbacks;
     static std::unordered_map<std::string, std::function<void(const std::string oldPath, const std::string newPath)>> moveCallbacks;
     static std::unordered_map<std::string, std::function<void()>> deleteCallbacks;
+
+    static std::unordered_map<std::string, std::function<void(const std::string&)>> globalModifyCallbacks;
+    static std::unordered_map<std::string, std::function<void(const std::string&, const std::string&)>> globalMoveCallbacks;
+    static std::unordered_map<std::string, std::function<void(const std::string&)>> globalDeleteCallbacks;
 
     void Init()
     {
@@ -79,6 +84,9 @@ namespace FileWatcher
                 deleteCallbacks[relativePath]();
                 deleteCallbacks.erase(relativePath);
             }
+
+            for (auto& [id, callback] : globalDeleteCallbacks)
+                callback(path.string());
         }
     }
 
@@ -102,6 +110,9 @@ namespace FileWatcher
             moveCallbacks[std::filesystem::relative(newPath, ProjectManager::projectData.path / "Assets").string()] = moveCallbacks[oldPath.string()];
             moveCallbacks.erase(relativeOldPath);
         }
+
+        for (auto& [id, callback] : globalMoveCallbacks)
+            callback(oldPath.string(), newPath.string());
     }
 
     void FileModified(std::filesystem::path filePath) // Todo: Since we have sleeps, after the sleep, we should check if there are any newer modifications. Applications like Gimp when saving/overwriting, it modifies the file 3 times. Having this would prevent it from being loaded and unloaded 3 times.
@@ -134,8 +145,12 @@ namespace FileWatcher
         std::string relativePath = std::filesystem::relative(filePath, ProjectManager::projectData.path / "Assets").string();
         if (modifyCallbacks.count(relativePath))
             modifyCallbacks[relativePath]();
+
+        for (auto& [id, callback] : globalModifyCallbacks)
+            callback(filePath.string());
     }
 
+    // Specific file Callbacks
     void AddFileModifyCallback(std::string relativePath, std::function<void()> callback)
     {
         modifyCallbacks[relativePath] = callback;
@@ -164,5 +179,36 @@ namespace FileWatcher
     void RemoveFileDeletedCallback(std::string relativePath)
     {
         deleteCallbacks.erase(relativePath);
+    }
+
+    // Global 
+    void AddGlobalModifyCallback(std::string& id, std::function<void(const std::string& path)> callback)
+    {
+        globalModifyCallbacks[id] = callback;
+    }
+
+    void RemoveGlobalModifyCallback(std::string& relativePath)
+    {
+        globalModifyCallbacks.erase(relativePath);
+    }
+
+    void AddGlobalMoveCallback(std::string& id, std::function<void(const std::string& oldPath, const std::string& newPath)> callback)
+    {
+        globalMoveCallbacks[id] = callback;
+    }
+
+    void RemoveGlobalMoveCallback(std::string& id)
+    {
+        globalMoveCallbacks.erase(id);
+    }
+
+    void AddGlobalDeletedCallback(std::string& id, std::function<void(const std::string& path)> callback)
+    {
+        globalDeleteCallbacks[id] = callback;
+    }
+
+    void RemoveGlobalDeletedCallback(std::string& id)
+    {
+        globalDeleteCallbacks.erase(id);
     }
 };
