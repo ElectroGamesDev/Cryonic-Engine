@@ -50,6 +50,7 @@
 #include "EditorWindow.h"
 #include "EventSheetEditor.h"
 #include "MainThreadQueue.h"
+#include "ScriptingTools/ScriptHeaderGenerator.h"
 
 //#define STB_IMAGE_IMPLEMENTATION
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -89,6 +90,7 @@ RaylibWrapper::Vector2 lastMousePosition = { 0 };
 bool animationGraphHovered = false;
 
 bool explorerContextMenuOpen = false;
+std::filesystem::path explorerContextMenuFile;
 bool hierarchyContextMenuOpen = false;
 GameObject* objectInHierarchyContextMenu = nullptr;
 bool hierarchyObjectClicked = false;
@@ -742,7 +744,10 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
         ImGui::SetCursorPos(ImVec2(305, 22));
         if (RaylibWrapper::rlImGuiImageButtonSize("##FileAddButton", IconManager::imageTextures["AddIcon"], ImVec2(16, 16)))
+        {
             explorerContextMenuOpen = true; // Todo: Not working
+            explorerContextMenuFile = "";
+        }
 
         //ImGui::SetCursorPos(ImVec2(325, 23));
         //if (rlImGuiImageButtonSize("##FileHomeButton", IconManager::imageTextures["HomeIcon"], ImVec2(17, 17)))
@@ -814,6 +819,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 std::filesystem::create_directories(ProjectManager::projectData.path / "Assets");
             fileExplorerPath = ProjectManager::projectData.path / "Assets";
         }
+
+        std::filesystem::path fileHovered;
+
         for (const auto& entry : std::filesystem::directory_iterator(fileExplorerPath))
         {
             ImGui::PushID(entry.path().string().c_str());
@@ -843,13 +851,17 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 focusContentBrowserFile = "";
             }
 
+            bool hovered = ImGui::IsMouseHoveringRect(ImGui::GetCursorScreenPos(), { ImGui::GetCursorScreenPos().x + 40, ImGui::GetCursorScreenPos().y + 38 }); // Using this since ImGui::IsItemHovered() won't work. ImGui::IsWindowHovered() also won't work for this. It seems these break when attempting to drag a button
+
+            if (hovered)
+                fileHovered = entry;
+
             if (entry.is_directory())
             {
                 // Need to create custom hover check code since ImGui::IsItemHovered() won't trigger as when dragging a file the ImGui Mouse Position doesn't update
                 //static bool hoveringButton = false;
                 //ImGui::GetWindowDrawList()->AddRectFilled(ImGui::GetCursorScreenPos(), { ImGui::GetCursorScreenPos().x + 40, ImGui::GetCursorScreenPos().y + 38 }, IM_COL32(255,0,0,255));
-                bool hovered = (dragData.first != None && ImGui::IsMouseHoveringRect(ImGui::GetCursorScreenPos(), { ImGui::GetCursorScreenPos().x + 40, ImGui::GetCursorScreenPos().y + 38 })); // Using this since ImGui::IsItemHovered() won't work. ImGui::IsWindowHovered() also won't work for this. It seems these break when attempting to drag a button
-                if (hovered)
+                if (hovered && dragData.first != None)
                 {
                     folderHovering = entry;
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.38f, 0.38f, 0.38f, 1.00f));
@@ -868,7 +880,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     {
                         fileExplorerPath = entry.path();
-                        if (hovered)
+                        if (hovered && dragData.first != None)
                             ImGui::PopStyleColor(3);
                         else
                             ImGui::PopStyleColor(2);
@@ -880,7 +892,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                 //if (ImGui::IsMouseHoveringRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax())) // Using this since ImGui::IsItemHovered() won't work. ImGui::IsWindowHovered() also won't work for this. It seems these break when attempting to drag a button
                     //ConsoleLogger::ErrorLog("Hovered");
-                if (hovered)
+                if (hovered && dragData.first != None)
                     ImGui::PopStyleColor();
                 //ConsoleLogger::InfoLog("Mouse Pos: " + std::to_string(mousePos.x) + " " + std::to_string(mousePos.y));
                 //ConsoleLogger::InfoLog("Item Pos: " + std::to_string(itemPos.x) + " " + std::to_string(itemPos.y));
@@ -1360,6 +1372,25 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         if (std::filesystem::exists(renamingFile.string() + ".data"))
                             std::filesystem::rename(renamingFile.string() + ".data", (renamingFile.parent_path() / (newFileName + renamingFile.extension().string() + ".data")));
 
+                        // Check if a script file was renamed
+                        if (renamingFile.extension() == ".cpp")
+                        {
+                            std::filesystem::path headerPath = renamingFile;
+                            headerPath.replace_extension(".h");
+
+                            if (std::filesystem::exists(headerPath))
+                                std::filesystem::rename(headerPath, (renamingFile.parent_path() / (newFileName + std::string(".h"))));
+                        }
+
+                        if (renamingFile.extension() == ".h")
+                        {
+                            std::filesystem::path cppPath = renamingFile;
+                            cppPath.replace_extension(".cpp");
+
+                            if (std::filesystem::exists(cppPath))
+                                std::filesystem::rename(cppPath, (renamingFile.parent_path() / (newFileName + std::string(".cpp"))));
+                        }
+
                         fileRenameFirstFrame = true;
                     }
                     renamingFile = "";
@@ -1766,19 +1797,21 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
 
         // Context Menu
-        if (explorerContextMenuOpen || (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
+        if (!explorerContextMenuOpen && (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
+        {
+            explorerContextMenuOpen = true;
+            explorerContextMenuFile = fileHovered;
+        }
+
+        if (explorerContextMenuOpen)
         {
             explorerContextMenuOpen = true;
             if (ImGui::BeginPopupContextWindow())
             {
-                // Todo: Make Rename only fix right click on a file
-                //if (ImGui::MenuItem("Rename", "F2"))
-                //{
-                //    explorerContextMenuOpen = false;
-                //}
                 if (ImGui::MenuItem("Create Script"))
                 {
                     explorerContextMenuOpen = false;
+                    explorerContextMenuFile = "";
                     scriptCreateWinOpen = true;
                 }
                 if (ImGui::BeginMenu("Visual Scripting"))
@@ -1786,6 +1819,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     if (ImGui::MenuItem("Create EventSheet"))
                     {
                         explorerContextMenuOpen = false;
+                        explorerContextMenuFile = "";
                         std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "EventSheet", "es");
                         if (filePath != "")
                         {
@@ -1821,6 +1855,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Create Scene"))
                 {
                     explorerContextMenuOpen = false;
+                    explorerContextMenuFile = "";
                     std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "New Scene", "scene");
                     SceneManager::CreateScene(filePath);
                     if (filePath != "")
@@ -1836,10 +1871,12 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Create Sprite"))
                 {
                     explorerContextMenuOpen = false;
+                    explorerContextMenuFile = "";
                 }
                 if (ImGui::MenuItem("Create Material"))
                 {
                     explorerContextMenuOpen = false;
+                    explorerContextMenuFile = "";
                     std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "New Material", "mat");
                     if (filePath != "")
                     {
@@ -1890,6 +1927,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Create Animation Graph"))
                 {
                     explorerContextMenuOpen = false;
+                    explorerContextMenuFile = "";
                     std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Animation Graph", "animgraph");
                     if (filePath != "")
                     {
@@ -1934,6 +1972,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Create Canvas"))
                 {
                     explorerContextMenuOpen = false;
+                    explorerContextMenuFile = "";
                     std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Canvas", "canvas");
 
                     std::string filePathString = filePath.string();
@@ -1976,6 +2015,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::MenuItem("Create Folder"))
                 {
                     explorerContextMenuOpen = false;
+                    explorerContextMenuFile = "";
                     std::filesystem::path folderPath = Utilities::CreateUniqueFile(fileExplorerPath, "New Folder", "");
                     if (folderPath != "")
                     {
@@ -1990,13 +2030,70 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                 ImGui::Separator();
 
+                ImGui::BeginDisabled();
+                if (ImGui::MenuItem("Paste", "CTRL+V"))
+                {
+                    explorerContextMenuOpen = false;
+                    explorerContextMenuFile = "";
+                }
+                ImGui::EndDisabled();
+
+                ImGui::Separator();
+
                 if (ImGui::MenuItem("Open In File Explorer"))
                 {
                     explorerContextMenuOpen = false;
+                    explorerContextMenuFile = "";
                     Utilities::OpenPathInExplorer(fileExplorerPath);
                 }
 
+                if (!explorerContextMenuFile.empty())
+                {
+                    ImGui::Separator();
+
+                    if (ImGui::MenuItem("Rename", "F2"))
+                    {
+                        explorerContextMenuOpen = false;
+                        renamingFile = explorerContextMenuFile;
+                        strcpy_s(newFileName, sizeof(newFileName), explorerContextMenuFile.stem().string().c_str());
+                    }
+
+                    if (ImGui::MenuItem("Copy", "CTRL+C"))
+                    {
+                        explorerContextMenuOpen = false;
+                        explorerContextMenuFile = "";
+                    }
+
+                    if (ImGui::MenuItem("Duplicate", "CTRL+D"))
+                    {
+                        std::string newFilename;
+                        int counter = 1;
+                        do {
+                            newFilename = explorerContextMenuFile.stem().string() + " copy" + (counter > 1 ? std::to_string(counter) : "") + explorerContextMenuFile.extension().string();
+                            counter++;
+                        } while (std::filesystem::exists(explorerContextMenuFile.parent_path() / newFilename));
+
+                        std::filesystem::copy_file(explorerContextMenuFile, explorerContextMenuFile.parent_path() / newFilename, std::filesystem::copy_options::overwrite_existing);
+
+                        explorerContextMenuOpen = false;
+                        explorerContextMenuFile = "";
+                    }
+
+                    if (ImGui::MenuItem("Delete", "DEL"))
+                    {
+                        std::filesystem::remove_all(explorerContextMenuFile);
+
+                        explorerContextMenuOpen = false;
+                        explorerContextMenuFile = "";
+                    }
+                }
+
                 ImGui::EndPopup();
+            }
+            else
+            {
+                explorerContextMenuOpen = false;
+                explorerContextMenuFile = "";
             }
 
         }
@@ -4678,6 +4775,7 @@ void Editor::Init()
     AssetManager::Init(&EditorWindow::defaultWindowClass);
 
     FileWatcher::Init();
+    ScriptHeaderGenerator::Init();
 
     while (!closeEditor)
     {
