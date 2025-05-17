@@ -1742,7 +1742,7 @@ ProjectData ProjectManager::LoadProjectData(std::filesystem::path projectPath) /
     return projectData;
 }
 
-void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path path)
+void ProjectManager::GenerateExposedVariablesFunctions(std::filesystem::path path) // Todo: Move to ScriptingTools directory
 {
     std::unordered_map<std::filesystem::path, std::unordered_map<int, nlohmann::json>> components;
 
