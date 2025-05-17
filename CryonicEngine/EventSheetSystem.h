@@ -20,6 +20,13 @@ namespace EventSheetSystem
 		MouseButtonPressed = 6,
 		MouseButtonReleased = 7,
 		MouseButtonDown = 8,
+		MouseMoved = 9,
+		MouseInZone = 10,
+
+		GamepadButtonPressed = 11,
+		GamepadButtonReleased = 12,
+		GamepadButtonDown = 13,
+		GamepadAxisMoved = 14
 	};
 
 	enum class Actions {
