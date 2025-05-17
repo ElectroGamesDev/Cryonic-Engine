@@ -15,6 +15,7 @@ class Collider3D;
 #define PUBLIC  
 #define PRIVATE
 #define PROTECTED
+#define STATIC
 
 class Component
 {
