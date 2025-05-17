@@ -25,12 +25,12 @@ namespace FileWatcher
     void AddFileDeletedCallback(std::string relativePath, std::function<void()> callback);
     void RemoveFileDeletedCallback(std::string relativePath);
 
-    void AddGlobalModifyCallback(std::string& id, std::function<void(const std::string& path)> callback);
-    void RemoveGlobalModifyCallback(std::string& id);
+    void AddGlobalModifyCallback(std::string id, std::function<void(const std::string path)> callback);
+    void RemoveGlobalModifyCallback(std::string id);
 
-    void AddGlobalMoveCallback(std::string& id, std::function<void(const std::string& oldPath, const std::string& newPath)> callback);
-    void RemoveGlobalMoveCallback(std::string& id);
+    void AddGlobalMoveCallback(std::string id, std::function<void(const std::string oldPath, const std::string newPath)> callback);
+    void RemoveGlobalMoveCallback(std::string id);
 
-    void AddGlobalDeletedCallback(std::string& id, std::function<void(const std::string& path)> callback);
-    void RemoveGlobalDeletedCallback(std::string& id);
+    void AddGlobalDeletedCallback(std::string id, std::function<void(const std::string& path)> callback);
+    void RemoveGlobalDeletedCallback(std::string id);
 };
