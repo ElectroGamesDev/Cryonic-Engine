@@ -31,6 +31,6 @@ namespace FileWatcher
     void AddGlobalMoveCallback(std::string id, std::function<void(const std::filesystem::path oldPath, const std::filesystem::path newPath)> callback);
     void RemoveGlobalMoveCallback(std::string id);
 
-    void AddGlobalDeletedCallback(std::string id, std::function<void(const std::filesystem::path& path)> callback);
+    void AddGlobalDeletedCallback(std::string id, std::function<void(const std::filesystem::path path)> callback);
     void RemoveGlobalDeletedCallback(std::string id);
 };
