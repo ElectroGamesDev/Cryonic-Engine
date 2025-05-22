@@ -215,6 +215,7 @@
     <ClCompile Include="RenderableTexture.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\SceneManager.cpp" />
+    <ClCompile Include="ScriptingTools\ScriptHeaderGenerator.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="ShadowManager.cpp" />
     <ClCompile Include="Sprite.cpp" />
@@ -296,6 +297,7 @@
     <ClInclude Include="RenderableTexture.h" />
     <ClInclude Include="Scenes\Scene.h" />
     <ClInclude Include="Scenes\SceneManager.h" />
+    <ClInclude Include="ScriptingTools\ScriptHeaderGenerator.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="ShadowManager.h" />
     <ClInclude Include="Sprite.h" />

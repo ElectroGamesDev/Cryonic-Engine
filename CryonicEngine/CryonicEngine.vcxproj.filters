@@ -40,6 +40,12 @@
     <Filter Include="Header Files\GUI">
       <UniqueIdentifier>{bfcc3e3b-284c-4ab5-b957-44ea67bcd22a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ScriptingTools">
+      <UniqueIdentifier>{c7b66302-25b6-4b98-b513-d67ba4e09679}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ScriptingTools">
+      <UniqueIdentifier>{5e7f1bf3-917b-4b56-aa78-ca9de03b6e36}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CryonicEngine.cpp">
@@ -236,6 +242,9 @@
     </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptingTools\ScriptHeaderGenerator.cpp">
+      <Filter>Source Files\ScriptingTools</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -475,6 +484,9 @@
     </ClInclude>
     <ClInclude Include="MainThreadQueue.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptingTools\ScriptHeaderGenerator.h">
+      <Filter>Header Files\ScriptingTools</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
