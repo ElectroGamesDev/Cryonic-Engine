@@ -11,7 +11,9 @@
 #endif
 #include "CryonicCore.h"
 #include "Sprite.h"
+#ifdef EDITOR
 #include "FileWatcher.h"
+#endif
 #include "ShaderManager.h"
 
 class Material
