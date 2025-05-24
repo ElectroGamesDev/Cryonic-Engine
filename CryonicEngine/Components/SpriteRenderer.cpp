@@ -8,7 +8,8 @@
 void SpriteRenderer::Awake()
 {
 #if defined(EDITOR)
-    sprite = new Sprite(exposedVariables[1][0][2].get<std::string>()); // Todo: Handle if the path no longer exists
+    if (!sprite)
+        sprite = new Sprite(exposedVariables[1][0][2].get<std::string>()); // Todo: Handle if the path no longer exists
 #endif
 
     textures.push_back(this);
@@ -55,6 +56,10 @@ void SpriteRenderer::SetSprite(Sprite* sprite)
     }
 
     this->sprite = sprite;
+
+#if defined (EDITOR)
+    exposedVariables[1][0][2] = sprite->GetRelativePath();
+#endif
 
     // Todo: Check to make sure the texture file exists, if it doesn't then replace it with some kind of NULL txture
 
