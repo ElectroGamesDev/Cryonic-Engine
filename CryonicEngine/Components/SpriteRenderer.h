@@ -72,6 +72,8 @@ public:
 	void Destroy() override;
 	void Render() override;
 
+	bool IntersectsPoint(Vector2 pos);
+
 	void SetSprite(Sprite* sprite);
 	Sprite* GetSprite();
 	void SetTint(Color tint);

@@ -24,6 +24,26 @@ void SpriteRenderer::Start()
     sorted = true;
 }
 
+bool SpriteRenderer::IntersectsPoint(Vector2 pos)
+{
+    if (!sprite)
+        return false;
+
+    RaylibWrapper::Texture2D* texture = sprite->GetTexture();
+
+    if (!texture)
+        return false;
+
+    Vector2 size = { gameObject->transform.GetScale().x, gameObject->transform.GetScale().y };
+
+    // TODO: Rotation needs to be considered
+    // Todo: Currently not working
+    return RaylibWrapper::CheckCollisionRecs(
+        { pos.x, pos.y, 1, 1 },
+        { gameObject->transform.GetPosition().x - size.x / 2, gameObject->transform.GetPosition().y - size.y / 2, size.x, size.y } // Subtracting by size / 2 so it uses the correct position since the sprite is centered
+    );
+}
+
 void SpriteRenderer::SetSprite(Sprite* sprite)
 {
     if (this->sprite != nullptr)
