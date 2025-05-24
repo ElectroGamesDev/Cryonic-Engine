@@ -434,12 +434,14 @@ void MainLoop()
 		}
 	}
 	GameObject::markForDeletion = false;
+
 	for (GameObject* gameObject : GameObject::markedForDeletion)
 	{
 		if (gameObject)
 			SceneManager::GetActiveScene()->RemoveGameObject(gameObject);
 	}
 	GameObject::markedForDeletion.clear();
+
 	for (Component* component : Component::markedForDeletion)
 		if (component && component->gameObject)
 			component->gameObject->RemoveComponent(component);
