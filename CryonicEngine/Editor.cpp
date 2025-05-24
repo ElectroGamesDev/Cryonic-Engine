@@ -511,6 +511,62 @@ void Editor::RenderViewport()
                 selectedObject->transform.SetPosition(position);
             }
         }
+
+        // Select game object by clicking it
+        // Todo: This does not work properly. It has an offset on the Y axis and for some reason different zoom levels (the camera fovy) effects the position. Rotation is also currently not considered.
+        if (ImGui::IsWindowHovered() && !movingObjectX && !movingObjectY && !movingObjectZ && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
+            mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
+            mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
+
+            RaylibWrapper::Vector3 rayPosition = RaylibWrapper::GetScreenToWorldRay(mousePosition, camera).position;
+
+            //ConsoleLogger::InfoLog("X: " + std::to_string(rayPosition.x) + " Y: " + std::to_string(rayPosition.y));
+
+            GameObject* closestObject = nullptr;
+            float distance = FLT_MAX;
+
+            if (ProjectManager::projectData.is3D)
+            {
+                // Todo: Implement this
+            }
+            else
+            {
+                for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+                {
+                    if (!gameObject->IsActive() || !gameObject->IsGlobalActive())
+                        continue;
+
+                    SpriteRenderer* spriteRenderer = gameObject->GetComponent<SpriteRenderer>();
+
+                    if (!spriteRenderer || !spriteRenderer->IsActive())
+                        continue;
+
+                    if (spriteRenderer->IntersectsPoint({ rayPosition.x, rayPosition.y }))
+                    {
+                        float zPos = gameObject->transform.GetPosition().z;
+                        if (zPos < distance)
+                        {
+                            distance = zPos;
+                            closestObject = gameObject;
+                        }
+                    }
+                }
+            }
+
+            if (closestObject)
+            {
+                selectedObject = closestObject;
+                objectInProperties = selectedObject;
+            }
+            else if (selectedObject)
+            {
+                selectedObject = nullptr;
+                objectInProperties = std::monostate{};
+            }
+        }
+
         lastMousePosition = RaylibWrapper::GetMousePosition();
     }
 
