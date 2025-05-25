@@ -416,12 +416,19 @@ void MainLoop()
 
 	// Call components Update()
 	GameObject::markForDeletion = true;
-	for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
+	auto& gameObjects = SceneManager::GetActiveScene()->GetGameObjects();
+	for (size_t i = 0; i < gameObjects.size(); ++i)
 	{
-		if (!gameObject->IsActive()) continue;
+		GameObject* gameObject = gameObjects[i];
+
+		if (!gameObject->IsActive())
+			continue;
+
 		for (Component* component : gameObject->GetComponents())
 		{
-			if (!component->IsActive()) continue;
+			if (!component->IsActive())
+				continue;
+
 			component->Update();
 			deltaTime = tempDelaTime; // Setting this here and before the loop incase if a component changes the delta time
 
