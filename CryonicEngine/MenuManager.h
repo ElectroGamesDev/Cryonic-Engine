@@ -2,7 +2,7 @@
 
 #include <stack>
 #include "GameObject.h"
-#include "Event.h"
+#include "EventSystem.h"
 
 namespace MenuManager
 {
@@ -12,6 +12,7 @@ namespace MenuManager
 		std::function<void()> closeCallback;
 	};
 
+	void Init();
 	void OpenMenu(GameObject* menu, std::function<void()> closeCallback = nullptr);
 	void CloseTopMenu();
 	void CloseAllMenus();

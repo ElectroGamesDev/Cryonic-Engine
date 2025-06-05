@@ -6,6 +6,13 @@ namespace MenuManager
 	static Event globalOpenEvent;
 	static Event globalCloseEvent;
 
+	void Init()
+	{
+#if !defined(EDITOR)
+		EventSystem::Subscribe("ActiveSceneChanged", CloseAllMenus);
+#endif
+	}
+
 	void OpenMenu(GameObject* menu, std::function<void()> closeCallback)
 	{
 		menu->SetActive(true);
