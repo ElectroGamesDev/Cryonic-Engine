@@ -6,8 +6,8 @@
 class Event
 {
 public:
-	void Subscribe(std::function<void()>& callback);
-	void Unsubscribe(std::function<void()>& callback);
+	void Subscribe(std::function<void()> callback);
+	void Unsubscribe(std::function<void()> callback);
 	void Invoke();
 	int CallbackCount();
 

@@ -6,7 +6,7 @@
 
 namespace EventSystem
 {
-    void Subscribe(std::string eventName, std::function<void()>& callback);
-    void Unsubscribe(std::string eventName, std::function<void()>& callback);
+    void Subscribe(std::string eventName, std::function<void()> callback);
+    void Unsubscribe(std::string eventName, std::function<void()> callback);
     void Invoke(std::string eventName);
 };

@@ -5,7 +5,7 @@ namespace EventSystem
 {
     static std::unordered_map<std::string, Event> events;
 
-    void Subscribe(std::string eventName, std::function<void()>& callback)
+    void Subscribe(std::string eventName, std::function<void()> callback)
     {
         auto it = events.find(eventName);
 
@@ -20,7 +20,7 @@ namespace EventSystem
 
     }
 
-    void Unsubscribe(std::string eventName, std::function<void()>& callback)
+    void Unsubscribe(std::string eventName, std::function<void()> callback)
     {
         auto it = events.find(eventName);
         if (it != events.end())

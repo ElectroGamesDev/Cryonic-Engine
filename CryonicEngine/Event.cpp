@@ -1,12 +1,12 @@
 #include "Event.h"
 #include <algorithm>
 
-void Event::Subscribe(std::function<void()>& callback)
+void Event::Subscribe(std::function<void()> callback)
 {
 	callbacks.push_back(callback);
 }
 
-void Event::Unsubscribe(std::function<void()>& callback)
+void Event::Unsubscribe(std::function<void()> callback)
 {
     callbacks.erase(std::remove_if(callbacks.begin(), callbacks.end(),
             [&](const std::function<void()>& c) {
