@@ -34,6 +34,7 @@
 #include "../ProjectManager.h"
 #else
 #include "../Game.h"
+#include "../EventSystem.h"
 #endif
 #include "../RaylibWrapper.h"
 
@@ -55,6 +56,11 @@ void SceneManager::SetActiveScene(Scene* scene) {
     {
         if (scene->GetPath() == m_activeScene->GetPath())
             return;
+
+#if !defined(EDITOR)
+        EventSystem::Invoke("ActiveSceneChanged");
+#endif
+
         UnloadScene(m_activeScene); // Todo: Maybe this should be moved to LoadScene()
     }
     m_activeScene = scene;
