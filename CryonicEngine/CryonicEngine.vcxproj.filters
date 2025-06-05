@@ -246,6 +246,12 @@
     <ClCompile Include="ScriptingTools\ScriptHeaderGenerator.cpp">
       <Filter>Source Files\ScriptingTools</Filter>
     </ClCompile>
+    <ClCompile Include="Event.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -487,6 +493,12 @@
     </ClInclude>
     <ClInclude Include="ScriptingTools\ScriptHeaderGenerator.h">
       <Filter>Header Files\ScriptingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MenuManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -193,6 +193,7 @@
     <ClCompile Include="CryonicEngine.cpp" />
     <ClCompile Include="Editor.cpp" />
     <ClCompile Include="EditorWindow.cpp" />
+    <ClCompile Include="Event.cpp" />
     <ClCompile Include="EventSheetEditor.cpp" />
     <ClCompile Include="EventSystem.cpp" />
     <ClCompile Include="FileWatcher.cpp" />
@@ -202,6 +203,7 @@
     <ClCompile Include="Components\SpriteRenderer.cpp" />
     <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="Material.cpp" />
+    <ClCompile Include="MenuManager.cpp" />
     <ClCompile Include="Physics2DDebugDraw.cpp" />
     <ClCompile Include="Physics3DDebugDraw.cpp" />
     <ClCompile Include="ProjectManager.cpp" />
@@ -271,6 +273,7 @@
     <ClInclude Include="CryonicCore.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="EditorWindow.h" />
+    <ClInclude Include="Event.h" />
     <ClInclude Include="EventSheetEditor.h" />
     <ClInclude Include="EventSheetSystem.h" />
     <ClInclude Include="EventSystem.h" />
@@ -284,6 +287,7 @@
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="MainThreadQueue.h" />
     <ClInclude Include="Material.h" />
+    <ClInclude Include="MenuManager.h" />
     <ClInclude Include="Physics2DDebugDraw.h" />
     <ClInclude Include="Physics3DDebugDraw.h" />
     <ClInclude Include="ProjectManager.h" />
