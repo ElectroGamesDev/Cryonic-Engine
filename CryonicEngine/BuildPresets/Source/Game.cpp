@@ -13,6 +13,7 @@
 #include "RenderableTexture.h"
 #include "ShadowManager.h"
 #include "Material.h"
+#include "MenuManager.h"
 #ifdef WINDOWS
 // Prevent Windows from defining conflicting functions
 #define NOGDI
@@ -259,6 +260,7 @@ int main(void)
 	ShaderManager::Init();
 	Material::LoadDefaultMaterial();
 	ShadowManager::LoadShaders();
+	MenuManager::Init();
 
 	// Todo: This assumes the default scene path and name
 	if (exeParent.empty())
