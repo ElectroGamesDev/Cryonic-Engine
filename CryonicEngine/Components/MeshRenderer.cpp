@@ -141,7 +141,8 @@ void MeshRenderer::SetMaterial(Material* mat) // Todo: MEMORY LEAK! We shouldn't
             ////    newMat.maps[RaylibWrapper::MATERIAL_MAP_EMISSION] = { *material->GetEmissionSprite()->GetTexture(), { 255, 255, 255, 255 }, material->GetEmission() };
             ////else
             ////    newMat.maps[RaylibWrapper::MATERIAL_MAP_EMISSION] = { Material::whiteTexture , { 255, 255, 255, 255 }, material->GetEmission() };
-
+            
+            // Todo: Consider supporting multiple materials
             raylibModel.SetMaterials({ material->GetRaylibMaterial()});
         }
     }
