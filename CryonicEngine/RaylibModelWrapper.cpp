@@ -284,10 +284,11 @@ void RaylibModel::SetMaterials(std::vector<RaylibWrapper::Material*> mats) // To
 
     model->first.materialCount = mats.size();
     model->first.materials = new Material[mats.size()];
-    model->first.materials->maps = new MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
 
     for (size_t i = 0; i < mats.size(); ++i)
     {
+        model->first.materials[i].maps = new MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
+
         RaylibWrapper::Material& mat = *mats[i];
         Material& material = model->first.materials[i];
 
