@@ -1,5 +1,6 @@
 #include "Material.h"
 #include "ShaderManager.h"
+#include "ShadowManager.h"
 
 std::unordered_map<std::filesystem::path, Material*> Material::materials;
 RaylibWrapper::Material Material::defaultMaterial;
@@ -7,9 +8,11 @@ RaylibWrapper::Texture2D Material::whiteTexture;
 
 void Material::LoadDefaultMaterial()
 {
-    std::pair<unsigned int, int*> shader = ShaderManager::GetShader(ShaderManager::LitStandard); // Todo: Change this to get the shader in the material
-    defaultMaterial.shader.id = shader.first;
-    defaultMaterial.shader.locs = shader.second;
+    //std::pair<unsigned int, int*> shader = ShaderManager::GetShader(ShaderManager::LitStandard);
+    //defaultMaterial.shader.id = shader.first;
+    //defaultMaterial.shader.locs = shader.second;
+    defaultMaterial.shader.id = ShadowManager::shader.id;
+    defaultMaterial.shader.locs = ShadowManager::shader.locs;
 
     defaultMaterial.maps = new RaylibWrapper::MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
     defaultMaterial.maps[RaylibWrapper::MATERIAL_MAP_ALBEDO] = { Material::whiteTexture , { 220, 220, 220, 255 }, 1 };
