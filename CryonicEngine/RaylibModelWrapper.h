@@ -24,7 +24,13 @@ public:
 	void DrawModelWrapper(float posX, float posY, float posZ, float sizeX, float sizeY, float sizeZ, float rotationX, float rotationY, float rotationZ, float rotationW, unsigned char colorR, unsigned char colorG, unsigned char colorB, unsigned char colorA);
 	void SetMaterialMap(int materialIndex, int mapIndex, RaylibWrapper::Texture2D texture, RaylibWrapper::Color color, float intesity);
 	void SetMaterials(std::vector<RaylibWrapper::Material*> mats);
-	RaylibWrapper::Material GetMaterial(int index);
+	void SetEmbeddedMaterials();
+	void SetMaterialsToEmbedded();
+	std::vector<int> GetMaterialIDs();
+	bool CompareMaterials(std::vector<int> matIDs);
+	int GetMaterialCount();
+	int GetMaterialID(int index);
+	//RaylibWrapper::Material GetMaterial(int index);
 	void SetShaderValue(int materialIndex, int locIndex, const void* value, int uniformType);
 	int GetShaderLocation(int materialIndex, std::string uniformName);
 	void SetShader(int materialIndex, ShaderManager::Shaders shader);
@@ -35,6 +41,9 @@ public:
 private:
 	std::pair<Model, int>* model;
 	bool primitiveModel = false;
+	std::filesystem::path path;
+	// This was removed because it added overhead for something that has an easier solution. It will only need to be re-added if GetMaterial() is needed
+	//static std::unordered_map<Model, std::vector<RaylibWrapper::Material>> rWrapperMaterials; // Model can not be used as a key. A pointer could be used though.
 	ShaderManager::Shaders modelShader;
 	static std::pair<unsigned int, int*> shadowShader;
 	static std::pair<unsigned int, int*> materialPreviewShadowShader;

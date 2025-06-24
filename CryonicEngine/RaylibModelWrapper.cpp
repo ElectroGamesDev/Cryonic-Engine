@@ -8,8 +8,10 @@
 
 static std::unordered_map<std::filesystem::path, std::pair<Model, int>> models;
 static std::unordered_map<ModelType, std::pair<Model, int>> primitiveModels;
+static std::unordered_map<std::filesystem::path, std::vector<Material>> embeddedMaterials;
 std::pair<unsigned int, int*> RaylibModel::shadowShader;
 std::pair<unsigned int, int*> RaylibModel::materialPreviewShadowShader;
+//std::unordered_map<Model, std::vector<RaylibWrapper::Material>> RaylibModel::rWrapperMaterials;
 
 bool RaylibModel::Create(ModelType type, std::filesystem::path path, ShaderManager::Shaders shader, std::filesystem::path projectPath)
 {
@@ -117,6 +119,39 @@ bool RaylibModel::Create(ModelType type, std::filesystem::path path, ShaderManag
             model->first.materials[i].shader = { shadowShader.first, shadowShader.second };
     }
 
+    for (int i = 0; i < model->first.materialCount; i++)
+    {
+        // Setting the embedded materials' ID to 1 (the ID for embedded materials)
+        model->first.materials[i].params[0] = static_cast<int>(1);
+
+        // Setup the rWrapperMaterials so functions like GetMaterials() can be used
+        //RaylibWrapper::Material mat;
+
+        //mat.maps = new RaylibWrapper::MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
+
+        //for (int j = 0; j < RaylibWrapper::MAX_MATERIAL_MAPS; ++j)
+        //{
+        //    MaterialMap& map = model->first.materials[i].maps[j];
+        //    mat.maps[j] = {
+        //        { map.texture.id, map.texture.width, map.texture.height, map.texture.mipmaps, map.texture.format},
+        //        { map.color.r, map.color.g, map.color.b, map.color.a },
+        //        1.0f
+        //    };
+        //}
+
+        //mat.shader.id = model->first.materials[i].shader.id;
+        //mat.shader.locs = model->first.materials[i].shader.locs;
+
+        //for (int j = 0; j < 4; j++)
+        //    mat.params[j] = model->first.materials[i].params[j];
+
+        //rWrapperMaterials[model->first].push_back(mat);
+    }
+
+    this->path = path;
+
+    SetEmbeddedMaterials();
+
     return true;
 }
 
@@ -124,6 +159,7 @@ void RaylibModel::Unload()
 {
     if (model == nullptr)
         return;
+
     UnloadModel(model->first);
     if (primitiveModel)
     {
@@ -154,6 +190,13 @@ void RaylibModel::Unload()
         }
     }
     model = nullptr;
+
+    // Only delete the maps for embedded materials. I don't think I need to delete the maps for non-embedded materials since they use the same pointers as the mats paramter. If there are issues, then deep copy the maps.
+    //if (rWrapperMaterials[model->first][0].params[0] == 1)
+    //    for (RaylibWrapper::Material& mat : rWrapperMaterials[model->first])
+    //        delete[] mat.maps;
+
+    //rWrapperMaterials.clear();
 }
 
 void RaylibModel::DeleteInstance()
@@ -230,14 +273,50 @@ void RaylibModel::SetShader(int materialIndex, ShaderManager::Shaders shader)
 {
     modelShader = shader;
     if (shader == ShaderManager::LitStandard)
+    {
         model->first.materials[materialIndex].shader = { shadowShader.first, shadowShader.second };
+        //rWrapperMaterials[model->first][materialIndex].shader = { shadowShader.first, shadowShader.second };
+    }
     else if (shader == ShaderManager::None)
+    {
         model->first.materials[materialIndex].shader = {};
+        //rWrapperMaterials[model->first][materialIndex].shader = {};
+    }
 }
 
 bool RaylibModel::IsPrimitive()
 {
     return primitiveModel;
+}
+
+std::vector<int> RaylibModel::GetMaterialIDs()
+{
+    std::vector<int> ids;
+    for (int i = 0; i < model->first.materialCount; i++)
+        ids.push_back(static_cast<int>(model->first.materials[i].params[0]));
+
+    return ids;
+}
+
+bool RaylibModel::CompareMaterials(std::vector<int> matIDs)
+{
+    // This assumes the materials are in the same order, which they should be
+
+    if (model->first.materialCount != matIDs.size())
+        return false;
+
+    for (int i = 0; i < model->first.materialCount; i++)
+    {
+        if (model->first.materials[i].params[0] != matIDs[i]) // Compares the materials' IDs
+            return false;
+    }
+
+    return true;
+}
+
+int RaylibModel::GetMaterialCount()
+{
+    return model->first.materialCount;
 }
 
 void RaylibModel::SetMaterialMap(int materialIndex, int mapIndex, RaylibWrapper::Texture2D texture, RaylibWrapper::Color color, float intensity)
@@ -250,6 +329,12 @@ void RaylibModel::SetMaterialMap(int materialIndex, int mapIndex, RaylibWrapper:
         { color.r, color.g, color.b, 255 },
         intensity
     };
+
+    //rWrapperMaterials[model->first][materialIndex].maps[mapIndex] = {
+    //    { texture.id, texture.width, texture.height, texture.mipmaps, texture.format },
+    //    { color.r, color.g, color.b, 255 },
+    //    intensity
+    //};
 }
 
 void RaylibModel::SetMaterials(std::vector<RaylibWrapper::Material*> mats) // Todo: There is a memory leak here
@@ -257,36 +342,32 @@ void RaylibModel::SetMaterials(std::vector<RaylibWrapper::Material*> mats) // To
     if (!model)
         return;
 
-    // Materials should never be modified or unloaded in here
+    // Only delete the maps for embedded materials. I don't think I need to delete the maps for non-embedded materials since they use the same pointers as the mats paramter. If there are issues, then deep copy the maps.
+    //if (rWrapperMaterials[model->first][0].params[0] == 1)
+    //    for (RaylibWrapper::Material& mat : rWrapperMaterials[model->first])
+    //        delete[] mat.maps;
+
+    //rWrapperMaterials.clear();
 
     // Deallocate the materials' maps
-    //if (model->first.materials)
-    //{
-    //    for (int i = 0; i < model->first.materialCount; ++i)
-    //    {
-    //        if (model->first.materials[i].maps)
-    //            delete[] model->first.materials[i].maps;
-    //    }
-    //}
+    if (model->first.materials)
+    {
+        for (int i = 0; i < model->first.materialCount; ++i)
+        {
+            if (model->first.materials[i].maps)
+                delete[] model->first.materials[i].maps;
+        }
+    }
 
-    //// If the material count is not the same, then resize the array
-    //if (model->first.materialCount != mats.size())
-    //{
-    //    // Todo: Should old materials be unloaded?
-
-    //    delete[] model->first.materials; // Deallocate the materials array
-    //    model->first.materials = new Material[mats.size()]; // Allocate the materials array with the new size
-    //    model->first.materialCount = mats.size();
-    //}
-
-    //delete[] model->first.materials; // Todo: Should I delete the old materials array? When I was testing this, when I modified this array, all of my models (all cubes) changed materials too. They may be
-    // sharing this array. Although then there will be a memory leak for objects with a materials array not in use. Should I also delete the materials.maps array?
+    delete[] model->first.materials;
 
     model->first.materialCount = mats.size();
     model->first.materials = new Material[mats.size()];
 
     for (size_t i = 0; i < mats.size(); ++i)
     {
+        //rWrapperMaterials[model->first].push_back(*mats[i]);
+
         model->first.materials[i].maps = new MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
 
         RaylibWrapper::Material& mat = *mats[i];
@@ -308,38 +389,83 @@ void RaylibModel::SetMaterials(std::vector<RaylibWrapper::Material*> mats) // To
     }
 }
 
-RaylibWrapper::Material RaylibModel::GetMaterial(int index)
+int RaylibModel::GetMaterialID(int index)
 {
-    if (!model)
-        return {};
+    return static_cast<int>(model->first.materials[index].params[0]);
+}
 
-    Material* material = &model->first.materials[index];
-    RaylibWrapper::Material mat;
+void RaylibModel::SetEmbeddedMaterials()
+{
+    if (!model || embeddedMaterials.find(path) != embeddedMaterials.end())
+        return;
 
-    // Set maps
-    mat.maps = new RaylibWrapper::MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
+    std::vector<Material> materials;
 
-    for (int i = 0; i < RaylibWrapper::MAX_MATERIAL_MAPS; ++i)
+    for (int i = 0; i < model->first.materialCount; i++)
     {
-        RaylibWrapper::MaterialMap map;
-        MaterialMap& raylibMap = material->maps[i];
+        Material srcMaterial = model->first.materials[i];
 
-        map.texture = { raylibMap.texture.id, raylibMap.texture.width, raylibMap.texture.height, raylibMap.texture.mipmaps, raylibMap.texture.format };
-        map.color = { raylibMap.color.r, raylibMap.color.g, raylibMap.color.b, raylibMap.color.a };
-        map.value = raylibMap.value;
+        // Allocate new maps array for the material
+        srcMaterial.maps = new MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
 
-        mat.maps[i] = map;
+        // Copy each MaterialMap from source to new material
+        memcpy(srcMaterial.maps, model->first.materials[i].maps, sizeof(MaterialMap) * RaylibWrapper::MAX_MATERIAL_MAPS);
+
+        materials.push_back(srcMaterial);
     }
 
-    // Set shader
-    mat.shader.id = material->shader.id;
-    mat.shader.locs = material->shader.locs;
-
-    // Set params
-    mat.params[0] = material->params[0];
-    mat.params[1] = material->params[1];
-    mat.params[2] = material->params[2];
-    mat.params[3] = material->params[3];
-
-    return mat;
+    embeddedMaterials[path] = materials;
 }
+
+void RaylibModel::SetMaterialsToEmbedded()
+{
+    if (model->first.materials)
+    {
+        for (int i = 0; i < model->first.materialCount; ++i)
+        {
+            if (model->first.materials[i].maps)
+                delete[] model->first.materials[i].maps;
+        }
+    }
+
+    delete[] model->first.materials;
+
+    std::vector<Material> mats = embeddedMaterials[path];
+
+    model->first.materialCount = mats.size();
+    model->first.materials = new Material[mats.size()];
+
+    for (size_t i = 0; i < mats.size(); ++i)
+    {
+        model->first.materials[i].maps = new MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
+
+        Material& mat = mats[i];
+        Material& material = model->first.materials[i];
+
+        // Set shader
+        material.shader.id = mat.shader.id;
+        material.shader.locs = mat.shader.locs;
+
+        // Set params
+        material.params[0] = mat.params[0];
+        material.params[1] = mat.params[1];
+        material.params[2] = mat.params[2];
+        material.params[3] = mat.params[3];
+
+        // Set maps
+        for (int j = 0; j < RaylibWrapper::MAX_MATERIAL_MAPS; ++j)
+        {
+            RaylibWrapper::Texture2D texture = { mat.maps[j].texture.id, mat.maps[j].texture.width, mat.maps[j].texture.height, mat.maps[j].texture. mipmaps, mat.maps[j].texture.format };
+            RaylibWrapper::Color color = { mat.maps[j].color.r, mat.maps[j].color.g, mat.maps[j].color.b, mat.maps[j].color.a };
+            SetMaterialMap(i, j, texture, color, mat.maps[j].value);
+        }
+    }
+}
+
+//RaylibWrapper::Material RaylibModel::GetMaterial(int index)
+//{
+//    if (!model)
+//        return {};
+//    
+//    return rWrapperMaterials[model->first][index];
+//}
