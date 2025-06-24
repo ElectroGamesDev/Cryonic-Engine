@@ -9,6 +9,51 @@ Cryonic Engine is a simple & flexible 2D/3D game engine designed to facilitate g
 - **Simplicity:** Easy-to-understand structure for developers of all levels.
 - **Extensibility:** Designed for easy expansion and customization.
 
+Below is a list of current and planned features for Cryonic Engine.
+
+| Emoji  | Meaning            |
+|--------|-------------------|
+| ❌     | Not Implemented    |
+| ⚠️     | Partially Implemented / Work in Progress |
+| ✅     | Fully Implemented  |
+
+| Feature                                 | Implemented |
+|----------------------------------------|-------------|
+| Windows Build Support                   | ✅          |
+| Web (WASM) Build Support                | ✅          |
+| Android Build Support                   | ❌          |
+| Scene System (Load/Save)                | ✅          |
+| GameObject-Component System             | ✅          |
+| Entity-Component System (ECS)           | ❌          |
+| 2D Rendering (Sprites, Text)            | ✅          |
+| 3D Rendering (Models, Materials)        | ✅          |
+| Lighting                                | ✅          |
+| Shadow Mapping                          | ✅          |
+| Particle System                         | ❌          |
+| Physics (2D)                            | ✅          |
+| Physics (3D)                            | ✅          |
+| Audio Playback                          | ✅          |
+| Input Handling (Keyboard, Mouse)        | ✅          |
+| Gamepad Support                         | ✅          |
+| Scripting (C++)                         | ✅          |
+| Scripting (Lua)                         | ❌          |
+| Visual Scripting                        | ❌          |
+| Editor Scripts                          | ❌          |
+| GUI System                              | ✅          |
+| Advanced GUI Editor                     | ✅          |
+| 2D Animation System                     | ✅          |
+| 3D Animation System                     | ⚠️          |
+| Terrain System                          | ❌          |
+| Tilemap Support                         | ⚠️          |
+| Tilemap Editor                          | ❌          |
+| AI Navigation                           | ⚠️          |
+| Asset Management                        | ✅          |
+| Custom Shaders                          | ❌          |
+| Post-Processing Effects                 | ❌          |
+| Networking                              | ❌          |
+| Asset Hot Reloading                     | ⚠️          |
+| Documentation                           | ❌          |
+
 ## Getting Started
 
 To get started with Cryonic Engine, clone this repository and follow the instructions in the [Documentation](link-to-docs) for setup and usage. Build releases will be coming soon.
