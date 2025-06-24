@@ -42,11 +42,15 @@ public:
 #endif
 
         materials[path] = this;
+
+        id = nextId;
+        raylibMaterial.params[0] = static_cast<float>(id);
+        nextId++;
     }
 
     ~Material()
     {
-        RaylibWrapper::UnloadMaterial(raylibMaterial);
+        ResetData();
     }
 
     void OnFileMoved(const std::string oldPath, const std::string newPath)
@@ -58,15 +62,15 @@ public:
         // Todo: Update all components using this material (or the components should find the new path themself. Maybe in FileWatcher for 10-15 seconds I could have a recentlyMoved vector which they can search though)
     }
 
-    void OnFileModified()
+    void OnFileModified() // Todo: I shouldn't be resetting all the data just for changing something in the file. It causes unnecessary overhead.
     {
         ResetData();
         LoadData();
     }
 
-    void ResetData()
+    void ResetData() // Todo: Move this and some of the other functions to Material.cpp
     {
-        // Todo: The Sprite is not being unloaded. Unload it if its not being used anywhere else.
+        // Todo: The Sprite is not being unloaded. Unload it if its not being used anywhere else. It could actually be better to let Sprite handle the unloading, just let the Sprite know that its no longer being used by this.
 
         albedoColor = { 255, 255, 255, 255 };
         metallic = 0.0f;
@@ -79,6 +83,21 @@ public:
         roughnessTexturePath = "";
         emissionTexturePath = "";
 
+        if (albedoSprite)
+            delete albedoSprite;
+
+        if (normalSprite)
+            delete normalSprite;
+
+        if (metallicSprite)
+            delete metallicSprite;
+
+        if (roughnessSprite)
+            delete roughnessSprite;
+
+        if (emissionSprite)
+            delete emissionSprite;
+
         albedoSprite = nullptr;
         normalSprite = nullptr;
         metallicSprite = nullptr;
@@ -87,7 +106,9 @@ public:
 
         RaylibWrapper::UnloadMaterial(raylibMaterial); // Most likely the same material is going to be loaded again, but in case it isn't (different material or the material fails to load), I'll unload it. This shouldn't really add any overhead.
 
+        delete[] raylibMaterial.maps;
         raylibMaterial = {};
+        raylibMaterial.params[0] = static_cast<float>(id);
     }
 
     void LoadData()
@@ -239,6 +260,8 @@ public:
     Sprite* GetRoughnessSprite() { return roughnessSprite; }
     Sprite* GetEmissionSprite() { return emissionSprite; }
 
+    int GetID() { return id; }
+
     // Hide in API
     static std::unordered_map<std::filesystem::path, Material*> materials;
 
@@ -255,9 +278,11 @@ public:
 
     static RaylibWrapper::Material defaultMaterial;
     static RaylibWrapper::Texture2D whiteTexture;
+    static int nextId;
 
 private:
     std::string path = "";
+    int id;
     Color albedoColor = { 255, 255, 255, 255 };
     float metallic = 0.0f;
     float roughness = 0.5f;

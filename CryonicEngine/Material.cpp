@@ -5,6 +5,7 @@
 std::unordered_map<std::filesystem::path, Material*> Material::materials;
 RaylibWrapper::Material Material::defaultMaterial;
 RaylibWrapper::Texture2D Material::whiteTexture;
+int Material::nextId = 2; // 0 is used for default, 1 is used for embed
 
 void Material::LoadDefaultMaterial()
 {
@@ -20,6 +21,8 @@ void Material::LoadDefaultMaterial()
     defaultMaterial.maps[RaylibWrapper::MATERIAL_MAP_ROUGHNESS] = { Material::whiteTexture , { 255, 255, 255, 255 }, 0.5 };
     defaultMaterial.maps[RaylibWrapper::MATERIAL_MAP_METALNESS] = { Material::whiteTexture , { 255, 255, 255, 255 }, 0 };
     defaultMaterial.maps[RaylibWrapper::MATERIAL_MAP_EMISSION] = { Material::whiteTexture , { 255, 255, 255, 255 }, 0 };
+
+    defaultMaterial.params[0] = static_cast<float>(0);
 }
 
 void Material::UnloadDefaultMaterial()
