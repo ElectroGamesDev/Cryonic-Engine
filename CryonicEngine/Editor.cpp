@@ -3900,32 +3900,34 @@ void Editor::RenderConsole()
     ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin((ICON_FA_CODE + std::string(" Console")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
     {
-        for (std::pair<std::string, ConsoleLogger::ConsoleLogType>& message : ConsoleLogger::logs)
+        for (int i = 0; i < ConsoleLogger::GetLogCount(); i++)
         {
-            switch (message.second)
+            const ConsoleLogger::LogEntry& log = ConsoleLogger::GetLog(i);
+
+            switch (log.type)
             {
-                case ConsoleLogger::ConsoleLogType::INFO:
+                case ConsoleLogger::LogType::INFO:
                     ImGui::TextColored({ 0.8f, 0.8f, 0.8f, 1.0f }, "[INFO]");
                     break;
-                case ConsoleLogger::ConsoleLogType::WARNING:
+                case ConsoleLogger::LogType::WARNING:
                     ImGui::TextColored({ 1.0f, 1.0f, 0.60f, 1.0f }, "[WARNING]");
                     break;
-                case ConsoleLogger::ConsoleLogType::ERROR_:
+                case ConsoleLogger::LogType::ERROR_:
                     ImGui::TextColored({ 1.0f, 0.4f, 0.4f, 1.0f }, "[ERROR]");
                     break;
             }
             ImGui::SameLine();
-            ImGui::Text(message.first.c_str());
+            ImGui::Text(log.message.c_str());
         }
         
-        if (ConsoleLogger::logs.size() != numberOfLogs && ImGui::GetScrollMaxY() - ImGui::GetScrollY() < 50)
+        if (ConsoleLogger::GetLogCount() != numberOfLogs && ImGui::GetScrollMaxY() - ImGui::GetScrollY() < 50)
             ImGui::SetScrollHereY(1);
 
         ImGui::NewLine();
     }
     ImGui::End();
 
-    numberOfLogs = ConsoleLogger::logs.size();
+    numberOfLogs = ConsoleLogger::GetLogCount();
 }
 
 bool Editor::RenderHierarchyNode(GameObject* gameObject, bool normalColor, bool& childDoubleClicked)
