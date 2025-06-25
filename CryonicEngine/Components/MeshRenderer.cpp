@@ -115,7 +115,6 @@ void MeshRenderer::Render(bool renderShadows)
     if ((!material && raylibModel.GetMaterialID(0) > 1) || // If the material is not set (using embedded) and if the first material ID of the model is not set to 0 or 1 (the embedded and default id)
         (material && !raylibModel.CompareMaterials({ material->GetID()}))) // If is the material is set, and the IDs are not the same
     {
-        //ConsoleLogger::InfoLog("Changing Material for " + gameObject->GetName());
         if (!material)
         {
             // Need to compare the IDs for default and embedded materials
