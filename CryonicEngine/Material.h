@@ -179,11 +179,9 @@ public:
             if (std::filesystem::exists(absolutePath))
             {
                 var = new Sprite(p);
-                ConsoleLogger::ErrorLog("Found");
             }
             else
             {
-                ConsoleLogger::ErrorLog("not found");
                 var = nullptr;
             }
         };
