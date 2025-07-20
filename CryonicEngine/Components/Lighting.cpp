@@ -4,7 +4,7 @@
 #include "../RaylibWrapper.h"
 #if defined(EDITOR)
 #include "../Editor.h"
-//#include "../IconManager.h"
+#include "../IconManager.h"
 #else
 #include "CameraComponent.h"
 #endif
@@ -193,8 +193,14 @@ void Lighting::EditorUpdate()
         RaylibWrapper::SetShaderValue(shadowManager.shader, shadowManager.lightTypeLoc, &value, RaylibWrapper::SHADER_UNIFORM_INT);
     }
 
+    RaylibWrapper::Vector2 pos = RaylibWrapper::GetWorldToScreen({ gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z }, Editor::camera);
+    // Divding positions by Raylib window size then multiply it by Viewport window size.
+    pos.x = pos.x / RaylibWrapper::GetScreenWidth() * Editor::viewportPosition.z;
+    pos.y = pos.y / RaylibWrapper::GetScreenHeight() * Editor::viewportPosition.w;
 
-	//Draw3DBillboard(Editor::camera, *IconManager::imageTextures["LightGizmoIcon"], gameObject->transform.GetPosition(), 2.0f, { 255, 255, 255, 150 }); // Todo: Re-add this
+    RaylibWrapper::Draw3DBillboard(Editor::camera, *IconManager::imageTextures["LightGizmoIcon"],
+        { gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z }, 0.5f, { 255, 255, 255, 150 });
+
 	//if (!setMain)
 	//{
 	//	setMain = true;
