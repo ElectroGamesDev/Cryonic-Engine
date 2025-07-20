@@ -271,6 +271,11 @@ public:
     static void LoadWhiteTexture();
     static void UnloadWhiteTexture();
 
+#if defined (EDITOR)
+    static void LoadPreviewMaterial();
+    static void UnloadPreviewMaterial();
+#endif
+
     /**
      * @brief Gets the material from the path and loads it if needed
      */
@@ -278,6 +283,9 @@ public:
 
     static RaylibWrapper::Material defaultMaterial;
     static RaylibWrapper::Texture2D whiteTexture;
+#if defined (EDITOR)
+    static RaylibWrapper::Material previewMaterial;
+#endif
     static int nextId;
 
 private:

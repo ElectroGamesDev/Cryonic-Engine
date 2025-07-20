@@ -234,20 +234,20 @@ RaylibWrapper::RenderTexture2D* Editor::CreateMaterialPreview(std::filesystem::p
 
     // Load textures
     auto loadTexture = [](const std::string& path) -> RaylibWrapper::Texture2D* {
-        if (path.empty() || !std::filesystem::exists(path))
+        if (path.empty() || !std::filesystem::exists(ProjectManager::projectData.path / "Assets" / path))
             return &Material::whiteTexture;
 
-        return new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(path.c_str())); // Todo: The textures need to be deleted if its not using the whiteTexture
+        return new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(std::filesystem::path(ProjectManager::projectData.path / "Assets" / path).string().c_str()));
     };
 
     // Todo: This will have issues if some of the maps arent set or valid. We're also loading the texture even if its already loaded as a Sprite
 
     // Todo: These textures may already be loaded if a model in-scene is using them. Once I do this, make sure not to unload the textures at the end of the function
-    RaylibWrapper::Texture2D* albedoTexture = loadTexture(publicData["albedoTexture"]);
-    RaylibWrapper::Texture2D* normalTexture = loadTexture(publicData["normalTexture"]);
-    RaylibWrapper::Texture2D* metallicTexture = loadTexture(publicData["metallicTexture"]);
-    RaylibWrapper::Texture2D* roughnessTexture = loadTexture(publicData["roughnessTexture"]);
-    RaylibWrapper::Texture2D* emissionTexture = loadTexture(publicData["emissionTexture"]);
+    RaylibWrapper::Texture2D* albedoTexture = loadTexture(publicData["albedoTexture"].get<std::string>());
+    RaylibWrapper::Texture2D* normalTexture = loadTexture(publicData["normalTexture"].get<std::string>());
+    RaylibWrapper::Texture2D* metallicTexture = loadTexture(publicData["metallicTexture"].get<std::string>());
+    RaylibWrapper::Texture2D* roughnessTexture = loadTexture(publicData["roughnessTexture"].get<std::string>());
+    RaylibWrapper::Texture2D* emissionTexture = loadTexture(publicData["emissionTexture"].get<std::string>());
 
     RaylibWrapper::Color normalColor = normalTexture == &Material::whiteTexture
         ? RaylibWrapper::Color{ 128, 128, 255 }
@@ -280,11 +280,35 @@ RaylibWrapper::RenderTexture2D* Editor::CreateMaterialPreview(std::filesystem::p
     RaylibWrapper::EndMode3D();
     RaylibWrapper::EndTextureMode();
 
-    RaylibWrapper::UnloadTexture(*albedoTexture);
-    RaylibWrapper::UnloadTexture(*normalTexture);
-    RaylibWrapper::UnloadTexture(*metallicTexture);
-    RaylibWrapper::UnloadTexture(*roughnessTexture);
-    RaylibWrapper::UnloadTexture(*emissionTexture);
+    if (albedoTexture != &Material::whiteTexture)
+    {
+        RaylibWrapper::UnloadTexture(*albedoTexture);
+        delete albedoTexture;
+    }
+
+    if (normalTexture != &Material::whiteTexture)
+    {
+        RaylibWrapper::UnloadTexture(*normalTexture);
+        delete normalTexture;
+    }
+
+    if (metallicTexture != &Material::whiteTexture)
+    {
+        RaylibWrapper::UnloadTexture(*metallicTexture);
+        delete metallicTexture;
+    }
+
+    if (roughnessTexture != &Material::whiteTexture)
+    {
+        RaylibWrapper::UnloadTexture(*roughnessTexture);
+        delete roughnessTexture;
+    }
+
+    if (emissionTexture != &Material::whiteTexture)
+    {
+        RaylibWrapper::UnloadTexture(*emissionTexture);
+        delete emissionTexture;
+    }
 
     return tempRenderTextures.back();
 }
@@ -4726,6 +4750,9 @@ void Editor::InitScenes()
 void Editor::InitMaterialPreview()
 {
     materialPreviewMesh.Create(ModelType::Sphere, "MaterialPreview", ShaderManager::LitStandard, "MaterialPreview");
+    Material::LoadPreviewMaterial();
+    
+    materialPreviewMesh.SetMaterials({ &Material::previewMaterial });
 
     // Setup lighting shader
 
@@ -4750,6 +4777,7 @@ void Editor::Cleanup()
     Material::UnloadDefaultMaterial();
     ShadowManager::UnloadShaders();
     materialPreviewMesh.Unload();
+    Material::UnloadPreviewMaterial();
     Material::UnloadWhiteTexture();
 
     for (auto& image : tempTextures)

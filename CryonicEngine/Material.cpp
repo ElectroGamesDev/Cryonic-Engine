@@ -5,6 +5,9 @@
 std::unordered_map<std::filesystem::path, Material*> Material::materials;
 RaylibWrapper::Material Material::defaultMaterial;
 RaylibWrapper::Texture2D Material::whiteTexture;
+#if defined (EDITOR)
+RaylibWrapper::Material Material::previewMaterial;
+#endif
 int Material::nextId = 2; // 0 is used for default, 1 is used for embed
 
 void Material::LoadDefaultMaterial()
@@ -41,6 +44,21 @@ void Material::UnloadWhiteTexture()
 {
     RaylibWrapper::UnloadTexture(whiteTexture);
 }
+
+#if defined (EDITOR)
+void Material::LoadPreviewMaterial()
+{
+    previewMaterial.shader.id = ShadowManager::shader.id;
+    previewMaterial.shader.locs = ShadowManager::shader.locs;
+
+    previewMaterial.maps = new RaylibWrapper::MaterialMap[RaylibWrapper::MAX_MATERIAL_MAPS];
+}
+
+void Material::UnloadPreviewMaterial()
+{
+    RaylibWrapper::UnloadMaterial(previewMaterial);
+}
+#endif
 
 Material* Material::GetMaterial(std::string path)
 {
