@@ -777,6 +777,9 @@ namespace RaylibWrapper
     void BeginVrStereoMode(VrStereoConfig config);
     void EndVrStereoMode(void);
 
+    void Draw3DBillboardRec(Camera camera, Texture2D texture, Rectangle source, Vector3 position, Vector2 size, Color tint);
+    void Draw3DBillboard(Camera camera, Texture2D texture, Vector3 position, float size, Color tint);
+
     // Shaders
     Shader LoadShader(const char* vsFileName, const char* fsFileName);
     void UnloadShader(Shader shader);
