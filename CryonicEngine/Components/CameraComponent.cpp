@@ -2,8 +2,8 @@
 #include "../CryonicCore.h"
 #if defined(EDITOR)
 #include "../ProjectManager.h"
-//#include "../IconManager.h"
-//#include "../Editor.h"
+#include "../IconManager.h"
+#include "../Editor.h"
 #endif
 #include "../ShadowManager.h"
 
@@ -75,7 +75,14 @@ void CameraComponent::EditorUpdate()
         main = this;
 		//ShadowManager::SetCamera(raylibCamera);
     }
-    // Draw3DBillboard(Editor::camera, *IconManager::imageTextures["CameraGizmoIcon"], gameObject->transform.GetPosition(), 2.0f, { 255, 255, 255, 150 }); // Todo: Re-add this
+
+	RaylibWrapper::Vector2 pos = RaylibWrapper::GetWorldToScreen({ gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z }, Editor::camera);
+	// Divding positions by Raylib window size then multiply it by Viewport window size.
+	pos.x = pos.x / RaylibWrapper::GetScreenWidth() * Editor::viewportPosition.z;
+	pos.y = pos.y / RaylibWrapper::GetScreenHeight() * Editor::viewportPosition.w;
+
+	RaylibWrapper::Draw3DBillboard(Editor::camera, *IconManager::imageTextures["CameraGizmoIcon"],
+		{ gameObject->transform.GetPosition().x, gameObject->transform.GetPosition().y, gameObject->transform.GetPosition().z }, 0.5f, { 255, 255, 255, 150 });
 }
 #endif
 
