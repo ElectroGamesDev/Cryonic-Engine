@@ -14,7 +14,7 @@
 #ifdef EDITOR
 #include "FileWatcher.h"
 #endif
-#include "ShaderManager.h"
+#include "ShadowManager.h"
 
 class Material
 {
@@ -224,9 +224,8 @@ public:
         setMaterialMap(RaylibWrapper::MATERIAL_MAP_METALNESS, metallicSprite, { 255, 255, 255, 255 }, metallic);
         setMaterialMap(RaylibWrapper::MATERIAL_MAP_EMISSION, emissionSprite, { 255, 255, 255, 255 }, emission);
 
-        std::pair<unsigned int, int*> shader = ShaderManager::GetShader(ShaderManager::LitStandard); // Todo: Change this to get the material's shader
-        raylibMaterial.shader.id = shader.first;
-        raylibMaterial.shader.locs = shader.second;
+        raylibMaterial.shader.id = ShadowManager::shader.id;
+        raylibMaterial.shader.locs = ShadowManager::shader.locs;
     }
 
     /**
