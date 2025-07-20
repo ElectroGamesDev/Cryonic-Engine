@@ -154,10 +154,10 @@ public:
         }
 
         // Loads textures/sprites // Todo: If a Sprite already exists for a texture, then dont create a new one
-        auto setSprite = [](Sprite* var, std::string& p) -> void {
+        auto setSprite = [](Sprite*& var, std::string& p) -> void {
             if (p == "")
             {
-                var == nullptr;
+                var = nullptr;
                 return;
             }
 
@@ -177,9 +177,15 @@ public:
                 absolutePath = exeParent.string() + "/Resources/Assets/" + p;
 #endif
             if (std::filesystem::exists(absolutePath))
+            {
                 var = new Sprite(p);
+                ConsoleLogger::ErrorLog("Found");
+            }
             else
+            {
+                ConsoleLogger::ErrorLog("not found");
                 var = nullptr;
+            }
         };
 
         setSprite(albedoSprite, albedoTexturePath);
