@@ -4295,9 +4295,19 @@ void OnBuildFinish(int success, bool debug) // 0 = failed, 1 = success, 2 = canc
     if (debug)
     {
         if (success == 1)
-            Utilities::OpenPathInExplorer(ProjectManager::projectData.path / "Internal" / "Builds" / "Windows" / "Debug" / (ProjectManager::projectData.name + ".exe"));
+        {
+            //Utilities::OpenPathInExplorer(ProjectManager::projectData.path / "Internal" / "Builds" / "Windows" / "Debug" / (ProjectManager::projectData.name + ".exe"));
+
+            std::filesystem::path path = ProjectManager::projectData.path / "Internal" / "Builds" / "Windows" / "Debug" / (ProjectManager::projectData.name + ".exe");
+
+            // Todo: Once I implment debugging, I would use the following function instead:
+            //Utilities::LaunchProcess(path.string(), "lldb -o run -- \"" + path.string() + "\""); // After this command, "r playmode" still needs to be ran after lldb initializes
+            std::string error = Utilities::LaunchProcess("\"" + path.string() + "\" playmode");
+            if (!error.empty())
+                ConsoleLogger::ErrorLog("Failed to launch play mode: failed to run game. Error: " + error);
+        }
         else if (success == 0)
-            ConsoleLogger::ErrorLog("Failed to enter play mode.");
+            ConsoleLogger::ErrorLog("Failed to enter play mode: failed to compile.");
     }
     else
     {
