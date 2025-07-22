@@ -254,12 +254,12 @@ int main(void)
 	//debugDraw.SetFlags(b2Draw::e_shapeBit);
 	//world->SetDebugDraw(&debugDraw);
 
-	Material::LoadWhiteTexture();
-
 	// Shaders must be initiated before scenes/gameobjects
 	ShaderManager::Init();
-	Material::LoadDefaultMaterial();
 	ShadowManager::LoadShaders();
+
+	Material::LoadWhiteTexture();
+	Material::LoadDefaultMaterial();
 	MenuManager::Init();
 
 	// Todo: This assumes the default scene path and name
