@@ -607,6 +607,28 @@ std::string Utilities::SelectFolderDialog(const std::filesystem::path& projectPa
     return path;
 }
 
+std::string Utilities::LaunchProcess(std::string startCommand)
+{
+    STARTUPINFOA si = { 0 };
+    PROCESS_INFORMATION pi = { 0 };
+    si.cb = sizeof(si);
+
+    BOOL success = CreateProcessA(
+        nullptr,
+        startCommand.data(),
+        nullptr, nullptr, FALSE, 0,
+        nullptr, nullptr,
+        &si, &pi
+    );
+
+    if (!success)
+        return std::to_string(GetLastError());
+
+    CloseHandle(pi.hThread);
+
+    return "";
+}
+
 void Utilities::TerminateProcess(int dwProcessId, int uExitCode)
 {
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);

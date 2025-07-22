@@ -17,6 +17,8 @@ namespace Utilities
     std::vector<std::string> GetGltfAnimationNames(std::filesystem::path path);
     bool CreateDataFile(std::filesystem::path path);
     bool ImportFile(std::filesystem::path filePath, std::filesystem::path importPath);
+    // Todo: This is used for running the compiled game in debug mode. This should be moved eventually.
+    std::string LaunchProcess(std::string startCommand);
     void TerminateProcess(int dwProcessId, int uExitCode); // A TerminateProcess function that actually works unlike Window's TermianteProcess()
     std::filesystem::path CreateTempFolder(std::filesystem::path projectPath);
     std::filesystem::path GetExePath();
