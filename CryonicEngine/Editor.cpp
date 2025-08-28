@@ -1104,7 +1104,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         }
                     }
                 }
-                else if (extension == ".png") // Todo: Add jpg support
+                else if (extension == ".png") // Todo: Add jpg support. Will need to modify config.h and rebuild raylib
                 {
                     tempTextures.push_back(new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(entry.path().string().c_str())));
                     float aspectRatio = (float)tempTextures.back()->width / (float)tempTextures.back()->height;
