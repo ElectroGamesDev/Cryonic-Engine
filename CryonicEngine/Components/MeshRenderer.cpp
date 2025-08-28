@@ -43,9 +43,10 @@ void MeshRenderer::SetModel(ModelType model, std::filesystem::path path, ShaderM
 #endif
 
     // This may cause issues when I fix start freeing/deallocating models since their material may already be freed from this. I'm not sure if Raylib creates a new material for each new primitive mesh.
-    raylibModel.SetMaterials({ &Material::defaultMaterial }); // Todo: This is being set after the embedded material is being set on the model
+    if (model != Custom)
+        raylibModel.SetMaterials({ &Material::defaultMaterial });
 
-    SetMaterial(material);
+    //SetMaterial(material);
 }
 
 std::filesystem::path MeshRenderer::GetModelPath() const
