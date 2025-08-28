@@ -607,26 +607,44 @@ std::string Utilities::SelectFolderDialog(const std::filesystem::path& projectPa
     return path;
 }
 
-std::string Utilities::LaunchProcess(std::string startCommand)
+std::pair<std::string, Utilities::JobHandle> Utilities::LaunchProcess(std::string startCommand)
 {
+    HANDLE hJob = CreateJobObject(nullptr, nullptr);
+
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli = { 0 };
+    jeli.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+
+    SetInformationJobObject(hJob, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli));
+
     STARTUPINFOA si = { 0 };
     PROCESS_INFORMATION pi = { 0 };
     si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
 
     BOOL success = CreateProcessA(
         nullptr,
         startCommand.data(),
-        nullptr, nullptr, FALSE, 0,
-        nullptr, nullptr,
-        &si, &pi
+        nullptr,
+        nullptr,
+        FALSE,
+        CREATE_SUSPENDED,
+        nullptr,
+        nullptr,
+        &si,
+        &pi
     );
 
     if (!success)
-        return std::to_string(GetLastError());
+        return { std::to_string(GetLastError()), nullptr };
+
+    AssignProcessToJobObject(hJob, pi.hProcess);
+
+    ResumeThread(pi.hThread);
 
     CloseHandle(pi.hThread);
 
-    return "";
+    return {"", (JobHandle)hJob};
 }
 
 void Utilities::TerminateProcess(int dwProcessId, int uExitCode)
@@ -640,13 +658,20 @@ void Utilities::TerminateProcess(int dwProcessId, int uExitCode)
     PROCESSENTRY32 pe32;
     pe32.dwSize = sizeof(PROCESSENTRY32);
 
+    // Kill the child processes
     if (Process32First(hSnapshot, &pe32))
     {
         do
         {
             if (pe32.th32ParentProcessID == dwProcessId)
             {
-                TerminateProcess(pe32.th32ProcessID, uExitCode);
+                //TerminateProcess(pe32.th32ProcessID, uExitCode);
+                HANDLE hChild = OpenProcess(PROCESS_TERMINATE, FALSE, pe32.th32ProcessID);
+                if (hChild)
+                {
+                    ::TerminateProcess(hChild, uExitCode);
+                    CloseHandle(hChild);
+                }
             }
         } while (Process32Next(hSnapshot, &pe32));
     }
@@ -659,6 +684,14 @@ void Utilities::TerminateProcess(int dwProcessId, int uExitCode)
         ::TerminateProcess(hProcess, uExitCode);
         CloseHandle(hProcess);
     }
+}
+
+void Utilities::TerminateJob(JobHandle jobHandle)
+{
+    if (!jobHandle)
+        return;
+
+    CloseHandle((HANDLE)jobHandle);
 }
 
 std::filesystem::path Utilities::CreateTempFolder(std::filesystem::path projectPath)

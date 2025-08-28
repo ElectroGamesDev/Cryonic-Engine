@@ -19,6 +19,8 @@
 #define NOGDI
 #define NOUSER
 #include <windows.h>
+#include "WindowsHelper.h"
+#include "AsyncPBOCapture.h"
 #elif WEB
 #include <emscripten/emscripten.h>
 #include <unordered_set>
@@ -57,6 +59,12 @@ b2World* world = nullptr;
 CollisionListener2D collisionListener;
 
 std::filesystem::path exeParent;
+
+bool isPlayMode = false;
+RaylibWrapper::RenderTexture playModeRenderTexture;
+#ifdef WINDOWS
+AsyncPBOCapture pboCapture;
+#endif
 
 // Todo: Get this from project settings
 // These are global so the MainLoop() can access them
@@ -159,12 +167,11 @@ public:
 
 void MainLoop();
 
-int main(void)
+int main(int argc, char* argv[])
 {
 	// TODO: Init() shadow manager, and make sure to pass in parameters
 	// Todo: and UnloadShader()
 	// Make sure to check if its 3d before rendering, init, and cleanup shadows
-
 
 	// Todo: Is this even running? There was an error in the code and it didn't give off any errors. I might have fixed it with the ninja command by using "-DCMAKE_CXX_FLAGS=-DWINDOWS "?
 #ifdef WINDOWS
@@ -206,6 +213,23 @@ int main(void)
 	io.ConfigWindowsMoveFromTitleBarOnly = true;
 	ImGui::StyleColorsDark();
 	RaylibWrapper::ImGui_ImplRaylib_Init();
+
+	// Setup playmode
+	if (argc > 1) {
+		for (int i = 1; i < argc; ++i) {
+			if (std::strcmp(argv[i], "playmode") == 0)
+			{
+				isPlayMode = true;
+				playModeRenderTexture = RaylibWrapper::LoadRenderTexture(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight());
+
+#ifdef WINDOWS
+				pboCapture.Init(RaylibWrapper::GetScreenWidth(), RaylibWrapper::GetScreenHeight());
+				pboCapture.Start();
+				WindowsHelper::HideWindow();
+#endif
+			}
+		}
+	}
 
 	FontManager::InitFontManager();
 
@@ -274,6 +298,11 @@ int main(void)
 #else
 	while (!RaylibWrapper::WindowShouldClose())
 		MainLoop();
+#endif
+
+#ifdef WINDOWS
+	pboCapture.Stop();
+	RaylibWrapper::UnloadRenderTexture(playModeRenderTexture);
 #endif
 
 	// Todo: There may be other scenes loaded. Make sure to also unload them.
@@ -377,7 +406,9 @@ void MainLoop()
 	//}
 	//RaylibWrapper::Matrix matLightVP = shadowManager.RenderShadowPass();
 
-	RaylibWrapper::BeginDrawing();
+	if (!isPlayMode)
+		RaylibWrapper::BeginDrawing();
+
 
 #ifdef IS3D
 	RaylibWrapper::rlEnableShader(ShadowManager::shader.id);
@@ -391,7 +422,12 @@ void MainLoop()
 			index++;
 		}
 	}
+#endif
 
+	if (isPlayMode) // Must go after RenderLight
+		RaylibWrapper::BeginTextureMode(playModeRenderTexture);
+
+#ifdef IS3D
 	RaylibWrapper::ClearBackground({ 135, 206, 235, 255 });
 #else
 	RaylibWrapper::ClearBackground({ 128, 128, 128, 255 });
@@ -486,5 +522,26 @@ void MainLoop()
 	ImGui::Render();
 	RaylibWrapper::ImGui_ImplRaylib_RenderDrawData(ImGui::GetDrawData());
 
-	RaylibWrapper::EndDrawing();
+	if (isPlayMode)
+	{
+		RaylibWrapper::EndTextureMode();
+#ifdef WINDOWS
+		pboCapture.AsyncReadback(playModeRenderTexture);
+#endif
+
+		// Todo: Copy render texture to shared memory
+
+		// Draws the render texture to the screen
+		// For some reason I still need to render this else it doesn't render to the Editor's Game view. I even tried scaling it down and making it invisible, but the Editor's game view copies it.
+		RaylibWrapper::BeginDrawing();
+		//RaylibWrapper::ClearBackground(RaylibWrapper::BLACK);
+
+		RaylibWrapper::Rectangle sourceRec = { 0, (float)playModeRenderTexture.texture.height, (float)playModeRenderTexture.texture.width, -(float)playModeRenderTexture.texture.height };
+		RaylibWrapper::Rectangle destRec = { 0, 0, (float)RaylibWrapper::GetScreenWidth(), (float)RaylibWrapper::GetScreenHeight() };
+		RaylibWrapper::DrawTexturePro(playModeRenderTexture.texture, sourceRec, destRec, { 0,0 }, 0.0f, RaylibWrapper::WHITE);
+
+		RaylibWrapper::EndDrawing();
+	}
+	else
+		RaylibWrapper::EndDrawing();
 }

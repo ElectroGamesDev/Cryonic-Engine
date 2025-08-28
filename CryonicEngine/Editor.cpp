@@ -68,6 +68,7 @@ ImGuiID dockspaceID;
 
 bool closeEditor = false;
 bool viewportOpen = true;
+bool gameViewOpen = true;
 bool viewportFocused = false;
 bool viewportHovered = false;
 bool rmbDown = false;
@@ -126,6 +127,8 @@ float cameraSpeed = 1;
 float oneSecondDelay = 1;
 
 RaylibModel materialPreviewMesh;
+bool playModeActive = false;
+Utilities::JobHandle playModeJobHandle;
 
 enum Tool
 {
@@ -414,6 +417,36 @@ void Editor::RenderViewport()
             IconManager::imageTextures["GuiVisibiltiy" + std::string(guiVisible ? "Selected" : "") + "Icon"], { 20, 20 }))
             guiVisible = !guiVisible;
 
+        // Render Play Button
+        RaylibWrapper::Texture* playIconTexture;
+        if (playModeActive)
+            playIconTexture = IconManager::imageTextures["ActivePlayIcon"];
+        else
+            playIconTexture = IconManager::imageTextures["PlayIcon"];
+
+        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() / 2 - 20, 27));
+        if (RaylibWrapper::rlImGuiImageButtonSize("##PlayButton", playIconTexture, ImVec2(30, 30)))
+        {
+            if (playModeActive)
+                ExitPlayMode();
+            else
+                EnterPlayMode();
+        }
+
+        // Render Pause Button
+        RaylibWrapper::Texture* pauseIconTexture;
+        //if (paused) pauseIconTexture = activePauseIcon;
+        //else if (playing) pauseIconTexture = pauseIcon;
+        //else pauseIconTexture = grayedPauseIcon;
+
+        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() / 2 + 20, 27));
+        ImGui::BeginDisabled();
+        if (RaylibWrapper::rlImGuiImageButtonSize("##PauseButton", IconManager::imageTextures["GrayedPauseIcon"], ImVec2(30, 30)))
+        {
+            // Todo: Implement this. Will need to pause the main loop and all threads
+        }
+        ImGui::EndDisabled();
+
         ImGui::PopStyleColor(3);
 
         viewportHovered = ImGui::IsWindowHovered();
@@ -592,6 +625,54 @@ void Editor::RenderViewport()
         }
 
         lastMousePosition = RaylibWrapper::GetMousePosition();
+    }
+
+    ImGui::End();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
+}
+
+void Editor::RenderGameView()
+{
+    if (!gameViewOpen)
+        return;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.10f, 0.11f, 0.12f, 1.00f));
+
+    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
+    if (ImGui::Begin((ICON_FA_GAMEPAD + std::string(" Game")).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar))
+    {
+        if (playModeActive && asyncPBODisplay.initialized)
+        {
+            asyncPBODisplay.Update();
+
+            ImVec2 availSize = ImGui::GetContentRegionAvail();
+            RaylibWrapper::Texture2D& texture = asyncPBODisplay.sharedTexture;
+
+            float ratio = (float)texture.width / texture.height;
+
+            float width = availSize.x;
+            float height = width / ratio;
+            if (height > availSize.y)
+            {
+                height = availSize.y;
+                width = height * ratio;
+            }
+
+            // Center the image
+            ImGui::SetCursorPos(ImVec2((availSize.x - width) * 0.5f, (availSize.y - height) * 0.5f));
+
+            // Flip the Y-axis
+            RaylibWrapper::Rectangle src = { 0, texture.height, (float)texture.width, -float(texture.height) };
+            rlImGuiImageRect(&texture, width, height, src);
+        }
+        else
+        {
+            if (playModeActive)
+                asyncPBODisplay.ConnectToSharedMemory();
+            rlImGuiImageRenderTextureFit(&cameraRenderTexture, true);
+        }
     }
 
     ImGui::End();
@@ -3107,7 +3188,18 @@ void Editor::RenderComponentsWin()
 void Editor::RenderCameraView()
 {
     if (!cameraSelected)
-        return;
+    {
+        // Checks if the Game view window is focused
+        ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_GAMEPAD + std::string(" Game")).c_str());
+
+        if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+        {
+            if (window->TabId != window->DockNode->TabBar->SelectedTabId)
+                return;
+        }
+        else
+            return;
+    }
 
     if (resetCameraView)
     {
@@ -3117,9 +3209,25 @@ void Editor::RenderCameraView()
         resetCameraView = false;
     }
 
+    bool selectedGameObjectHasCamera = true;
+    CameraComponent* camera = nullptr;
+
+    if (selectedObject)
+        camera = selectedObject->GetComponent<CameraComponent>();
+
+    if (!camera)
+    {
+        selectedGameObjectHasCamera = false;
+        camera = CameraComponent::main;
+
+        if (!camera)
+            return;
+    }
+
     RaylibWrapper::BeginTextureMode(cameraRenderTexture);
     RaylibWrapper::ClearBackground(ProjectManager::projectData.is3D ? RaylibWrapper::Color{ 135, 206, 235, 255 } : RaylibWrapper::Color{128, 128, 128, 255});
-    selectedObject->GetComponent<CameraComponent>()->raylibCamera.BeginMode3D();
+
+    camera->raylibCamera.BeginMode3D();
 
     deltaTime = RaylibWrapper::GetFrameTime();
 
@@ -3140,11 +3248,14 @@ void Editor::RenderCameraView()
     RaylibWrapper::EndMode3D();
     RaylibWrapper::EndTextureMode();
 
-    ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
-    if (ImGui::Begin("Camera View", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
-        rlImGuiImageRenderTextureFit(&cameraRenderTexture, true);
+    if (selectedGameObjectHasCamera)
+    {
+        ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
+        if (ImGui::Begin("Camera View", &componentsWindowOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
+            rlImGuiImageRenderTextureFit(&cameraRenderTexture, true);
 
-    ImGui::End();
+        ImGui::End();
+    }
 }
 
 int Editor::RenderColorPicker(std::string name, ImVec2 position, ImVec4& selectedColor, ImVec4& previousColor) // Todo: Does this really need to be in the Editor.h? Also Add Undo/Redo
@@ -4290,24 +4401,38 @@ void Editor::RenderTopbar()
     ImGui::End();
 }
 
-void OnBuildFinish(int success, bool debug) // 0 = failed, 1 = success, 2 = cancelled
+void Editor::OnBuildFinish(int success, bool debug) // 0 = failed, 1 = success, 2 = cancelled
 {
     if (debug)
     {
-        if (success == 1)
-        {
-            //Utilities::OpenPathInExplorer(ProjectManager::projectData.path / "Internal" / "Builds" / "Windows" / "Debug" / (ProjectManager::projectData.name + ".exe"));
+        // Moved this to EnterPlayMode()
+        //if (success == 1)
+        //{
+        //    //Utilities::OpenPathInExplorer(ProjectManager::projectData.path / "Internal" / "Builds" / "Windows" / "Debug" / (ProjectManager::projectData.name + ".exe"));
 
-            std::filesystem::path path = ProjectManager::projectData.path / "Internal" / "Builds" / "Windows" / "Debug" / (ProjectManager::projectData.name + ".exe");
+        //    std::filesystem::path path = ProjectManager::projectData.path / "Internal" / "Builds" / "Windows" / "Debug" / (ProjectManager::projectData.name + ".exe");
 
-            // Todo: Once I implment debugging, I would use the following function instead:
-            //Utilities::LaunchProcess(path.string(), "lldb -o run -- \"" + path.string() + "\""); // After this command, "r playmode" still needs to be ran after lldb initializes
-            std::string error = Utilities::LaunchProcess("\"" + path.string() + "\" playmode");
-            if (!error.empty())
-                ConsoleLogger::ErrorLog("Failed to launch play mode: failed to run game. Error: " + error);
-        }
-        else if (success == 0)
-            ConsoleLogger::ErrorLog("Failed to enter play mode: failed to compile.");
+        //    // Todo: Once I implment debugging, I would use the following function instead:
+        //    //Utilities::LaunchProcess(path.string(), "lldb -o run -- \"" + path.string() + "\""); // After this command, "r playmode" still needs to be ran after lldb initializes
+        //    std::string error = Utilities::LaunchProcess("\"" + path.string() + "\" playmode");
+        //    if (error.empty())
+        //    {
+        //        asyncPBODisplay.ConnectToSharedMemory();
+        //        if (gameViewOpen)
+        //        {
+        //            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_GAMEPAD + std::string(" Game")).c_str());
+        //            if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+        //                window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+        //        }
+        //        else
+        //            gameViewOpen = true; // Todo: Make sure this focuses the game view
+        //    }
+        //    else
+        //        ConsoleLogger::ErrorLog("Failed to launch play mode: failed to run game. Error: " + error);
+
+        //}
+        //else if (success == 0)
+        //    ConsoleLogger::ErrorLog("Failed to enter play mode: failed to compile.");
     }
     else
     {
@@ -4328,6 +4453,68 @@ void OnBuildFinish(int success, bool debug) // 0 = failed, 1 = success, 2 = canc
 
         ImGui::SetScrollY(window, window->ContentSize.y);
     }
+}
+
+void Editor::EnterPlayMode()
+{
+    if (playModeActive)
+        return;
+
+    std::thread(ProjectManager::BuildToWindows, ProjectManager::projectData, true,
+        [this](int success, bool debug) {
+            if (success == 1) // 0 = fail, 1 = success, 2 = cancelled
+            {
+                std::filesystem::path path = ProjectManager::projectData.path / "Internal" / "Builds" / "Windows" / "Debug" / (ProjectManager::projectData.name + ".exe");
+
+                // Todo: Once I implment debugging, I would use the following function instead:
+                //Utilities::LaunchProcess(path.string(), "lldb -o run -- \"" + path.string() + "\""); // After this command, "r playmode" still needs to be ran after lldb initializes
+                std::pair<std::string, Utilities::JobHandle> result = Utilities::LaunchProcess("\"" + path.string() + "\" playmode"); // Result string = Error
+                if (result.first.empty())
+                {
+                    asyncPBODisplay.ConnectToSharedMemory();
+                    playModeActive = true;
+                    playModeJobHandle = result.second;
+
+                    // Focus Game window
+                    if (gameViewOpen)
+                    {
+                        ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_GAMEPAD + std::string(" Game")).c_str());
+                        if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                            window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+                    }
+                    else
+                        gameViewOpen = true; // Todo: Make sure this focuses the game view
+                }
+                else
+                {
+                    ConsoleLogger::ErrorLog("Failed to launch play mode: failed to run game. Error: " + result.first);
+                    success = 0;
+                }
+            }
+            else if (success == 0)
+                ConsoleLogger::ErrorLog("Failed to enter play mode: failed to compile.");
+
+            // Focus the console to show the errors
+            if (success == 0)
+            {
+                ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_CODE + std::string(" Console")).c_str());
+                if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                    window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+
+                ImGui::SetScrollY(window, window->ContentSize.y);
+            }
+        }).detach();
+}
+
+void Editor::ExitPlayMode()
+{
+    if (!playModeActive)
+        return;
+
+    playModeActive = false;
+    Utilities::TerminateJob(playModeJobHandle);
+    playModeJobHandle = nullptr;
+    asyncPBODisplay.Disconnect();
 }
 
 void Editor::Render()
@@ -4352,6 +4539,7 @@ void Editor::Render()
 
         ImGui::DockBuilderDockWindow((ICON_FA_SITEMAP + std::string(" Hierarchy")).c_str(), dock_id_left);
         ImGui::DockBuilderDockWindow((ICON_FA_CUBES + std::string(" Viewport")).c_str(), dock_main_id);
+        ImGui::DockBuilderDockWindow((ICON_FA_GAMEPAD + std::string(" Game")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_BOX_ARCHIVE + std::string(" Asset Manager")).c_str(), dock_main_id);
         ImGui::DockBuilderDockWindow((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str(), dock_main_id);
@@ -4377,6 +4565,7 @@ void Editor::Render()
 
     // Todo: All the windows below should be changed to a EditorWindow
     RenderViewport();
+    RenderGameView();
     RenderHierarchy();
     RenderProperties();
     RenderFileExplorer();
@@ -4438,18 +4627,38 @@ void Editor::Render()
                 toast.setContent("The project has successfully saved.");
                 ImGui::InsertNotification(toast);
             }
+
+            if (playModeActive)
+                ImGui::BeginDisabled();
             if (ImGui::MenuItem("Play", "Ctrl+P"))
             {
                 // Todo: Check if changes have been made and it needs to be recompiled
-                std::thread(ProjectManager::BuildToWindows, ProjectManager::projectData, true, OnBuildFinish).detach();
+                //std::thread(ProjectManager::BuildToWindows, ProjectManager::projectData, true, &Editor::OnBuildFinish).detach();
+                //std::thread(ProjectManager::BuildToWindows, ProjectManager::projectData, true,
+                //    [this](int success, bool debug) {
+                //        this->OnBuildFinish(success, debug);
+                //    }).detach();
+                EnterPlayMode();
             }
+            if (playModeActive)
+                ImGui::EndDisabled();
+
             if (ImGui::BeginMenu("Build Project"))
             {
                 if (ImGui::MenuItem("Windows", ""))
-                    std::thread(ProjectManager::BuildToWindows, ProjectManager::projectData, false, OnBuildFinish).detach();
+                    //std::thread(ProjectManager::BuildToWindows, ProjectManager::projectData, false, &Editor::OnBuildFinish).detach();
+                    std::thread(ProjectManager::BuildToWindows, ProjectManager::projectData, false,
+                        [this](int success, bool debug) {
+                            this->OnBuildFinish(success, debug);
+                        }).detach();
 
                 if (ImGui::MenuItem("Web", ""))
-                    std::thread(ProjectManager::BuildToWeb, ProjectManager::projectData, OnBuildFinish).detach();
+                    //std::thread(ProjectManager::BuildToWeb, ProjectManager::projectData, &Editor::OnBuildFinish).detach();
+                    std::thread(ProjectManager::BuildToWeb, ProjectManager::projectData,
+                        [this](int success, bool debug) {
+                            this->OnBuildFinish(success, debug);
+                        }).detach();
+
                 ImGui::EndMenu();
             }
             ImGui::EndMenu();
@@ -4816,7 +5025,7 @@ void Editor::Cleanup()
         }
     }
 
-    if (cameraSelected)
+    if (cameraSelected) // Todo: This needs to be changed as its possible there's a render texture from just viewing the Game view
         UnloadRenderTexture(cameraRenderTexture);
 
     RaylibWrapper::CloseAudioDevice();
@@ -4911,8 +5120,8 @@ void Editor::Init()
         }
         tempRenderTextures.clear();
 
-        if (!cameraSelected)
-            RaylibWrapper::UnloadRenderTexture(cameraRenderTexture);
+        //if (!cameraSelected) // Todo: This needs to be changed as its possible that the camera view is selected
+        //    RaylibWrapper::UnloadRenderTexture(cameraRenderTexture);
 
         if (oneSecondDelay <= 0)
             oneSecondDelay = 1;

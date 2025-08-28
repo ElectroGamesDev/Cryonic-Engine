@@ -4,6 +4,7 @@
 #include "RaylibWrapper.h"
 #include <json.hpp>
 #include <variant>
+#include "AsyncPBODisplay.h"
 
 enum class DataFileTypes
 {
@@ -26,6 +27,7 @@ class Editor
 public:
 	RaylibWrapper::RenderTexture2D* CreateModelPreview(std::filesystem::path modelPath, int textureSize);
 	RaylibWrapper::RenderTexture2D* CreateMaterialPreview(std::filesystem::path materialPath, int textureSize);
+	AsyncPBODisplay asyncPBODisplay;
 
 	void InitFonts();
 	void InitStyle();
@@ -36,6 +38,7 @@ public:
 	void InitMaterialPreview();
 
 	void RenderViewport();
+	void RenderGameView();
 	void RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnDefault);
 	void RenderFileExplorer();
 	int RenderColorPicker(std::string name, ImVec2 position, ImVec4& selectedColor, ImVec4& previousColor); // Does this really need to be in here?
@@ -50,6 +53,10 @@ public:
 	void RenderAnimationGraph();
 	void RenderProjectSettings();
 	void Render();
+
+	void OnBuildFinish(int success, bool debug);
+	void EnterPlayMode();
+	void ExitPlayMode();
 
 	void UpdateViewport();
 	void SetupViewport();

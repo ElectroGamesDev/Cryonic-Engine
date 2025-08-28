@@ -252,6 +252,12 @@
     <ClCompile Include="MenuManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BuildPresets\Source\AsyncPBOCapture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AsyncPBODisplay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FontManager.h">
@@ -498,6 +504,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MenuManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BuildPresets\Source\AsyncPBOCapture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncPBODisplay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

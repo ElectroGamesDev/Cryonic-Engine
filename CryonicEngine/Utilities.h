@@ -6,6 +6,8 @@
 
 namespace Utilities
 {
+    using JobHandle = void*;
+
     void OpenPathInExplorer(std::filesystem::path path);
     std::string SelectFolderDialog(const std::filesystem::path& projectPath);
     void HideFile(std::filesystem::path path);
@@ -18,8 +20,9 @@ namespace Utilities
     bool CreateDataFile(std::filesystem::path path);
     bool ImportFile(std::filesystem::path filePath, std::filesystem::path importPath);
     // Todo: This is used for running the compiled game in debug mode. This should be moved eventually.
-    std::string LaunchProcess(std::string startCommand);
+    std::pair<std::string, JobHandle> LaunchProcess(std::string startCommand);
     void TerminateProcess(int dwProcessId, int uExitCode); // A TerminateProcess function that actually works unlike Window's TermianteProcess()
+    void TerminateJob(JobHandle jobHandle);
     std::filesystem::path CreateTempFolder(std::filesystem::path projectPath);
     std::filesystem::path GetExePath();
 };

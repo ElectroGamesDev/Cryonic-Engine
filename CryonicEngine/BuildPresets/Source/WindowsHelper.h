@@ -1,0 +1,4 @@
+namespace WindowsHelper
+{
+	void HideWindow();
+};

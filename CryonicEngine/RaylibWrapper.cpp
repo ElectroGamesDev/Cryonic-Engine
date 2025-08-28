@@ -447,9 +447,18 @@ namespace RaylibWrapper {
         return { image.data, image.width, image.height, image.mipmaps, image.format };
     }
 
+    Image LoadImageFromTexture(Texture2D texture) {
+        ::Image image = ::LoadImageFromTexture({ texture.id, texture.width, texture.height, texture.mipmaps, texture.format });
+        return { image.data, image.width, image.height, image.mipmaps, image.format };
+    }
+
     void UnloadImage(Image image)
     {
         ::UnloadImage({ image.data, image.width, image.height, image.mipmaps, image.format });
+    }
+
+    bool ExportImage(Image image, const char* fileName) {
+        return ::ExportImage({image.data, image.width, image.height, image.mipmaps, image.format}, fileName);
     }
 
 
@@ -1451,6 +1460,10 @@ namespace RaylibWrapper {
 
     void rlVertex3f(float x, float y, float z) {
         ::rlVertex3f(x, y, z);
+    }
+
+    void rlDrawRenderBatchActive() {
+        ::rlDrawRenderBatchActive();
     }
 
     // raymath functions

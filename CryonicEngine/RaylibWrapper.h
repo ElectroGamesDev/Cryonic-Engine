@@ -790,7 +790,10 @@ namespace RaylibWrapper
 
     // Image loading functions
     Image LoadImageFromMemory(const char* fileType, const unsigned char* fileData, int dataSize);
+    Image LoadImageFromTexture(Texture2D texture);
     void UnloadImage(Image image);
+
+    bool ExportImage(Image image, const char* fileName);
 
     // Texture loading functions
     Texture2D LoadTexture(const char* fileName);
@@ -984,6 +987,7 @@ namespace RaylibWrapper
     void rlBegin(int mode);
     void rlEnd();
     void rlVertex3f(float x, float y, float z);
+    void rlDrawRenderBatchActive();
 
     // raymath functions
     Matrix MatrixOrtho(double left, double right, double bottom, double top, double nearPlane, double farPlane);
