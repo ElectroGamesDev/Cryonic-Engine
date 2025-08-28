@@ -62,6 +62,7 @@ public:
 	void SetupViewport();
 
 	void Cleanup();
+	void CleanupCache();
 
 	static RaylibWrapper::Camera camera;
 	static RaylibWrapper::Camera2D camera2D;

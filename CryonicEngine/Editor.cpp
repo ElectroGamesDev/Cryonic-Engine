@@ -130,6 +130,8 @@ RaylibModel materialPreviewMesh;
 bool playModeActive = false;
 Utilities::JobHandle playModeJobHandle;
 
+std::unordered_map<std::filesystem::path, std::pair<RaylibWrapper::Texture, float>> cachedTextures; // The float is the GetTime() since the texture was last used
+
 enum Tool
 {
     Move,
@@ -1106,8 +1108,19 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".png") // Todo: Add jpg support. Will need to modify config.h and rebuild raylib
                 {
-                    tempTextures.push_back(new RaylibWrapper::Texture2D(RaylibWrapper::LoadTexture(entry.path().string().c_str())));
-                    float aspectRatio = (float)tempTextures.back()->width / (float)tempTextures.back()->height;
+                    if (auto it = cachedTextures.find(entry.path()); it != cachedTextures.end()) // Cached
+                        it->second.second = RaylibWrapper::GetTime();
+                    else // Not cached
+                    {
+                        cachedTextures[entry.path()] = std::make_pair(
+                            RaylibWrapper::LoadTexture(entry.path().string().c_str()),
+                            RaylibWrapper::GetTime()
+                        );
+                    }
+
+                    RaylibWrapper::Texture& texture = cachedTextures[entry.path()].first;
+
+                    float aspectRatio = (float)texture.width / (float)texture.height;
                     ImVec2 imageSize = ImVec2(0, 0);
                     imageSize.x = aspectRatio > 1.0f ? 32 : 32 * aspectRatio;
                     imageSize.y = aspectRatio > 1.0f ? 32 / aspectRatio : 32;
@@ -1115,7 +1128,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                     ImVec2 cursorPos = ImGui::GetCursorPos();
 
-                    //RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), tempTextures.back(), ImVec2(32, 32));
+                    //RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), texture, ImVec2(32, 32));
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
                     ImGui::Button(("##" + id).c_str(), ImVec2(buttonSize, buttonSize));
                     ImGui::PopStyleColor();
@@ -1125,7 +1138,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
                         {
                             dragData.first = ImageFile;
-                            dragData.second["Texture"] = RaylibWrapper::LoadTexture(entry.path().string().c_str());
+                            dragData.second["Texture"] = RaylibWrapper::LoadTexture(entry.path().string().c_str()); // Todo: Make sure this texture is being unloaded. It would be best to just use texture variable, but make sure to update the float in the textureCaches
                             dragData.second["Path"] = entry.path();
                         }
                         else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
@@ -1134,7 +1147,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
                     ImVec2 newCursorPos = ImGui::GetCursorPos();
                     ImGui::SetCursorPos(ImVec2(cursorPos.x + (buttonSize - imageSize.x) / 2, cursorPos.y + (buttonSize - imageSize.y) / 2)); // Sets the position to the button position and centers it
-                    RaylibWrapper::rlImGuiImageSize(tempTextures.back(), imageSize.x, imageSize.y);
+                    RaylibWrapper::rlImGuiImageSize(&texture, imageSize.x, imageSize.y);
                     ImGui::SetCursorPos(newCursorPos);
                 }
                 else if (extension == ".mp3" || extension == ".wav" || extension == ".ogg" || extension == ".flac" || extension == ".qoa" || extension == ".xm" || extension == ".mod")
@@ -4988,6 +5001,30 @@ void Editor::InitMaterialPreview()
     materialPreviewMesh.SetShaderValue(0, materialPreviewMesh.GetShaderLocation(0, "enableShadows"), &enableShadows, RaylibWrapper::SHADER_UNIFORM_INT);
 }
 
+void Editor::CleanupCache()
+{
+    // Cleanup every second
+    static float timeSinceLastCleanup = 0.0f;
+    timeSinceLastCleanup += RaylibWrapper::GetFrameTime();
+
+    if (timeSinceLastCleanup < 1.0f)
+        return;
+
+    timeSinceLastCleanup = 0;
+
+    // Textures
+    for (auto it = cachedTextures.begin(); it != cachedTextures.end(); )
+    {
+        if (RaylibWrapper::GetTime() - it->second.second >= 2) // Checks if the texture was used in the last 2 seconnds
+        {
+            RaylibWrapper::UnloadTexture(it->second.first);
+            it = cachedTextures.erase(it);
+        }
+        else
+            ++it;
+    }
+}
+
 void Editor::Cleanup()
 {
     IconManager::Cleanup();
@@ -5119,6 +5156,8 @@ void Editor::Init()
             RaylibWrapper::UnloadRenderTexture(*image);
         }
         tempRenderTextures.clear();
+
+        CleanupCache();
 
         //if (!cameraSelected) // Todo: This needs to be changed as its possible that the camera view is selected
         //    RaylibWrapper::UnloadRenderTexture(cameraRenderTexture);
