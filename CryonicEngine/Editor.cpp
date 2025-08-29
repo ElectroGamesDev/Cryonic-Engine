@@ -1033,7 +1033,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             // Creates back button
             ImGui::SetCursorPosY(nextY);
             ImGui::SetCursorPosX(nextX);
-            if (RaylibWrapper::rlImGuiImageButtonSize("##FileBackButton", IconManager::imageTextures["FolderIcon"], ImVec2(32, 32)))
+            if (RaylibWrapper::rlImGuiImageButtonSize("##FileBackButton", IconManager::imageTextures["FolderIcon"], ImVec2(40, 40)))
             {
                 fileExplorerPath = fileExplorerPath.parent_path();
                 ImGui::PopStyleColor(2);
@@ -1042,9 +1042,11 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 return;
             }
             ImGui::SetCursorPosY(ImGui::GetCursorPosY());
-            ImGui::SetCursorPosX(nextX + 5);
+            ImGui::SetCursorPosX(nextX + (40 / 2) - (ImGui::CalcTextSize("Back").x / 2) + ImGui::CalcTextSize("  ").x);
+            ImGui::PushFont(FontManager::GetFont("Roboto-Medium", 12, false));
             ImGui::Text("Back");
             nextX += 60;
+            ImGui::PopFont();
             ImGui::PopID();
         }
 
@@ -1071,9 +1073,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 continue;
             }
 
-            if (fileName.length() > 7)
+            if (fileName.length() > 11)
             {
-                fileName = fileName.substr(0, 6);
+                fileName = fileName.substr(0, 10);
                 fileName = fileName + "..";
             }
             ImGui::SetCursorPosY(nextY);
@@ -1104,7 +1106,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 //ImVec2 mousePos = { RaylibWrapper::GetMousePosition().x - ImGui::GetWindowPos().x, RaylibWrapper::GetMousePosition().y - ImGui::GetWindowPos().y};
                 //ImVec2 itemPos = ImGui::GetCursorPos();
-                RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FolderIcon"], ImVec2(32, 32));
+                RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FolderIcon"], ImVec2(40, 40));
 
                 if (ImGui::IsItemHovered())
                 {
@@ -1147,7 +1149,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 std::string extension = entry.path().extension().string();
                 if (extension == ".cpp")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CppIcon"], ImVec2(32, 32));
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CppIcon"], ImVec2(40, 40));
                     if (ImGui::IsItemHovered())
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
@@ -1164,7 +1166,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".h")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["HeaderIcon"], ImVec2(32, 32));
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["HeaderIcon"], ImVec2(40, 40));
                     if (ImGui::IsItemHovered())
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
@@ -1292,7 +1294,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".ttf" || extension == ".otf")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FontIcon"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FontIcon"], ImVec2(40, 40)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
                     if (ImGui::IsItemHovered())
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
@@ -1326,7 +1328,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".ldtk")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["LDtkIcon"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["LDtkIcon"], ImVec2(40, 40)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
                     if (ImGui::IsItemHovered())
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
@@ -1427,8 +1429,8 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 else if (extension == ".gltf" || extension == ".glb" || extension == ".obj" || extension == ".m3d")
                 {
                     // Todo: This is causing errors if there are game objects with a MeshRenderer
-                    //if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(32, 32)))
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CubeIcon"], ImVec2(32, 32));
+                    //if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(40, 40)))
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CubeIcon"], ImVec2(40, 40));
 
                     if (ImGui::IsItemHovered())
                     {
@@ -1441,7 +1443,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".animgraph")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["AnimationGraphIcon"], ImVec2(32, 32));
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["AnimationGraphIcon"], ImVec2(40, 40));
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     {
                         // Todo: If something is already in the Animation Graph window and its not saved, popup asking to save, don't save, or cancel
@@ -1480,7 +1482,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".es")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["EventSheetIcon"], ImVec2(32, 32));
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["EventSheetIcon"], ImVec2(40, 40));
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     {
                         std::ifstream dataFile(entry.path());
@@ -1526,7 +1528,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".canvas")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CanvasIcon"], ImVec2(32, 32));
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CanvasIcon"], ImVec2(40, 40));
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     {
                         // Todo: If something is already in the Canvas Editor window and its not saved, popup asking to save, don't save, or cancel
@@ -1564,7 +1566,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension == ".scene")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["SceneIcon"], ImVec2(32, 32));
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["SceneIcon"], ImVec2(40, 40));
                     if (ImGui::IsItemHovered())
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
@@ -1583,7 +1585,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
                 else if (extension != ".data")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(40, 40)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
                     if (ImGui::IsItemHovered())
                     {
                         if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
@@ -1602,9 +1604,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
             }
 
-            ImGui::PushFont(FontManager::GetFont("Roboto-Bold", 15, false));
+            ImGui::PushFont(FontManager::GetFont("Roboto-Medium", 12, false));
             ImGui::SetCursorPosY(ImGui::GetCursorPosY());
-            ImGui::SetCursorPosX(nextX + (32/2) - (ImGui::CalcTextSize(fileName.c_str()).x / 2) + ImGui::CalcTextSize(" ").x); // ImGui::CalcTextSize(" ").x adds one space so its properly aligned
+            ImGui::SetCursorPosX(nextX + (40/2) - (ImGui::CalcTextSize(fileName.c_str()).x / 2) + ImGui::CalcTextSize("  ").x); // ImGui::CalcTextSize("  ").x adds two spaces so its properly aligned
             //ImGui::SetCursorPosX(nextX - 2);
             if (!renamingFile.empty() && renamingFile.filename().string() == entry.path().filename().string())
             {
@@ -4946,6 +4948,7 @@ void Editor::InitFonts()
     FontManager::LoadFont("BoldMarker", 90);
     FontManager::LoadFont("fa-solid-900", 15, true);
     FontManager::LoadFont("Roboto-Bold", 15);
+    FontManager::LoadFont("Roboto-Medium", 12);
 }
 
 void Editor::InitStyle()
