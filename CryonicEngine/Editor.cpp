@@ -456,7 +456,7 @@ void Editor::RenderViewport()
         // Handle camera movement
         static float cameraSpeed = 5.0f;
         static float minCameraSpeed = 0.1f;
-        static float maxCameraSpeed = 50.0f;
+        static float maxCameraSpeed = 1000.0f;
         static bool firstRightClick = true;
         static RaylibWrapper::Vector2 savedMousePosition;
 
@@ -475,11 +475,11 @@ void Editor::RenderViewport()
             if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_LEFT_SHIFT) || RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_RIGHT_SHIFT))
                 speedMultiplier = 2;
 
-            // Check scroll wheel while right mouse button is held down
+            // Camera speed
             if (RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT) && RaylibWrapper::GetMouseWheelMove() != 0)
             {
                 float wheelMove = RaylibWrapper::GetMouseWheelMove();
-                cameraSpeed += wheelMove * 0.5f;
+                cameraSpeed += wheelMove * speedMultiplier * (1 + (cameraSpeed / maxCameraSpeed) * (cameraSpeed / maxCameraSpeed));
 
                 if (cameraSpeed < minCameraSpeed)
                     cameraSpeed = minCameraSpeed;
@@ -579,8 +579,12 @@ void Editor::RenderViewport()
                 if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_LEFT_SHIFT) || RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_RIGHT_SHIFT))
                     multiplier = 2;
 
+                float zoomSpeed = cameraSpeed * multiplier;
+                if (zoomSpeed > maxCameraSpeed)
+                    zoomSpeed = maxCameraSpeed;
+
                 RaylibWrapper::Vector3 forward = RaylibWrapper::Vector3Normalize(RaylibWrapper::Vector3Subtract(camera.target, camera.position));
-                RaylibWrapper::Vector3 movement = RaylibWrapper::Vector3Scale(forward, RaylibWrapper::GetMouseWheelMove() * 2.0f * multiplier);
+                RaylibWrapper::Vector3 movement = RaylibWrapper::Vector3Scale(forward, RaylibWrapper::GetMouseWheelMove() * 2.0f * zoomSpeed);
 
                 camera.position = RaylibWrapper::Vector3Add(camera.position, movement);
                 camera.target = RaylibWrapper::Vector3Add(camera.target, movement);
