@@ -39,8 +39,8 @@ public:
 
 	void RenderViewport();
 	void RenderGameView();
-	void RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnDefault);
-	void RenderFileExplorer();
+	void RenderContentBrowserTreeNode(std::filesystem::path path, bool openOnDefault);
+	void RenderContentBrowser();
 	int RenderColorPicker(std::string name, ImVec2 position, ImVec4& selectedColor, ImVec4& previousColor); // Does this really need to be in here?
 	void RenderProperties();
 	bool RenderHierarchyNode(GameObject* gameObject, bool normalColor, bool& childDoubleClicked);

@@ -917,7 +917,7 @@ void Editor::UpdateViewport()
     case ImageFile:
         ImVec2 mousePos = ImGui::GetMousePos();
         viewportHovered = (mousePos.x >= viewportPosition.x && mousePos.x <= viewportPosition.z &&
-            mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w);
+            mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w); // Todo: This being set 3 times a frame. First in UpdateViewport (if dragging), then RenderViewport, then here.
 
         if (viewportHovered)
         {
@@ -951,7 +951,7 @@ void Editor::UpdateViewport()
     RaylibWrapper::EndTextureMode();
 }
 
-void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted folder.
+void Editor::RenderContentBrowser() // Todo: Handle if path is in a now deleted folder.
 {
     if (resetFileExplorerWin)
     {
@@ -968,9 +968,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         renamingFile = "";
 
     ImGuiWindowFlags windowFlags = ImGuiTableFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse;
-
-    float nextX = 310;
-    float nextY = 55;
+    float nextX = 310, nextY = 55;
 
     ImGui::SetNextWindowClass(&EditorWindow::defaultWindowClass);
     if (ImGui::Begin((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str(), nullptr, windowFlags))
@@ -978,6 +976,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.f, 0.f, 0.f, 0.f));
 
+        // Add Button
         ImGui::SetCursorPos(ImVec2(305, 22));
         if (RaylibWrapper::rlImGuiImageButtonSize("##FileAddButton", IconManager::imageTextures["AddIcon"], ImVec2(16, 16)))
         {
@@ -985,10 +984,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             explorerContextMenuFile = "";
         }
 
-        //ImGui::SetCursorPos(ImVec2(325, 23));
-        //if (rlImGuiImageButtonSize("##FileHomeButton", IconManager::imageTextures["HomeIcon"], ImVec2(17, 17)))
-        //    fileExplorerPath = ProjectManager::projectData.path / "Assets";
-
+        // Breadcrumb navigation
         std::filesystem::path fileExplorerTempPath = fileExplorerPath;
         std::filesystem::path path = ProjectManager::projectData.path;
         ImGui::SetCursorPos(ImVec2(335, 22));
@@ -1008,10 +1004,10 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 if (ImGui::Button((dir.string() + "##" + std::to_string(ImGui::GetCursorPosX())).c_str()))
                     fileExplorerPath = path;
                 ImGui::SameLine();
-                //ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20); // Todo: Shouldn't use fixed value here. Should calculate the length of the button
             }
         }
 
+        // Search box
         ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 260, 25));
         ImGui::SetNextItemWidth(250);
         static char searchBuffer[256] = "";
@@ -1029,8 +1025,7 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         // Back Button if not in /Assets folder
         if (fileExplorerPath != ProjectManager::projectData.path / "Assets")
         {
-            ImGui::PushID(fileExplorerPath.string().c_str()); // set unique ID based on the path string
-            // Creates back button
+            ImGui::PushID(fileExplorerPath.string().c_str());
             ImGui::SetCursorPosY(nextY);
             ImGui::SetCursorPosX(nextX);
             if (RaylibWrapper::rlImGuiImageButtonSize("##FileBackButton", IconManager::imageTextures["FolderIcon"], ImVec2(40, 40)))
@@ -1060,13 +1055,14 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
 
         std::filesystem::path fileHovered;
 
+        // File iteration
         for (const auto& entry : std::filesystem::directory_iterator(fileExplorerPath))
         {
             ImGui::PushID(entry.path().string().c_str());
             std::string id = entry.path().string().c_str();
             std::string fileName = entry.path().stem().string();
 
-            // Continues if the file is supposed to be hidden
+            // Skip hidden files
             if (fileName[0] == '.')
             {
                 ImGui::PopID();
@@ -1074,13 +1070,10 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             }
 
             if (fileName.length() > 11)
-            {
-                fileName = fileName.substr(0, 10);
-                fileName = fileName + "..";
-            }
+                fileName = fileName.substr(0, 10) + "..";
+
             ImGui::SetCursorPosY(nextY);
             ImGui::SetCursorPosX(nextX);
-            ImVec2 pos = ImGui::GetCursorPos();
 
             // Set focused item
             if (focusContentBrowserFile == entry.path().string()) // This doesn't show the navigation rectangle because apparently its hidden when navigating with a mouse (https://github.com/ocornut/imgui/issues/4054)
@@ -1090,9 +1083,40 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             }
 
             bool hovered = ImGui::IsMouseHoveringRect(ImGui::GetCursorScreenPos(), { ImGui::GetCursorScreenPos().x + 40, ImGui::GetCursorScreenPos().y + 38 }); // Using this since ImGui::IsItemHovered() won't work. ImGui::IsWindowHovered() also won't work for this. It seems these break when attempting to drag a button
+            if (hovered) fileHovered = entry;
 
-            if (hovered)
-                fileHovered = entry;
+            // Todo: For ImageFile and ModelFile, add support for dropping into hierarchy
+            // Todo: Support dropping and moving files usinng the contnent broswer tree and the "assets -> example -> example 2"
+            auto handleDrag = [&](DragTypes dragType) {
+                if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over a file, it will select that file
+                {
+                    dragData.first = dragType;
+                    dragData.second["Path"] = entry.path();
+                    if (dragType == ImageFile)
+                        dragData.second["Texture"] = RaylibWrapper::LoadTexture(entry.path().string().c_str()); // Todo: Make sure this texture is being unloaded. It would be best to just use texture variable, but make sure to update the float in the textureCaches
+                }
+            };
+
+            // Unified double-click handler for data files
+            auto handleDataFileDoubleClick = [&](DataFileTypes type, bool createIfMissing = true) {
+                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    std::string dataPath = entry.path().string() + (type == DataFileTypes::Material ? "" : ".data");
+                    // Puts the data into objectInProperties so it is displayed in the properties window
+                    if (!std::holds_alternative<DataFile>(objectInProperties) || std::filesystem::path(std::get<DataFile>(objectInProperties).path) != dataPath)
+                    {
+                        if (createIfMissing && !std::filesystem::exists(dataPath))
+                            Utilities::CreateDataFile(entry.path());
+
+                        DataFile dataFile;
+                        dataFile.path = dataPath;
+                        dataFile.type = type;
+                        std::ifstream jsonFile(dataFile.path);
+                        dataFile.json = nlohmann::json::parse(jsonFile);
+                        objectInProperties = dataFile;
+                    }
+                }
+            };
 
             if (entry.is_directory())
             {
@@ -1104,258 +1128,120 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     folderHovering = entry;
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.38f, 0.38f, 0.38f, 1.00f));
                 }
-                //ImVec2 mousePos = { RaylibWrapper::GetMousePosition().x - ImGui::GetWindowPos().x, RaylibWrapper::GetMousePosition().y - ImGui::GetWindowPos().y};
-                //ImVec2 itemPos = ImGui::GetCursorPos();
                 RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FolderIcon"], ImVec2(40, 40));
 
                 if (ImGui::IsItemHovered())
                 {
-                    if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over a folder, it will select that folder
-                    {
-                        dragData.first = Folder;
-                        dragData.second["Path"] = entry.path();
-                    }
-                    else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                    handleDrag(Folder);
+                    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     {
                         fileExplorerPath = entry.path();
-                        if (hovered && dragData.first != None)
-                            ImGui::PopStyleColor(3);
-                        else
-                            ImGui::PopStyleColor(2);
+                        if (hovered && dragData.first != None) ImGui::PopStyleColor(3);
+                        else ImGui::PopStyleColor(2);
                         ImGui::PopID();
                         ImGui::End();
                         return;
                     }
                 }
-
-                //if (ImGui::IsMouseHoveringRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax())) // Using this since ImGui::IsItemHovered() won't work. ImGui::IsWindowHovered() also won't work for this. It seems these break when attempting to drag a button
-                    //ConsoleLogger::ErrorLog("Hovered");
-                if (hovered && dragData.first != None)
-                    ImGui::PopStyleColor();
-                //ConsoleLogger::InfoLog("Mouse Pos: " + std::to_string(mousePos.x) + " " + std::to_string(mousePos.y));
-                //ConsoleLogger::InfoLog("Item Pos: " + std::to_string(itemPos.x) + " " + std::to_string(itemPos.y));
-                //if (ImGui::IsWindowHovered() && (mousePos.x >= itemPos.x && mousePos.x <= (itemPos.x + 32) &&
-                //    mousePos.y >= itemPos.y && mousePos.y <= (itemPos.y + 32)))
-                //{
-                //    hoveringButton = true;
-                //    ConsoleLogger::ErrorLog("Hovering");
-                //}
-                //else
-                //    hoveringButton = false;
-
+                if (hovered && dragData.first != None) ImGui::PopStyleColor();
             }
             else if (entry.is_regular_file())
             {
                 std::string extension = entry.path().extension().string();
-                if (extension == ".cpp")
+
+                // Define file type data
+                struct FileTypeData {
+                    const char* iconKey;
+                    DragTypes dragType;
+                    std::function<void()> doubleClickAction;
+                };
+
+                std::map<std::string, FileTypeData> fileTypes = {
+                    {".cpp", {"CppIcon", Other, [&]() { std::system(("\"" + entry.path().string() + "\"").c_str()); }}},
+                    {".h", {"HeaderIcon", Other, [&]() { std::system(("\"" + entry.path().string() + "\"").c_str()); }}},
+                    {".mp3", {"SoundIcon", Other, [&]() { handleDataFileDoubleClick(DataFileTypes::Sound); }}},
+                    {".wav", {"SoundIcon", Other, [&]() { handleDataFileDoubleClick(DataFileTypes::Sound); }}},
+                    {".ogg", {"SoundIcon", Other, [&]() { handleDataFileDoubleClick(DataFileTypes::Sound); }}},
+                    {".flac", {"SoundIcon", Other, [&]() { handleDataFileDoubleClick(DataFileTypes::Sound); }}},
+                    {".qoa", {"SoundIcon", Other, [&]() { handleDataFileDoubleClick(DataFileTypes::Sound); }}},
+                    {".xm", {"SoundIcon", Other, [&]() { handleDataFileDoubleClick(DataFileTypes::Sound); }}},
+                    {".mod", {"SoundIcon", Other, [&]() { handleDataFileDoubleClick(DataFileTypes::Sound); }}},
+                    {".ttf", {"FontIcon", Other, [&]() { handleDataFileDoubleClick(DataFileTypes::Sound); }}},
+                    {".otf", {"FontIcon", Other, [&]() { handleDataFileDoubleClick(DataFileTypes::Sound); }}},
+                    {".gltf", {"CubeIcon", ModelFile, []() {}}},
+                    {".glb", {"CubeIcon", ModelFile, []() {}}},
+                    {".obj", {"CubeIcon", ModelFile, []() {}}},
+                    {".m3d", {"CubeIcon", ModelFile, []() {}}},
+                    {".scene", {"SceneIcon", Other, [&]() {
+                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && SceneManager::GetActiveScene()->GetPath() != entry.path())
+                        {
+                            objectInProperties = std::monostate{};
+                            SceneManager::SaveScene(SceneManager::GetActiveScene());
+                            SceneManager::LoadScene(entry.path());
+                        }
+                    }}}
+                };
+
+                if (extension == ".png")  // Todo: Add jpg support. Will need to modify config.h and rebuild raylib
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CppIcon"], ImVec2(40, 40));
-                    if (ImGui::IsItemHovered())
-                    {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
-                        }
-                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                        {
-                            //std::string command = "code " + entry.path().string(); // VSCode
-                            std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
-                        }
-                    }
-                }
-                else if (extension == ".h")
-                {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["HeaderIcon"], ImVec2(40, 40));
-                    if (ImGui::IsItemHovered())
-                    {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
-                        }
-                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                        {
-                            //std::string command = "code " + entry.path().string(); // VSCode
-                            std::system(("\"" + entry.path().string() + "\"").c_str()); // Use prefered editor
-                        }
-                    }
-                }
-                else if (extension == ".png") // Todo: Add jpg support. Will need to modify config.h and rebuild raylib
-                {
-                    if (auto it = cachedTextures.find(entry.path()); it != cachedTextures.end()) // Cached
+                    if (auto it = cachedTextures.find(entry.path()); it != cachedTextures.end())
                         it->second.second = RaylibWrapper::GetTime();
-                    else // Not cached
-                    {
-                        cachedTextures[entry.path()] = std::make_pair(
-                            RaylibWrapper::LoadTexture(entry.path().string().c_str()),
-                            RaylibWrapper::GetTime()
-                        );
-                    }
+                    else
+                        cachedTextures[entry.path()] = std::make_pair(RaylibWrapper::LoadTexture(entry.path().string().c_str()), RaylibWrapper::GetTime());
 
                     RaylibWrapper::Texture& texture = cachedTextures[entry.path()].first;
-
                     float aspectRatio = (float)texture.width / (float)texture.height;
-                    ImVec2 imageSize = ImVec2(0, 0);
-                    imageSize.x = aspectRatio > 1.0f ? 32 : 32 * aspectRatio;
-                    imageSize.y = aspectRatio > 1.0f ? 32 / aspectRatio : 32;
+                    ImVec2 imageSize = ImVec2(aspectRatio > 1.0f ? 32 : 32 * aspectRatio, aspectRatio > 1.0f ? 32 / aspectRatio : 32);
                     int buttonSize = 32 + ImGui::GetStyle().FramePadding.x * 2;
-
                     ImVec2 cursorPos = ImGui::GetCursorPos();
 
-                    //RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), texture, ImVec2(32, 32));
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
                     ImGui::Button(("##" + id).c_str(), ImVec2(buttonSize, buttonSize));
                     ImGui::PopStyleColor();
 
                     if (ImGui::IsItemHovered())
                     {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = ImageFile;
-                            dragData.second["Texture"] = RaylibWrapper::LoadTexture(entry.path().string().c_str()); // Todo: Make sure this texture is being unloaded. It would be best to just use texture variable, but make sure to update the float in the textureCaches
-                            dragData.second["Path"] = entry.path();
-                        }
-                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        handleDrag(ImageFile);
+                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                             std::system(("\"" + entry.path().string() + "\"").c_str());
                     }
 
                     ImVec2 newCursorPos = ImGui::GetCursorPos();
-                    ImGui::SetCursorPos(ImVec2(cursorPos.x + (buttonSize - imageSize.x) / 2, cursorPos.y + (buttonSize - imageSize.y) / 2)); // Sets the position to the button position and centers it
+                    ImGui::SetCursorPos(ImVec2(cursorPos.x + (buttonSize - imageSize.x) / 2, cursorPos.y + (buttonSize - imageSize.y) / 2));
                     RaylibWrapper::rlImGuiImageSize(&texture, imageSize.x, imageSize.y);
                     ImGui::SetCursorPos(newCursorPos);
                 }
-                else if (extension == ".mp3" || extension == ".wav" || extension == ".ogg" || extension == ".flac" || extension == ".qoa" || extension == ".xm" || extension == ".mod")
-                {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["SoundIcon"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-                    if (ImGui::IsItemHovered())
-                    {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
-                        }
-                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                        {
-                            // Puts the data into objectInProperties so it is displayed in the properties window
-                            if (!std::holds_alternative<DataFile>(objectInProperties) || std::filesystem::path(std::get<DataFile>(objectInProperties).path) != (entry.path().string() + ".data"))
-                            {
-                                if (!std::filesystem::exists(entry.path().string() + ".data"))
-                                    Utilities::CreateDataFile(entry.path());
-
-                                DataFile dataFile;
-                                dataFile.path = entry.path().string() + ".data";
-                                dataFile.type = DataFileTypes::Sound;
-
-                                std::ifstream jsonFile(dataFile.path);
-                                dataFile.json = nlohmann::json::parse(jsonFile);
-
-                                objectInProperties = dataFile;
-                            }
-                        }
-                    }
-                }
-                else if (extension == ".mat")
+                else if (extension == ".mat") // Material files
                 {
                     RaylibWrapper::RenderTexture2D* materialIcon = CreateMaterialPreview(entry.path(), 32);
-                    RaylibWrapper::Texture2D* texture;
-                    if (materialIcon == nullptr)
-                        texture = IconManager::imageTextures["SoundIcon"]; // Todo: CHANGE THIS
-                    else
-                        texture = &materialIcon->texture;
-
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), texture, ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-                    //RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["SoundIcon"], ImVec2(32, 32)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    RaylibWrapper::Texture2D* texture = materialIcon ? &materialIcon->texture : IconManager::imageTextures["SoundIcon"];
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), texture, ImVec2(32, 32));
                     if (ImGui::IsItemHovered())
                     {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
-                        }
-                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                        {
-                            // Puts the data into objectInProperties so it is displayed in the properties window
-                            if (!std::holds_alternative<DataFile>(objectInProperties) || std::filesystem::path(std::get<DataFile>(objectInProperties).path) != (entry.path().string()))
-                            {
-                                Utilities::CreateDataFile(entry.path());
-
-                                DataFile dataFile;
-                                dataFile.path = entry.path().string();
-                                dataFile.type = DataFileTypes::Material;
-
-                                std::ifstream jsonFile(dataFile.path);
-                                dataFile.json = nlohmann::json::parse(jsonFile);
-
-                                objectInProperties = dataFile;
-                            }
-                        }
+                        handleDrag(Other);
+                        handleDataFileDoubleClick(DataFileTypes::Material, false);
                     }
                 }
-                else if (extension == ".ttf" || extension == ".otf")
+                else if (extension == ".ldtk") // LDtk files with complex logic
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["FontIcon"], ImVec2(40, 40)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["LDtkIcon"], ImVec2(40, 40));
                     if (ImGui::IsItemHovered())
                     {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        handleDrag(Other);
+                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                         {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
-                        }
-                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                        {
+                            std::string dataPath = entry.path().string() + ".data";
+
                             // Puts the data into objectInProperties so it is displayed in the properties window
-                            if (!std::holds_alternative<DataFile>(objectInProperties) || std::filesystem::path(std::get<DataFile>(objectInProperties).path) != (entry.path().string() + ".data"))
+                            if (!std::holds_alternative<DataFile>(objectInProperties) || std::filesystem::path(std::get<DataFile>(objectInProperties).path) != dataPath)
                             {
-                                bool dataExists = true;
-                                if (!std::filesystem::exists(entry.path().string() + ".data"))
-                                    dataExists = Utilities::CreateDataFile(entry.path());
-
-                                DataFile dataFile;
-                                dataFile.path = entry.path().string() + ".data";
-                                dataFile.type = DataFileTypes::Sound;
-
-                                if (!dataExists)
-                                {
-                                    std::ifstream jsonFile(dataFile.path);
-                                    dataFile.json = nlohmann::json::parse(jsonFile);
-                                }
-
-                                objectInProperties = dataFile;
-                            }
-                        }
-                    }
-                }
-                else if (extension == ".ldtk")
-                {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["LDtkIcon"], ImVec2(40, 40)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-                    if (ImGui::IsItemHovered())
-                    {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
-                        }
-                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                        {
-                            // Puts the data into objectInProperties so it is displayed in the properties window
-                            if (!std::holds_alternative<DataFile>(objectInProperties) || std::filesystem::path(std::get<DataFile>(objectInProperties).path) != (entry.path().string() + ".data"))
-                            {
-                                if (!std::filesystem::exists(entry.path().string() + ".data"))
+                                if (!std::filesystem::exists(dataPath))
                                 {
                                     Utilities::CreateDataFile(entry.path());
-
-                                    std::ofstream file(entry.path().string() + ".data");
-                                    if (file.is_open()) // Todo: handle if the file doesn't open
+                                    std::ofstream file(dataPath);
+                                    if (file.is_open())
                                     {
-                                        nlohmann::json jsonData = {
-                                            {"public",
-                                                nlohmann::json::object()
-                                            },
-                                            {"private", {
-                                                {"version", 1.0f}
-                                            }}
-                                        };
+                                        nlohmann::json jsonData = { {"public", nlohmann::json::object()}, {"private", {{"version", 1.0f}}} };
 
                                         // Opens the LDtk file, reads the tilesets, then adds the tilesets to File
                                         std::ifstream ldtkFile(entry.path());
@@ -1363,13 +1249,9 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                                         {
                                             nlohmann::json data = nlohmann::json::parse(ldtkFile);
                                             for (int i = 0; i < data["defs"]["tilesets"].size(); i++)
-                                                jsonData["public"][data["defs"]["tilesets"][i]["identifier"]] = { "file", { ".png", ".jpeg", ".jpg" }, "nullptr"};
+                                                jsonData["public"][data["defs"]["tilesets"][i]["identifier"]] = { "file", { ".png", ".jpeg", ".jpg" }, "nullptr" };
                                         }
-                                        else
-                                            ConsoleLogger::ErrorLog("Failed to open " + entry.path().filename().string());
-
                                         file << std::setw(4) << jsonData << std::endl;
-                                        file.close();
                                     }
                                     else
                                         ConsoleLogger::ErrorLog("Failed to open " + entry.path().filename().string());
@@ -1377,223 +1259,171 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                                 else
                                 {
                                     // Updates the data with the up-to-date LDtk data if needed
-                                    std::ifstream fileR(entry.path().string() + ".data");
+                                    std::ifstream fileR(dataPath);
                                     nlohmann::json jsonData = nlohmann::json::parse(fileR);
-                                    if (fileR.is_open()) // Todo: handle if the file doesn't open
+                                    fileR.close();
+                                    std::ifstream ldtkFile(entry.path());
+                                    if (ldtkFile.is_open()) // Todo: handle if the file doesn't open
                                     {
-                                        fileR.close();
-                                        std::ifstream ldtkFile(entry.path());
-                                        if (ldtkFile.is_open())
+                                        nlohmann::json data = nlohmann::json::parse(ldtkFile);
+                                        for (int i = 0; i < data["defs"]["tilesets"].size(); i++)
                                         {
-                                            nlohmann::json data = nlohmann::json::parse(ldtkFile);
-                                            ldtkFile.close();
-
-                                            for (int i = 0; i < data["defs"]["tilesets"].size(); i++)
-                                            {
-                                                nlohmann::json id = data["defs"]["tilesets"][i]["identifier"];
-                                                if (jsonData["public"].contains(id))
-                                                    jsonData["public"][id] = { "file", { ".png", ".jpeg", ".jpg" }, jsonData["public"][id][2]};
-                                                else
-                                                    jsonData["public"][id] = { "file", { ".png", ".jpeg", ".jpg" }, "nullptr"};
-                                            }
-
-                                            std::ofstream fileW(entry.path().string() + ".data");
-                                            if (fileW.is_open())
-                                            {
-                                                fileW << std::setw(4) << jsonData << std::endl;
-                                                fileW.close();
-                                            }
-                                            else // Todo: Handle this
-                                                ConsoleLogger::ErrorLog("Failed to open " + entry.path().filename().string());
+                                            nlohmann::json id = data["defs"]["tilesets"][i]["identifier"];
+                                            jsonData["public"][id] = jsonData["public"].contains(id) ?
+                                                nlohmann::json{ "file", { ".png", ".jpeg", ".jpg" }, jsonData["public"][id][2] } :
+                                                nlohmann::json{ "file", { ".png", ".jpeg", ".jpg" }, "nullptr" };
                                         }
-                                        else
+                                        std::ofstream fileW(dataPath);
+                                        if (fileW.is_open())
+                                            fileW << std::setw(4) << jsonData << std::endl;
+                                        else // Todo: Handle this
                                             ConsoleLogger::ErrorLog("Failed to open " + entry.path().filename().string());
                                     }
                                     else
                                         ConsoleLogger::ErrorLog("Failed to open " + entry.path().filename().string());
                                 }
-
                                 DataFile dataFile;
-                                dataFile.path = entry.path().string() + ".data";
+                                dataFile.path = dataPath;
                                 dataFile.type = DataFileTypes::Tilemap;
-
                                 std::ifstream jsonFile(dataFile.path);
                                 dataFile.json = nlohmann::json::parse(jsonFile);
-                                jsonFile.close();
-
                                 objectInProperties = dataFile;
                             }
                         }
                     }
                 }
-                else if (extension == ".gltf" || extension == ".glb" || extension == ".obj" || extension == ".m3d")
-                {
-                    // Todo: This is causing errors if there are game objects with a MeshRenderer
-                    //if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(40, 40)))
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CubeIcon"], ImVec2(40, 40));
+                //else if (extension == ".gltf" || extension == ".glb" || extension == ".obj" || extension == ".m3d")
+                //{
+                //    // Todo: This is causing errors if there are game objects with a MeshRenderer
+                //    //if (RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), &CreateModelPreview(entry.path(), 32)->texture, ImVec2(40, 40)))
+                //    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CubeIcon"], ImVec2(40, 40));
 
-                    if (ImGui::IsItemHovered())
-                    {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = ModelFile;
-                            dragData.second["Path"] = entry.path();
-                        }
-                    }
-                }
+                //    if (ImGui::IsItemHovered())
+                //    {
+                //        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5))
+                //        {
+                //            dragData.first = ModelFile;
+                //            dragData.second["Path"] = entry.path();
+                //        }
+                //    }
+                //}
                 else if (extension == ".animgraph")
                 {
                     RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["AnimationGraphIcon"], ImVec2(40, 40));
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                    {
-                        // Todo: If something is already in the Animation Graph window and its not saved, popup asking to save, don't save, or cancel
-                        
-                        // Todo: Create a AnimationGraph script and put OpenAnimationGraph() in it.
-                        std::ifstream dataFile(entry.path());
-                        if (dataFile.is_open())
-                        {
-                            // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
-                            dataFile >> animationGraphData;
-                            animationGraphData["path"] = entry.path(); // Updating the path incase it changed.
-
-                            if (animationGraphWinOpen) // If the animation graph is open, I need to focus it
-                            {
-                                ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
-                                if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
-                                    window->DockNode->TabBar->NextSelectedTabId = window->TabId;
-                            }
-                            else
-                                animationGraphWinOpen = true; // This should focus the animation graph window
-                        }
-                        else
-                        {
-                            // Todo: Send error message
-                        }
-                    }
-
                     if (ImGui::IsItemHovered())
                     {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
+                        handleDrag(Other);
+                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                         {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
+                            // Todo: If something is already in the Animation Graph window and its not saved, popup asking to save, don't save, or cancel
+                            // Todo: Create a AnimationGraph script and put OpenAnimationGraph() in it.
+
+                            std::ifstream dataFile(entry.path());
+                            if (dataFile.is_open())
+                            {
+                                // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
+                                dataFile >> animationGraphData;
+                                animationGraphData["path"] = entry.path(); // Updating the path incase it changed.
+                                if (animationGraphWinOpen) // If the animation graph is open, I need to focus it
+                                {
+                                    ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
+                                    if (window && window->DockNode && window->DockNode->TabBar)
+                                        window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+                                }
+                                else
+                                    animationGraphWinOpen = true; // This should focus the animation graph window
+                            }
+                            else
+                            {
+                                // Todo: Send error message
+                            }
                         }
                     }
                 }
                 else if (extension == ".es")
                 {
                     RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["EventSheetIcon"], ImVec2(40, 40));
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                    if (ImGui::IsItemHovered())
                     {
-                        std::ifstream dataFile(entry.path());
-                        if (dataFile.is_open())
+                        handleDrag(Other);
+                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                         {
-                            bool foundWindow = false;
-                            for (EditorWindow* window : windows)
+                            std::ifstream dataFile(entry.path());
+                            if (dataFile.is_open())
                             {
-                                if (window->windowName == "EventSheet Editor" && window->windowID == entry.path().string())
+                                bool foundWindow = false;
+                                for (EditorWindow* window : windows)
                                 {
-                                    ImGuiWindow* imGuiWindow = ImGui::FindWindowByName((window->fullWindowName).c_str());
-                                    if (imGuiWindow != NULL && imGuiWindow->DockNode != NULL && imGuiWindow->DockNode->TabBar != NULL)
-                                        imGuiWindow->DockNode->TabBar->NextSelectedTabId = imGuiWindow->TabId;
-                                    foundWindow = true;
-                                    break;
+                                    if (window->windowName == "EventSheet Editor" && window->windowID == entry.path().string())
+                                    {
+                                        ImGuiWindow* imGuiWindow = ImGui::FindWindowByName(window->fullWindowName.c_str());
+                                        if (imGuiWindow && imGuiWindow->DockNode && imGuiWindow->DockNode->TabBar)
+                                            imGuiWindow->DockNode->TabBar->NextSelectedTabId = imGuiWindow->TabId;
+                                        foundWindow = true;
+                                        break;
+                                    }
+                                }
+                                if (!foundWindow)
+                                {
+                                    windows.push_back(new EventSheetEditor());
+                                    windows.back()->Init("EventSheet Editor", entry.path().string(), true, ICON_FA_TABLE_COLUMNS, ImVec4(0.10f, 0.11f, 0.12f, 1.00f));
+                                    // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
+                                    nlohmann::json data;
+                                    dataFile >> data;
+                                    static_cast<EventSheetEditor*>(windows.back())->LoadData(data, entry.path().string());
+
+                                    // Todo: If something is already in the Canvas Editor window and its not saved, popup asking to save, don't save, or cancel
+
+                                    //if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                                    //{
+                                        //std::ifstream dataFile(entry.path());
+                                        //if (dataFile.is_open())
+                                        //{
+                                        //    // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
+                                        //    dataFile >> CanvasEditor::canvasData;
+                                        //    CanvasEditor::canvasData["path"] = entry.path(); // Updating the path incase it changed.
+
+                                        //    if (CanvasEditor::windowOpen) // If the canvas editor is open, focus it
+                                        //    {
+                                        //        ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str());
+                                        //        if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
+                                        //            window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+                                        //    }
+                                        //    else
+                                        //        CanvasEditor::windowOpen = true; // This should focus the canvas editor window
+                                        //}
+                                        //else
+                                        //{
+                                        //    // Todo: Send error message
+                                        //}
+                                    //}
                                 }
                             }
-
-                            if (!foundWindow)
-                            {
-                                windows.push_back(new EventSheetEditor());
-                                windows.back()->Init("EventSheet Editor", entry.path().string(), true, ICON_FA_TABLE_COLUMNS, ImVec4(0.10f, 0.11f, 0.12f, 1.00f));
-                                // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
-                                nlohmann::json data;
-                                dataFile >> data;
-                                static_cast<EventSheetEditor*>(windows.back())->LoadData(data, entry.path().string());
-                            }
-                        }
-                        else
-                        {
-                            // Todo: Send error message
-                        }
-                    }
-
-                    if (ImGui::IsItemHovered()) // Todo: Stop duplicating for each one
-                    {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
                         }
                     }
                 }
                 else if (extension == ".canvas")
                 {
                     RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["CanvasIcon"], ImVec2(40, 40));
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                    {
-                        // Todo: If something is already in the Canvas Editor window and its not saved, popup asking to save, don't save, or cancel
-
-                        //std::ifstream dataFile(entry.path());
-                        //if (dataFile.is_open())
-                        //{
-                        //    // Todo: Check if the dataFile has data in it. If it doesn't then add default data to it so it won't crash.
-                        //    dataFile >> CanvasEditor::canvasData;
-                        //    CanvasEditor::canvasData["path"] = entry.path(); // Updating the path incase it changed.
-
-                        //    if (CanvasEditor::windowOpen) // If the canvas editor is open, focus it
-                        //    {
-                        //        ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_BRUSH + std::string(" Canvas Editor")).c_str());
-                        //        if (window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL)
-                        //            window->DockNode->TabBar->NextSelectedTabId = window->TabId;
-                        //    }
-                        //    else
-                        //        CanvasEditor::windowOpen = true; // This should focus the canvas editor window
-                        //}
-                        //else
-                        //{
-                        //    // Todo: Send error message
-                        //}
-                    }
-
-                    if (ImGui::IsItemHovered()) // Todo: Stop duplicating for each one
-                    {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
-                        }
-                    }
+                    if (ImGui::IsItemHovered()) handleDrag(Other);
                 }
-                else if (extension == ".scene")
+                else if (auto it = fileTypes.find(extension); it != fileTypes.end())
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["SceneIcon"], ImVec2(40, 40));
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures[it->second.iconKey], ImVec2(40, 40));
                     if (ImGui::IsItemHovered())
                     {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
-                        }
-                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && SceneManager::GetActiveScene()->GetPath() != entry.path())
-                        {
-                            // Todo: Popup save window if the scene isn't saved
-                            objectInProperties = std::monostate{};
-                            SceneManager::SaveScene(SceneManager::GetActiveScene());
-                            SceneManager::LoadScene(entry.path());
-                        }
+                        handleDrag(it->second.dragType);
+                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                            it->second.doubleClickAction();
                     }
                 }
                 else if (extension != ".data")
                 {
-                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(40, 40)) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    RaylibWrapper::rlImGuiImageButtonSize(("##" + id).c_str(), IconManager::imageTextures["UnknownFile"], ImVec2(40, 40));
                     if (ImGui::IsItemHovered())
                     {
-                        if (dragData.first == None && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 5)) // Todo: If the user holds down on nothing and moves mouse over an image file, it will select that file
-                        {
-                            dragData.first = Other;
-                            dragData.second["Path"] = entry.path();
-                        }
-                        else if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        handleDrag(Other);
+                        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                             std::system(("\"" + entry.path().string() + "\"").c_str());
                     }
                 }
@@ -1604,10 +1434,11 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 }
             }
 
+            // File name rendering
             ImGui::PushFont(FontManager::GetFont("Roboto-Medium", 12, false));
             ImGui::SetCursorPosY(ImGui::GetCursorPosY());
-            ImGui::SetCursorPosX(nextX + (40/2) - (ImGui::CalcTextSize(fileName.c_str()).x / 2) + ImGui::CalcTextSize("  ").x); // ImGui::CalcTextSize("  ").x adds two spaces so its properly aligned
-            //ImGui::SetCursorPosX(nextX - 2);
+            ImGui::SetCursorPosX(nextX + (40 / 2) - (ImGui::CalcTextSize(fileName.c_str()).x / 2) + ImGui::CalcTextSize("  ").x);
+
             if (!renamingFile.empty() && renamingFile.filename().string() == entry.path().filename().string())
             {
                 ImGui::SetNextItemWidth(44);
@@ -1626,26 +1457,21 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         {
                             std::filesystem::path headerPath = renamingFile;
                             headerPath.replace_extension(".h");
-
                             if (std::filesystem::exists(headerPath))
                                 std::filesystem::rename(headerPath, (renamingFile.parent_path() / (newFileName + std::string(".h"))));
                         }
-
-                        if (renamingFile.extension() == ".h")
+                        else if (renamingFile.extension() == ".h")
                         {
                             std::filesystem::path cppPath = renamingFile;
                             cppPath.replace_extension(".cpp");
-
                             if (std::filesystem::exists(cppPath))
                                 std::filesystem::rename(cppPath, (renamingFile.parent_path() / (newFileName + std::string(".cpp"))));
                         }
-
                         fileRenameFirstFrame = true;
                     }
                     renamingFile = "";
                     strcpy_s(newFileName, sizeof(newFileName), "");
                 }
-
                 if (!ImGui::IsItemClicked() && ImGui::IsKeyPressed(ImGuiKey_MouseLeft))
                 {
                     renamingFile = "";
@@ -1653,11 +1479,10 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                     fileRenameFirstFrame = true;
                 }
             }
-            else ImGui::Text(fileName.c_str()); // Todo: Center text
+            else ImGui::Text(fileName.c_str());
             ImGui::PopFont();
 
             nextX += 60;
-
             if (nextX > ImGui::GetWindowWidth() - 32)
             {
                 nextX = 310;
@@ -1667,385 +1492,201 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
         }
         ImGui::PopStyleColor(2);
 
-        // Drag and drop code
-        // Todo: For ImageFile and ModelFile, add support for dropping into hierarchy
-        if (dragData.first == ImageFile)
-        {
-            //ImGui::SetNextWindowSize(ImVec2(32, 32));
-            //ImGui::SetNextWindowPos(ImGui::GetMousePos()); // Todo: Add offset
-            //ImGui::SetNextWindowBgAlpha(0.0f);
-
-            //ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-            //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-            //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-
-            //ImGui::Begin("DragWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-            //RaylibWrapper::rlImGuiImageSize(std::any_cast<RaylibWrapper::Texture2D*>(dragData.second["Texture"]), ImGui::GetWindowSize().x, ImGui::GetWindowSize().y);
-            //ImGui::End();
-            //ImGui::PopStyleVar(3);
-
+        // Consolidated drag and drop handling
+        auto setCursor = [](RaylibWrapper::MouseCursor cursor) {
             static RaylibWrapper::MouseCursor currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
+            if (currentCursor != cursor) {
+                RaylibWrapper::SetMouseCursor(cursor);
+                currentCursor = cursor;
+            }
+        };
 
-            //viewportHovered = ImGui::IsMouseHoveringRect({viewportPosition.x, viewportPosition.y}, { viewportPosition.z, viewportPosition.w }); // This doesn't work for some reason, neither does IsWindowHovered() in the viewport window
+        auto isViewportHovered = []() {
             ImVec2 mousePos = ImGui::GetMousePos();
-            viewportHovered = (mousePos.x >= viewportPosition.x && mousePos.x <= viewportPosition.z &&
-                mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w); // Todo: This being set 3 times a frame. First in UpdateViewport (if dragging), then RenderViewport, then here.
+            return (mousePos.x >= viewportPosition.x && mousePos.x <= viewportPosition.z && mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w);
+        };
 
-            if (viewportHovered || dragData.second.find("HoveringValidElement") != dragData.second.end() && std::any_cast<bool>(dragData.second["HoveringValidElement"]))
+        if (dragData.first != None)
+        {
+            bool validDrop = !folderHovering.empty() || (dragData.second.find("HoveringValidElement") != dragData.second.end() && std::any_cast<bool>(dragData.second["HoveringValidElement"]));
+
+            // Todo: Show the model while placing it down, like with sprites
+            if (dragData.first == ImageFile || dragData.first == ModelFile)
             {
-                if (currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
-                {
-                    RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-                    currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
-                }
+                viewportHovered = isViewportHovered();
+                setCursor((viewportHovered || validDrop) ? RaylibWrapper::MOUSE_CURSOR_DEFAULT : RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
             }
-            else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED)
+            else
             {
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
-                currentCursor = RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED;
+                setCursor(validDrop ? RaylibWrapper::MOUSE_CURSOR_DEFAULT : RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
             }
+
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
             {
-                if (ImGui::IsWindowHovered())
+                if (!folderHovering.empty())
                 {
-                    if (!folderHovering.empty()) // Todo: Add support for dropping files onto folders in the file explorer tree, and the previous folders buttons near the top of the file explorer
-                    {
+                    try {
                         std::filesystem::path path = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
                         std::filesystem::rename(path, folderHovering / path.filename());
+                        if (std::filesystem::exists(path.string() + ".data"))
+                            std::filesystem::rename(path.string() + ".data", folderHovering / (path.filename().string() + ".data"));
+                    }
+                    catch (const std::filesystem::filesystem_error& e) {
+                        ConsoleLogger::ErrorLog(std::string("Error moving folder: ") + e.what(), false);
+                    }
+                    catch (const std::bad_any_cast& e) {
+                        ConsoleLogger::ErrorLog(std::string("Error moving folder: ") + e.what());
+                    }
+                    catch (const std::exception& e) {
+                        ConsoleLogger::ErrorLog(std::string("Error moving folder: ") + e.what());
                     }
                 }
-                else if (viewportHovered)
+                else if ((dragData.first == ImageFile || dragData.first == ModelFile) && viewportHovered)
                 {
+                    // Handle viewport drops
                     RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
                     mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
                     mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
                     RaylibWrapper::Vector3 position = RaylibWrapper::GetScreenToWorldRay(mousePosition, camera).position;
 
-                    std::filesystem::path texturePath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+                    // Todo: Properly set the Z position using a raycast (that detects every game object, including ones without colliders)
+
+                    std::filesystem::path filePath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
+                    auto assetsPosition = filePath.string().find("Assets");
+                    if (assetsPosition != std::string::npos)
+                        filePath = filePath.string().substr(assetsPosition + 7);
 
                     GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
-                    gameObject->transform.SetPosition({ position.x, position.y, 0 });
+                    gameObject->transform.SetPosition({ position.x, position.y, dragData.first == ModelFile ? position.z : 0 });
                     gameObject->transform.SetScale({ 1,1,1 });
                     gameObject->transform.SetRotation(Quaternion::Identity());
-                    gameObject->SetName(texturePath.stem().string());
+                    gameObject->SetName(filePath.stem().string());
 
-                    auto assetsPosition = texturePath.string().find("Assets");
-                    if (assetsPosition != std::string::npos)
-                        texturePath = texturePath.string().substr(assetsPosition + 7);
-
-                    std::string texturePathString = texturePath.string();
-                    for (char& c : texturePathString) // Reformatted the path for unix
+                    if (dragData.first == ImageFile)
                     {
-                        if (c == '\\')
-                            c = '/';
-                    }
+                        std::string texturePathString = filePath.string();
+                        for (char& c : texturePathString) // Reformatted the path for unix
+                        {
+                            if (c == '\\')
+                                c = '/';
+                        }
 
-                    SpriteRenderer& spriteRenderer = gameObject->AddComponentInternal<SpriteRenderer>();
-                    spriteRenderer.exposedVariables[1][0][2] = texturePathString;
-                    //spriteRenderer.SetSprite(new Sprite(ProjectManager::projectData.path.string() + "/Assets/" + texturePath.string()));
-                    gameObject->AddComponentInternal<Collider2D>(); // Todo: Set to convex/texture type
+                        SpriteRenderer& spriteRenderer = gameObject->AddComponentInternal<SpriteRenderer>();
+                        spriteRenderer.exposedVariables[1][0][2] = texturePathString;
+                        gameObject->AddComponentInternal<Collider2D>(); // Todo: Set to convex/texture type
+                    }
+                    else if (dragData.first == ModelFile)
+                    {
+                        MeshRenderer& meshRenderer = gameObject->AddComponentInternal<MeshRenderer>();
+                        meshRenderer.SetModelPath(filePath);
+                        meshRenderer.SetModel(ModelType::Custom, filePath, ShaderManager::LitStandard);
+                    }
 
                     for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
                         component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
-                    
+
                     //if (selectedObject != nullptr)
                         //EventSystem::Invoke("ObjectDeselected", selectedObject);
                     selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
                     objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
                     //EventSystem::Invoke("ObjectSelected", selectedObject);
                 }
-
-                dragData.first = None;
-                RaylibWrapper::UnloadTexture(std::any_cast<RaylibWrapper::Texture2D>(dragData.second["Texture"]));
-                dragData.second.clear();
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
-                // Check if in in file explorer and hovering over folder
-            }
-            if (!folderHovering.empty())
-            {
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
-            }
-        }
-        else if (dragData.first == ModelFile && ProjectManager::projectData.is3D)
-        {
-            // Todo: Show the model while placing it down, like with sprites
-            static RaylibWrapper::MouseCursor currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
-
-            //viewportHovered = ImGui::IsMouseHoveringRect({viewportPosition.x, viewportPosition.y}, { viewportPosition.z, viewportPosition.w }); // This doesn't work for some reason, neither does IsWindowHovered() in the viewport window
-            ImVec2 mousePos = ImGui::GetMousePos();
-            viewportHovered = (mousePos.x >= viewportPosition.x && mousePos.x <= viewportPosition.z &&
-                mousePos.y >= viewportPosition.y && mousePos.y <= viewportPosition.w); // Todo: This being set 3 times a frame. First in UpdateViewport (if dragging), then RenderViewport, then here.
-
-            if (viewportHovered || dragData.second.find("HoveringValidElement") != dragData.second.end() && std::any_cast<bool>(dragData.second["HoveringValidElement"]))
-            {
-                if (currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
-                {
-                    RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-                    currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
-                }
-            }
-            else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED)
-            {
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
-                currentCursor = RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED;
-            }
-            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-            {
-                // Checks if hovering Content Browser
-                ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str());
-                if (ImGui::IsWindowHovered() && window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL && window->DockNode->TabBar->SelectedTabId == window->TabId)
-                {
-                    if (!folderHovering.empty()) // Todo: Add support for dropping files onto folders in the file explorer tree, and the previous folders buttons near the top of the file explorer
-                    {
-                        std::filesystem::path path = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
-                        std::filesystem::rename(path, folderHovering / path.filename());
-                    }
-                }
                 else
                 {
-                    // Checks if hoveirng viewport
-                    window = ImGui::FindWindowByName((ICON_FA_CUBES + std::string(" Viewport")).c_str());
-                    if (viewportHovered && window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL && window->DockNode->TabBar->SelectedTabId == window->TabId)
+                    // Checks if hovering animation graph
+                    ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
+                    // Todo: animationGraphHovered is always true if its open. It doesn't actually check if its being hovered. Look at dropping a model file into viewport and how im checking if viewport is hovered
+                    if (animationGraphWinOpen && animationGraphHovered && window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL && window->DockNode->TabBar->SelectedTabId == window->TabId)
                     {
                         RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
                         mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
                         mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
                         RaylibWrapper::Vector3 position = RaylibWrapper::GetScreenToWorldRay(mousePosition, camera).position;
 
-                        // Todo: Properly set the Z position
+                        // Todo: Place the nodes at the mouse position
 
-                        //ConsoleLogger::ErrorLog("Current Z: " + std::to_string(camera.position.z));
-                        //ConsoleLogger::ErrorLog("Z Ray: " + std::to_string(position.z));
+                        bool updatedAnimations = false;
 
-                        //for (GameObject* gameObject : SceneManager::GetActiveScene()->GetGameObjects())
-                        //{
-                        //    if (!gameObject->IsActive())
-                        //        continue;
-                        //    MeshRenderer* meshRenderer = gameObject->GetComponent<MeshRenderer>();
-                        //    if (meshRenderer == nullptr)
-                        //        continue;
-
-                        //    for (int i = 0; i < model.mesh.vertexCount; i += 3)
-                        //    {
-                        //        Vector3 v0 = model.transform * model.mesh.vertices[i];
-                        //        Vector3 v1 = model.transform * model.mesh.vertices[i + 1];
-                        //        Vector3 v2 = model.transform * model.mesh.vertices[i + 2];
-                        //        Triangle triangle = { v0, v1, v2 };
-
-                        //        if (CheckCollisionRayTriangle(ray, triangle, &hitPosition))
-                        //        {
-                        //            DrawSphere(hitPosition, 0.1f, GREEN); // Draw a sphere at the intersection point
-                        //            break; // Exit loop if intersection found
-                        //        }
-                        //    }
-                        //}
-
-                        // Todo: Add raycast (that detects every game object, including ones without colliders)
-
-
-                        std::filesystem::path modelPath = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
-                        auto assetsPosition = modelPath.string().find("Assets");
-                        if (assetsPosition != std::string::npos)
-                            modelPath = modelPath.string().substr(assetsPosition + 7);
-
-                        GameObject* gameObject = SceneManager::GetActiveScene()->AddGameObject();
-                        gameObject->transform.SetPosition({ position.x, position.y, position.z });
-                        gameObject->transform.SetScale({ 1,1,1 });
-                        gameObject->transform.SetRotation(Quaternion::Identity());
-                        gameObject->SetName(modelPath.stem().string());
-
-                        MeshRenderer& meshRenderer = gameObject->AddComponentInternal<MeshRenderer>();
-                        meshRenderer.SetModelPath(modelPath);
-                        meshRenderer.SetModel(ModelType::Custom, modelPath, ShaderManager::LitStandard);
-
-                        for (Component* component : SceneManager::GetActiveScene()->GetGameObjects().back()->GetComponents())
-                            component->gameObject = SceneManager::GetActiveScene()->GetGameObjects().back();
-
-                        //if (selectedObject != nullptr)
-                            //EventSystem::Invoke("ObjectDeselected", selectedObject);
-                        selectedObject = SceneManager::GetActiveScene()->GetGameObjects().back();
-                        objectInProperties = SceneManager::GetActiveScene()->GetGameObjects().back();
-                        //EventSystem::Invoke("ObjectSelected", selectedObject);
-                    }
-                    else
-                    {
-                        // Checks if hovering animation graph
-                        ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_PERSON_RUNNING + std::string(" Animation Graph")).c_str());
-                        // Todo: animationGraphHovered is always true if its open. It doesn't actually check if its being hovered. Look at dropping a model file into viewport and how im checking if viewport is hovered
-                        if (animationGraphWinOpen && animationGraphHovered && window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL && window->DockNode->TabBar->SelectedTabId == window->TabId)
+                        int index = 0;
+                        std::random_device rd;
+                        std::mt19937 gen(rd());
+                        std::uniform_int_distribution<int> distribution(999999, 99999999);
+                        // Todo: Popup a window with a progress bar
+                        // Todo: This function is really slow to get animations
+                        for (std::string& animationName : Utilities::GetGltfAnimationNames(std::any_cast<std::filesystem::path>(dragData.second["Path"])))
                         {
-                            RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
-                            mousePosition.x = (mousePosition.x - viewportPosition.x) / (viewportPosition.z - viewportPosition.x) * RaylibWrapper::GetScreenWidth();
-                            mousePosition.y = (mousePosition.y - viewportPosition.y) / (viewportPosition.w - viewportPosition.y) * RaylibWrapper::GetScreenHeight();
-                            RaylibWrapper::Vector3 position = RaylibWrapper::GetScreenToWorldRay(mousePosition, camera).position;
-
-                            // Todo: Place the nodes at the mouse position
-
-                            bool updatedAnimations = false;
-
-                            int index = 0;
-                            std::random_device rd;
-                            std::mt19937 gen(rd());
-                            std::uniform_int_distribution<int> distribution(999999, 99999999);
-                            // Todo: Popup a window with a progress bar
-                            // Todo: This function is really slow to get animations
-                            for (std::string& animationName : Utilities::GetGltfAnimationNames(std::any_cast<std::filesystem::path>(dragData.second["Path"])))
+                            int id = 0;
+                            while (id == 0)
                             {
-                                int id = 0;
-                                while (id == 0)
+                                id = distribution(gen);
+                                for (auto& node : animationGraphData["nodes"])
                                 {
-                                    id = distribution(gen);
-                                    for (auto& node : animationGraphData["nodes"])
+                                    if (id == node["id"])
                                     {
-                                        if (id == node["id"])
-                                        {
-                                            id = 0;
-                                            break;
-                                        }
+                                        id = 0;
+                                        break;
                                     }
                                 }
-
-                                nlohmann::json node = {
-                                    {"id", id},
-                                    {"name", animationName},
-                                    {"index", index},
-                                    {"x", 350 + (index * 30)},
-                                    {"y", 350 + (index * 30)},
-                                    {"loop", true},
-                                    {"speed", 1.0f}
-                                };
-
-                                animationGraphData["nodes"].push_back(node);
-                                updatedAnimations = true;
-                                index++;
                             }
 
-                            if (updatedAnimations)
+                            nlohmann::json node = {
+                                {"id", id},
+                                {"name", animationName},
+                                {"index", index},
+                                {"x", 350 + (index * 30)},
+                                {"y", 350 + (index * 30)},
+                                {"loop", true},
+                                {"speed", 1.0f}
+                            };
+
+                            animationGraphData["nodes"].push_back(node);
+                            updatedAnimations = true;
+                            index++;
+                        }
+
+                        if (updatedAnimations)
+                        {
+                            std::ofstream file(animationGraphData["path"].get<std::filesystem::path>());
+                            if (file.is_open())
                             {
-                                std::ofstream file(animationGraphData["path"].get<std::filesystem::path>());
-                                if (file.is_open())
-                                {
-                                    file << std::setw(4) << animationGraphData << std::endl;
-                                    file.close();
-                                }
+                                file << std::setw(4) << animationGraphData << std::endl;
+                                file.close();
                             }
                         }
                     }
                 }
+
+                // Cleanup
+                if (dragData.first == ImageFile)
+                    RaylibWrapper::UnloadTexture(std::any_cast<RaylibWrapper::Texture2D>(dragData.second["Texture"]));
                 dragData.first = None;
                 dragData.second.clear();
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
-                // Check if in in file explorer and hovering over folder
-            }
-            if (!folderHovering.empty())
-            {
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
-            }
-        }
-        else if (dragData.first == Folder)
-        {
-            static RaylibWrapper::MouseCursor currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
-
-            ImVec2 mousePos = ImGui::GetMousePos();
-            ImVec2 windowPos = ImGui::GetWindowPos();
-            // Using this since ImGui::IsWindowHovered() doesn't seem to work when dragging
-            bool windowHovered = (mousePos.x >= windowPos.x && mousePos.x <= (windowPos.x + ImGui::GetWindowWidth()) &&
-                mousePos.y >= windowPos.y && mousePos.y <= (windowPos.y + ImGui::GetWindowHeight()));
-            ImGuiWindow* window = ImGui::FindWindowByName((ICON_FA_FOLDER_OPEN + std::string(" Content Browser")).c_str());
-            if (windowHovered && window != NULL && window->DockNode != NULL && window->DockNode->TabBar != NULL && window->DockNode->TabBar->SelectedTabId == window->TabId)
-            {
-                if (!folderHovering.empty() && folderHovering != std::any_cast<std::filesystem::path>(dragData.second["Path"])) // Todo: Add support for dropping folders onto folders in the file explorer tree, and the previous folders buttons near the top of the file explorer
-                {
-                    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-                    {
-                        try {
-                            std::filesystem::path path = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
-                            std::filesystem::rename(path, folderHovering / path.filename());
-                        }
-                        catch (const std::filesystem::filesystem_error& e) {
-                            ConsoleLogger::ErrorLog(std::string("Error moving folder: ") + e.what(), false);
-                        }
-                        catch (const std::bad_any_cast& e) {
-                            ConsoleLogger::ErrorLog(std::string("Error moving folder: ") + e.what());
-                        }
-                        catch (const std::exception& e) {
-                            ConsoleLogger::ErrorLog(std::string("Error moving folder: ") + e.what());
-                        }
-                    }
-                    else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_DEFAULT)
-                    {
-                        RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-                        currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
-                    }
-                }
-                else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED)
-                {
-                    RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
-                    currentCursor = RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED;
-                }
-            }
-            else if (currentCursor != RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED)
-            {
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
-                currentCursor = RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED;
+                setCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
             }
 
-            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-            {
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-                currentCursor = RaylibWrapper::MOUSE_CURSOR_DEFAULT;
-
-                dragData.first = None;
-                dragData.second.clear();
-            }
-        }
-        else if (dragData.first != None)
-        {
-            // Todo: This is not optimized and will be setting the cursor each frame
-            if (!folderHovering.empty() || dragData.second.find("HoveringValidElement") != dragData.second.end() && std::any_cast<bool>(dragData.second["HoveringValidElement"]))
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-            else
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_NOT_ALLOWED);
-
-            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-            {
-                RaylibWrapper::SetMouseCursor(RaylibWrapper::MOUSE_CURSOR_DEFAULT);
-
-                if (!folderHovering.empty()) // Todo: Add support for dropping files onto folders in the file explorer tree, and the previous folders buttons near the top of the file explorer
-                {
-                    std::filesystem::path path = std::any_cast<std::filesystem::path>(dragData.second["Path"]);
-                    std::filesystem::rename(path, folderHovering / path.filename());
-                    if (std::filesystem::exists(path.string() + ".data"))
-                        std::filesystem::rename(path.string() + ".data", folderHovering / (path.filename().string() + ".data"));
-
-                }
-
-                dragData.first = None;
-                dragData.second.clear();
-            }
+            if (dragData.second.find("HoveringValidElement") != dragData.second.end())
+                dragData.second["HoveringValidElement"] = false;
         }
 
-        if (dragData.first != None && dragData.second.find("HoveringValidElement") != dragData.second.end()) // Todo: Is it worth trying to find this each frame? It may be best just to set the value to false, even if its not needed
-            dragData.second["HoveringValidElement"] = false; // Setting this to false so once the cursor stops hovering a valid element, it won't set it back to true therefore letting the code above know its no longer hovering the element
-
-        // File Explorer Tree
+        // Content Browser Tree
         int xSize = 300;
         ImGui::GetWindowDrawList()->AddLine(ImVec2(ImGui::GetWindowPos().x + xSize, ImGui::GetWindowPos().y), ImVec2(ImGui::GetWindowPos().x + xSize, ImGui::GetWindowPos().y + ImGui::GetWindowWidth()), IM_COL32(0, 0, 0, 255), 1);
         ImGui::SetCursorPos(ImVec2(0, 25));
         if (ImGui::BeginChild("##FileExplorerTree", ImVec2(xSize, ImGui::GetWindowHeight() - 35))) // Todo: Make this a dockable window or something so it resizes properly and can be resized. Check if I need this -35 (or if 35 is the best number)
         {
             ImGui::BeginTable("FileExplorerTreeTable", 1);
-            RenderFileExplorerTreeNode(ProjectManager::projectData.path / "Assets", true);
+            RenderContentBrowserTreeNode(ProjectManager::projectData.path / "Assets", true);
             ImGui::EndTable();
         }
         ImGui::EndChild();
 
-
         // Context Menu
+        auto closeContextMenu = [&]()
+        {
+            explorerContextMenuOpen = false;
+            explorerContextMenuFile = "";
+        };
+
         if (!explorerContextMenuOpen && (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
         {
             explorerContextMenuOpen = true;
@@ -2057,40 +1698,25 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
             explorerContextMenuOpen = true;
             if (ImGui::BeginPopupContextWindow())
             {
-                if (ImGui::MenuItem("Create Script"))
-                {
-                    explorerContextMenuOpen = false;
-                    explorerContextMenuFile = "";
-                    scriptCreateWinOpen = true;
-                }
-                if (ImGui::BeginMenu("Visual Scripting"))
-                {
-                    if (ImGui::MenuItem("Create EventSheet"))
-                    {
-                        explorerContextMenuOpen = false;
-                        explorerContextMenuFile = "";
+                // Create menu items
+                struct MenuItem { const char* name; std::function<void()> action; };
+                std::vector<MenuItem> createMenuItems = {
+                    {"Create Script", [&]() { scriptCreateWinOpen = true; }},
+                    {"Create EventSheet", [&]() {
                         std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "EventSheet", "es");
                         if (filePath != "")
                         {
                             std::ofstream file(filePath);
                             if (file.is_open())
                             {
-                                nlohmann::json jsonData = {
-                                    {"version", 1},
-                                    {"path", filePath},
-                                    {"events", nlohmann::json::array()}
-                                };
-
+                                nlohmann::json jsonData = {{"version", 1}, {"path", filePath}, {"events", nlohmann::json::array()}};
                                 file << std::setw(4) << jsonData << std::endl;
-                                file.close();
                             }
                             else
                             {
                                 // Todo: Properly handle if the file couldn't be opened. Maybe retry a few times, then popup with a message and delete the file.
                                 std::filesystem::remove(filePath);
                             }
-
-
                             renamingFile = filePath;
                             strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
                         }
@@ -2098,46 +1724,98 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                         {
                             // Todo: Handle if it wasn't created
                         }
-                    }
-                    ImGui::EndMenu();
-                }
-                if (ImGui::MenuItem("Create Scene"))
-                {
-                    explorerContextMenuOpen = false;
-                    explorerContextMenuFile = "";
-                    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "New Scene", "scene");
-                    SceneManager::CreateScene(filePath);
-                    if (filePath != "")
-                    {
-                        renamingFile = filePath;
-                        strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
-                    }
-                    else
-                    {
-                        // Todo: Handle if it wasn't created
-                    }
-                }
-                if (ImGui::MenuItem("Create Sprite"))
-                {
-                    explorerContextMenuOpen = false;
-                    explorerContextMenuFile = "";
-                }
-                if (ImGui::MenuItem("Create Material"))
-                {
-                    explorerContextMenuOpen = false;
-                    explorerContextMenuFile = "";
-                    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "New Material", "mat");
-                    if (filePath != "")
-                    {
-                        Utilities::CreateDataFile(filePath);
-                        renamingFile = filePath;
-                        strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
-                    }
-                    else
-                    {
-                        // Todo: Handle if it wasn't created
-                    }
-                }
+                    }},
+                    {"Create Scene", [&]() {
+                        std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "New Scene", "scene");
+                        SceneManager::CreateScene(filePath);
+                        if (filePath != "")
+                        {
+                            renamingFile = filePath;
+                            strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
+                        }
+                        else
+                        {
+                            // Todo: Handle if it wasn't created
+                        }
+                    }},
+                    {"Create Sprite", [&]() {}},
+                    {"Create Material", [&]() {
+                        std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "New Material", "mat");
+                        if (filePath != "")
+                        {
+                            Utilities::CreateDataFile(filePath);
+                            renamingFile = filePath;
+                            strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
+                        }
+                        else
+                        {
+                            // Todo: Handle if it wasn't created
+                        }
+                    }},
+                    {"Create Animation Graph", [&]() {
+                        std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Animation Graph", "animgraph");
+                        if (filePath != "")
+                        {
+                            std::ofstream file(filePath);
+                            if (file.is_open())
+                            {
+                                nlohmann::json jsonData = {{"version", 1}, {"path", filePath}, {"model_path", ""},
+                                    {"nodes", {{{"id", -5}, {"name", "Start"}, {"x", 80}, {"y", 350}, {"loop", false}, {"speed", 0.0f}}}},
+                                    {"links", nlohmann::json::array()}};
+                                file << std::setw(4) << jsonData << std::endl;
+                            }
+                            else
+                            {
+                                // Todo: Properly handle if the file couldn't be opened. Maybe retry a few times, then popup with a message and delete the file.=
+                                std::filesystem::remove(filePath);
+                            }
+                            renamingFile = filePath;
+                            strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
+                        }
+                        else
+                        {
+                            // Todo: Handle if it wasn't created
+                        }
+                    }},
+                    {"Create Canvas", [&]() {
+                        std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Canvas", "canvas");
+                        std::string filePathString = filePath.string();
+                        for (char& c : filePathString) if (c == '\\') c = '/';
+                        if (filePath != "")
+                        {
+                            std::ofstream file(filePath);
+                            if (file.is_open())
+                            {
+                                nlohmann::json jsonData = {{"version", 1}, {"path", filePathString}, {"gameobjects", nlohmann::json::array()}};
+                                file << std::setw(4) << jsonData << std::endl;
+                            }
+                            else
+                            {
+                                // Todo: Properly handle if the file couldn't be opened. Maybe retry a few times, then popup with a message and delete the file.
+                                std::filesystem::remove(filePath);
+                            }
+                            renamingFile = filePath;
+                            strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
+                        }
+                        else
+                        {
+                            // Todo: Handle if it wasn't created
+                        }
+                    }},
+                    {"Create Folder", [&]() {
+                        std::filesystem::path folderPath = Utilities::CreateUniqueFile(fileExplorerPath, "New Folder", "");
+                        if (folderPath != "")
+                        {
+                            renamingFile = folderPath;
+                            strcpy_s(newFileName, sizeof(newFileName), folderPath.stem().string().c_str());
+                        }
+                        else
+                        {
+                            // Todo: Handle if it wasn't created
+                        }
+                    }}
+                };
+
                 //if (ImGui::MenuItem("Create Animation"))
                 //{
                 //    explorerContextMenuOpen = false;
@@ -2173,146 +1851,55 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                 //        // Todo: Handle if it wasn't created
                 //    }1
                 //}
-                if (ImGui::MenuItem("Create Animation Graph"))
+
+                if (ImGui::MenuItem("Create Script"))
                 {
-                    explorerContextMenuOpen = false;
-                    explorerContextMenuFile = "";
-                    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Animation Graph", "animgraph");
-                    if (filePath != "")
-                    {
-                        std::ofstream file(filePath);
-                        if (file.is_open())
-                        {
-                            nlohmann::json jsonData = {
-                                {"version", 1},
-                                {"path", filePath},
-                                {"model_path", ""},
-                                {"nodes", {
-                                    {
-                                        {"id", -5},
-                                        {"name", "Start"},
-                                        {"x", 80},
-                                        {"y", 350},
-                                        {"loop", false},
-                                        {"speed", 0.0f}
-                                    }
-                                }},
-                                {"links", nlohmann::json::array()}
-                            };
-
-                            file << std::setw(4) << jsonData << std::endl;
-                            file.close();
-                        }
-                        else
-                        {
-                            // Todo: Properly handle if the file couldn't be opened. Maybe retry a few times, then popup with a message and delete the file.
-                            std::filesystem::remove(filePath);
-                        }
-
-
-                        renamingFile = filePath;
-                        strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
-                    }
-                    else
-                    {
-                        // Todo: Handle if it wasn't created
-                    }
-                }
-                if (ImGui::MenuItem("Create Canvas"))
-                {
-                    explorerContextMenuOpen = false;
-                    explorerContextMenuFile = "";
-                    std::filesystem::path filePath = Utilities::CreateUniqueFile(fileExplorerPath, "Canvas", "canvas");
-
-                    std::string filePathString = filePath.string();
-                    for (char& c : filePathString) // Reformatted the path for unix
-                    {
-                        if (c == '\\')
-                            c = '/';
-                    }
-
-                    if (filePath != "")
-                    {
-                        std::ofstream file(filePath);
-                        if (file.is_open())
-                        {
-                            nlohmann::json jsonData = {
-                                {"version", 1},
-                                {"path", filePathString},
-                                {"gameobjects", nlohmann::json::array()}
-                            };
-
-                            file << std::setw(4) << jsonData << std::endl;
-                            file.close();
-                        }
-                        else
-                        {
-                            // Todo: Properly handle if the file couldn't be opened. Maybe retry a few times, then popup with a message and delete the file.
-                            std::filesystem::remove(filePath);
-                        }
-
-
-                        renamingFile = filePath;
-                        strcpy_s(newFileName, sizeof(newFileName), filePath.stem().string().c_str());
-                    }
-                    else
-                    {
-                        // Todo: Handle if it wasn't created
-                    }
+                    createMenuItems[0].action();
+                    closeContextMenu();
                 }
 
-                if (ImGui::MenuItem("Create Folder"))
+                if (ImGui::BeginMenu("Visual Scripting"))
                 {
-                    explorerContextMenuOpen = false;
-                    explorerContextMenuFile = "";
-                    std::filesystem::path folderPath = Utilities::CreateUniqueFile(fileExplorerPath, "New Folder", "");
-                    if (folderPath != "")
+                    if (ImGui::MenuItem("Create EventSheet"))
                     {
-                        renamingFile = folderPath;
-                        strcpy_s(newFileName, sizeof(newFileName), folderPath.stem().string().c_str());
+                        createMenuItems[1].action();
+                        closeContextMenu();
                     }
-                    else
+
+                    ImGui::EndMenu();
+                }
+                for (int i = 2; i < createMenuItems.size(); i++)
+                {
+                    if (ImGui::MenuItem(createMenuItems[i].name))
                     {
-                        // Todo: Handle if it wasn't created
+                        createMenuItems[i].action();
+                        closeContextMenu();
                     }
                 }
 
                 ImGui::Separator();
-
                 ImGui::BeginDisabled();
-                if (ImGui::MenuItem("Paste", "CTRL+V"))
-                {
-                    explorerContextMenuOpen = false;
-                    explorerContextMenuFile = "";
-                }
+                ImGui::MenuItem("Paste", "CTRL+V");
                 ImGui::EndDisabled();
-
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Open In File Explorer"))
+                if (ImGui::MenuItem("Open In Content Browser"))
                 {
-                    explorerContextMenuOpen = false;
-                    explorerContextMenuFile = "";
                     Utilities::OpenPathInExplorer(fileExplorerPath);
+                    closeContextMenu();
                 }
 
                 if (!explorerContextMenuFile.empty())
                 {
                     ImGui::Separator();
-
                     if (ImGui::MenuItem("Rename", "F2"))
                     {
-                        explorerContextMenuOpen = false;
                         renamingFile = explorerContextMenuFile;
                         strcpy_s(newFileName, sizeof(newFileName), explorerContextMenuFile.stem().string().c_str());
+                        closeContextMenu();
                     }
-
                     if (ImGui::MenuItem("Copy", "CTRL+C"))
-                    {
-                        explorerContextMenuOpen = false;
-                        explorerContextMenuFile = "";
-                    }
-
+                        closeContextMenu();
                     if (ImGui::MenuItem("Duplicate", "CTRL+D"))
                     {
                         std::string newFilename;
@@ -2321,51 +1908,37 @@ void Editor::RenderFileExplorer() // Todo: Handle if path is in a now deleted fo
                             newFilename = explorerContextMenuFile.stem().string() + " copy" + (counter > 1 ? std::to_string(counter) : "") + explorerContextMenuFile.extension().string();
                             counter++;
                         } while (std::filesystem::exists(explorerContextMenuFile.parent_path() / newFilename));
-
                         std::filesystem::copy_file(explorerContextMenuFile, explorerContextMenuFile.parent_path() / newFilename, std::filesystem::copy_options::overwrite_existing);
-
-                        explorerContextMenuOpen = false;
-                        explorerContextMenuFile = "";
+                        closeContextMenu();
                     }
-
                     if (ImGui::MenuItem("Delete", "DEL"))
                     {
                         std::filesystem::remove_all(explorerContextMenuFile);
-
-                        explorerContextMenuOpen = false;
-                        explorerContextMenuFile = "";
+                        closeContextMenu();
                     }
                 }
 
                 ImGui::EndPopup();
             }
             else
-            {
-                explorerContextMenuOpen = false;
-                explorerContextMenuFile = "";
-            }
-
+                closeContextMenu();
         }
 
         // Drag and drop files
-        if (ImGui::IsWindowHovered() && RaylibWrapper::IsFileDropped()) 
+        if (ImGui::IsWindowHovered() && RaylibWrapper::IsFileDropped())
         {
             // Todo: Consider adding a progress bar, especially if there is a lot of files and directories, so then the program doesn't freeze and confuse the user
             RaylibWrapper::FilePathList droppedFiles = RaylibWrapper::LoadDroppedFiles();
-
             for (int i = 0; i < (int)droppedFiles.count; i++)
-            {
                 Utilities::ImportFile(droppedFiles.paths[i], fileExplorerPath / std::filesystem::path(droppedFiles.paths[i]).filename());
                 // Todo: Popup a window with the error. ImportFile() returns a bool, but this won't work if a file within a folder fails. Maybe have it return a vector of strings holding the errors? Or handle this within the ImportFile()
-            }
-
             UnloadDroppedFiles(droppedFiles);
         }
     }
     ImGui::End();
 }
 
-void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnDefault)
+void Editor::RenderContentBrowserTreeNode(std::filesystem::path path, bool openOnDefault)
 {
     std::error_code ec;
     if (!std::filesystem::exists(path, ec)) // This is important as it prevents a crash if the file is deleted from an external application like File Explorer
@@ -2407,7 +1980,7 @@ void Editor::RenderFileExplorerTreeNode(std::filesystem::path path, bool openOnD
                         break;
 
                     if (entry.is_directory())
-                        RenderFileExplorerTreeNode(entry, false);
+                        RenderContentBrowserTreeNode(entry, false);
                 }
             }
         }
@@ -4656,7 +4229,7 @@ void Editor::Render()
     RenderGameView();
     RenderHierarchy();
     RenderProperties();
-    RenderFileExplorer();
+    RenderContentBrowser();
     RenderConsole();
     RenderCameraView();
     RenderComponentsWin();
