@@ -1008,17 +1008,22 @@ void Editor::RenderContentBrowser() // Todo: Handle if path is in a now deleted 
         }
 
         // Search box
-        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 260, 25));
-        ImGui::SetNextItemWidth(250);
+
+        // Search Icon
+        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 260, 26));
+        ImGui::PushFont(FontManager::GetFont("Roboto-Medium", 12, false));
+
+        ImGui::SameLine(ImGui::GetCursorPosX());
+        RaylibWrapper::rlImGuiImageSize(IconManager::imageTextures["SearchIcon"], 22, 22);
+
+        // Input box
+        ImGui::SetCursorPos({ ImGui::GetWindowWidth() - 240, 25 });
+        ImGui::SetNextItemWidth(230);
+
         static char searchBuffer[256] = "";
-        ImGui::PushFont(FontManager::GetFont("Familiar-Pro-Bold", 10, false));
-        if (ImGui::InputText("##FileSearch", searchBuffer, sizeof(searchBuffer), 0))
-        {
-            // Todo: Add Search
-        }
+        ImGui::InputText("##FileSearch", searchBuffer, sizeof(searchBuffer), 0);
+
         ImGui::PopFont();
-        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 262, 25));
-        RaylibWrapper::rlImGuiImageSize(IconManager::imageTextures["SearchIcon"], 17, 17);
 
         ImGui::GetWindowDrawList()->AddLine(ImVec2(ImGui::GetWindowPos().x + 300, ImGui::GetWindowPos().y + 45), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowWidth(), ImGui::GetWindowPos().y + 45), IM_COL32(0, 0, 0, 255), 1);
 
@@ -1056,7 +1061,31 @@ void Editor::RenderContentBrowser() // Todo: Handle if path is in a now deleted 
         std::filesystem::path fileHovered;
 
         // File iteration
-        for (const auto& entry : std::filesystem::directory_iterator(fileExplorerPath))
+        std::vector<std::filesystem::directory_entry> filePaths;
+
+        std::string search = searchBuffer;
+        // Convnert the search to lowercase
+        std::transform(search.begin(), search.end(), search.begin(), ::tolower);
+
+        if (searchBuffer[0] == '\0')
+        {
+            for (const auto& entry : std::filesystem::directory_iterator(fileExplorerPath))
+                filePaths.push_back(entry);
+        }
+        else // Search for all files recursively using the search
+        {
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(fileExplorerPath))
+            {
+                // Convert file name to lowercase
+                std::string fileName = entry.path().filename().string();
+                std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
+
+                if (fileName.find(search) != std::string::npos)
+                    filePaths.push_back(entry);
+            }
+        }
+
+        for (const auto& entry : filePaths)
         {
             ImGui::PushID(entry.path().string().c_str());
             std::string id = entry.path().string().c_str();
@@ -1883,9 +1912,19 @@ void Editor::RenderContentBrowser() // Todo: Handle if path is in a now deleted 
                 ImGui::EndDisabled();
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Open In Content Browser"))
+                if (ImGui::MenuItem("Open In File Explorer"))
                 {
-                    Utilities::OpenPathInExplorer(fileExplorerPath);
+                    std::filesystem::path openPath = fileExplorerPath;
+
+                    if (!explorerContextMenuFile.empty()) // If hovering a folder (or file when using search) open that directory
+                    {
+                        if (std::filesystem::is_directory(explorerContextMenuFile))
+                            openPath = explorerContextMenuFile;
+                        else
+                            openPath = explorerContextMenuFile.parent_path();
+                    }
+
+                    Utilities::OpenPathInExplorer(openPath);
                     closeContextMenu();
                 }
 
