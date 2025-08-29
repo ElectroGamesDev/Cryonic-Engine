@@ -454,78 +454,147 @@ void Editor::RenderViewport()
         viewportHovered = ImGui::IsWindowHovered();
 
         // Handle camera movement
-        if (ImGui::IsWindowHovered() && (RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT) || !ProjectManager::projectData.is3D && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_MIDDLE))) // Todo: Maybe change to viewportFocused instead of IsWindowFocused
+        static float cameraSpeed = 5.0f;
+        static float minCameraSpeed = 0.1f;
+        static float maxCameraSpeed = 50.0f;
+        static bool firstRightClick = true;
+        static RaylibWrapper::Vector2 savedMousePosition;
+
+        if (ImGui::IsWindowHovered() && (RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT) || !ProjectManager::projectData.is3D && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_MIDDLE)))
         {
-            //    // Todo: Add SHIFT to speed up by x2, and scroll weel to change speed
-            //rmbDown = true;
-            //HideCursor();
-            //DisableCursor();
+            if (ProjectManager::projectData.is3D && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT) && firstRightClick)
+            {
+                savedMousePosition = RaylibWrapper::GetMousePosition();
+                RaylibWrapper::HideCursor();
+                RaylibWrapper::DisableCursor();
+                firstRightClick = false;
+            }
+
+            // Check for shift modifier for 2x speed
+            int speedMultiplier = 1;
+            if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_LEFT_SHIFT) || RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_RIGHT_SHIFT))
+                speedMultiplier = 2;
+
+            // Check scroll wheel while right mouse button is held down
+            if (RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT) && RaylibWrapper::GetMouseWheelMove() != 0)
+            {
+                float wheelMove = RaylibWrapper::GetMouseWheelMove();
+                cameraSpeed += wheelMove * 0.5f;
+
+                if (cameraSpeed < minCameraSpeed)
+                    cameraSpeed = minCameraSpeed;
+
+                if (cameraSpeed > maxCameraSpeed)
+                    cameraSpeed = maxCameraSpeed;
+            }
 
             if (ProjectManager::projectData.is3D)
-                RaylibWrapper::UpdateCamera(&camera, RaylibWrapper::CAMERA_FREE);
-            else
             {
+                RaylibWrapper::Vector2 mousePositionDelta = RaylibWrapper::GetMouseDelta();
+                float mouseSensitivity = 0.003f;
+
+                // Keep cursor centered while right mouse buttonn is downn
+                if (RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT))
+                    RaylibWrapper::SetMousePosition((viewportPosition.x + viewportPosition.z) / 2, (viewportPosition.y + viewportPosition.w) / 2);
+
+                static float yaw = 0.0f;
+                static float pitch = 0.0f;
+                static bool yawPitchInitialized = false;
+
+                if (!yawPitchInitialized)
+                {
+                    RaylibWrapper::Vector3 forward = RaylibWrapper::Vector3Normalize(RaylibWrapper::Vector3Subtract(camera.target, camera.position));
+                    yaw = atan2f(forward.z, forward.x);
+                    pitch = asinf(forward.y);
+                    yawPitchInitialized = true;
+                }
+
+                yaw += mousePositionDelta.x * mouseSensitivity;
+                pitch -= mousePositionDelta.y * mouseSensitivity;
+
+                // Clamp pitch to prevent camera flipping
+                if (pitch > 1.5f)
+                    pitch = 1.5f;
+
+                if (pitch < -1.5f)
+                    pitch = -1.5f;
+
+                camera.target.x = camera.position.x + cosf(yaw) * cosf(pitch);
+                camera.target.y = camera.position.y + sinf(pitch);
+                camera.target.z = camera.position.z + sinf(yaw) * cosf(pitch);
+
+                RaylibWrapper::Vector3 forward = RaylibWrapper::Vector3Normalize(RaylibWrapper::Vector3Subtract(camera.target, camera.position));
+                RaylibWrapper::Vector3 right = RaylibWrapper::Vector3Normalize(RaylibWrapper::Vector3CrossProduct(forward, { 0, 1, 0 }));
+
+                float moveSpeed = cameraSpeed * speedMultiplier * RaylibWrapper::GetFrameTime();
+
+                RaylibWrapper::Vector3 oldPosition = camera.position;
+
+                if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_W)) {
+                    camera.position = RaylibWrapper::Vector3Add(camera.position, RaylibWrapper::Vector3Scale(forward, moveSpeed));
+                }
+                if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_S)) {
+                    camera.position = RaylibWrapper::Vector3Subtract(camera.position, RaylibWrapper::Vector3Scale(forward, moveSpeed));
+                }
+                if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_A)) {
+                    camera.position = RaylibWrapper::Vector3Subtract(camera.position, RaylibWrapper::Vector3Scale(right, moveSpeed));
+                }
+                if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_D)) {
+                    camera.position = RaylibWrapper::Vector3Add(camera.position, RaylibWrapper::Vector3Scale(right, moveSpeed));
+                }
+
+                if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_E))
+                    camera.position.y += moveSpeed;
+
+                if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_Q))
+                    camera.position.y -= moveSpeed;
+
+                camera.target.x = camera.position.x + cosf(yaw) * cosf(pitch);
+                camera.target.y = camera.position.y + sinf(pitch);
+                camera.target.z = camera.position.z + sinf(yaw) * cosf(pitch);
+            }
+            else {
+                // 2D camera movement
                 RaylibWrapper::Vector2 deltaMouse = RaylibWrapper::Vector2Subtract(RaylibWrapper::GetMousePosition(), lastMousePosition);
-                camera.position.x += deltaMouse.x * 0.1f;
-                camera.position.y -= deltaMouse.y * 0.1f;
+                float panSpeed = 0.1f * speedMultiplier * (cameraSpeed / 5.0f);
+
+                camera.position.x += deltaMouse.x * panSpeed;
+                camera.position.y -= deltaMouse.y * panSpeed;
                 camera.target.x = camera.position.x;
                 camera.target.y = camera.position.y;
             }
-            //    UpdateCamera(&camera, CAMERA_FREE);
-            //    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
-            //    {
-            //        Matrix viewMatrix = GetCameraMatrix(camera);
-            //        Vector3 forward = { -viewMatrix.m12, -viewMatrix.m13, -viewMatrix.m14 };
-            //        camera.position.x += forward.x * cameraSpeed * GetFrameTime();
-            //        camera.position.y += forward.y * cameraSpeed * GetFrameTime();
-            //        camera.position.z += forward.z * cameraSpeed * GetFrameTime();
-            //        viewMatrix = GetCameraMatrix(camera);
-            //        //UpdateCamera(&camera, CAMERA_FIRST_PERSON);
-            //    }
-            //    else if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))
-            //    {
-            //        Matrix viewMatrix = GetCameraMatrix(camera);
-            //        Vector3 left = { -viewMatrix.m0, -viewMatrix.m1, -viewMatrix.m2 };
-            //        camera.position.x += left.x * cameraSpeed * GetFrameTime();
-            //        camera.position.y += left.y * cameraSpeed * GetFrameTime();
-            //        camera.position.z += left.z * cameraSpeed * GetFrameTime();
-            //        viewMatrix = GetCameraMatrix(camera);
-            //        //UpdateCamera(&camera, CAMERA_FIRST_PERSON);
-            //    }
-            //    else if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))
-            //    {
-            //        Matrix viewMatrix = GetCameraMatrix(camera);
-            //        Vector3 backward = { viewMatrix.m12, viewMatrix.m13, viewMatrix.m14 };
-            //        camera.position.x += backward.x * cameraSpeed * GetFrameTime();
-            //        camera.position.y += backward.y * cameraSpeed * GetFrameTime();
-            //        camera.position.z += backward.z * cameraSpeed * GetFrameTime();
-            //        viewMatrix = GetCameraMatrix(camera);
-            //        //UpdateCamera(&camera, CAMERA_FIRST_PERSON);
-            //    }
-            //    else if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT))
-            //    {
-            //        Matrix viewMatrix = GetCameraMatrix(camera);
-            //        Vector3 right = { viewMatrix.m0, viewMatrix.m1, viewMatrix.m2 };
-            //        camera.position.x += right.x * cameraSpeed * GetFrameTime();
-            //        camera.position.y += right.y * cameraSpeed * GetFrameTime();
-            //        camera.position.z += right.z * cameraSpeed * GetFrameTime();
-            //        viewMatrix = GetCameraMatrix(camera);
-            //        //UpdateCamera(&camera, CAMERA_FIRST_PERSON);
-            //    }
         }
-        else if (rmbDown && RaylibWrapper::IsMouseButtonUp(RaylibWrapper::MOUSE_BUTTON_RIGHT))
-        {
-            //ShowCursor();
-            //EnableCursor();
+        else if (!firstRightClick && RaylibWrapper::IsMouseButtonUp(RaylibWrapper::MOUSE_BUTTON_RIGHT) && ProjectManager::projectData.is3D) {
+            // Restore mouse when right click is released
+            RaylibWrapper::EnableCursor();
+            RaylibWrapper::ShowCursor();
+            RaylibWrapper::SetMousePosition(savedMousePosition.x, savedMousePosition.y);
+            firstRightClick = true;
         }
-        else if (ImGui::IsWindowHovered() && RaylibWrapper::GetMouseWheelMove() != 0)
+        else if (ImGui::IsWindowHovered() && RaylibWrapper::GetMouseWheelMove() != 0 && !RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_RIGHT))
         {
-            int multiplier = 1;
-            if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_LEFT_SHIFT) || RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_RIGHT_SHIFT))
-                multiplier = 2;
-            float newZoom = camera.fovy - RaylibWrapper::GetMouseWheelMove() * 5 * multiplier;
-            if (newZoom > 0 && newZoom < 250)
-                camera.fovy = newZoom;
+            if (ProjectManager::projectData.is3D)
+            {
+                int multiplier = 1;
+                if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_LEFT_SHIFT) || RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_RIGHT_SHIFT))
+                    multiplier = 2;
+
+                RaylibWrapper::Vector3 forward = RaylibWrapper::Vector3Normalize(RaylibWrapper::Vector3Subtract(camera.target, camera.position));
+                RaylibWrapper::Vector3 movement = RaylibWrapper::Vector3Scale(forward, RaylibWrapper::GetMouseWheelMove() * 2.0f * multiplier);
+
+                camera.position = RaylibWrapper::Vector3Add(camera.position, movement);
+                camera.target = RaylibWrapper::Vector3Add(camera.target, movement);
+            }
+            else
+            {
+                int multiplier = 1;
+                if (RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_LEFT_SHIFT) || RaylibWrapper::IsKeyDown(RaylibWrapper::KEY_RIGHT_SHIFT))
+                    multiplier = 2;
+
+                float newZoom = camera.fovy - RaylibWrapper::GetMouseWheelMove() * 5 * multiplier;
+                if (newZoom > 0 && newZoom < 250)
+                    camera.fovy = newZoom;
+            }
         }
 
         // Render move tool arrows
