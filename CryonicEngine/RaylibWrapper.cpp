@@ -352,6 +352,18 @@ namespace RaylibWrapper {
         ::EndVrStereoMode();
     }
 
+    void DrawCube(Vector3 position, float width, float height, float length, Color color) {
+        ::DrawCube({ position.x, position.y, position.z }, width, height, length, { color.r, color.g, color.b, color.a });
+    }
+
+    void DrawCubeWires(Vector3 position, float width, float height, float length, Color color) {
+        ::DrawCubeWires({ position.x, position.y, position.z }, width, height, length, { color.r, color.g, color.b, color.a });
+    }
+
+    void DrawCylinderEx(Vector3 startPos, Vector3 endPos, float startRadius, float endRadius, int sides, Color color) {
+        ::DrawCylinderEx({ startPos.x, startPos.y, startPos.z }, { endPos.x, endPos.y, endPos.z }, startRadius, endRadius, sides, {color.r, color.g, color.b, color.a});
+    }
+
     void Draw3DBillboardRec(Camera camera, Texture2D texture, Rectangle source, Vector3 position, Vector2 size, Color tint)
     {
         ::rlPushMatrix();
@@ -1023,6 +1035,16 @@ namespace RaylibWrapper {
         return ::CheckCollisionCircleRec({center.x, center.y}, radius, { rec.x, rec.y, rec.width, rec.height });
     }
 
+    // Basic 3D Collisions
+    RayCollision GetRayCollisionBox(Ray ray, BoundingBox box)
+    {
+        ::RayCollision rayCollision = ::GetRayCollisionBox(
+            { {ray.position.x, ray.position.y, ray.position.z}, { ray.direction.x, ray.direction.y, ray.direction.z } },
+            { { box.min.x, box.min.y, box.min.z }, { box.max.x, box.max.y, box.max.z } });
+
+        return { rayCollision.hit, rayCollision.distance, { rayCollision.point.x, rayCollision.point.y, rayCollision.point.z }, { rayCollision.normal.x, rayCollision.normal.y, rayCollision.normal.z } };
+    }
+
 
     //Vector Math
     Vector2 Vector2Add(Vector2 v1, Vector2 v2)
@@ -1058,6 +1080,10 @@ namespace RaylibWrapper {
         Vector3 result = { v.x * scalar, v.y * scalar, v.z * scalar };
 
         return result;
+    }
+
+    float Vector3Distance(Vector3 v1, Vector3 v2) {
+        return ::Vector3Distance({ v1.x, v1.y, v1.z }, {v2.x, v2.y, v2.z});
     }
 
     Quaternion QuaternionFromEuler(float pitch, float yaw, float roll)

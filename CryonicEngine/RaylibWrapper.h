@@ -777,6 +777,10 @@ namespace RaylibWrapper
     void BeginVrStereoMode(VrStereoConfig config);
     void EndVrStereoMode(void);
 
+    void DrawCube(Vector3 position, float width, float height, float length, Color color);
+    void DrawCubeWires(Vector3 position, float width, float height, float length, Color color);
+    void DrawCylinderEx(Vector3 startPos, Vector3 endPos, float startRadius, float endRadius, int sides, Color color);
+
     void Draw3DBillboardRec(Camera camera, Texture2D texture, Rectangle source, Vector3 position, Vector2 size, Color tint);
     void Draw3DBillboard(Camera camera, Texture2D texture, Vector3 position, float size, Color tint);
 
@@ -876,6 +880,7 @@ namespace RaylibWrapper
     Vector3 Vector3Add(Vector3 v1, Vector3 v2);
     Vector3 Vector3Subtract(Vector3 v1, Vector3 v2);
     Vector3 Vector3Scale(Vector3 v, float scalar);
+    float Vector3Distance(Vector3 v1, Vector3 v2);
 
     // NOTE: Rotation order is ZYX
     Quaternion QuaternionFromEuler(float pitch, float yaw, float roll);
@@ -898,6 +903,8 @@ namespace RaylibWrapper
     bool CheckCollisionCircles(Vector2 center1, float radius1, Vector2 center2, float radius2);
     bool CheckCollisionCircleRec(Vector2 center, float radius, Rectangle rec);
 
+    // Basic 3D Collisions
+    RayCollision GetRayCollisionBox(Ray ray, BoundingBox box);
 
     // Model animations loading/unloading functions
     //ModelAnimation *LoadModelAnimations(const char *fileName, int *animCount);            // Load model animations from file
