@@ -601,48 +601,51 @@ void Editor::RenderViewport()
             }
         }
 
-        // Render move tool arrows
-        if (selectedObject != nullptr)
+        // Render 2D move tool arrows
+        if (selectedObject != nullptr && !ProjectManager::projectData.is3D)
         {
-            Vector3 position = selectedObject->transform.GetPosition();
-            RaylibWrapper::Vector2 pos = RaylibWrapper::GetWorldToScreen({ position.x, position.y, position.z}, camera);
-            // Divding positions by Raylib window size then multiply it by Viewport window size.
-            pos.x = pos.x / RaylibWrapper::GetScreenWidth() * ImGui::GetWindowSize().x;
-            pos.y = pos.y / RaylibWrapper::GetScreenHeight() * ImGui::GetWindowSize().y;
+            Vector3 pos = selectedObject->transform.GetPosition();
+            RaylibWrapper::Vector2 position = RaylibWrapper::GetWorldToScreen({ pos.x, pos.y }, camera);
+            position.x = position.x / RaylibWrapper::GetScreenWidth() * ImGui::GetWindowSize().x;
+            position.y = position.y / RaylibWrapper::GetScreenHeight() * ImGui::GetWindowSize().y;
 
-            ImGui::SetCursorPos(ImVec2(pos.x - 10, pos.y - 35));
+            // Y-axis arrow (Green) - Vertical
+            ImGui::SetCursorPos(ImVec2(position.x - 10, position.y - 35));
             RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["GreenArrow"], { 20, 40 });
             if (!movingObjectY && ImGui::IsItemHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_LEFT))
                 movingObjectY = true;
 
-            ImGui::SetCursorPos(ImVec2(pos.x + 5, pos.y));
+            // X-axis arrow (Red) - Horizontal
+            ImGui::SetCursorPos(ImVec2(position.x + 5, position.y));
             RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["RedArrow"], { 40, 20 });
             if (!movingObjectX && ImGui::IsItemHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_LEFT))
                 movingObjectX = true;
 
-            ImGui::SetCursorPos(ImVec2(pos.x + 3, pos.y - 8));
+            // XY move tool (combined movement)
+            ImGui::SetCursorPos(ImVec2(position.x + 3, position.y - 8));
             RaylibWrapper::rlImGuiImageSizeV(IconManager::imageTextures["XYMoveTool"], { 15, 15 });
-            if (!movingObjectX && !movingObjectY && ImGui::IsItemHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_LEFT)) // Todo: Fix this so if the user is moving with the X or Y arrow and move mouse up to XY move square, it will not switch to the XY square move tool
+            if (!movingObjectX && !movingObjectY && ImGui::IsItemHovered() && RaylibWrapper::IsMouseButtonDown(RaylibWrapper::MOUSE_BUTTON_LEFT))
                 movingObjectX = movingObjectY = true;
 
-            if (RaylibWrapper::IsMouseButtonReleased(RaylibWrapper::MOUSE_BUTTON_LEFT))
-                movingObjectY = movingObjectX = false;
-
+            // Handle 2D movement
             if (movingObjectX || movingObjectY || movingObjectZ)
             {
                 RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
                 RaylibWrapper::Vector2 deltaMouse = RaylibWrapper::Vector2Subtract(mousePosition, lastMousePosition);
 
-                if (movingObjectX) // Todo: Dividing by 15 is a horrible solution. Instead I should set it to the mouse position - an offset
-                    position.x += deltaMouse.x / 15;
+                if (movingObjectX)
+                    pos.x += deltaMouse.x / 15;
                 if (movingObjectY)
-                    position.y -= deltaMouse.y / 15;
+                    pos.y -= deltaMouse.y / 15;
                 if (movingObjectZ)
-                    position.z -= deltaMouse.x / 15;
+                    pos.z -= deltaMouse.x / 15;
 
-                selectedObject->transform.SetPosition(position);
+                selectedObject->transform.SetPosition(pos);
             }
         }
+
+        if (RaylibWrapper::IsMouseButtonReleased(RaylibWrapper::MOUSE_BUTTON_LEFT))
+            movingObjectY = movingObjectX = false;
 
         // Select game object by clicking it
         // Todo: This does not work properly. It has an offset on the Y axis and for some reason different zoom levels (the camera fovy) effects the position. Rotation is also currently not considered.
@@ -883,6 +886,183 @@ void Editor::UpdateViewport()
     //RaylibWrapper::SetShaderValueTexture(shadowManager.shader, RaylibWrapper::GetShaderLocation(shadowManager.shader, "texture_shadowmap"), shadowManager.shadowMapTexture.depth); // Todo: should the last be depth or texture
 
     RaylibWrapper::BeginMode3D(camera);
+
+    // Handle 3D movement arrows
+    if (selectedObject != nullptr && ProjectManager::projectData.is3D)
+    {
+        Vector3 pos = selectedObject->transform.GetPosition();
+        RaylibWrapper::Vector3 position = { pos.x, pos.y, pos.z };
+
+        // Movement handling
+        if (movingObjectX || movingObjectY || movingObjectZ)
+        {
+            RaylibWrapper::Vector2 mousePosition = RaylibWrapper::GetMousePosition();
+            RaylibWrapper::Vector2 deltaMouse = RaylibWrapper::Vector2Subtract(mousePosition, lastMousePosition);
+
+            float sensitivity = 0.01f;
+
+            if (movingObjectX)
+            {
+                Vector3 worldRight = { 1, 0, 0 };
+                RaylibWrapper::Vector3 tempPos = RaylibWrapper::Vector3Add(position, RaylibWrapper::Vector3Scale({ worldRight.x, worldRight.y, worldRight.z }, deltaMouse.x * sensitivity));
+                position = tempPos;
+            }
+            if (movingObjectY)
+            {
+                Vector3 worldUp = { 0, 1, 0 };
+                RaylibWrapper::Vector3 tempPos = RaylibWrapper::Vector3Add(position, RaylibWrapper::Vector3Scale({ worldUp.x, worldUp.y, worldUp.z }, -deltaMouse.y * sensitivity));
+                position = tempPos;
+            }
+            if (movingObjectZ)
+            {
+                Vector3 worldForward = { 0, 0, 1 };
+                RaylibWrapper::Vector3 tempPos = RaylibWrapper::Vector3Add(position, RaylibWrapper::Vector3Scale({ worldForward.x, worldForward.y, worldForward.z }, -deltaMouse.x * sensitivity));
+                position = tempPos;
+            }
+
+            // Update the object position
+            selectedObject->transform.SetPosition({ position.x, position.y, position.z });
+            pos = { position.x, position.y, position.z }; // Keep pos in sync
+        }
+
+        // Arrow drawing parameters
+        float baseArrowLength = 1.0f;
+        float baseArrowThickness = 0.05f;
+        float baseArrowHeadSize = 0.2f;
+
+        // Calculate distance to camera for consistent sizing
+        float distanceToCamera = RaylibWrapper::Vector3Distance(position, camera.position);
+        float scaleFactor = fmaxf(distanceToCamera * 0.1f, 0.5f);
+
+        float arrowLength = baseArrowLength * scaleFactor;
+        float arrowThickness = baseArrowThickness * scaleFactor;
+        float arrowHeadSize = baseArrowHeadSize * scaleFactor;
+
+        // X-axis arrow (Red)
+        RaylibWrapper::Vector3 xEnd = RaylibWrapper::Vector3Add(position, { arrowLength, 0, 0 });
+        RaylibWrapper::DrawCylinderEx(position, xEnd, arrowThickness, arrowThickness, 8, RaylibWrapper::RED);
+        RaylibWrapper::DrawCylinderEx(xEnd, RaylibWrapper::Vector3Add(xEnd, { arrowHeadSize, 0, 0 }), arrowHeadSize, 0, 8, RaylibWrapper::RED);
+
+        // Y-axis arrow (Green)
+        RaylibWrapper::Vector3 yEnd = RaylibWrapper::Vector3Add(position, { 0, arrowLength, 0 });
+        RaylibWrapper::DrawCylinderEx(position, yEnd, arrowThickness, arrowThickness, 8, RaylibWrapper::GREEN);
+        RaylibWrapper::DrawCylinderEx(yEnd, RaylibWrapper::Vector3Add(yEnd, { 0, arrowHeadSize, 0 }), arrowHeadSize, 0, 8, RaylibWrapper::GREEN);
+
+        // Z-axis arrow (Blue)
+        RaylibWrapper::Vector3 zEnd = RaylibWrapper::Vector3Add(position, { 0, 0, arrowLength });
+        RaylibWrapper::DrawCylinderEx(position, zEnd, arrowThickness, arrowThickness, 8, RaylibWrapper::BLUE);
+        RaylibWrapper::DrawCylinderEx(zEnd, RaylibWrapper::Vector3Add(zEnd, { 0, 0, arrowHeadSize }), arrowHeadSize, 0, 8, RaylibWrapper::BLUE);
+
+        // Plane squares
+        float squareSize = arrowLength * 0.3f;
+        float squareOffset = arrowLength * 0.2f;
+
+        // XY plane square (Red-Green)
+        RaylibWrapper::Vector3 xySquarePos = RaylibWrapper::Vector3Add(position, { squareOffset, squareOffset, 0 });
+        RaylibWrapper::DrawCube(xySquarePos, squareSize, squareSize, 0.02f, { 253, 249, 0, 77 });
+        RaylibWrapper::DrawCubeWires(xySquarePos, squareSize, squareSize, 0.02f, { 253, 249, 0, 255 });
+
+        // XZ plane square (Red-Blue)
+        RaylibWrapper::Vector3 xzSquarePos = RaylibWrapper::Vector3Add(position, { squareOffset, 0, squareOffset });
+        RaylibWrapper::DrawCube(xzSquarePos, squareSize, 0.02f, squareSize, { 255, 0, 255, 77 });
+        RaylibWrapper::DrawCubeWires(xzSquarePos, squareSize, 0.02f, squareSize, { 255, 0, 255, 255 });
+
+        // YZ plane square (Green-Blue)
+        RaylibWrapper::Vector3 yzSquarePos = RaylibWrapper::Vector3Add(position, { 0, squareOffset, squareOffset });
+        RaylibWrapper::DrawCube(yzSquarePos, 0.02f, squareSize, squareSize, { 255, 161, 0, 77 });
+        RaylibWrapper::DrawCubeWires(yzSquarePos, 0.02f, squareSize, squareSize, { 255, 161, 0, 255 });
+
+        // Input
+        if (RaylibWrapper::IsMouseButtonPressed(RaylibWrapper::MOUSE_BUTTON_LEFT))
+        {
+            RaylibWrapper::Ray mouseRay = RaylibWrapper::GetMouseRay(RaylibWrapper::GetMousePosition(), camera);
+            float minDistance = 10000.0f;
+            int selectedAxis = 0; // 0=none, 1=X, 2=Y, 3=Z, 4=XY, 5=XZ, 6=YZ
+
+            // Calculate arrow dimensions for collision detection
+            float distanceToCamera = RaylibWrapper::Vector3Distance(position, camera.position);
+            float scaleFactor = fmaxf(distanceToCamera * 0.1f, 0.5f);
+            float arrowLength = 1.0f * scaleFactor;
+            float arrowThickness = 0.05f * scaleFactor;
+            float arrowHeadSize = 0.2f * scaleFactor;
+            float squareSize = arrowLength * 0.3f;
+            float squareOffset = arrowLength * 0.2f;
+            float collisionPadding = arrowThickness * 3;
+
+            // Todo: Consider usingn GetRayCollisionMesh() instead
+
+            // Check X-axis arrow
+            RaylibWrapper::RayCollision xCollision = RaylibWrapper::GetRayCollisionBox(mouseRay,
+                { position.x - collisionPadding, position.y - arrowThickness - collisionPadding, position.z - arrowThickness - collisionPadding,
+                 position.x + arrowLength + arrowHeadSize + collisionPadding, position.y + arrowThickness + collisionPadding, position.z + arrowThickness + collisionPadding });
+            if (xCollision.hit && xCollision.distance < minDistance) {
+                minDistance = xCollision.distance;
+                selectedAxis = 1;
+            }
+
+            // Check Y-axis arrow
+            RaylibWrapper::RayCollision yCollision = RaylibWrapper::GetRayCollisionBox(mouseRay,
+                { position.x - arrowThickness - collisionPadding, position.y - collisionPadding, position.z - arrowThickness - collisionPadding,
+                 position.x + arrowThickness + collisionPadding, position.y + arrowLength + arrowHeadSize + collisionPadding, position.z + arrowThickness + collisionPadding });
+            if (yCollision.hit && yCollision.distance < minDistance) {
+                minDistance = yCollision.distance;
+                selectedAxis = 2;
+            }
+
+            // Check Z-axis arrow
+            RaylibWrapper::RayCollision zCollision = RaylibWrapper::GetRayCollisionBox(mouseRay,
+                { position.x - arrowThickness - collisionPadding, position.y - arrowThickness - collisionPadding, position.z - collisionPadding,
+                 position.x + arrowThickness + collisionPadding, position.y + arrowThickness + collisionPadding, position.z + arrowLength + arrowHeadSize + collisionPadding });
+            if (zCollision.hit && zCollision.distance < minDistance) {
+                minDistance = zCollision.distance;
+                selectedAxis = 3;
+            }
+
+            // Check XY plane
+            RaylibWrapper::Vector3 xySquarePos = RaylibWrapper::Vector3Add(position, { squareOffset, squareOffset, 0 });
+            RaylibWrapper::RayCollision xyCollision = RaylibWrapper::GetRayCollisionBox(mouseRay,
+                { xySquarePos.x - squareSize / 2, xySquarePos.y - squareSize / 2, xySquarePos.z - 0.01f * scaleFactor,
+                 xySquarePos.x + squareSize / 2, xySquarePos.y + squareSize / 2, xySquarePos.z + 0.01f * scaleFactor });
+            if (xyCollision.hit && xyCollision.distance < minDistance) {
+                minDistance = xyCollision.distance;
+                selectedAxis = 4;
+            }
+
+            // Check XZ plane
+            RaylibWrapper::Vector3 xzSquarePos = RaylibWrapper::Vector3Add(position, { squareOffset, 0, squareOffset });
+            RaylibWrapper::RayCollision xzCollision = RaylibWrapper::GetRayCollisionBox(mouseRay,
+                { xzSquarePos.x - squareSize / 2, xzSquarePos.y - 0.01f, xzSquarePos.z - squareSize / 2 * scaleFactor,
+                 xzSquarePos.x + squareSize / 2, xzSquarePos.y + 0.01f, xzSquarePos.z + squareSize / 2 * scaleFactor });
+            if (xzCollision.hit && xzCollision.distance < minDistance) {
+                minDistance = xzCollision.distance;
+                selectedAxis = 5;
+            }
+
+            // Check YZ plane
+            RaylibWrapper::Vector3 yzSquarePos = RaylibWrapper::Vector3Add(position, { 0, squareOffset, squareOffset });
+            RaylibWrapper::RayCollision yzCollision = RaylibWrapper::GetRayCollisionBox(mouseRay,
+                { yzSquarePos.x - 0.01f, yzSquarePos.y - squareSize / 2, yzSquarePos.z - squareSize / 2 * scaleFactor,
+                 yzSquarePos.x + 0.01f, yzSquarePos.y + squareSize / 2, yzSquarePos.z + squareSize / 2 * scaleFactor });
+            if (yzCollision.hit && yzCollision.distance < minDistance) {
+                minDistance = yzCollision.distance;
+                selectedAxis = 6;
+            }
+
+            // Set movement flags based on selected axis
+            movingObjectX = movingObjectY = movingObjectZ = false;
+            switch (selectedAxis) {
+                case 1: movingObjectX = true; break;
+                case 2: movingObjectY = true; break;
+                case 3: movingObjectZ = true; break;
+                case 4: movingObjectX = movingObjectY = true; break;
+                case 5: movingObjectX = movingObjectZ = true; break;
+                case 6: movingObjectY = movingObjectZ = true; break;
+            }
+        }
+    }
+
+    if (RaylibWrapper::IsMouseButtonReleased(RaylibWrapper::MOUSE_BUTTON_LEFT))
+        movingObjectY = movingObjectX = movingObjectZ = false;
 
     if (ProjectManager::projectData.is3D)
         RaylibWrapper::DrawGrid(100, 10.0f);
