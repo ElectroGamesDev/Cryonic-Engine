@@ -1520,6 +1520,11 @@ namespace RaylibWrapper {
         return { result.x, result.y, result.z };
     }
 
+    Vector3 Vector3CrossProduct(Vector3 v1, Vector3 v2) {
+        Vector3 result = { v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x };
+        return result;
+    }
+
     // Models
     Model LoadModelFromMesh(Mesh mesh) { // This is unfinished as there is a lot needed to convert everything
         ::Model model;

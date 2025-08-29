@@ -995,6 +995,7 @@ namespace RaylibWrapper
     Vector3 Vector3Normalize(Vector3 v);
     Matrix MatrixRotateXYZ(Vector3 angle);
     Vector3 Vector3Transform(Vector3 v, Matrix matrix);
+    Vector3 Vector3CrossProduct(Vector3 v1, Vector3 v2);
 
     // Model functions
     Model LoadModelFromMesh(Mesh mesh);
